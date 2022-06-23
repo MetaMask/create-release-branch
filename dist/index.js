@@ -12465,6 +12465,9 @@ var auto_changelog_dist = __nccwpck_require__(9272);
 
 const MANIFEST_FILE_NAME = 'package.json';
 const CHANGELOG_FILE_NAME = 'CHANGELOG.md';
+function isErrorWithCode(error) {
+    return typeof error === 'object' && error !== null && 'code' in error;
+}
 /**
  * Recursively finds the package manifest for each workspace, and collects
  * metadata for each package.
@@ -12598,7 +12601,7 @@ async function updatePackageChangelog(packageMetadata, updateSpecification, root
     }
     catch (error) {
         // If the error is not a file not found error, throw it
-        if (error.code !== 'ENOENT') {
+        if (!isErrorWithCode(error) || error.code !== 'ENOENT') {
             console.error(`Failed to read changelog in "${projectRootDirectory}".`);
             throw error;
         }
