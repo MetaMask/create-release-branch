@@ -11,9 +11,9 @@ import { knownKeysOf } from './utils';
  * root).
  * @property workspaces - The known workspaces within this repo.
  */
-export interface LocalMonorepoOptions<PackageNames extends string>
+export interface LocalMonorepoOptions<PackageNickname extends string>
   extends LocalRepoOptions {
-  packages: Record<PackageNames, PackageSpecification>;
+  packages: Record<PackageNickname, PackageSpecification>;
   workspaces: Record<string, string[]>;
 }
 
@@ -22,12 +22,12 @@ export interface LocalMonorepoOptions<PackageNames extends string>
  * specific to a monorepo.
  */
 export default class LocalMonorepo<
-  PackageNames extends string
+  PackageNickname extends string
 > extends LocalRepo {
   /**
    * The known packages within this repo (including the root).
    */
-  #packages: Record<'$root$' | PackageNames, PackageSpecification>;
+  #packages: Record<'$root$' | PackageNickname, PackageSpecification>;
 
   /**
    * The known workspaces within this repo.
@@ -38,17 +38,98 @@ export default class LocalMonorepo<
     packages,
     workspaces,
     ...rest
-  }: LocalMonorepoOptions<PackageNames>) {
+  }: LocalMonorepoOptions<PackageNickname>) {
     super(rest);
     this.#packages = {
       $root$: {
         name: 'monorepo',
         version: '1.0.0',
-        directory: '.',
+        directoryPath: '.',
       },
       ...packages,
     };
     this.#workspaces = workspaces;
+  }
+
+  /**
+   * Reads a file within a workspace package within the project.
+   *
+   * @param packageNickname - The nickname of the workspace package, as
+   * identified in the `packages` options passed to
+   * `withMonorepoProjectEnvironment`.
+   * @param partialFilePath - The path to the desired file within the package.
+   * @returns The content of the file.
+   */
+  async readFileWithinPackage(
+    packageNickname: '$root$' | PackageNickname,
+    partialFilePath: string,
+  ) {
+    const packageDirectoryPath = this.#packages[packageNickname].directoryPath;
+    return await this.readFile(
+      path.join(packageDirectoryPath, partialFilePath),
+    );
+  }
+
+  /**
+   * Reads a JSON file within a workspace package within the project.
+   *
+   * @param packageNickname - The nickname of the workspace package, as
+   * identified in the `packages` options passed to
+   * `withMonorepoProjectEnvironment`.
+   * @param partialFilePath - The path to the desired file within the package.
+   * @returns The object which the JSON file holds.
+   */
+  async readJsonFileWithinPackage(
+    packageNickname: '$root$' | PackageNickname,
+    partialFilePath: string,
+  ) {
+    const packageDirectoryPath = this.#packages[packageNickname].directoryPath;
+    return await this.readJsonFile(
+      path.join(packageDirectoryPath, partialFilePath),
+    );
+  }
+
+  /**
+   * Creates or overwrites a file within a workspace package within the project.
+   *
+   * @param packageNickname - The nickname of the workspace package, as
+   * identified in the `packages` options passed to
+   * `withMonorepoProjectEnvironment`.
+   * @param partialFilePath - The path to the desired file within the package.
+   * @param contents - The desired contents of the file.
+   */
+  async writeFileWithinPackage(
+    packageNickname: '$root$' | PackageNickname,
+    partialFilePath: string,
+    contents: string,
+  ): Promise<void> {
+    const packageDirectoryPath = this.#packages[packageNickname].directoryPath;
+    await this.writeFile(
+      path.join(packageDirectoryPath, partialFilePath),
+      contents,
+    );
+  }
+
+  /**
+   * Creates or overwrites a JSON file within a workspace package within the
+   * project.
+   *
+   * @param packageNickname - The nickname of the workspace package, as
+   * identified in the `packages` options passed to
+   * `withMonorepoProjectEnvironment`.
+   * @param partialFilePath - The path to the desired file within the package.
+   * @param object - The new object that the file should represent.
+   */
+  async writeJsonFileWithinPackage(
+    packageNickname: '$root$' | PackageNickname,
+    partialFilePath: string,
+    object: Record<string, unknown>,
+  ): Promise<void> {
+    const packageDirectoryPath = this.#packages[packageNickname].directoryPath;
+    await this.writeJsonFile(
+      path.join(packageDirectoryPath, partialFilePath),
+      object,
+    );
   }
 
   /**
@@ -67,13 +148,13 @@ export default class LocalMonorepo<
         const pkg = this.#packages[packageName];
         const content = {
           name: pkg.name,
-          version: pkg.version,
-          ...(pkg.directory in this.#workspaces
-            ? { workspaces: this.#workspaces[pkg.directory] }
+          ...('version' in pkg ? { version: pkg.version } : {}),
+          ...(pkg.directoryPath in this.#workspaces
+            ? { workspaces: this.#workspaces[pkg.directoryPath] }
             : {}),
         };
         return this.updateJsonFile(
-          path.join(pkg.directory, 'package.json'),
+          path.join(pkg.directoryPath, 'package.json'),
           content,
         );
       }),

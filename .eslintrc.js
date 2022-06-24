@@ -28,6 +28,7 @@ module.exports = {
       },
     ],
     'node/no-process-env': 'off',
+    'node/no-process-exit': 'off',
   },
 
   overrides: [
@@ -35,8 +36,9 @@ module.exports = {
       files: ['**/*.ts'],
       extends: ['@metamask/eslint-config-typescript'],
       rules: {
-        'no-shadow': 'off',
         '@typescript-eslint/no-shadow': ['error', { builtinGlobals: true }],
+        'jsdoc/check-indentation': 'off',
+        'no-shadow': 'off',
       },
     },
     {

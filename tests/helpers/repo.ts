@@ -3,7 +3,7 @@ import path from 'path';
 import execa, { ExecaChildProcess, Options as ExecaOptions } from 'execa';
 import deepmerge from 'deepmerge';
 import { CommandEnv } from './environment';
-import { benchmark, isErrorWithCode, isExecaError, sleepFor } from './utils';
+import { debug, isErrorWithCode, isExecaError, sleepFor } from './utils';
 
 /**
  * A set of options with which to customize the action script or configuration
@@ -187,43 +187,55 @@ export default abstract class Repo {
     args?: readonly string[] | undefined,
     options?: ExecaOptions<string> | undefined,
   ): Promise<ExecaChildProcess<string>> {
-    return await benchmark(
-      `Command \`${executableName} ${args
-        ?.map((arg) => (arg.includes(' ') ? `"${arg}"` : arg))
-        .join(' ')}\``,
-      async () => {
-        try {
-          return await execa(executableName, args, {
-            all: true,
-            cwd: this.getWorkingDir(),
-            env: this.commandEnv as NodeJS.ProcessEnv,
-            ...options,
-          });
-        } catch (error) {
-          if (isExecaError(error)) {
-            // Strip GitHub Action error message formatting
-            const message = error.all
-              ?.split('\n')
-              .map((line) => {
-                if (line.startsWith('::error::Error: ')) {
-                  return line
-                    .replace(/^::error::Error: /u, '')
-                    .replace('%0A', '\n');
-                }
+    const { env, ...remainingOptions } =
+      options === undefined ? { env: {} } : options;
 
-                return line;
-              })
-              .join('\n');
-
-            if (message && error.all !== message) {
-              throw new Error(`${message}\n\n${error.stack}`);
-            }
-          }
-
-          throw error;
-        }
-      },
+    debug(
+      'Running command `%s %s`...',
+      executableName,
+      args?.map((arg) => (arg.includes(' ') ? `"${arg}"` : arg)).join(' '),
     );
+
+    try {
+      const result = await execa(executableName, args, {
+        all: true,
+        cwd: this.getWorkingDir(),
+        env: {
+          ...this.commandEnv,
+          ...env,
+          DEBUG_COLORS: '1',
+        } as NodeJS.ProcessEnv,
+        ...remainingOptions,
+      });
+      debug(
+        'Completed command `%s %s`',
+        executableName,
+        args?.map((arg) => (arg.includes(' ') ? `"${arg}"` : arg)).join(' '),
+      );
+      return result;
+    } catch (error) {
+      if (isExecaError(error)) {
+        // Strip GitHub Action error message formatting
+        const message = error.all
+          ?.split('\n')
+          .map((line) => {
+            if (line.startsWith('::error::Error: ')) {
+              return line
+                .replace(/^::error::Error: /u, '')
+                .replace('%0A', '\n');
+            }
+
+            return line;
+          })
+          .join('\n');
+
+        if (message && error.all !== message) {
+          throw new Error(`${message}\n\n${error.stack}`);
+        }
+      }
+
+      throw error;
+    }
   }
 
   /**
@@ -258,5 +270,5 @@ export default abstract class Repo {
   /**
    * Returns the directory where the repo is located. Overridden in subclasses.
    */
-  protected abstract getWorkingDir(): string;
+  abstract getWorkingDir(): string;
 }

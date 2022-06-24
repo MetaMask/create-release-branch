@@ -8,5 +8,5 @@
     "strict": true,
     "target": "ES2019"
   },
-  "exclude": ["./dist/**/*", "./lib/**/*"]
+  "exclude": ["./dist", "./lib", "./node_modules"]
 }

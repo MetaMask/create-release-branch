@@ -117,7 +117,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    *
    * @returns `local-repo` within the environment directory.
    */
-  protected getWorkingDir() {
+  getWorkingDir() {
     return path.join(this.environmentDir, 'local-repo');
   }
 
@@ -131,5 +131,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    * Returns the version of the sole or main package that this repo represents.
    * Overridden in subclasses>
    */
-  protected abstract getPackageVersion(): string;
+  protected abstract getPackageVersion(): string | undefined;
 }

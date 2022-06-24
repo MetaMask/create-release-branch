@@ -20,7 +20,7 @@ export default class RemoteRepo extends Repo {
    *
    * @returns `remote-repo` within the environment directory.
    */
-  protected getWorkingDir() {
+  getWorkingDir() {
     return path.join(this.environmentDir, 'remote-repo');
   }
 }

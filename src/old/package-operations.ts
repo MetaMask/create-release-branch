@@ -23,13 +23,13 @@ export interface PackageMetadata {
   readonly dirPath: string;
 }
 
-interface UpdateSpecification {
+export interface UpdateSpecification {
   readonly newVersion: string;
   readonly repositoryUrl: string;
   readonly shouldUpdateChangelog: boolean;
 }
 
-interface MonorepoUpdateSpecification extends UpdateSpecification {
+export interface MonorepoUpdateSpecification extends UpdateSpecification {
   readonly packagesToUpdate: ReadonlySet<string>;
   readonly synchronizeVersions: boolean;
 }
@@ -39,7 +39,8 @@ const CHANGELOG_FILE_NAME = 'CHANGELOG.md';
 
 /**
  * Type guard for determining whether the given value is an error object with a
- * `message` property, such as an instance of Error.
+ * `code` property, such as the type of error that Node throws for filesystem
+ * operations, etc.
  *
  * @param error - The object to check.
  * @returns True or false, depending on the result.
@@ -68,7 +69,9 @@ export async function getMetadataForAllPackages(
     async (promise, workspaceDirectory) => {
       const result = await promise;
 
-      const fullWorkspacePath = pathUtils.join(rootDir, workspaceDirectory);
+      const fullWorkspacePath = pathUtils.isAbsolute(workspaceDirectory)
+        ? workspaceDirectory
+        : pathUtils.resolve(rootDir, workspaceDirectory);
 
       if ((await fs.lstat(fullWorkspacePath)).isDirectory()) {
         const rawManifest = await getPackageManifest(fullWorkspacePath);
@@ -105,7 +108,9 @@ export async function getMetadataForAllPackages(
               dirName: pathUtils.basename(workspaceDirectory),
               manifest,
               name,
-              dirPath: pathUtils.join(parentDir, workspaceDirectory),
+              dirPath: pathUtils.isAbsolute(workspaceDirectory)
+                ? workspaceDirectory
+                : pathUtils.resolve(parentDir, workspaceDirectory),
             },
           };
         }
@@ -121,7 +126,9 @@ export async function getMetadataForAllPackages(
             dirName: pathUtils.basename(workspaceDirectory),
             manifest,
             name: manifest.name,
-            dirPath: pathUtils.join(parentDir, workspaceDirectory),
+            dirPath: pathUtils.isAbsolute(workspaceDirectory)
+              ? workspaceDirectory
+              : pathUtils.resolve(parentDir, workspaceDirectory),
           },
         };
       }
@@ -217,9 +224,16 @@ export async function updatePackage(
   updateSpecification: UpdateSpecification | MonorepoUpdateSpecification,
   rootDir: string = WORKSPACE_ROOT,
 ): Promise<void> {
+  const partialManifestFilePath = pathUtils.join(
+    packageMetadata.dirPath,
+    MANIFEST_FILE_NAME,
+  );
+  const fullManifestFilePath = pathUtils.isAbsolute(partialManifestFilePath)
+    ? pathUtils.resolve(rootDir, partialManifestFilePath)
+    : partialManifestFilePath;
   await Promise.all([
     writeJsonFile(
-      pathUtils.join(rootDir, packageMetadata.dirPath, MANIFEST_FILE_NAME),
+      fullManifestFilePath,
       getUpdatedManifest(packageMetadata.manifest, updateSpecification),
     ),
     updateSpecification.shouldUpdateChangelog
@@ -252,7 +266,9 @@ async function updatePackageChangelog(
   const { newVersion, repositoryUrl } = updateSpecification;
 
   let changelogContent: string;
-  const packagePath = pathUtils.join(rootDir, projectRootDirectory);
+  const packagePath = pathUtils.isAbsolute(projectRootDirectory)
+    ? projectRootDirectory
+    : pathUtils.resolve(rootDir, projectRootDirectory);
   const changelogPath = pathUtils.join(packagePath, CHANGELOG_FILE_NAME);
 
   try {

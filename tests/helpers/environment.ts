@@ -1,6 +1,4 @@
 import path from 'path';
-import { ExecaChildProcess } from 'execa';
-import { ACTION_EXECUTABLE_PATH, TS_NODE_PATH } from './constants';
 import LocalRepo from './local-repo';
 import RemoteRepo from './remote-repo';
 import Repo from './repo';
@@ -13,9 +11,9 @@ import Repo from './repo';
  * @property RELEASE_VERSION - The exact version that will be used to set
  * package versions.
  */
+/* eslint-disable-next-line @typescript-eslint/no-empty-interface */
 export interface CommandEnv {
-  RELEASE_TYPE?: string;
-  RELEASE_VERSION?: string;
+  // TODO: Needed?
 }
 
 /**
@@ -29,8 +27,8 @@ export interface CommandEnv {
  */
 export interface PackageSpecification {
   name: string;
-  version: string;
-  directory: string;
+  version?: string;
+  directoryPath: string;
 }
 
 /**
@@ -49,6 +47,7 @@ export interface PackageSpecification {
  */
 export interface EnvironmentOptions {
   name: string;
+  sandboxDir: string;
   environmentsDir: string;
   commandEnv?: CommandEnv;
   createInitialCommit?: boolean;
@@ -58,40 +57,41 @@ export interface EnvironmentOptions {
  * This class sets up each test and acts as a facade to all of the actions that
  * we need to take from within the test.
  */
-export default abstract class Environment {
+export default abstract class Environment<SpecificLocalRepo extends LocalRepo> {
   #remoteRepo: Repo;
 
-  #localRepo: Repo;
+  protected sandboxDir: string;
 
-  readJsonFile: LocalRepo['readJsonFile'];
+  protected localRepo: SpecificLocalRepo;
 
-  readFile: LocalRepo['readFile'];
+  readJsonFile: SpecificLocalRepo['readJsonFile'];
 
-  updateJsonFile: LocalRepo['updateJsonFile'];
+  readFile: SpecificLocalRepo['readFile'];
 
-  writeJsonFile: LocalRepo['writeJsonFile'];
+  updateJsonFile: SpecificLocalRepo['updateJsonFile'];
 
-  writeFile: LocalRepo['writeFile'];
+  writeJsonFile: SpecificLocalRepo['writeJsonFile'];
 
-  runCommand: LocalRepo['runCommand'];
+  writeFile: SpecificLocalRepo['writeFile'];
 
-  createCommit: LocalRepo['createCommit'];
+  runCommand: SpecificLocalRepo['runCommand'];
+
+  createCommit: SpecificLocalRepo['createCommit'];
 
   constructor(options: EnvironmentOptions) {
-    const { environmentsDir, name } = options;
+    const { sandboxDir, environmentsDir, name } = options;
     const projectDir = path.join(environmentsDir, name);
     const remoteRepoDir = path.resolve(projectDir, 'remote-repo');
-
+    this.sandboxDir = sandboxDir;
     this.#remoteRepo = new RemoteRepo({ environmentDir: projectDir });
-
-    this.#localRepo = this.buildLocalRepo(projectDir, remoteRepoDir, options);
-    this.readJsonFile = this.#localRepo.readJsonFile.bind(this.#localRepo);
-    this.readFile = this.#localRepo.readFile.bind(this.#localRepo);
-    this.updateJsonFile = this.#localRepo.updateJsonFile.bind(this.#localRepo);
-    this.writeJsonFile = this.#localRepo.writeJsonFile.bind(this.#localRepo);
-    this.writeFile = this.#localRepo.writeFile.bind(this.#localRepo);
-    this.runCommand = this.#localRepo.runCommand.bind(this.#localRepo);
-    this.createCommit = this.#localRepo.createCommit.bind(this.#localRepo);
+    this.localRepo = this.buildLocalRepo(projectDir, remoteRepoDir, options);
+    this.readJsonFile = this.localRepo.readJsonFile.bind(this.localRepo);
+    this.readFile = this.localRepo.readFile.bind(this.localRepo);
+    this.updateJsonFile = this.localRepo.updateJsonFile.bind(this.localRepo);
+    this.writeJsonFile = this.localRepo.writeJsonFile.bind(this.localRepo);
+    this.writeFile = this.localRepo.writeFile.bind(this.localRepo);
+    this.runCommand = this.localRepo.runCommand.bind(this.localRepo);
+    this.createCommit = this.localRepo.createCommit.bind(this.localRepo);
   }
 
   /**
@@ -101,19 +101,7 @@ export default abstract class Environment {
    */
   async initialize() {
     await this.#remoteRepo.initialize();
-    await this.#localRepo.initialize();
-  }
-
-  /**
-   * Runs the script that powers this action within the context of the project.
-   *
-   * @returns The result of the command.
-   */
-  async runAction(): Promise<ExecaChildProcess<string>> {
-    return await this.#localRepo.runCommand(TS_NODE_PATH, [
-      '--transpileOnly',
-      ACTION_EXECUTABLE_PATH,
-    ]);
+    await this.localRepo.initialize();
   }
 
   /**
@@ -124,5 +112,5 @@ export default abstract class Environment {
     projectDir: string,
     remoteRepoDir: string,
     options: EnvironmentOptions,
-  ): LocalRepo;
+  ): SpecificLocalRepo;
 }

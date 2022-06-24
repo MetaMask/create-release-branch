@@ -1,3 +1,5 @@
+import { ExecaReturnValue } from 'execa';
+import { SCRIPT_EXECUTABLE_PATH, TS_NODE_PATH } from './constants';
 import Environment, { CommandEnv, EnvironmentOptions } from './environment';
 import LocalPolyrepo from './local-polyrepo';
 
@@ -17,13 +19,13 @@ export interface PolyrepoEnvironmentOptions extends EnvironmentOptions {
  * This class configures Environment such that the "local" repo becomes a
  * polyrepo.
  */
-export default class PolyrepoEnvironment extends Environment {
+export default class PolyrepoEnvironment extends Environment<LocalPolyrepo> {
   protected buildLocalRepo(
     projectDir: string,
     remoteRepoDir: string,
     {
       packageVersion = '1.0.0',
-      commandEnv = { RELEASE_TYPE: 'major' },
+      commandEnv = {},
       createInitialCommit = true,
     }: Omit<PolyrepoEnvironmentOptions, 'commandEnv'> & {
       commandEnv: CommandEnv;
@@ -37,5 +39,17 @@ export default class PolyrepoEnvironment extends Environment {
       createInitialCommit,
       remoteRepoDir,
     });
+  }
+
+  /**
+   * Runs the script within the context of the project.
+   *
+   * @returns The result of the command.
+   */
+  async runScript(): Promise<ExecaReturnValue<string>> {
+    return await this.localRepo.runCommand(TS_NODE_PATH, [
+      '--transpileOnly',
+      SCRIPT_EXECUTABLE_PATH,
+    ]);
   }
 }

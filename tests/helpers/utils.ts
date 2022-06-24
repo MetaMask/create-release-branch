@@ -1,27 +1,7 @@
 import { ExecaError } from 'execa';
+import createDebug from 'debug';
 
-/**
- * Records and reports the time that a section of code takes to run.
- *
- * @param label - How to label this section of code in the output.
- * @param code - The section of code to run.
- * @returns Whatever `code` returns.
- */
-export async function benchmark<T>(
-  label: string,
-  code: (...args: any[]) => T,
-): Promise<T> {
-  const then = new Date().getTime();
-  const value = await code();
-  const now = new Date().getTime();
-  const diff = now - then;
-
-  if (process.env.DEBUG) {
-    console.log(`${label} took ${diff}ms`);
-  }
-
-  return value;
-}
+export const debug = createDebug('create-release-branch:tests');
 
 /**
  * `Object.keys()` is intentionally generic: it returns the keys of an object,
@@ -34,8 +14,8 @@ export async function benchmark<T>(
  * @returns The keys of an object, typed according to the type of the object
  * itself.
  */
-export function knownKeysOf<K extends string | number | symbol, V>(
-  object: Record<K, V>,
+export function knownKeysOf<K extends string | number | symbol>(
+  object: Record<K, any>,
 ) {
   return Object.keys(object) as K[];
 }
