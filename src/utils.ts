@@ -75,6 +75,8 @@ function getProcessEnvValue(key: string): string {
 /**
  * Validates the inputs to the Action, defined earlier in this file.
  * Throws an error if validation fails.
+ *
+ * @param inputs - The inputs to this action.
  */
 function validateActionInputs(inputs: ActionInputs): void {
   if (!inputs.ReleaseType && !inputs.ReleaseVersion) {

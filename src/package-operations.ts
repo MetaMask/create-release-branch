@@ -37,6 +37,13 @@ interface MonorepoUpdateSpecification extends UpdateSpecification {
 const MANIFEST_FILE_NAME = 'package.json';
 const CHANGELOG_FILE_NAME = 'CHANGELOG.md';
 
+/**
+ * Type guard for determining whether the given value is an error object with a
+ * `message` property, such as an instance of Error.
+ *
+ * @param error - The object to check.
+ * @returns True or false, depending on the result.
+ */
 function isErrorWithCode(error: unknown): error is { code: string } {
   return typeof error === 'object' && error !== null && 'code' in error;
 }
@@ -124,6 +131,9 @@ export async function getMetadataForAllPackages(
 }
 
 /**
+ * Determines the set of packages whose versions should be bumped and whose
+ * changelogs should be updated.
+ *
  * @param allPackages - The metadata of all packages in the monorepo.
  * @param synchronizeVersions - Whether to synchronize the versions of all
  * packages.
@@ -161,11 +171,11 @@ export async function getPackagesToUpdate(
  * update specification. Writes the new manifests to disk. The following changes
  * are made to the new manifests:
  *
- * - The "version" field is replaced with the new version
+ * - The "version" field is replaced with the new version.
  * - If package versions are being synchronized, updates their version ranges
- * wherever they appear as dependencies
+ * wherever they appear as dependencies.
  *
- * @param allPackages - The metadata of all monorepo packages
+ * @param allPackages - The metadata of all monorepo packages.
  * @param updateSpecification - The update specification.
  */
 export async function updatePackages(
@@ -185,13 +195,18 @@ export async function updatePackages(
  * specification and writes the changes to disk. The following changes are made
  * to the manifest:
  *
- * - The "version" field is replaced with the new version
+ * - The "version" field is replaced with the new version.
  * - If package versions are being synchronized, updates their version ranges
- * wherever they appear as dependencies
+ * wherever they appear as dependencies.
  *
  * @param packageMetadata - The metadata of the package to update.
+ * @param packageMetadata.dirPath - The full path to the directory that holds
+ * the package.
+ * @param packageMetadata.manifest - The information within the `package.json`
+ * file for the package.
  * @param updateSpecification - The update specification, which determines how
  * the update is performed.
+ * @param rootDir - The full path to the project.
  */
 export async function updatePackage(
   packageMetadata: { dirPath: string; manifest: Partial<PackageManifest> },
@@ -211,18 +226,24 @@ export async function updatePackage(
 
 /**
  * Updates the changelog file of the given package, using
- * @metamask/auto-changelog. Assumes that the changelog file is located at the
+ * `@metamask/auto-changelog`. Assumes that the changelog file is located at the
  * package root directory and named "CHANGELOG.md".
  *
  * @param packageMetadata - The metadata of the package to update.
+ * @param packageMetadata.dirPath - The full path to the directory that holds
+ * the package.
+ * @param packageMetadata.manifest - The information within the `package.json`
+ * file for the package.
  * @param updateSpecification - The update specification, which determines how
  * the update is performed.
+ * @param rootDir - The full path to the project.
+ * @returns The result of writing to the changelog.
  */
 async function updatePackageChangelog(
   packageMetadata: { dirPath: string; manifest: Partial<PackageManifest> },
   updateSpecification: UpdateSpecification | MonorepoUpdateSpecification,
   rootDir: string = WORKSPACE_ROOT,
-) {
+): Promise<number | void> {
   const { dirPath: projectRootDirectory } = packageMetadata;
   const { newVersion, repositoryUrl } = updateSpecification;
 
@@ -239,9 +260,8 @@ async function updatePackageChangelog(
       throw error;
     }
 
-    return console.warn(
-      `Failed to read changelog in "${projectRootDirectory}".`,
-    );
+    console.warn(`Failed to read changelog in "${projectRootDirectory}".`);
+    return undefined;
   }
 
   const newChangelogContent = await updateChangelog({
@@ -266,9 +286,9 @@ async function updatePackageChangelog(
 /**
  * Updates the given manifest per the update specification as follows:
  *
- * - Updates the manifest's "version" field to the new version
+ * - Updates the manifest's "version" field to the new version.
  * - If monorepo package versions are being synchronized, updates their version
- * ranges wherever they appear as dependencies
+ * ranges wherever they appear as dependencies.
  *
  * @param currentManifest - The package's current manifest, as read from disk.
  * @param updateSpecification - The update specification, which determines how
@@ -301,7 +321,7 @@ function getUpdatedManifest(
  * Gets the updated dependency fields of the given manifest per the given
  * update specification.
  *
- * @param currentManifest - The package's current manifest, as read from disk.
+ * @param manifest - The package's current manifest, as read from disk.
  * @param updateSpecification - The update specification, which determines how
  * the update is performed.
  * @returns The updated dependency fields of the manifest.
