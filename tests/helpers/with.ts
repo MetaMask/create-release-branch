@@ -20,6 +20,7 @@ export async function withInitializedEnvironmentsDir<T>(
   callback: (environmentsDir: string) => Promise<T>,
 ): Promise<T> {
   const environmentsDir = path.join(os.tmpdir(), 'action-create-release-pr');
+
   try {
     await fs.promises.rmdir(environmentsDir, { recursive: true });
   } catch (error) {
@@ -33,7 +34,9 @@ export async function withInitializedEnvironmentsDir<T>(
   if (process.env.DEBUG) {
     console.log('Removed temp directory', environmentsDir);
   }
+
   await fs.promises.mkdir(environmentsDir, { recursive: true });
+
   if (process.env.DEBUG) {
     console.log('Created temp directory', environmentsDir);
   }
@@ -51,6 +54,7 @@ export async function withInitializedEnvironmentsDir<T>(
  */
 export async function withProtectedProcessEnv<T>(callback: () => Promise<T>) {
   const originalEnv = { ...process.env };
+
   try {
     return await callback();
   } finally {

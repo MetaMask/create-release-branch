@@ -96,6 +96,7 @@ export default abstract class Repo {
     updates: Record<string, unknown>,
   ): Promise<void> {
     let newObject: Record<string, unknown>;
+
     try {
       const object = await this.readJsonFile(partialFilePath);
       newObject = deepmerge(object, updates);
@@ -106,6 +107,7 @@ export default abstract class Repo {
         throw error;
       }
     }
+
     return await this.writeJsonFile(partialFilePath, newObject);
   }
 
@@ -158,12 +160,14 @@ export default abstract class Repo {
       this.#latestCommitTime === undefined
         ? null
         : now.getTime() - this.#latestCommitTime.getTime();
+
     if (
       timeSincePreviousCommit !== null &&
       timeSincePreviousCommit < MIN_TIME_BETWEEN_COMMITS
     ) {
       await sleepFor(MIN_TIME_BETWEEN_COMMITS - timeSincePreviousCommit);
     }
+
     await this.runCommand('git', ['add', '-A']);
     const result = await this.runCommand('git', ['commit', '-m', message]);
     this.#latestCommitTime = now;
@@ -206,13 +210,16 @@ export default abstract class Repo {
                     .replace(/^::error::Error: /u, '')
                     .replace('%0A', '\n');
                 }
+
                 return line;
               })
               .join('\n');
+
             if (message && error.all !== message) {
               throw new Error(`${message}\n\n${error.stack}`);
             }
           }
+
           throw error;
         }
       },

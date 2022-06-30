@@ -4,6 +4,29 @@ module.exports = {
   extends: ['@metamask/eslint-config', '@metamask/eslint-config-nodejs'],
 
   rules: {
+    'padding-line-between-statements': [
+      'error',
+      {
+        blankLine: 'always',
+        prev: 'directive',
+        next: '*',
+      },
+      {
+        blankLine: 'any',
+        prev: 'directive',
+        next: 'directive',
+      },
+      {
+        blankLine: 'always',
+        prev: 'multiline-block-like',
+        next: '*',
+      },
+      {
+        blankLine: 'always',
+        prev: '*',
+        next: 'multiline-block-like',
+      },
+    ],
     'node/no-process-env': 'off',
   },
 

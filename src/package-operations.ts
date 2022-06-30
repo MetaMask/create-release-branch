@@ -69,6 +69,7 @@ export async function getMetadataForAllPackages(
       const result = await promise;
 
       const fullWorkspacePath = pathUtils.join(rootDir, workspaceDirectory);
+
       if ((await fs.lstat(fullWorkspacePath)).isDirectory()) {
         const rawManifest = await getPackageManifest(fullWorkspacePath);
 
@@ -86,6 +87,7 @@ export async function getMetadataForAllPackages(
           );
 
           const name = manifest[ManifestFieldNames.Name];
+
           if (!name) {
             throw new Error(
               `Expected sub-workspace in "${workspaceDirectory}" to have a name.`,
@@ -152,6 +154,7 @@ export async function getPackagesToUpdate(
 
   // If we're not synchronizing versions, we only update changed packages.
   const shouldBeUpdated: Set<string> = new Set();
+
   // We use a for-loop here instead of Promise.all because didPackageChange
   // must be called serially.
   for (const packageName of Object.keys(allPackages)) {
@@ -163,6 +166,7 @@ export async function getPackagesToUpdate(
   if (shouldBeUpdated.size === 0) {
     throw new Error(`There are no packages to update.`);
   }
+
   return shouldBeUpdated;
 }
 
@@ -271,6 +275,7 @@ async function updatePackageChangelog(
     projectRootDirectory,
     repoUrl: repositoryUrl,
   });
+
   if (!newChangelogContent) {
     const packageName = packageMetadata.manifest.name;
     throw new Error(
@@ -300,6 +305,7 @@ function getUpdatedManifest(
   updateSpecification: UpdateSpecification | MonorepoUpdateSpecification,
 ) {
   const { newVersion } = updateSpecification;
+
   if (
     isMonorepoUpdateSpecification(updateSpecification) &&
     updateSpecification.synchronizeVersions

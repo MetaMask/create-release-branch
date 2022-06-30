@@ -48,6 +48,7 @@ describe('getActionInputs', () => {
 
   it('correctly parses valid input: release-version', () => {
     const versions = ['1.0.0', '2.0.0', '1.0.1', '0.1.0'];
+
     for (const releaseVersion of versions) {
       mockProcessEnv({ releaseVersion });
       expect(getActionInputs()).toStrictEqual({
@@ -69,6 +70,7 @@ describe('getActionInputs', () => {
 
   it('throws if "release-type" is not an accepted SemVer release type', () => {
     const invalidTypes = ['v1.0.0', '1.0.0', 'premajor', 'foo'];
+
     for (const releaseType of invalidTypes) {
       mockProcessEnv({ releaseType });
       expect(() => getActionInputs()).toThrow(/^Unrecognized/u);
@@ -77,6 +79,7 @@ describe('getActionInputs', () => {
 
   it('throws if neither "release-version" is not a valid SemVer version', () => {
     const invalidVersions = ['v1.0.0', 'major', 'premajor', 'foo'];
+
     for (const releaseVersion of invalidVersions) {
       mockProcessEnv({ releaseVersion });
       expect(() => getActionInputs()).toThrow(/a plain SemVer version string/u);

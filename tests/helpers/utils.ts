@@ -15,9 +15,11 @@ export async function benchmark<T>(
   const value = await code();
   const now = new Date().getTime();
   const diff = now - then;
+
   if (process.env.DEBUG) {
     console.log(`${label} took ${diff}ms`);
   }
+
   return value;
 }
 

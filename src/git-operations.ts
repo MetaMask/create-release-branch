@@ -47,6 +47,7 @@ export async function getRepositoryHttpsUrl(): Promise<string> {
       .replace(sshPrefixRegex, '')
       .replace(sshPostfixRegex, '')}`;
   }
+
   throw new Error(`Unrecognized URL for git remote "origin": ${gitConfigUrl}`);
 }
 
@@ -70,17 +71,20 @@ export async function getTags(): Promise<
     if (await hasCompleteGitHistory()) {
       return [new Set(), null];
     }
+
     throw new Error(
       `"git tag" returned no tags. Increase your git fetch depth.`,
     );
   }
 
   const latestTag = allTags[allTags.length - 1];
+
   if (!latestTag || !isValidSemver(semverClean(latestTag))) {
     throw new Error(
       `Invalid latest tag. Expected a valid SemVer version. Received: ${latestTag}`,
     );
   }
+
   return [new Set(allTags), latestTag] as const;
 }
 
@@ -104,6 +108,7 @@ async function hasCompleteGitHistory(): Promise<boolean> {
   } else if (isShallow === 'false') {
     return true;
   }
+
   throw new Error(
     `"git rev-parse --is-shallow-repository" returned unrecognized value: ${isShallow}`,
   );
@@ -146,6 +151,7 @@ export async function didPackageChange(
       `Package "${packageName}" has version "${currentVersion}" in its manifest, but no corresponding tag "${tagOfCurrentVersion}" exists.`,
     );
   }
+
   return hasDiff(packageData, tagOfCurrentVersion);
 }
 
@@ -164,6 +170,7 @@ async function hasDiff(
   const { dirPath: packagePath } = packageData;
 
   let diff: string[];
+
   if (DIFFS.has(tag)) {
     diff = DIFFS.get(tag) as string[];
   } else {

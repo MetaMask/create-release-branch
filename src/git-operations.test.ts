@@ -106,11 +106,13 @@ describe('getTags', () => {
   it('succeeds if repo has complete history and no tags', async () => {
     execaMock.mockImplementation(async (...args) => {
       const gitCommand = args[1][0];
+
       if (gitCommand === 'tag') {
         return { stdout: '' };
       } else if (gitCommand === 'rev-parse') {
         return { stdout: 'false' };
       }
+
       throw new Error(`Unrecognized git command: ${gitCommand}`);
     });
 
@@ -121,11 +123,13 @@ describe('getTags', () => {
   it('throws if repo has incomplete history and no tags', async () => {
     execaMock.mockImplementation(async (...args) => {
       const gitCommand = args[1][0];
+
       if (gitCommand === 'tag') {
         return { stdout: '' };
       } else if (gitCommand === 'rev-parse') {
         return { stdout: 'true' };
       }
+
       throw new Error(`Unrecognized git command: ${gitCommand}`);
     });
 
@@ -146,11 +150,13 @@ describe('getTags', () => {
   it('throws if git rev-parse returns unrecognized value', async () => {
     execaMock.mockImplementation(async (...args) => {
       const gitCommand = args[1][0];
+
       if (gitCommand === 'tag') {
         return { stdout: '' };
       } else if (gitCommand === 'rev-parse') {
         return { stdout: 'foo' };
       }
+
       throw new Error(`Unrecognized git command: ${gitCommand}`);
     });
 

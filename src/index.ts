@@ -10,5 +10,6 @@ performUpdate(getActionInputs()).catch((error) => {
   if (error.stack) {
     logError(error.stack);
   }
+
   setActionToFailed(error);
 });

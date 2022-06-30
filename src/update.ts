@@ -46,6 +46,7 @@ export async function performUpdate(actionInputs: ActionInputs): Promise<void> {
 
   // Compute the new version and version diff from the inputs and root manifest
   let newVersion: string, versionDiff: SemverReleaseType;
+
   if (actionInputs.ReleaseType) {
     newVersion = semverIncrement(
       currentVersion,
@@ -84,6 +85,7 @@ export async function performUpdate(actionInputs: ActionInputs): Promise<void> {
       repositoryUrl,
     );
   }
+
   setActionOutput('NEW_VERSION', newVersion);
 }
 

@@ -100,6 +100,7 @@ describe('package-operations', () => {
      */
     function getMockReadJsonFile() {
       let mockIndex = -1;
+
       return async () => {
         mockIndex += 1;
         return getMockManifest(names[mockIndex], version);
