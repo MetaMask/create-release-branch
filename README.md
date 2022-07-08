@@ -4,11 +4,11 @@ This is an interactive command-line tool that automates steps involved in prepar
 
 ## Installation
 
-TODO
+This tool is intended to be run as a global executable, so it does not require installation in any project.
 
 ## Usage
 
-TODO
+For more on how to use this tool, please see the [docs](./docs).
 
 ## Contributing
 
