@@ -1,4 +1,5 @@
-import { debug, resolveExecutable } from './utils';
+import { getEnvironmentVariables } from './env-utils';
+import { debug, resolveExecutable } from './misc-utils';
 
 /**
  * Information about the editor present on the user's computer.
@@ -23,13 +24,14 @@ export interface Editor {
 export async function determineEditor(): Promise<Editor | null> {
   let executablePath: string | null = null;
   const executableArgs: string[] = [];
+  const env = getEnvironmentVariables();
 
-  if (process.env.EDITOR !== undefined) {
+  if (env.EDITOR !== undefined) {
     try {
-      executablePath = await resolveExecutable(process.env.EDITOR);
+      executablePath = await resolveExecutable(env.EDITOR);
     } catch (error) {
       debug(
-        `Could not resolve executable ${process.env.EDITOR} (${error}), falling back to VSCode`,
+        `Could not resolve executable ${env.EDITOR} (${error}), falling back to VSCode`,
       );
       executablePath = await resolveExecutable('code');
       // Waits until the file is closed before returning
