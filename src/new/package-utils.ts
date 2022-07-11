@@ -16,20 +16,14 @@ import { Project } from './project-utils';
 import { isValidSemver, semver, SemVer } from './semver-utils';
 import { PackageReleasePlan } from './workflow-utils';
 
-export interface UpdateSpecification {
-  readonly newVersion: string;
-  readonly repositoryUrl: string;
-  readonly shouldUpdateChangelog: boolean;
-}
-
-export interface MonorepoUpdateSpecification extends UpdateSpecification {
-  readonly packagesToUpdate: ReadonlySet<string>;
-  readonly synchronizeVersions: boolean;
-}
-
 export { ManifestFieldNames };
 
-// TODO: Move this to action-utils
+/**
+ * An unverified representation of the data in a package's `package.json`.
+ * (We know which properties could be present but haven't confirmed this yet.)
+ *
+ * TODO: Move this to action-utils
+ */
 interface UnvalidatedManifest
   extends Readonly<
     Partial<Record<ManifestDependencyFieldNames, Record<string, string>>>
@@ -40,7 +34,11 @@ interface UnvalidatedManifest
   readonly [ManifestFieldNames.Workspaces]?: string[];
 }
 
-// TODO: Move this to action-utils
+/**
+ * A type-checked representation of the data in a package's `package.json`.
+ *
+ * TODO: Move this to action-utils
+ */
 type ValidatedManifest = Require<
   Omit<UnvalidatedManifest, ManifestFieldNames.Version>,
   | ManifestFieldNames.Name
@@ -49,20 +47,33 @@ type ValidatedManifest = Require<
   | ManifestDependencyFieldNames
 > & { [ManifestFieldNames.Version]: SemVer };
 
-// TODO: Move this to action-utils
+/**
+ * Information about a package's `package.json`, including an unverified version
+ * of the data.
+ *
+ * TODO: Move this to action-utils
+ */
 interface UnvalidatedManifestFile {
   path: string;
   parentDirectory: string;
   data: UnvalidatedManifest;
 }
 
-// TODO: Move this to action-utils
+/**
+ * Information about a package's `package.json`, including a type-checked
+ * version of the data.
+ *
+ * TODO: Move this to action-utils
+ */
 interface ValidatedManifestFile {
   path: string;
   parentDirectory: string;
   data: ValidatedManifest;
 }
 
+/**
+ * Information about a package within a project.
+ */
 export interface Package {
   directoryPath: string;
   manifestPath: string;
@@ -161,8 +172,12 @@ function getManifestErrorMessagePrefix(
  * @param manifestFile - The manifest file to validate.
  * @param options - The options.
  * @param options.usingSemver - Whether or not to check that the version is
- * not only present but also conforms to SemVer.
- * @returns The unmodified manifest file, with the "version" field typed correctly.
+ * not only present but also conforms to SemVer. For a polyrepo, or for
+ * workspace packages within a monorepo, we always do this, but for the root
+ * package within a monorepo, we may or may not make this check depending on
+ * whether or not the monorepo uses independent versions.
+ * @returns The unmodified manifest file, with the "version" field typed
+ * correctly.
  */
 function validateManifestVersion<F extends UnvalidatedManifestFile>(
   manifestFile: F,
@@ -190,11 +205,14 @@ function validateManifestVersion<F extends UnvalidatedManifestFile>(
  *
  * TODO: Move this to action-utils.
  *
- * @param unvalidatedManifestFile - Information about the manifest for a
- * package.
+ * @param unvalidatedManifestFile - Information about the manifest file for a
+ * package, including its raw data.
  * @param options - The options.
- * @param options.expectSemverVersion - Whether or not to check that the
- * version is not only present but also conforms to SemVer.
+ * @param options.expectSemverVersion - Whether or not to check that the version
+ * is not only present but also conforms to SemVer. For a polyrepo, or for
+ * workspace packages within a monorepo, we always do this, but for the root
+ * package within a monorepo, we may or may not make this check depending on
+ * whether or not the monorepo uses independent versions.
  * @returns Information about a correctly typed version of the manifest for a
  * package.
  */
@@ -244,8 +262,11 @@ async function validateManifest(
  *
  * @param packageDirectoryPath - The path to the package within a project.
  * @param options - The options.
- * @param options.expectSemverVersion - Whether or not to check that the
- * version is not only present but also conforms to SemVer.
+ * @param options.expectSemverVersion - Whether or not to check that the version
+ * is not only present but also conforms to SemVer. For a polyrepo, or for
+ * workspace packages within a monorepo, we always do this, but for the root
+ * package within a monorepo, we may or may not make this check depending on
+ * whether or not the monorepo uses independent versions.
  * @returns Information about the package.
  */
 export async function readPackage(
@@ -275,7 +296,7 @@ export async function readPackage(
 }
 
 /**
- * Updates the changelog file of the given package, using
+ * Updates the changelog file of the given package using
  * `@metamask/auto-changelog`. Assumes that the changelog file is located at the
  * package root directory and named "CHANGELOG.md".
  *

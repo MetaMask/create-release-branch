@@ -1,5 +1,12 @@
 import { debug, resolveExecutable } from './utils';
 
+/**
+ * Information about the editor present on the user's computer.
+ *
+ * @property path - The path to the executable representing the editor.
+ * @property args - Command-line arguments to pass to the executable when
+ * calling it.
+ */
 export interface Editor {
   path: string;
   args: string[];

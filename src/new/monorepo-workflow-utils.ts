@@ -15,14 +15,30 @@ import {
   ReleasePlan,
 } from './workflow-utils';
 
+/**
+ * The SemVer-compatible parts of a version string that can be bumped by this
+ * tool.
+ */
 enum IncrementableVersionParts {
   major = 'major',
   minor = 'minor',
   patch = 'patch',
 }
 
+/**
+ * Describes how to update the version for a package, either by bumping a part
+ * of the version or by setting that version exactly.
+ */
+type VersionSpecifier = IncrementableVersionParts | SemVer;
+
+/**
+ * User-provided instructions for how to update this project in order to prepare
+ * it for a new release.
+ *
+ * @property packages - A mapping of package names to version specifiers.
+ */
 interface ReleaseSpecification {
-  packages: Record<string, IncrementableVersionParts | SemVer>;
+  packages: Record<string, VersionSpecifier>;
 }
 
 /**
@@ -365,9 +381,9 @@ async function validateReleaseSpecification(
           case IncrementableVersionParts.patch:
             return { ...obj, [packageName]: versionSpecifier };
           default:
-            // Typecast: We know that this will safely parse.
             return {
               ...obj,
+              // Typecast: We know that this will safely parse.
               [packageName]: semver.parse(versionSpecifier) as SemVer,
             };
         }
@@ -385,7 +401,8 @@ async function validateReleaseSpecification(
  * Uses the release specification to calculate the final versions of all of the
  * packages that we want to update, as well as a new release name.
  *
- * @param project - The project.
+ * @param project - Information about the whole project (e.g., names of packages
+ * and where they can found).
  * @param releaseSpecification - A parsed version of the release spec entered by
  * the user.
  * @returns A promise for information about the new release.
@@ -453,8 +470,10 @@ async function planRelease(
  * Bumps versions and updates changelogs of packages within the monorepo
  * according to the release plan.
  *
- * @param project - The project.
- * @param releasePlan - The release plan.
+ * @param project - Information about the whole project (e.g., names of packages
+ * and where they can found).
+ * @param releasePlan - Compiled instructions on how exactly to update the
+ * project in order to prepare a new release.
  */
 async function applyUpdatesToMonorepo(
   project: Project,

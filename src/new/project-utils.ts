@@ -80,7 +80,7 @@ export async function readProject(
  * @returns The HTTPS URL of the repository, e.g.
  * `https://github.com/OrganizationName/RepositoryName`.
  */
-export async function getRepositoryHttpsUrl(
+async function getRepositoryHttpsUrl(
   projectDirectoryPath: string,
 ): Promise<string> {
   const httpsPrefix = 'https://github.com';

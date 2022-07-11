@@ -3,6 +3,11 @@ import which from 'which';
 
 export { isTruthyString } from '@metamask/action-utils';
 
+/**
+ * A logger object for the implementation part of this project.
+ *
+ * @see The [debug](https://www.npmjs.com/package/debug) package.
+ */
 export const debug = createDebug('create-release-branch:impl');
 
 /**

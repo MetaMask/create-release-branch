@@ -48,7 +48,6 @@ export async function readFile(filePath: string): Promise<string> {
  *
  * @param filePath - The path to the file.
  * @param content - The new content of the file.
- * @returns Nothing meaningful.
  * @throws If writing fails in any way.
  */
 export async function writeFile(
@@ -56,7 +55,7 @@ export async function writeFile(
   content: string,
 ): Promise<void> {
   try {
-    return await fs.promises.writeFile(filePath, content);
+    await fs.promises.writeFile(filePath, content);
   } catch (error) {
     throw buildErrorWithStackFrom(error, `Could not write file '${filePath}'`);
   }
@@ -94,14 +93,13 @@ export async function readJsonObjectFile(
  * itself.
  * @param jsonValue - The JSON-like value to write to the file. Make sure that
  * JSON.stringify can handle it.
- * @returns Nothing meaningful.
  */
 export async function writeJsonFile(
   filePath: string,
   jsonValue: unknown,
 ): Promise<void> {
   try {
-    return await underlyingWriteJsonFile(filePath, jsonValue);
+    await underlyingWriteJsonFile(filePath, jsonValue);
   } catch (error) {
     throw buildErrorWithStackFrom(
       error,
