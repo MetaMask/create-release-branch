@@ -3,7 +3,30 @@ import {
   readJsonObjectFile as underlyingReadJsonObjectFile,
   writeJsonFile as underlyingWriteJsonFile,
 } from '@metamask/action-utils';
-import { isErrorWithCode, isErrorWithStack } from './utils';
+import { isErrorWithCode, isErrorWithMessage, isErrorWithStack } from './utils';
+
+/**
+ * Node's `fs.promises` module does not produce a stack trace if there is an I/O
+ * error, so this function provides one by creating a new Error object.
+ *
+ * @param errorLike - Any value that can be thrown.
+ * @param prefix - A string to place in the error message before the original
+ * message.
+ * @see https://github.com/nodejs/node/issues/30944
+ * @returns A copy of the given error, but with a stack.
+ */
+function buildErrorWithStackFrom(errorLike: unknown, prefix: string) {
+  const message = isErrorWithMessage(errorLike) ? errorLike.message : errorLike;
+  const code = isErrorWithCode(errorLike) ? errorLike.code : undefined;
+  const stack = isErrorWithStack(errorLike) ? errorLike.stack : undefined;
+  const errorWithStack: Error & {
+    code?: string | undefined;
+    stack?: string | undefined;
+  } = new Error(`${prefix}: ${message}`);
+  errorWithStack.code = code;
+  errorWithStack.stack = stack;
+  return errorWithStack;
+}
 
 /**
  * Reads the file at the given path, assuming its content is encoded as UTF-8.
@@ -13,13 +36,10 @@ import { isErrorWithCode, isErrorWithStack } from './utils';
  * @throws If reading fails in any way.
  */
 export async function readFile(filePath: string): Promise<string> {
-  // Node's `fs.promises` module does not produce a stack trace if there is an
-  // I/O error. See: <https://github.com/nodejs/node/issues/30944>
   try {
     return await fs.promises.readFile(filePath, 'utf8');
   } catch (error) {
-    const message = isErrorWithStack(error) ? error.stack : error;
-    throw new Error(`Could not read file '${filePath}': ${message}`);
+    throw buildErrorWithStackFrom(error, `Could not read file '${filePath}'`);
   }
 }
 
@@ -35,13 +55,10 @@ export async function writeFile(
   filePath: string,
   content: string,
 ): Promise<void> {
-  // Node's `fs.promises` module does not produce a stack trace if there is an
-  // I/O error. See: <https://github.com/nodejs/node/issues/30944>
   try {
     return await fs.promises.writeFile(filePath, content);
   } catch (error) {
-    const message = isErrorWithStack(error) ? error.stack : error;
-    throw new Error(`Could not write file '${filePath}': ${message}`);
+    throw buildErrorWithStackFrom(error, `Could not write file '${filePath}'`);
   }
 }
 
@@ -52,20 +69,20 @@ export async function writeFile(
  * Throws if failing to read or parse, or if the parsed JSON value is not a
  * plain object.
  *
- * @param path - The path segments pointing to the JSON file. Will be passed
+ * @param filePath - The path segments pointing to the JSON file. Will be passed
  * to path.join().
  * @returns The object corresponding to the parsed JSON file.
  */
 export async function readJsonObjectFile(
-  path: string,
+  filePath: string,
 ): Promise<Record<string, unknown>> {
-  // Node's `fs.promises` module does not produce a stack trace if there is an
-  // I/O error. See: <https://github.com/nodejs/node/issues/30944>
   try {
-    return await underlyingReadJsonObjectFile(path);
+    return await underlyingReadJsonObjectFile(filePath);
   } catch (error) {
-    const message = isErrorWithStack(error) ? error.stack : error;
-    throw new Error(`Could not read JSON file '${path}': ${message}`);
+    throw buildErrorWithStackFrom(
+      error,
+      `Could not read JSON file '${filePath}'`,
+    );
   }
 }
 
@@ -83,13 +100,13 @@ export async function writeJsonFile(
   filePath: string,
   jsonValue: unknown,
 ): Promise<void> {
-  // Node's `fs.promises` module does not produce a stack trace if there is an
-  // I/O error. See: <https://github.com/nodejs/node/issues/30944>
   try {
     return await underlyingWriteJsonFile(filePath, jsonValue);
   } catch (error) {
-    const message = isErrorWithStack(error) ? error.stack : error;
-    throw new Error(`Could not write JSON file: ${message}`);
+    throw buildErrorWithStackFrom(
+      error,
+      `Could not write JSON file '${filePath}'`,
+    );
   }
 }
 
@@ -108,9 +125,9 @@ export async function fileExists(entryPath: string): Promise<boolean> {
       return false;
     }
 
-    const message = isErrorWithStack(error) ? error.stack : error;
-    throw new Error(
-      `Could not determine if file exists '${entryPath}': ${message}`,
+    throw buildErrorWithStackFrom(
+      error,
+      `Could not determine if file exists '${entryPath}'`,
     );
   }
 }

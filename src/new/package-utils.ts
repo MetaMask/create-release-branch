@@ -1,4 +1,3 @@
-import fs from 'fs';
 import path from 'path';
 import {
   ManifestFieldNames,
@@ -7,7 +6,12 @@ import {
 import { updateChangelog } from '@metamask/auto-changelog';
 import type { Require } from './utils';
 import { isErrorWithCode, isTruthyString, knownKeysOf } from './utils';
-import { readFile, readJsonObjectFile, writeJsonFile } from './file-utils';
+import {
+  readFile,
+  writeFile,
+  readJsonObjectFile,
+  writeJsonFile,
+} from './file-utils';
 import { Project } from './project-utils';
 import { isValidSemver, semver, SemVer } from './semver-utils';
 import { PackageReleasePlan } from './workflow-utils';
@@ -304,12 +308,12 @@ async function updatePackageChangelog(
     changelogContent,
     currentVersion: newVersion,
     isReleaseCandidate: true,
-    projectRootDirectory: project.directoryPath,
+    projectRootDirectory: pkg.directoryPath,
     repoUrl: project.repositoryUrl,
   });
 
   if (newChangelogContent) {
-    await fs.promises.writeFile(pkg.changelogPath, newChangelogContent);
+    await writeFile(pkg.changelogPath, newChangelogContent);
   } else {
     throw new Error(
       `"updateChangelog" returned an empty value for package ${pkg.manifest.name}.`,
