@@ -1,9 +1,18 @@
+import { main } from './main';
+
 /**
- * Example function that returns a greeting for the given name.
- *
- * @param name - The name to greet.
- * @returns The greeting.
+ * The entrypoint to this script.
  */
-export default function greeter(name: string): string {
-  return `Hello, ${name}!`;
+async function index() {
+  await main({
+    argv: process.argv,
+    cwd: process.cwd(),
+    stdout: process.stdout,
+    stderr: process.stderr,
+  });
 }
+
+index().catch((error) => {
+  console.error(error.stack);
+  process.exit(1);
+});
