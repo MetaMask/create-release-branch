@@ -1,5 +1,5 @@
 import execa from 'execa';
-import { ValidatedManifestFile } from './package-utils';
+import { Package } from './package-utils';
 import { Project } from './project-utils';
 
 export interface ReleasePlan {
@@ -8,7 +8,7 @@ export interface ReleasePlan {
 }
 
 export interface PackageReleasePlan {
-  manifestFile: ValidatedManifestFile;
+  package: Package;
   newVersion: string;
   shouldUpdateChangelog: boolean;
 }

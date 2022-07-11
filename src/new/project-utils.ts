@@ -1,17 +1,13 @@
 import util from 'util';
 import glob from 'glob';
 import execa from 'execa';
-import {
-  ManifestFieldNames,
-  ValidatedManifestFile,
-  getValidatedManifestFile,
-} from './package-utils';
+import { ManifestFieldNames, Package, readPackage } from './package-utils';
 
 export interface Project {
   directoryPath: string;
   repositoryUrl: string;
-  rootManifestFile: ValidatedManifestFile;
-  workspaceManifestFiles: Record<string, ValidatedManifestFile>;
+  rootPackage: Package;
+  workspacePackages: Record<string, Package>;
 }
 
 const promisifiedGlob = util.promisify(glob);
@@ -19,7 +15,7 @@ const promisifiedGlob = util.promisify(glob);
 /**
  * Collects information about a project. For a polyrepo, this information will
  * only cover the project's `package.json` file; for a monorepo, it will cover
- * `package.json` files for any workspaces which the monorepo defines.
+ * `package.json` files for any workspaces that the monorepo defines.
  *
  * @param projectDirectoryPath - The path to the project.
  * @returns An object that represents information about the project.
@@ -30,14 +26,13 @@ const promisifiedGlob = util.promisify(glob);
 export async function readProject(
   projectDirectoryPath: string,
 ): Promise<Project> {
-  const rootManifestFile = await getValidatedManifestFile(
-    projectDirectoryPath,
-    { usingSemverForVersion: false },
-  );
+  const rootPackage = await readPackage(projectDirectoryPath, {
+    expectSemverVersion: false,
+  });
 
   const workspaceDirectories = (
     await Promise.all(
-      rootManifestFile.data[ManifestFieldNames.Workspaces].map(
+      rootPackage.manifest[ManifestFieldNames.Workspaces].map(
         async (workspacePattern) => {
           return await promisifiedGlob(workspacePattern, {
             cwd: projectDirectoryPath,
@@ -48,25 +43,25 @@ export async function readProject(
     )
   ).flat();
 
-  const workspaceManifestFiles = (
+  const workspacePackages = (
     await Promise.all(
       workspaceDirectories.map(async (directory) => {
-        return await getValidatedManifestFile(directory, {
-          usingSemverForVersion: true,
+        return await readPackage(directory, {
+          expectSemverVersion: true,
         });
       }),
     )
-  ).reduce((obj, manifestFile) => {
-    return { ...obj, [manifestFile.data.name]: manifestFile };
-  }, {} as Record<string, ValidatedManifestFile>);
+  ).reduce((obj, pkg) => {
+    return { ...obj, [pkg.manifest.name]: pkg };
+  }, {} as Record<string, Package>);
 
   const repositoryUrl = await getRepositoryHttpsUrl(projectDirectoryPath);
 
   return {
     directoryPath: projectDirectoryPath,
     repositoryUrl,
-    rootManifestFile,
-    workspaceManifestFiles,
+    rootPackage,
+    workspacePackages,
   };
 }
 

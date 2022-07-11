@@ -39,11 +39,11 @@ async function main() {
       ? path.join(
           os.tmpdir(),
           'create-release-branch',
-          project.rootManifestFile.data.name.replace('/', '__'),
+          project.rootPackage.manifest.name.replace('/', '__'),
         )
       : path.resolve(process.cwd(), args.tempDirectory);
 
-  if (Object.keys(project.workspaceManifestFiles).length > 0) {
+  if (Object.keys(project.workspacePackages).length > 0) {
     console.log(
       'Project appears to have workspaces. Following monorepo workflow.',
     );

@@ -126,7 +126,7 @@ export async function followMonorepoWorkflow(
  * the user's computer to edit the release spec once it is generated.
  */
 async function generateReleaseSpecForMonorepo({
-  project: { rootManifestFile, workspaceManifestFiles },
+  project: { rootPackage, workspacePackages },
   tempDirectory,
   releaseSpecificationPath,
   isEditorAvailable,
@@ -145,7 +145,7 @@ async function generateReleaseSpecForMonorepo({
 # the script that generated this file.`.trim();
 
   const instructions = `
-# The following is a list of packages in ${rootManifestFile.data.name}.
+# The following is a list of packages in ${rootPackage.manifest.name}.
 # Please indicate the packages for which you want to create a new release
 # by updating "null" (which does nothing) to one of the following:
 #
@@ -158,12 +158,9 @@ async function generateReleaseSpecForMonorepo({
 ${afterEditingInstructions}
   `.trim();
 
-  const packages = Object.values(workspaceManifestFiles).reduce(
-    (obj, workspaceManifestFile) => {
-      return { ...obj, [workspaceManifestFile.data.name]: null };
-    },
-    {},
-  );
+  const packages = Object.values(workspacePackages).reduce((obj, pkg) => {
+    return { ...obj, [pkg.manifest.name]: null };
+  }, {});
 
   const releaseSpecificationContents = [
     instructions,
@@ -241,9 +238,9 @@ async function validateReleaseSpecification(
   releaseSpecificationPath: string,
   project: Project,
 ): Promise<ReleaseSpecification> {
-  const workspacePackageNames = Object.values(
-    project.workspaceManifestFiles,
-  ).map((file) => file.data.name);
+  const workspacePackageNames = Object.values(project.workspacePackages).map(
+    (pkg) => pkg.manifest.name,
+  );
   const releaseSpecificationContents = await fs.promises.readFile(
     releaseSpecificationPath,
     'utf8',
@@ -406,34 +403,19 @@ async function planRelease(
     today.getUTCMonth() + 1,
     today.getUTCDate(),
   ].join('.');
-  const packagesToUpdate = new Set(Object.keys(releaseSpecification.packages));
-  const { repositoryUrl } = project;
-  const synchronizeVersions = false;
 
   const rootReleasePlan: PackageReleasePlan = {
-    manifestFile: project.rootManifestFile,
-    packageMetadata: {
-      dirPath: project.rootManifestFile.parentDirectory,
-      manifest: {
-        ...project.rootManifestFile.data,
-        version: project.rootManifestFile.data.version.toString(),
-      },
-    },
-    updateSpecification: {
-      newVersion: newRootVersion,
-      packagesToUpdate,
-      repositoryUrl,
-      synchronizeVersions,
-      shouldUpdateChangelog: false,
-    },
+    package: project.rootPackage,
+    newVersion: newRootVersion,
+    shouldUpdateChangelog: false,
   };
 
   const workspaceReleasePlans: PackageReleasePlan[] = Object.keys(
     releaseSpecification.packages,
   ).map((packageName) => {
+    const pkg = project.workspacePackages[packageName];
     const versionSpecifier = releaseSpecification.packages[packageName];
-    const manifestFile = project.workspaceManifestFiles[packageName];
-    const currentVersion = manifestFile.data.version;
+    const currentVersion = pkg.manifest.version;
     let newVersion: string;
     // TODO: Figure out if we need this or not
     // let versionDiff: semver.ReleaseType | null;
@@ -455,7 +437,7 @@ async function planRelease(
     }
 
     return {
-      manifestFile,
+      package: pkg,
       newVersion,
       shouldUpdateChangelog: true,
     };
@@ -481,7 +463,7 @@ async function applyUpdatesToMonorepo(
   await Promise.all(
     releasePlan.packages.map(async (workspaceReleasePlan) => {
       debug(
-        `Updating package ${workspaceReleasePlan.manifestFile.data.name}...`,
+        `Updating package ${workspaceReleasePlan.package.manifest.name}...`,
       );
       await updatePackage(project, workspaceReleasePlan);
     }),

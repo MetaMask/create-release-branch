@@ -3,18 +3,11 @@ import path from 'path';
 import {
   ManifestFieldNames,
   ManifestDependencyFieldNames,
-  PackageManifest,
 } from '@metamask/action-utils';
 import { updateChangelog } from '@metamask/auto-changelog';
 import type { Require } from './utils';
-import {
-  isErrorWithCode,
-  isErrorWithStack,
-  isNullOrUndefined,
-  isTruthyString,
-  knownKeysOf,
-} from './utils';
-import { readJsonObjectFile, writeJsonFile } from './file-utils';
+import { isErrorWithCode, isTruthyString, knownKeysOf } from './utils';
+import { readFile, readJsonObjectFile, writeJsonFile } from './file-utils';
 import { Project } from './project-utils';
 import { isValidSemver, semver, SemVer } from './semver-utils';
 import { PackageReleasePlan } from './workflow-utils';
@@ -30,7 +23,7 @@ export interface MonorepoUpdateSpecification extends UpdateSpecification {
   readonly synchronizeVersions: boolean;
 }
 
-export { ManifestFieldNames, PackageManifest };
+export { ManifestFieldNames };
 
 // TODO: Move this to action-utils
 interface UnvalidatedManifest
@@ -44,6 +37,15 @@ interface UnvalidatedManifest
 }
 
 // TODO: Move this to action-utils
+type ValidatedManifest = Require<
+  Omit<UnvalidatedManifest, ManifestFieldNames.Version>,
+  | ManifestFieldNames.Name
+  | ManifestFieldNames.Private
+  | ManifestFieldNames.Workspaces
+  | ManifestDependencyFieldNames
+> & { [ManifestFieldNames.Version]: SemVer };
+
+// TODO: Move this to action-utils
 interface UnvalidatedManifestFile {
   path: string;
   parentDirectory: string;
@@ -51,19 +53,21 @@ interface UnvalidatedManifestFile {
 }
 
 // TODO: Move this to action-utils
-export interface ValidatedManifestFile {
+interface ValidatedManifestFile {
   path: string;
   parentDirectory: string;
-  data: Require<
-    Omit<UnvalidatedManifest, ManifestFieldNames.Version>,
-    | ManifestFieldNames.Name
-    | ManifestFieldNames.Private
-    | ManifestFieldNames.Workspaces
-    | ManifestDependencyFieldNames
-  > & { [ManifestFieldNames.Version]: SemVer };
+  data: ValidatedManifest;
+}
+
+export interface Package {
+  directoryPath: string;
+  manifestPath: string;
+  manifest: ValidatedManifest;
+  changelogPath: string;
 }
 
 const MANIFEST_FILE_NAME = 'package.json';
+const CHANGELOG_FILE_NAME = 'CHANGELOG.md';
 
 /**
  * Type guard to ensure that the given manifest has a valid "name" field.
@@ -100,47 +104,15 @@ function hasValidVersionField<F extends UnvalidatedManifestFile>(
 }
 
 /**
- * Type guard to ensure that the given manifest has a valid "workspaces" field.
- *
- * TODO: Move this back to action-utils.
- *
- * @param manifestFile - The manifest file to validate.
- * @returns Whether the manifest has a valid "workspaces" field.
- */
-function hasValidWorkspacesField<F extends UnvalidatedManifestFile>(
-  manifestFile: F,
-): manifestFile is F & {
-  data: Require<F['data'], ManifestFieldNames.Workspaces>;
-} {
-  return !isNullOrUndefined(manifestFile.data[ManifestFieldNames.Workspaces]);
-}
-
-/**
- * Type guard to ensure that the given manifest has a valid "private" field.
- *
- * TODO: Move this back to action-utils.
- *
- * @param manifestFile - The manifest file to validate.
- * @returns Whether the manifest has a valid "private" field.
- */
-function hasValidPrivateField<F extends UnvalidatedManifestFile>(
-  manifestFile: F,
-): manifestFile is F & {
-  data: Require<F['data'], ManifestFieldNames.Private>;
-} {
-  return !isNullOrUndefined(manifestFile.data[ManifestFieldNames.Private]);
-}
-
-/**
  * Validates the "name" field of a package manifest object, i.e. a parsed
  * "package.json" file.
  *
- * TODO: Move back to action-utils.
+ * TODO: Move this back to action-utils.
  *
  * @param manifestFile - The manifest file to validate.
  * @returns The unmodified manifest file, with the "name" field typed correctly.
  */
-export function validateManifestName<F extends UnvalidatedManifestFile>(
+function validateManifestName<F extends UnvalidatedManifestFile>(
   manifestFile: F,
 ): F & {
   data: Require<F['data'], ManifestFieldNames.Name>;
@@ -180,7 +152,7 @@ function getManifestErrorMessagePrefix(
  * Validates the "version" field of a package manifest object, i.e. a parsed
  * "package.json" file.
  *
- * TODO: Move back to action-utils.
+ * TODO: Move this back to action-utils.
  *
  * @param manifestFile - The manifest file to validate.
  * @param options - The options.
@@ -188,7 +160,7 @@ function getManifestErrorMessagePrefix(
  * not only present but also conforms to SemVer.
  * @returns The unmodified manifest file, with the "version" field typed correctly.
  */
-export function validateManifestVersion<F extends UnvalidatedManifestFile>(
+function validateManifestVersion<F extends UnvalidatedManifestFile>(
   manifestFile: F,
   { usingSemver }: { usingSemver: boolean },
 ): F & {
@@ -209,101 +181,29 @@ export function validateManifestVersion<F extends UnvalidatedManifestFile>(
 }
 
 /**
- * Validates the "workspaces" field of a package manifest object, i.e. a parsed
- * "package.json" file.
+ * Verifies key data within the manifest of a package, throwing if that data is
+ * incomplete.
  *
- * TODO: Move back to action-utils.
+ * TODO: Move this to action-utils.
  *
- * @param manifestFile - The manifest file to validate.
- * @returns The unmodified manifest file, with the "version" field typed correctly.
- */
-export function validateManifestWorkspaces<F extends UnvalidatedManifestFile>(
-  manifestFile: F,
-): F & {
-  data: Require<F['data'], ManifestFieldNames.Workspaces>;
-} {
-  if (!hasValidWorkspacesField(manifestFile)) {
-    throw new Error(
-      `Manifest in "${manifestFile.parentDirectory}" does not have a valid "${ManifestFieldNames.Workspaces}" field.`,
-    );
-  }
-
-  return manifestFile;
-}
-
-/**
- * Validates the "private" field of a package manifest object, i.e. a parsed
- * "package.json" file.
- *
- * TODO: Move back to action-utils.
- *
- * @param manifestFile - The manifest file to validate.
- * @returns The unmodified manifest file, with the "version" field typed correctly.
- */
-export function validateManifestPrivate<F extends UnvalidatedManifestFile>(
-  manifestFile: F,
-): F & {
-  data: Require<F['data'], ManifestFieldNames.Private>;
-} {
-  if (!hasValidPrivateField(manifestFile)) {
-    throw new Error(
-      `Manifest in "${manifestFile.parentDirectory}" does not have a valid "${ManifestFieldNames.Private}" field.`,
-    );
-  }
-
-  return manifestFile;
-}
-
-/**
- * Read and parse the object corresponding to the package.json file in the given
- * directory.
- *
- * An error is thrown if the file does not exist or if validation fails.
- *
- * TODO: Update corresponding function in action-utils.
- *
- * @param parentDirectory - The complete path to the directory containing the
- * `package.json` file.
- * @returns The object corresponding to the parsed package.json file.
- */
-async function readManifestFile(
-  parentDirectory: string,
-): Promise<UnvalidatedManifestFile> {
-  // Node's `fs.promises` module does not produce a stack trace if there is an
-  // I/O error. See: <https://github.com/nodejs/node/issues/30944>
-  try {
-    const manifestPath = path.join(parentDirectory, MANIFEST_FILE_NAME);
-    const data = await readJsonObjectFile(manifestPath);
-    return { path: manifestPath, parentDirectory, data };
-  } catch (error) {
-    const message = isErrorWithStack(error) ? error.stack : error;
-    throw new Error(`Could not get package manifest: ${message}`);
-  }
-}
-
-/**
- * Reads the `package.json` within the given package directory, detecting
- * whether the directory represents a monorepo or a polyrepo based on the
- * existence of a `workspaces` field, and returns an object containing the
- * information therein.
- *
- * @param parentDirectory - The path to the project that contains a
- * `package.json`.
+ * @param unvalidatedManifestFile - Information about the manifest for a
+ * package.
  * @param options - The options.
- * @param options.usingSemverForVersion - Whether or not to check that the
+ * @param options.expectSemverVersion - Whether or not to check that the
  * version is not only present but also conforms to SemVer.
- * @returns A promise for an object that represents the information within
- * `package.json`.
+ * @returns Information about a correctly typed version of the manifest for a
+ * package.
  */
-export async function getValidatedManifestFile(
-  parentDirectory: string,
-  { usingSemverForVersion }: { usingSemverForVersion: boolean },
+async function validateManifest(
+  unvalidatedManifestFile: UnvalidatedManifestFile,
+  { expectSemverVersion }: { expectSemverVersion: boolean },
 ): Promise<ValidatedManifestFile> {
-  const manifestFile = await readManifestFile(parentDirectory);
-  const manifestFileWithKnownName = validateManifestName(manifestFile);
+  const manifestFileWithKnownName = validateManifestName(
+    unvalidatedManifestFile,
+  );
   const manifestFileWithKnownVersion = validateManifestVersion(
     manifestFileWithKnownName,
-    { usingSemver: usingSemverForVersion },
+    { usingSemver: expectSemverVersion },
   );
   const rawVersion =
     manifestFileWithKnownVersion.data[ManifestFieldNames.Version];
@@ -314,22 +214,59 @@ export async function getValidatedManifestFile(
   }
 
   return {
-    ...manifestFile,
+    ...unvalidatedManifestFile,
     data: {
       [ManifestFieldNames.Name]:
         manifestFileWithKnownName.data[ManifestFieldNames.Name],
       [ManifestFieldNames.Version]: parsedVersion,
       [ManifestFieldNames.Workspaces]:
-        manifestFile.data[ManifestFieldNames.Workspaces] ?? [],
+        unvalidatedManifestFile.data[ManifestFieldNames.Workspaces] ?? [],
       [ManifestFieldNames.Private]:
-        manifestFile.data[ManifestFieldNames.Private] ?? false,
+        unvalidatedManifestFile.data[ManifestFieldNames.Private] ?? false,
       ...knownKeysOf(ManifestDependencyFieldNames).reduce((obj, key) => {
         return {
           ...obj,
-          [key]: manifestFile.data[ManifestDependencyFieldNames[key]] ?? {},
+          [key]:
+            unvalidatedManifestFile.data[ManifestDependencyFieldNames[key]] ??
+            {},
         };
       }, {} as Record<ManifestDependencyFieldNames, Record<string, string>>),
     },
+  };
+}
+
+/**
+ * Collects information about a package.
+ *
+ * @param packageDirectoryPath - The path to the package within a project.
+ * @param options - The options.
+ * @param options.expectSemverVersion - Whether or not to check that the
+ * version is not only present but also conforms to SemVer.
+ * @returns Information about the package.
+ */
+export async function readPackage(
+  packageDirectoryPath: string,
+  { expectSemverVersion }: { expectSemverVersion: boolean },
+): Promise<Package> {
+  const manifestPath = path.join(packageDirectoryPath, MANIFEST_FILE_NAME);
+  const changelogPath = path.join(packageDirectoryPath, CHANGELOG_FILE_NAME);
+
+  const unvalidatedManifest = await readJsonObjectFile(manifestPath);
+  const unvalidatedManifestFile = {
+    parentDirectory: packageDirectoryPath,
+    path: manifestPath,
+    data: unvalidatedManifest,
+  };
+  const validatedManifestFile = await validateManifest(
+    unvalidatedManifestFile,
+    { expectSemverVersion },
+  );
+
+  return {
+    directoryPath: packageDirectoryPath,
+    manifestPath,
+    manifest: validatedManifestFile.data,
+    changelogPath,
   };
 }
 
@@ -351,7 +288,7 @@ async function updatePackageChangelog(
   let changelogContent;
 
   try {
-    changelogContent = await fs.promises.readFile(pkg.changelogPath, 'utf-8');
+    changelogContent = await readFile(pkg.changelogPath);
   } catch (error) {
     // If the error is not a file not found error, throw it
     if (!isErrorWithCode(error) || error.code !== 'ENOENT') {
@@ -400,11 +337,14 @@ export async function updatePackage(
   project: Project,
   packageReleasePlan: PackageReleasePlan,
 ): Promise<void> {
-  const { manifestFile, newVersion, shouldUpdateChangelog } =
-    packageReleasePlan;
+  const {
+    package: pkg,
+    newVersion,
+    shouldUpdateChangelog,
+  } = packageReleasePlan;
 
-  await writeJsonFile(manifestFile.path, {
-    ...manifestFile.data,
+  await writeJsonFile(pkg.manifestPath, {
+    ...pkg.manifest,
     version: newVersion,
   });
 
