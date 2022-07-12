@@ -1,6 +1,5 @@
-import which from 'which';
 import { getEnvironmentVariables } from './env-utils';
-import { debug, isErrorWithMessage } from './misc-utils';
+import { debug, resolveExecutable } from './misc-utils';
 
 /**
  * Information about the editor present on the user's computer.
@@ -12,29 +11,6 @@ import { debug, isErrorWithMessage } from './misc-utils';
 export interface Editor {
   path: string;
   args: string[];
-}
-
-/**
- * Tests the given path to determine whether it represents an executable.
- *
- * @param executablePath - The path to an executable.
- * @returns A promise for true or false, depending on the result.
- */
-async function resolveExecutable(
-  executablePath: string,
-): Promise<string | null> {
-  try {
-    return await which(executablePath);
-  } catch (error) {
-    if (
-      isErrorWithMessage(error) &&
-      new RegExp(`^not found: ${executablePath}$`, 'u').test(error.message)
-    ) {
-      return null;
-    }
-
-    throw error;
-  }
 }
 
 /**

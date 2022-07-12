@@ -4,8 +4,12 @@ import {
   ManifestDependencyFieldNames,
 } from '@metamask/action-utils';
 import { updateChangelog } from '@metamask/auto-changelog';
-import type { Require } from './utils';
-import { isErrorWithCode, isTruthyString, knownKeysOf } from './utils';
+import {
+  isErrorWithCode,
+  isTruthyString,
+  knownKeysOf,
+  Require,
+} from './misc-utils';
 import {
   readFile,
   writeFile,
@@ -16,7 +20,7 @@ import { Project } from './project-utils';
 import { isValidSemver, semver, SemVer } from './semver-utils';
 import { PackageReleasePlan } from './workflow-utils';
 
-export { ManifestFieldNames };
+export { ManifestFieldNames, ManifestDependencyFieldNames };
 
 /**
  * An unverified representation of the data in a package's `package.json`.
@@ -39,7 +43,7 @@ interface UnvalidatedManifest
  *
  * TODO: Move this to action-utils
  */
-type ValidatedManifest = Require<
+export type ValidatedManifest = Require<
   Omit<UnvalidatedManifest, ManifestFieldNames.Version>,
   | ManifestFieldNames.Name
   | ManifestFieldNames.Private
@@ -353,10 +357,6 @@ async function updatePackageChangelog(
  *
  * @param project - The project.
  * @param packageReleasePlan - The package release plan.
- * @param packageReleasePlan.manifestFile - The manifest file.
- * @param packageReleasePlan.newVersion - The new version.
- * @param packageReleasePlan.shouldUpdateChangelog - Whether the changelog
- * should be updated.
  */
 export async function updatePackage(
   project: Project,

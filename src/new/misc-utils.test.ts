@@ -1,9 +1,15 @@
+import which from 'which';
 import {
   isErrorWithCode,
   isErrorWithMessage,
   isErrorWithStack,
   knownKeysOf,
+  resolveExecutable,
 } from './misc-utils';
+
+jest.mock('which');
+
+const whichMocked = jest.mocked(which);
 
 describe('misc-utils', () => {
   describe('isErrorWithCode', () => {
@@ -80,6 +86,30 @@ describe('misc-utils', () => {
         fizz: 'buzz',
       };
       expect(knownKeysOf(object)).toStrictEqual(['foo', 'baz', 'fizz']);
+    });
+  });
+
+  describe('resolveExecutable', () => {
+    it('returns the fullpath of the given executable as returned by "which"', async () => {
+      whichMocked.mockResolvedValue('/path/to/executable');
+
+      expect(await resolveExecutable('executable')).toStrictEqual(
+        '/path/to/executable',
+      );
+    });
+
+    it('returns null if the given executable cannot be found', async () => {
+      whichMocked.mockRejectedValue(new Error('not found: executable'));
+
+      expect(await resolveExecutable('executable')).toBeNull();
+    });
+
+    it('throws the error that "which" throws if it is not a "not found" error', async () => {
+      whichMocked.mockRejectedValue(new Error('something else'));
+
+      await expect(resolveExecutable('executable')).rejects.toThrow(
+        'something else',
+      );
     });
   });
 });

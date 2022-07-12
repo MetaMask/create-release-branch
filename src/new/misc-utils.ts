@@ -1,3 +1,4 @@
+import which from 'which';
 import createDebug from 'debug';
 
 export { isTruthyString } from '@metamask/action-utils';
@@ -15,6 +16,14 @@ export const debug = createDebug('create-release-branch:impl');
  * the designated keys.
  */
 export type Require<T, K extends keyof T> = T & { [P in K]-?: T[P] };
+
+/**
+ * Returns a version of the given record type where optionality is added to
+ * the designated keys.
+ */
+export type Unrequire<T, K extends keyof T> = Omit<T, K> & {
+  [P in K]+?: T[P];
+};
 
 /**
  * Type guard for determining whether the given value is an error object with a
@@ -70,4 +79,27 @@ export function knownKeysOf<K extends string | number | symbol>(
   object: Record<K, any>,
 ) {
   return Object.keys(object) as K[];
+}
+
+/**
+ * Tests the given path to determine whether it represents an executable.
+ *
+ * @param executablePath - The path to an executable.
+ * @returns A promise for true or false, depending on the result.
+ */
+export async function resolveExecutable(
+  executablePath: string,
+): Promise<string | null> {
+  try {
+    return await which(executablePath);
+  } catch (error) {
+    if (
+      isErrorWithMessage(error) &&
+      new RegExp(`^not found: ${executablePath}$`, 'u').test(error.message)
+    ) {
+      return null;
+    }
+
+    throw error;
+  }
 }

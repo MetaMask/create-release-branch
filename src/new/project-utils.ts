@@ -3,6 +3,17 @@ import glob from 'glob';
 import execa from 'execa';
 import { ManifestFieldNames, Package, readPackage } from './package-utils';
 
+/**
+ * Represents the entire codebase on which this tool is operating.
+ *
+ * @property directoryPath - The directory in which the project lives.
+ * @property repositoryUrl - The public URL of the Git repository where the
+ * codebase for the project lives.
+ * @property rootPackage - Information about the root package (assuming that the
+ * project is a monorepo).
+ * @property workspacePackages - Information about packages that are referenced
+ * via workspaces (assuming that the project is a monorepo).
+ */
 export interface Project {
   directoryPath: string;
   repositoryUrl: string;
