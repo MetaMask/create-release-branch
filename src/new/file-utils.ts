@@ -3,7 +3,11 @@ import {
   readJsonObjectFile as underlyingReadJsonObjectFile,
   writeJsonFile as underlyingWriteJsonFile,
 } from '@metamask/action-utils';
-import { isErrorWithCode, isErrorWithMessage, isErrorWithStack } from './utils';
+import {
+  isErrorWithCode,
+  isErrorWithMessage,
+  isErrorWithStack,
+} from './misc-utils';
 
 /**
  * Node's `fs.promises` module does not produce a stack trace if there is an I/O

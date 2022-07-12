@@ -5,8 +5,8 @@ interface Env {
 /**
  * Returns all of the environment variables that this tool uses.
  *
- * @returns An object with all of the properties that will be accessed, whether
- * their values are defined or not.
+ * @returns An object with a selection of properties from `process.env` that
+ * this tool needs to access, whether their values are defined or not.
  */
 export function getEnvironmentVariables(): Env {
   return {

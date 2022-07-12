@@ -1,5 +1,6 @@
+import which from 'which';
 import { getEnvironmentVariables } from './env-utils';
-import { debug, resolveExecutable } from './misc-utils';
+import { debug, isErrorWithMessage } from './misc-utils';
 
 /**
  * Information about the editor present on the user's computer.
@@ -14,6 +15,29 @@ export interface Editor {
 }
 
 /**
+ * Tests the given path to determine whether it represents an executable.
+ *
+ * @param executablePath - The path to an executable.
+ * @returns A promise for true or false, depending on the result.
+ */
+async function resolveExecutable(
+  executablePath: string,
+): Promise<string | null> {
+  try {
+    return await which(executablePath);
+  } catch (error) {
+    if (
+      isErrorWithMessage(error) &&
+      new RegExp(`^not found: ${executablePath}$`, 'u').test(error.message)
+    ) {
+      return null;
+    }
+
+    throw error;
+  }
+}
+
+/**
  * Looks for an executable that represents a code editor on your computer. Tries
  * the `EDITOR` environment variable first, falling back to the executable that
  * represents VSCode (`code`).
@@ -24,22 +48,31 @@ export interface Editor {
 export async function determineEditor(): Promise<Editor | null> {
   let executablePath: string | null = null;
   const executableArgs: string[] = [];
-  const env = getEnvironmentVariables();
+  const { EDITOR } = getEnvironmentVariables();
 
-  if (env.EDITOR !== undefined) {
+  if (EDITOR !== undefined) {
     try {
-      executablePath = await resolveExecutable(env.EDITOR);
+      executablePath = await resolveExecutable(EDITOR);
     } catch (error) {
       debug(
-        `Could not resolve executable ${env.EDITOR} (${error}), falling back to VSCode`,
+        `Could not resolve executable ${EDITOR} (${error}), falling back to VSCode`,
       );
-      executablePath = await resolveExecutable('code');
-      // Waits until the file is closed before returning
-      executableArgs.push('--wait');
     }
   }
 
-  if (executablePath) {
+  if (executablePath === null) {
+    try {
+      executablePath = await resolveExecutable('code');
+      // Waits until the file is closed before returning
+      executableArgs.push('--wait');
+    } catch (error) {
+      debug(
+        `Could not resolve path to VSCode: ${error}, continuing regardless`,
+      );
+    }
+  }
+
+  if (executablePath !== null) {
     return { path: executablePath, args: executableArgs };
   }
 
