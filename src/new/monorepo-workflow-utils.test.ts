@@ -7,11 +7,9 @@ import { followMonorepoWorkflow } from './monorepo-workflow-utils';
 import * as editorUtils from './editor-utils';
 import * as envUtils from './env-utils';
 import * as packageUtils from './package-utils';
-import type {
-  Package,
-  ManifestDependencyFieldNames,
-  ValidatedManifest,
-} from './package-utils';
+import type { Package } from './package-utils';
+import * as packageManifestUtils from './package-manifest-utils';
+import type { ValidatedManifest } from './package-manifest-utils';
 import type { Project } from './project-utils';
 import * as releaseSpecificationUtils from './release-specification-utils';
 import * as workflowUtils from './workflow-utils';
@@ -23,113 +21,628 @@ jest.mock('./package-utils');
 jest.mock('./release-specification-utils');
 jest.mock('./workflow-utils');
 
+/**
+ * Given a Promise type, returns the type inside.
+ */
 type UnwrapPromise<T> = T extends Promise<infer U> ? U : never;
 
 const TEMP_DIRECTORY = path.join(os.tmpdir(), 'create-release-branch-tests');
 
 describe('monorepo-workflow-utils', () => {
+  beforeEach(async () => {
+    await ensureDirectoryCleared(TEMP_DIRECTORY);
+  });
+
   describe('followMonorepoWorkflow', () => {
-    beforeEach(async () => {
-      await ensureDirectoryCleared(TEMP_DIRECTORY);
-    });
-
-    describe("if no release spec has been created and an editor exists on the user's computer", () => {
-      it('generates a release spec, waits for the user to edit it, then applies it to the monorepo', async () => {
-        const project = buildMockProject({
-          rootPackage: buildMockPackage('root', '2022.1.1', {
-            manifest: {
-              private: true,
-              workspaces: ['packages/*'],
-            },
-          }),
-          workspacePackages: {
-            a: buildMockPackage('a', '1.0.0', {
-              manifest: {
-                private: false,
+    describe('when firstRemovingExistingReleaseSpecification is true', () => {
+      describe('when a release spec file does not already exist', () => {
+        describe('when an editor can be determined', () => {
+          it('generates a release spec, waits for the user to edit it, then applies it to the monorepo', async () => {
+            const project = buildMockMonorepoProject({
+              rootPackage: buildMockPackage('root', '2022.1.1', {
+                manifest: {
+                  private: true,
+                  workspaces: ['packages/*'],
+                },
+              }),
+              workspacePackages: {
+                a: buildMockPackage('a', '1.0.0', {
+                  manifest: {
+                    private: false,
+                  },
+                }),
               },
-            }),
-          },
-        });
-        const { updatePackageSpy } = mockDependencies({
-          determineEditor: {
-            path: '/some/editor',
-            args: [],
-          },
-          getEnvironmentVariables: {
-            TODAY: '2022-06-12',
-          },
-          validateReleaseSpecification: {
-            packages: {
-              a: releaseSpecificationUtils.IncrementableVersionParts.major,
-            },
-          },
+            });
+            const stderr = fs.createWriteStream('/dev/null');
+            const {
+              generateReleaseSpecificationForMonorepoSpy,
+              updatePackageSpy,
+            } = mockDependencies({
+              determineEditor: {
+                path: '/some/editor',
+                args: [],
+              },
+              getEnvironmentVariables: {
+                TODAY: '2022-06-12',
+              },
+              validateReleaseSpecification: {
+                packages: {
+                  a: releaseSpecificationUtils.IncrementableVersionParts.major,
+                },
+              },
+            });
+
+            await followMonorepoWorkflow({
+              project,
+              tempDirectoryPath: TEMP_DIRECTORY,
+              firstRemovingExistingReleaseSpecification: true,
+              stderr,
+            });
+
+            expect(
+              generateReleaseSpecificationForMonorepoSpy,
+            ).toHaveBeenCalled();
+            expect(updatePackageSpy).toHaveBeenNthCalledWith(1, {
+              project,
+              packageReleasePlan: {
+                package: project.rootPackage,
+                newVersion: '2022.6.12',
+                shouldUpdateChangelog: false,
+              },
+              stderr,
+            });
+            expect(updatePackageSpy).toHaveBeenNthCalledWith(2, {
+              project,
+              packageReleasePlan: {
+                package: project.workspacePackages.a,
+                newVersion: '2.0.0',
+                shouldUpdateChangelog: true,
+              },
+              stderr,
+            });
+          });
+
+          it('creates a new branch named after the generated release version', async () => {
+            const project = buildMockMonorepoProject({
+              rootPackage: buildMockPackage('root', '2022.1.1', {
+                manifest: {
+                  private: true,
+                  workspaces: ['packages/*'],
+                },
+              }),
+              workspacePackages: {
+                a: buildMockPackage('a', '1.0.0', {
+                  manifest: {
+                    private: false,
+                  },
+                }),
+              },
+            });
+            const { captureChangesInReleaseBranchSpy } = mockDependencies({
+              determineEditor: {
+                path: '/some/editor',
+                args: [],
+              },
+              getEnvironmentVariables: {
+                TODAY: '2022-06-12',
+              },
+              validateReleaseSpecification: {
+                packages: {
+                  a: releaseSpecificationUtils.IncrementableVersionParts.major,
+                },
+              },
+            });
+
+            await followMonorepoWorkflow({
+              project,
+              tempDirectoryPath: TEMP_DIRECTORY,
+              firstRemovingExistingReleaseSpecification: true,
+            });
+
+            expect(captureChangesInReleaseBranchSpy).toHaveBeenCalledWith(
+              project,
+              {
+                releaseName: '2022-06-12',
+                packages: [
+                  {
+                    package: project.rootPackage,
+                    newVersion: '2022.6.12',
+                    shouldUpdateChangelog: false,
+                  },
+                  {
+                    package: project.workspacePackages.a,
+                    newVersion: '2.0.0',
+                    shouldUpdateChangelog: true,
+                  },
+                ],
+              },
+            );
+          });
         });
 
-        await followMonorepoWorkflow(project, TEMP_DIRECTORY, {
-          firstRemovingExistingReleaseSpecification: false,
-        });
+        describe('when an editor cannot be determined', () => {
+          it('merely generates a release spec and nothing more', async () => {
+            const project = buildMockMonorepoProject();
+            const {
+              generateReleaseSpecificationForMonorepoSpy,
+              waitForUserToEditReleaseSpecificationSpy,
+              validateReleaseSpecificationSpy,
+              updatePackageSpy,
+              captureChangesInReleaseBranchSpy,
+            } = mockDependencies({
+              determineEditor: null,
+            });
 
-        expect(updatePackageSpy).toHaveBeenNthCalledWith(1, project, {
-          package: project.rootPackage,
-          newVersion: '2022.6.12',
-          shouldUpdateChangelog: false,
-        });
-        expect(updatePackageSpy).toHaveBeenNthCalledWith(2, project, {
-          package: project.workspacePackages.a,
-          newVersion: '2.0.0',
-          shouldUpdateChangelog: true,
+            await followMonorepoWorkflow({
+              project,
+              tempDirectoryPath: TEMP_DIRECTORY,
+              firstRemovingExistingReleaseSpecification: true,
+            });
+
+            expect(
+              generateReleaseSpecificationForMonorepoSpy,
+            ).toHaveBeenCalled();
+            expect(
+              waitForUserToEditReleaseSpecificationSpy,
+            ).not.toHaveBeenCalled();
+            expect(validateReleaseSpecificationSpy).not.toHaveBeenCalled();
+            expect(updatePackageSpy).not.toHaveBeenCalled();
+            expect(captureChangesInReleaseBranchSpy).not.toHaveBeenCalled();
+          });
         });
       });
 
-      it('creates a new branch named after the generated release version', async () => {
-        const project: Project = buildMockProject({
-          rootPackage: buildMockPackage('root', '2022.1.1', {
-            manifest: {
-              private: true,
-              workspaces: ['packages/*'],
-            },
-          }),
-          workspacePackages: {
-            a: buildMockPackage('a', '1.0.0', {
+      describe('when a release spec file already exists', () => {
+        describe('when an editor can be determined', () => {
+          it('re-generates the release spec, waits for the user to edit it, then applies it to the monorepo', async () => {
+            const project = buildMockMonorepoProject({
+              rootPackage: buildMockPackage('root', '2022.1.1', {
+                manifest: {
+                  private: true,
+                  workspaces: ['packages/*'],
+                },
+              }),
+              workspacePackages: {
+                a: buildMockPackage('a', '1.0.0', {
+                  manifest: {
+                    private: false,
+                  },
+                }),
+              },
+            });
+            const stderr = fs.createWriteStream('/dev/null');
+            const {
+              generateReleaseSpecificationForMonorepoSpy,
+              updatePackageSpy,
+            } = mockDependencies({
+              determineEditor: {
+                path: '/some/editor',
+                args: [],
+              },
+              getEnvironmentVariables: {
+                TODAY: '2022-06-12',
+              },
+              validateReleaseSpecification: {
+                packages: {
+                  a: releaseSpecificationUtils.IncrementableVersionParts.major,
+                },
+              },
+            });
+            const releaseSpecPath = path.join(TEMP_DIRECTORY, 'RELEASE_SPEC');
+            await fs.promises.writeFile(releaseSpecPath, 'release spec');
+
+            await followMonorepoWorkflow({
+              project,
+              tempDirectoryPath: TEMP_DIRECTORY,
+              firstRemovingExistingReleaseSpecification: true,
+              stderr,
+            });
+
+            expect(
+              generateReleaseSpecificationForMonorepoSpy,
+            ).toHaveBeenCalled();
+            expect(updatePackageSpy).toHaveBeenNthCalledWith(1, {
+              project,
+              packageReleasePlan: {
+                package: project.rootPackage,
+                newVersion: '2022.6.12',
+                shouldUpdateChangelog: false,
+              },
+              stderr,
+            });
+            expect(updatePackageSpy).toHaveBeenNthCalledWith(2, {
+              project,
+              packageReleasePlan: {
+                package: project.workspacePackages.a,
+                newVersion: '2.0.0',
+                shouldUpdateChangelog: true,
+              },
+              stderr,
+            });
+          });
+
+          it('creates a new branch named after the generated release version', async () => {
+            const project = buildMockMonorepoProject({
+              rootPackage: buildMockPackage('root', '2022.1.1', {
+                manifest: {
+                  private: true,
+                  workspaces: ['packages/*'],
+                },
+              }),
+              workspacePackages: {
+                a: buildMockPackage('a', '1.0.0', {
+                  manifest: {
+                    private: false,
+                  },
+                }),
+              },
+            });
+            const { captureChangesInReleaseBranchSpy } = mockDependencies({
+              determineEditor: {
+                path: '/some/editor',
+                args: [],
+              },
+              getEnvironmentVariables: {
+                TODAY: '2022-06-12',
+              },
+              validateReleaseSpecification: {
+                packages: {
+                  a: releaseSpecificationUtils.IncrementableVersionParts.major,
+                },
+              },
+            });
+            const releaseSpecPath = path.join(TEMP_DIRECTORY, 'RELEASE_SPEC');
+            await fs.promises.writeFile(releaseSpecPath, 'release spec');
+
+            await followMonorepoWorkflow({
+              project,
+              tempDirectoryPath: TEMP_DIRECTORY,
+              firstRemovingExistingReleaseSpecification: true,
+            });
+
+            expect(captureChangesInReleaseBranchSpy).toHaveBeenCalledWith(
+              project,
+              {
+                releaseName: '2022-06-12',
+                packages: [
+                  {
+                    package: project.rootPackage,
+                    newVersion: '2022.6.12',
+                    shouldUpdateChangelog: false,
+                  },
+                  {
+                    package: project.workspacePackages.a,
+                    newVersion: '2.0.0',
+                    shouldUpdateChangelog: true,
+                  },
+                ],
+              },
+            );
+          });
+        });
+
+        describe('when an editor cannot be determined', () => {
+          it('merely re-generates a release spec and nothing more', async () => {
+            const project = buildMockMonorepoProject();
+            const {
+              generateReleaseSpecificationForMonorepoSpy,
+              waitForUserToEditReleaseSpecificationSpy,
+              validateReleaseSpecificationSpy,
+              updatePackageSpy,
+              captureChangesInReleaseBranchSpy,
+            } = mockDependencies({
+              determineEditor: null,
+            });
+            const releaseSpecPath = path.join(TEMP_DIRECTORY, 'RELEASE_SPEC');
+            await fs.promises.writeFile(releaseSpecPath, 'release spec');
+
+            await followMonorepoWorkflow({
+              project,
+              tempDirectoryPath: TEMP_DIRECTORY,
+              firstRemovingExistingReleaseSpecification: true,
+            });
+
+            expect(
+              generateReleaseSpecificationForMonorepoSpy,
+            ).toHaveBeenCalled();
+            expect(
+              waitForUserToEditReleaseSpecificationSpy,
+            ).not.toHaveBeenCalled();
+            expect(validateReleaseSpecificationSpy).not.toHaveBeenCalled();
+            expect(updatePackageSpy).not.toHaveBeenCalled();
+            expect(captureChangesInReleaseBranchSpy).not.toHaveBeenCalled();
+          });
+        });
+      });
+    });
+
+    describe('when firstRemovingExistingReleaseSpecification is false', () => {
+      describe('when a release spec file does not already exist', () => {
+        describe('when an editor can be determined', () => {
+          it('generates a release spec, waits for the user to edit it, then applies it to the monorepo', async () => {
+            const project = buildMockMonorepoProject({
+              rootPackage: buildMockPackage('root', '2022.1.1', {
+                manifest: {
+                  private: true,
+                  workspaces: ['packages/*'],
+                },
+              }),
+              workspacePackages: {
+                a: buildMockPackage('a', '1.0.0', {
+                  manifest: {
+                    private: false,
+                  },
+                }),
+              },
+            });
+            const stderr = fs.createWriteStream('/dev/null');
+            const {
+              generateReleaseSpecificationForMonorepoSpy,
+              updatePackageSpy,
+            } = mockDependencies({
+              determineEditor: {
+                path: '/some/editor',
+                args: [],
+              },
+              getEnvironmentVariables: {
+                TODAY: '2022-06-12',
+              },
+              validateReleaseSpecification: {
+                packages: {
+                  a: releaseSpecificationUtils.IncrementableVersionParts.major,
+                },
+              },
+            });
+
+            await followMonorepoWorkflow({
+              project,
+              tempDirectoryPath: TEMP_DIRECTORY,
+              firstRemovingExistingReleaseSpecification: false,
+              stderr,
+            });
+
+            expect(
+              generateReleaseSpecificationForMonorepoSpy,
+            ).toHaveBeenCalled();
+            expect(updatePackageSpy).toHaveBeenNthCalledWith(1, {
+              project,
+              packageReleasePlan: {
+                package: project.rootPackage,
+                newVersion: '2022.6.12',
+                shouldUpdateChangelog: false,
+              },
+              stderr,
+            });
+            expect(updatePackageSpy).toHaveBeenNthCalledWith(2, {
+              project,
+              packageReleasePlan: {
+                package: project.workspacePackages.a,
+                newVersion: '2.0.0',
+                shouldUpdateChangelog: true,
+              },
+              stderr,
+            });
+          });
+
+          it('creates a new branch named after the generated release version', async () => {
+            const project = buildMockMonorepoProject({
+              rootPackage: buildMockPackage('root', '2022.1.1', {
+                manifest: {
+                  private: true,
+                  workspaces: ['packages/*'],
+                },
+              }),
+              workspacePackages: {
+                a: buildMockPackage('a', '1.0.0', {
+                  manifest: {
+                    private: false,
+                  },
+                }),
+              },
+            });
+            const { captureChangesInReleaseBranchSpy } = mockDependencies({
+              determineEditor: {
+                path: '/some/editor',
+                args: [],
+              },
+              getEnvironmentVariables: {
+                TODAY: '2022-06-12',
+              },
+              validateReleaseSpecification: {
+                packages: {
+                  a: releaseSpecificationUtils.IncrementableVersionParts.major,
+                },
+              },
+            });
+
+            await followMonorepoWorkflow({
+              project,
+              tempDirectoryPath: TEMP_DIRECTORY,
+              firstRemovingExistingReleaseSpecification: false,
+            });
+
+            expect(captureChangesInReleaseBranchSpy).toHaveBeenCalledWith(
+              project,
+              {
+                releaseName: '2022-06-12',
+                packages: [
+                  {
+                    package: project.rootPackage,
+                    newVersion: '2022.6.12',
+                    shouldUpdateChangelog: false,
+                  },
+                  {
+                    package: project.workspacePackages.a,
+                    newVersion: '2.0.0',
+                    shouldUpdateChangelog: true,
+                  },
+                ],
+              },
+            );
+          });
+        });
+
+        describe('when an editor cannot be determined', () => {
+          it('merely generates a release spec and nothing more', async () => {
+            const project = buildMockMonorepoProject();
+            const {
+              generateReleaseSpecificationForMonorepoSpy,
+              waitForUserToEditReleaseSpecificationSpy,
+              validateReleaseSpecificationSpy,
+              updatePackageSpy,
+              captureChangesInReleaseBranchSpy,
+            } = mockDependencies({
+              determineEditor: null,
+            });
+
+            await followMonorepoWorkflow({
+              project,
+              tempDirectoryPath: TEMP_DIRECTORY,
+              firstRemovingExistingReleaseSpecification: false,
+            });
+
+            expect(
+              generateReleaseSpecificationForMonorepoSpy,
+            ).toHaveBeenCalled();
+            expect(
+              waitForUserToEditReleaseSpecificationSpy,
+            ).not.toHaveBeenCalled();
+            expect(validateReleaseSpecificationSpy).not.toHaveBeenCalled();
+            expect(updatePackageSpy).not.toHaveBeenCalled();
+            expect(captureChangesInReleaseBranchSpy).not.toHaveBeenCalled();
+          });
+        });
+      });
+
+      describe('when a release spec file already exists', () => {
+        it('does not re-generate the release spec, but applies it to the monorepo', async () => {
+          const project = buildMockMonorepoProject({
+            rootPackage: buildMockPackage('root', '2022.1.1', {
               manifest: {
-                private: false,
+                private: true,
+                workspaces: ['packages/*'],
               },
             }),
-          },
-        });
-        const { captureChangesInReleaseBranchSpy } = mockDependencies({
-          determineEditor: {
-            path: '/some/editor',
-            args: [],
-          },
-          getEnvironmentVariables: {
-            TODAY: '2022-06-12',
-          },
-          validateReleaseSpecification: {
-            packages: {
-              a: releaseSpecificationUtils.IncrementableVersionParts.major,
+            workspacePackages: {
+              a: buildMockPackage('a', '1.0.0', {
+                manifest: {
+                  private: false,
+                },
+              }),
             },
-          },
-        });
+          });
+          const stderr = fs.createWriteStream('/dev/null');
+          const {
+            generateReleaseSpecificationForMonorepoSpy,
+            waitForUserToEditReleaseSpecificationSpy,
+            updatePackageSpy,
+          } = mockDependencies({
+            determineEditor: {
+              path: '/some/editor',
+              args: [],
+            },
+            getEnvironmentVariables: {
+              TODAY: '2022-06-12',
+            },
+            validateReleaseSpecification: {
+              packages: {
+                a: releaseSpecificationUtils.IncrementableVersionParts.major,
+              },
+            },
+          });
+          const releaseSpecPath = path.join(TEMP_DIRECTORY, 'RELEASE_SPEC');
+          await fs.promises.writeFile(releaseSpecPath, 'release spec');
 
-        await followMonorepoWorkflow(project, TEMP_DIRECTORY, {
-          firstRemovingExistingReleaseSpecification: false,
-        });
+          await followMonorepoWorkflow({
+            project,
+            tempDirectoryPath: TEMP_DIRECTORY,
+            firstRemovingExistingReleaseSpecification: false,
+            stderr,
+          });
 
-        expect(captureChangesInReleaseBranchSpy).toHaveBeenCalledWith(project, {
-          releaseName: '2022-06-12',
-          packages: [
-            {
+          expect(
+            generateReleaseSpecificationForMonorepoSpy,
+          ).not.toHaveBeenCalled();
+          expect(
+            waitForUserToEditReleaseSpecificationSpy,
+          ).not.toHaveBeenCalled();
+          expect(updatePackageSpy).toHaveBeenNthCalledWith(1, {
+            project,
+            packageReleasePlan: {
               package: project.rootPackage,
               newVersion: '2022.6.12',
               shouldUpdateChangelog: false,
             },
-            {
+            stderr,
+          });
+          expect(updatePackageSpy).toHaveBeenNthCalledWith(2, {
+            project,
+            packageReleasePlan: {
               package: project.workspacePackages.a,
               newVersion: '2.0.0',
               shouldUpdateChangelog: true,
             },
-          ],
+            stderr,
+          });
+        });
+
+        it('creates a new branch named after the generated release version', async () => {
+          const project = buildMockMonorepoProject({
+            rootPackage: buildMockPackage('root', '2022.1.1', {
+              manifest: {
+                private: true,
+                workspaces: ['packages/*'],
+              },
+            }),
+            workspacePackages: {
+              a: buildMockPackage('a', '1.0.0', {
+                manifest: {
+                  private: false,
+                },
+              }),
+            },
+          });
+          const { captureChangesInReleaseBranchSpy } = mockDependencies({
+            determineEditor: {
+              path: '/some/editor',
+              args: [],
+            },
+            getEnvironmentVariables: {
+              TODAY: '2022-06-12',
+            },
+            validateReleaseSpecification: {
+              packages: {
+                a: releaseSpecificationUtils.IncrementableVersionParts.major,
+              },
+            },
+          });
+          const releaseSpecPath = path.join(TEMP_DIRECTORY, 'RELEASE_SPEC');
+          await fs.promises.writeFile(releaseSpecPath, 'release spec');
+
+          await followMonorepoWorkflow({
+            project,
+            tempDirectoryPath: TEMP_DIRECTORY,
+            firstRemovingExistingReleaseSpecification: false,
+          });
+
+          expect(captureChangesInReleaseBranchSpy).toHaveBeenCalledWith(
+            project,
+            {
+              releaseName: '2022-06-12',
+              packages: [
+                {
+                  package: project.rootPackage,
+                  newVersion: '2022.6.12',
+                  shouldUpdateChangelog: false,
+                },
+                {
+                  package: project.workspacePackages.a,
+                  newVersion: '2.0.0',
+                  shouldUpdateChangelog: true,
+                },
+              ],
+            },
+          );
         });
       });
     });
@@ -170,6 +683,20 @@ function buildMockProject(
 }
 
 /**
+ * Builds a project for use in tests which represents a monorepo.
+ *
+ * @param overrides - The properties that will go into the object.
+ * @returns The mock Project object.
+ */
+function buildMockMonorepoProject(overrides: Partial<Project> = {}) {
+  return buildMockProject({
+    rootPackage: buildMockMonorepoRootPackage(),
+    workspacePackages: {},
+    ...overrides,
+  });
+}
+
+/**
  * Builds a package for use in tests, where `directoryPath`, `manifestPath`, and
  * `changelogPath` do not have to be provided (they are filled in with
  * reasonable defaults), and where some fields in `manifest` is prefilled based
@@ -190,11 +717,11 @@ function buildMockPackage(
     manifest: Omit<
       Unrequire<
         ValidatedManifest,
-        | packageUtils.ManifestFieldNames.Workspaces
-        | ManifestDependencyFieldNames
+        | packageManifestUtils.ManifestFieldNames.Workspaces
+        | packageManifestUtils.ManifestDependencyFieldNames
       >,
-      | packageUtils.ManifestFieldNames.Name
-      | packageUtils.ManifestFieldNames.Version
+      | packageManifestUtils.ManifestFieldNames.Name
+      | packageManifestUtils.ManifestFieldNames.Version
     >;
   },
 ): Package {
@@ -210,13 +737,40 @@ function buildMockPackage(
     directoryPath,
     manifest: buildMockManifest({
       ...manifest,
-      [packageUtils.ManifestFieldNames.Name]: name,
-      [packageUtils.ManifestFieldNames.Version]: new SemVer(version),
+      [packageManifestUtils.ManifestFieldNames.Name]: name,
+      [packageManifestUtils.ManifestFieldNames.Version]: new SemVer(version),
     }),
     manifestPath,
     changelogPath,
     ...rest,
   };
+}
+
+/**
+ * Builds a package for use in tests which is designed to be the root package of
+ * a monorepo.
+ *
+ * @param name - The name of the package.
+ * @param version - The version of the package, as a version string.
+ * @param overrides - The properties that will go into the object.
+ * @returns The mock Package object.
+ */
+function buildMockMonorepoRootPackage(
+  name = 'root',
+  version = '2022.1.1',
+  overrides: Omit<Partial<Package>, 'manifest'> & {
+    manifest?: Partial<ValidatedManifest>;
+  } = {},
+) {
+  const { manifest, ...rest } = overrides;
+  return buildMockPackage(name, version, {
+    manifest: {
+      private: true,
+      workspaces: ['packages/*'],
+      ...manifest,
+    },
+    ...rest,
+  });
 }
 
 /**
@@ -230,7 +784,8 @@ function buildMockPackage(
 function buildMockManifest(
   overrides: Unrequire<
     ValidatedManifest,
-    packageUtils.ManifestFieldNames.Workspaces | ManifestDependencyFieldNames
+    | packageManifestUtils.ManifestFieldNames.Workspaces
+    | packageManifestUtils.ManifestDependencyFieldNames
   >,
 ): ValidatedManifest {
   const {
@@ -279,7 +834,9 @@ function mockDependencies({
     generateReleaseSpecificationForMonorepoValue = undefined,
   waitForUserToEditReleaseSpecification:
     waitForUserToEditReleaseSpecificationValue = undefined,
-  validateReleaseSpecification: validateReleaseSpecificationValue,
+  validateReleaseSpecification: validateReleaseSpecificationValue = {
+    packages: {},
+  },
   updatePackage: updatePackageValue = undefined,
   captureChangesInReleaseBranch: captureChangesInReleaseBranchValue = undefined,
 }: {
@@ -299,7 +856,7 @@ function mockDependencies({
       typeof releaseSpecificationUtils.waitForUserToEditReleaseSpecification
     >
   >;
-  validateReleaseSpecification: UnwrapPromise<
+  validateReleaseSpecification?: UnwrapPromise<
     ReturnType<typeof releaseSpecificationUtils.validateReleaseSpecification>
   >;
   updatePackage?: UnwrapPromise<ReturnType<typeof packageUtils.updatePackage>>;
@@ -315,13 +872,13 @@ function mockDependencies({
     TODAY: undefined,
     ...getEnvironmentVariablesValue,
   });
-  jest
+  const generateReleaseSpecificationForMonorepoSpy = jest
     .spyOn(releaseSpecificationUtils, 'generateReleaseSpecificationForMonorepo')
     .mockResolvedValue(generateReleaseSpecificationForMonorepoValue);
-  jest
+  const waitForUserToEditReleaseSpecificationSpy = jest
     .spyOn(releaseSpecificationUtils, 'waitForUserToEditReleaseSpecification')
     .mockResolvedValue(waitForUserToEditReleaseSpecificationValue);
-  jest
+  const validateReleaseSpecificationSpy = jest
     .spyOn(releaseSpecificationUtils, 'validateReleaseSpecification')
     .mockResolvedValue(validateReleaseSpecificationValue);
   const updatePackageSpy = jest
@@ -331,5 +888,11 @@ function mockDependencies({
     .spyOn(workflowUtils, 'captureChangesInReleaseBranch')
     .mockResolvedValue(captureChangesInReleaseBranchValue);
 
-  return { updatePackageSpy, captureChangesInReleaseBranchSpy };
+  return {
+    generateReleaseSpecificationForMonorepoSpy,
+    waitForUserToEditReleaseSpecificationSpy,
+    validateReleaseSpecificationSpy,
+    updatePackageSpy,
+    captureChangesInReleaseBranchSpy,
+  };
 }

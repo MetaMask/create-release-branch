@@ -58,8 +58,12 @@ async function main() {
     console.log(
       'Project appears to have workspaces. Following monorepo workflow.',
     );
-    await followMonorepoWorkflow(project, tempDirectoryPath, {
+    await followMonorepoWorkflow({
+      project,
+      tempDirectoryPath,
       firstRemovingExistingReleaseSpecification: args.reset,
+      stdout: process.stdout,
+      stderr: process.stderr,
     });
   } else {
     console.log(

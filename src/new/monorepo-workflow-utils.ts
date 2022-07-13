@@ -1,3 +1,4 @@
+import fs, { WriteStream } from 'fs';
 import path from 'path';
 import rimraf from 'rimraf';
 import { debug } from './misc-utils';
@@ -56,34 +57,41 @@ function getToday() {
  *   commit that includes the changes, then create a branch using the current
  *   date as the name.
  *
- * @param project - Information about the project.
- * @param tempDirectory - A directory in which to hold the generated release
- * spec file.
  * @param options - The options.
- * @param options.firstRemovingExistingReleaseSpecification - If true, removes
- * an existing release specification that was created in a previous run.
+ * @param options.project - Information about the project.
+ * @param options.tempDirectoryPath - A directory in which to hold the generated
+ * release spec file.
+ * @param options.firstRemovingExistingReleaseSpecification - Sometimes it's
+ * possible for a release specification that was created in a previous run to
+ * stick around (due to an error). This will ensure that the file is removed
+ * first.
+ * @param options.stdout - A stream that can be used to write to standard out.
+ * Defaults to /dev/null.
+ * @param options.stderr - A stream that can be used to write to standard error.
+ * Defaults to /dev/null.
  */
-export async function followMonorepoWorkflow(
-  project: Project,
-  tempDirectory: string,
-  {
-    firstRemovingExistingReleaseSpecification,
-  }: { firstRemovingExistingReleaseSpecification: boolean },
-) {
-  const releaseSpecificationPath = path.join(tempDirectory, 'RELEASE_SPEC');
+export async function followMonorepoWorkflow({
+  project,
+  tempDirectoryPath,
+  firstRemovingExistingReleaseSpecification,
+  stdout = fs.createWriteStream('/dev/null'),
+  stderr = fs.createWriteStream('/dev/null'),
+}: {
+  project: Project;
+  tempDirectoryPath: string;
+  firstRemovingExistingReleaseSpecification: boolean;
+  stdout?: Pick<WriteStream, 'write'>;
+  stderr?: Pick<WriteStream, 'write'>;
+}) {
+  const releaseSpecificationPath = path.join(tempDirectoryPath, 'RELEASE_SPEC');
 
-  if (
-    firstRemovingExistingReleaseSpecification &&
-    (await fileExists(releaseSpecificationPath))
-  ) {
-    await new Promise((resolve) => {
-      rimraf(releaseSpecificationPath, resolve);
-    });
+  if (firstRemovingExistingReleaseSpecification) {
+    await new Promise((resolve) => rimraf(releaseSpecificationPath, resolve));
   }
 
   if (await fileExists(releaseSpecificationPath)) {
-    console.log(
-      'Release spec already exists. Picking back up from previous run.',
+    stdout.write(
+      'Release spec already exists. Picking back up from previous run.\n',
     );
     // TODO: If we end up here, then we will probably get an error later when
     // attempting to bump versions of packages, as that may have already
@@ -93,17 +101,17 @@ export async function followMonorepoWorkflow(
 
     await generateReleaseSpecificationForMonorepo({
       project,
-      tempDirectory,
+      tempDirectoryPath,
       releaseSpecificationPath,
       isEditorAvailable: editor !== undefined,
     });
 
     if (!editor) {
-      console.log(
-        [
+      stdout.write(
+        `${[
           'A template has been generated that specifies this release. Please open the following file in your editor of choice, then re-run this script:',
           `${releaseSpecificationPath}`,
-        ].join('\n\n'),
+        ].join('\n\n')}\n`,
       );
       return;
     }
@@ -121,7 +129,7 @@ export async function followMonorepoWorkflow(
 
   const releasePlan = await planRelease(project, releaseSpecification);
 
-  await applyUpdatesToMonorepo(project, releasePlan);
+  await applyUpdatesToMonorepo(project, releasePlan, stderr);
 
   await captureChangesInReleaseBranch(project, releasePlan);
 }
@@ -202,17 +210,23 @@ async function planRelease(
  * and where they can found).
  * @param releasePlan - Compiled instructions on how exactly to update the
  * project in order to prepare a new release.
+ * @param stderr - A stream that can be used to write to standard error.
  */
 async function applyUpdatesToMonorepo(
   project: Project,
   releasePlan: ReleasePlan,
+  stderr: Pick<WriteStream, 'write'>,
 ) {
   await Promise.all(
     releasePlan.packages.map(async (workspaceReleasePlan) => {
       debug(
         `Updating package ${workspaceReleasePlan.package.manifest.name}...`,
       );
-      await updatePackage(project, workspaceReleasePlan);
+      await updatePackage({
+        project,
+        packageReleasePlan: workspaceReleasePlan,
+        stderr,
+      });
     }),
   );
 }

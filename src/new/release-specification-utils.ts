@@ -37,19 +37,20 @@ export interface ReleaseSpecification {
  *
  * @param args - The set of arguments to this function.
  * @param args.project - Information about the project.
- * @param args.tempDirectory - A temporary directory in which to write the file.
+ * @param args.tempDirectoryPath - The path to a temporary directory in which to
+ * write the file.
  * @param args.releaseSpecificationPath - The path to the file that will be written.
  * @param args.isEditorAvailable - Whether or not an executable can be found on
  * the user's computer to edit the release spec once it is generated.
  */
 export async function generateReleaseSpecificationForMonorepo({
   project: { rootPackage, workspacePackages },
-  tempDirectory,
+  tempDirectoryPath,
   releaseSpecificationPath,
   isEditorAvailable,
 }: {
   project: Project;
-  tempDirectory: string;
+  tempDirectoryPath: string;
   releaseSpecificationPath: string;
   isEditorAvailable: boolean;
 }) {
@@ -84,7 +85,9 @@ ${afterEditingInstructions}
     YAML.stringify({ packages }),
   ].join('\n\n');
 
-  await fs.promises.mkdir(tempDirectory, { recursive: true });
+  // TODO: Use file-utils for this instead of just straight fs.promises so that
+  // if there are any errors, correct stacktraces areproduced
+  await fs.promises.mkdir(tempDirectoryPath, { recursive: true });
   await fs.promises.writeFile(
     releaseSpecificationPath,
     releaseSpecificationContents,

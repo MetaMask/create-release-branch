@@ -60,7 +60,7 @@ export async function captureChangesInReleaseBranch(
   // TODO: What if the index was dirty before this script was run? Or what if
   // you're in the middle of a rebase? Might want to check that up front before
   // changes are even made.
-  // TODO: What if this branch already exists? Append a number?
+  // TODO: What if this branch already exists? Append the build number?
   await execa(
     'git',
     ['checkout', '-b', `release/${releasePlan.releaseName}`],

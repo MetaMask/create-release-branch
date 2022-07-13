@@ -27,8 +27,15 @@ function buildErrorWithStackFrom(errorLike: unknown, prefix: string) {
     code?: string | undefined;
     stack?: string | undefined;
   } = new Error(`${prefix}: ${message}`);
-  errorWithStack.code = code;
-  errorWithStack.stack = stack;
+
+  if (code !== undefined) {
+    errorWithStack.code = code;
+  }
+
+  if (stack !== undefined) {
+    errorWithStack.stack = stack;
+  }
+
   return errorWithStack;
 }
 

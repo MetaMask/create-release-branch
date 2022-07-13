@@ -1,7 +1,8 @@
 import util from 'util';
 import glob from 'glob';
 import execa from 'execa';
-import { ManifestFieldNames, Package, readPackage } from './package-utils';
+import { Package, readPackage } from './package-utils';
+import { ManifestFieldNames } from './package-manifest-utils';
 
 /**
  * Represents the entire codebase on which this tool is operating.
@@ -37,9 +38,7 @@ const promisifiedGlob = util.promisify(glob);
 export async function readProject(
   projectDirectoryPath: string,
 ): Promise<Project> {
-  const rootPackage = await readPackage(projectDirectoryPath, {
-    expectSemverVersion: false,
-  });
+  const rootPackage = await readPackage(projectDirectoryPath);
 
   const workspaceDirectories = (
     await Promise.all(
@@ -57,9 +56,7 @@ export async function readProject(
   const workspacePackages = (
     await Promise.all(
       workspaceDirectories.map(async (directory) => {
-        return await readPackage(directory, {
-          expectSemverVersion: true,
-        });
+        return await readPackage(directory);
       }),
     )
   ).reduce((obj, pkg) => {

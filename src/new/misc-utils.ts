@@ -15,7 +15,7 @@ export const debug = createDebug('create-release-branch:impl');
  * Returns a version of the given record type where optionality is removed from
  * the designated keys.
  */
-export type Require<T, K extends keyof T> = T & { [P in K]-?: T[P] };
+export type Require<T, K extends keyof T> = Omit<T, K> & { [P in K]-?: T[P] };
 
 /**
  * Returns a version of the given record type where optionality is added to

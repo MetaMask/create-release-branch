@@ -1,7 +1,7 @@
 import { withMonorepoProjectEnvironment } from '../../tests/helpers/with';
 import { buildChangelog } from '../../tests/helpers/utils';
 
-describe('create-release-branch', () => {
+describe.skip('create-release-branch (high level)', () => {
   describe('against a monorepo with independent versions', () => {
     it('updates the version of the root package to be the current date along with the versions of the specified packages', async () => {
       await withMonorepoProjectEnvironment(
