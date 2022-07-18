@@ -4,11 +4,8 @@ import { when } from 'jest-when';
 import { MockWritable } from 'stdio-mock';
 import YAML from 'yaml';
 import { SemVer } from 'semver';
-import {
-  withSandbox,
-  buildMockProject,
-  buildMockPackage,
-} from '../tests/unit/helpers';
+import { withSandbox } from '../tests/helpers';
+import { buildMockProject, buildMockPackage } from '../tests/unit/helpers';
 import {
   generateReleaseSpecificationTemplateForMonorepo,
   waitForUserToEditReleaseSpecification,

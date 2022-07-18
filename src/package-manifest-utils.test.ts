@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { SemVer } from 'semver';
-import { withSandbox } from '../tests/unit/helpers';
+import { withSandbox } from '../tests/helpers';
 import { readManifest } from './package-manifest-utils';
 
 describe('package-manifest-utils', () => {

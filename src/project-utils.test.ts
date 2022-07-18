@@ -1,11 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { when } from 'jest-when';
-import {
-  buildMockManifest,
-  buildMockPackage,
-  withSandbox,
-} from '../tests/unit/helpers';
+import { withSandbox } from '../tests/helpers';
+import { buildMockManifest, buildMockPackage } from '../tests/unit/helpers';
 import * as gitUtils from './git-utils';
 import * as packageUtils from './package-utils';
 import { readProject } from './project-utils';

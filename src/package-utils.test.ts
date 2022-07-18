@@ -2,11 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import { when } from 'jest-when';
 import * as autoChangelog from '@metamask/auto-changelog';
-import {
-  buildMockProject,
-  buildMockManifest,
-  withSandbox,
-} from '../tests/unit/helpers';
+import { withSandbox } from '../tests/helpers';
+import { buildMockProject, buildMockManifest } from '../tests/unit/helpers';
 import * as fileUtils from './file-utils';
 import { readPackage, updatePackage } from './package-utils';
 import * as packageManifestUtils from './package-manifest-utils';

@@ -4,7 +4,7 @@ import util from 'util';
 import rimraf from 'rimraf';
 import { when } from 'jest-when';
 import * as actionUtils from '@metamask/action-utils';
-import { withSandbox } from '../tests/unit/helpers';
+import { withSandbox } from '../tests/helpers';
 import {
   readFile,
   writeFile,
