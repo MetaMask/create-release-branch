@@ -1,6 +1,8 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import util from 'util';
+import rimraf from 'rimraf';
 import { SemVer } from 'semver';
 import { nanoid } from 'nanoid';
 import type { Package } from '../../src/package-utils';
@@ -26,6 +28,8 @@ type Unrequire<T, K extends keyof T> = Omit<T, K> & {
 interface Sandbox {
   directoryPath: string;
 }
+
+const promisifiedRimraf = util.promisify(rimraf);
 
 /**
  * The temporary directory that acts as a filesystem sandbox for tests.
@@ -66,7 +70,7 @@ export async function withSandbox(fn: (sandbox: Sandbox) => any) {
   try {
     await fn({ directoryPath });
   } finally {
-    await fs.promises.rmdir(directoryPath, { recursive: true });
+    await promisifiedRimraf(directoryPath);
   }
 }
 
