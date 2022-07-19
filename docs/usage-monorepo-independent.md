@@ -19,7 +19,7 @@ The tool will generate a "release specification", which is YAML file, and open i
 
 The `packages` object will be populated with all of the packages that have changed since the previous release. You should not change this list.
 
-A typical release spec might look like:
+A typical release spec, once edited, might look like this:
 
 ```
 packages:
@@ -29,7 +29,7 @@ packages:
   @metamask/assets-controllers: 1.2.3
 ```
 
-Once you've filled out this file, save and close it, and the tool will continue. (Or, if the tool couldn't detect your editor and you had to edit the file manually, then run `create-release-branch --continue` to resume).
+Once you've filled out the release spec, save and close it, and the tool will continue. (Or, if the tool couldn't detect your editor and you had to edit the file manually, then run `create-release-branch` again to resume).
 
 At this point, the tool will:
 
