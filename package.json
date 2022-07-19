@@ -22,6 +22,17 @@
     "test": "jest && jest-it-up",
     "test:watch": "jest --watch"
   },
+  "dependencies": {
+    "@metamask/action-utils": "^0.0.2",
+    "@metamask/utils": "^2.0.0",
+    "debug": "^4.3.4",
+    "execa": "^5.0.0",
+    "glob": "^8.0.3",
+    "semver": "^7.3.7",
+    "which": "^2.0.2",
+    "yaml": "^2.1.1",
+    "yargs": "^17.5.1"
+  },
   "devDependencies": {
     "@lavamoat/allow-scripts": "^2.0.3",
     "@metamask/auto-changelog": "^2.3.0",
@@ -70,16 +81,5 @@
     "allowScripts": {
       "@lavamoat/preinstall-always-fail": false
     }
-  },
-  "dependencies": {
-    "@metamask/action-utils": "^0.0.2",
-    "@metamask/utils": "^2.0.0",
-    "debug": "^4.3.4",
-    "execa": "^5.0.0",
-    "glob": "^8.0.3",
-    "semver": "^7.3.7",
-    "which": "^2.0.2",
-    "yaml": "^2.1.1",
-    "yargs": "^17.5.1"
   }
 }

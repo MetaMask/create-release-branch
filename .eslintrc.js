@@ -29,9 +29,6 @@ module.exports = {
         next: 'multiline-block-like',
       },
     ],
-    // This prevents using bulleted/numbered lists in JSDoc blocks.
-    // See: <https://github.com/gajus/eslint-plugin-jsdoc/issues/541>
-    'jsdoc/check-indentation': 'off',
     // It's common for scripts to access `process.env`
     'node/no-process-env': 'off',
     // It's common for scripts to exit explicitly
@@ -42,6 +39,11 @@ module.exports = {
     {
       files: ['*.ts'],
       extends: ['@metamask/eslint-config-typescript'],
+      rules: {
+        // This prevents using bulleted/numbered lists in JSDoc blocks.
+        // See: <https://github.com/gajus/eslint-plugin-jsdoc/issues/541>
+        'jsdoc/check-indentation': 'off',
+      },
     },
 
     {

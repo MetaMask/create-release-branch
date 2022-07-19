@@ -5,7 +5,6 @@ import { readFile } from './file-utils';
 import {
   debug,
   hasProperty,
-  isErrorWithMessage,
   wrapError,
   isObject,
   runCommand,

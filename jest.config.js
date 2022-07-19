@@ -112,7 +112,7 @@ module.exports = {
   resetMocks: true,
 
   // Reset the module registry before running each individual test
-  resetModules: true,
+  // resetModules: false,
 
   // A path to a custom resolver
   // resolver: undefined,
@@ -161,7 +161,9 @@ module.exports = {
   // ],
 
   // An array of regexp pattern strings that are matched against all test paths, matched tests are skipped
-  testPathIgnorePatterns: ['/node_modules/', '/src/old/'],
+  // testPathIgnorePatterns: [
+  //   "/node_modules/"
+  // ],
 
   // The regexp pattern or array of patterns that Jest uses to detect test files
   // testRegex: [],

@@ -1,7 +1,7 @@
 import fs, { WriteStream } from 'fs';
 import path from 'path';
 import { updateChangelog } from '@metamask/auto-changelog';
-import { isErrorWithCode, isErrorWithMessage } from './misc-utils';
+import { isErrorWithCode } from './misc-utils';
 import { readFile, writeFile, writeJsonFile } from './file-utils';
 import { Project } from './project-utils';
 import { PackageReleasePlan } from './workflow-utils';
