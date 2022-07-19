@@ -1,6 +1,6 @@
-# Using the tool for a polyrepo
+# Using the tool for a polyrepo package
 
-For a polyrepo, the tool needs to know the new version of the package that you want to release (hereafter called the "release version"). This can happen one of two ways:
+For a package within a polyrepo architecture, the tool needs to know the new version of the package you want to release. This can happen one of two ways:
 
 1. You can have the tool determine the release version automatically by bumping the major, minor, or patch part of the current version.
 
@@ -31,7 +31,7 @@ For a polyrepo, the tool needs to know the new version of the package that you w
 After you run the command, the tool will:
 
 1. Adjust the version of the package to the version specified.
-2. Read the Git history of the repo to extract the names of the commits which have occurred since the Git tag that corresponds to the current version (before being changed).
+2. Read the Git history of the repo to extract the names of the commits which have occurred since the Git tag that corresponds to the current version.
 3. Add a new section to the changelog for the release version which lists the commits gathered.
 4. Commit the changes to a new branch called `release/<release-version>` (e.g. `release/1.2.3`) and switch to that branch.
 

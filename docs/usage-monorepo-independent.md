@@ -1,6 +1,6 @@
-# Using the tool for a monorepo with independent versions
+# Using the tool in a monorepo with independent versions
 
-For a monorepo with independent versions, the tool needs to know which packages you want to release and how to set the version for each package.
+For a monorepo using an "independent" versioning strategy, the tool needs to know which packages you want to release and how to set the version for each package.
 
 Start by running:
 
@@ -8,27 +8,28 @@ Start by running:
 create-release-branch
 ```
 
-The tool will generate a YAML file format and open it in your editor (or, if it cannot detect an appropriate editor, give you the path to the file for you to open yourself). This file contains one field, `packages`, which is an object where:
+The tool will generate a YAML file and open it in your editor (or, if it cannot detect an appropriate editor, output the path to the file for you to open yourself). This file contains one field, `packages`, which is an object. In this object:
 
 - Each key is the name of the workspace package you want to release.
 - Each value specifies the new version the package should receive. This can either be:
-  - `major` if you want to bump the major part of the current version. For instance, if the current version is 1.0.0, then the release version would be 2.0.0.
-  - `minor` if you want to bump the minor part of the current version. For instance, if the current version is 1.0.0, then the release version would be 1.1.0.
-  - `patch` if you want to bump the patch part of the current version. For instance, if the current version is 1.0.0, then the release version would be 1.0.1.
+  - `major` if you want to bump the major part of the current version (e.g., if the current version is 1.0.0, then the release version would be 2.0.0).
+  - `minor` if you want to bump the minor part of the current version (e.g. if the current version is 1.0.0, then the release version would be 1.1.0).
+  - `patch` if you want to bump the patch part of the current version (e.g. if the current version is 1.0.0, then the release version would be 1.0.1).
   - An exact version such as `1.2.3`.
 
-This object will be populated with all of the packages that have any changed since the previous release, but you are free to remove or add any line as long as it refers to a valid workspace package.
+The `packages` object will be populated with all of the packages that have changed since the previous release. You should not change this list.
 
-Here is an example:
+A typical release spec might look like:
 
 ```
-@metamask/base-controller: major
-@metamask/controller-utils: minor
-@metamask/transaction-controller: patch
-@metamask/assets-controllers: 1.6.3
+packages:
+  @metamask/base-controller: major
+  @metamask/controller-utils: minor
+  @metamask/transaction-controller: patch
+  @metamask/assets-controllers: 1.2.3
 ```
 
-Once you've filled out this file, save and close it, and the tool will continue. (Or, if the tool couldn't detect your editor and you had to edit the file manually, then run `create-release-branch --continue`).
+Once you've filled out this file, save and close it, and the tool will continue. (Or, if the tool couldn't detect your editor and you had to edit the file manually, then run `create-release-branch --continue` to resume).
 
 At this point, the tool will:
 

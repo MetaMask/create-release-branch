@@ -1,45 +1,54 @@
 # Setting up your project
 
-There are three different use cases that this tool supports: polyrepos, monorepos with fixed versions, and monorepos with independent versions (see [here](./understanding.md) for more about the implications between them). The tool has the ability to detect the difference between these at runtime, provided that some requirements are met.
+There are three different type of projects that this tool supports: packages that live within a polyrepo architecture (or stand alone), monorepos that use a "fixed" versioning strategy, and monorepos that use an "independent" versioning strategy (see [here](./understanding.md) for more about the implications between them). The tool has the ability to detect the difference between these at runtime, provided that some requirements are met.
 
 ## Polyrepos
 
-First, by default, the tool will assume your project is a polyrepo, so if that is the case, you can start using the tool right away — no setup needed.
+By default, the tool will assume your project is within a polyrepo, so if that is the case, you can start using the tool right away — there's no additional setup needed.
 
 ## Monorepos
 
-To determine whether a project is a monorepo, the tool looks for the existence of a non-empty `workspaces` field within the project's `package.json` file. In other words, it assumes that you are using workspaces to manage the packages within a repo. Likely you are already doing this for your monorepo, but if not, then you will want to adopt this feature (which is supported by all package managers) and add this field.
+To determine whether a project is a monorepo, the tool will look at the project's `package.json` file for a non-empty `workspaces` field, which lists directories that hold packages you want to publish.
 
-Additionally, to determine which versioning strategy a monorepo uses, you will
-need to provide some configuration. The tool will look for the presence of a `@metamask/create-release-branch` section in the root package's `package.json` for options, and one of the options supported is `versioningStrategy`. The expected value for this option and associated requirements are explained below.
+To determine which versioning strategy a monorepo is using, the tool will look for a `release.config.json` file within the root directory of the project. This file should define an object, and that object should have a `versioningStrategy` property. The expected value for this property and associated requirements are explained below.
 
 ### Monorepos with fixed versions
 
-For a monorepo with fixed versions, you will update the root `package.json` with a `versioningStrategy` of `"fixed"`. For example:
+For a monorepo with fixed versions, you will want to add a `release.config.json` with a `versioningStrategy` of `"fixed"`.
 
-```json
+All together, this looks like:
+
+```
+# package.json
 {
   "version": "1.0.0",
   "workspaces": ["packages/*"],
-  "@metamask/create-release-branch": {
-    "versioningStrategy": "fixed"
-  }
+}
+
+# release.config.json
+{
+  "versioningStrategy": "fixed"
 }
 ```
 
 ### Monorepos with independent versions
 
-For a monorepo with independent versions, you will want to make two changes to the root `package.json`:
+For a monorepo with independent versions, you will want to:
 
-1. Use a `versioningStrategy` of `"independent"`
-2. Change the format of the `version` from `<major>.<minor>.<patch>` to `<year>.<month>.<day>-<build number>` ("1" is a sensible starting build number). For example:
+1. Add a `release.config.json` with a `versioningStrategy` of `"independent"`.
+2. Change the format of the `version` within the root `package.json` from `<major>.<minor>.<patch>` to `<yyyymmdd>.1.0` (where `yyyymmdd` is a date in ISO format without the dashes, and "1" is the build number, which will be incremented with successive releases).
 
-```json
+All together, this looks like:
+
+```
+# package.json
 {
-  "version": "2022.6.7-1",
+  "version": "20220607.1",
   "workspaces": ["packages/*"],
-  "@metamask/create-release-branch": {
-    "versioningStrategy": "independent"
-  }
+}
+
+# release.config.json
+{
+  "versioningStrategy": "independent"
 }
 ```
