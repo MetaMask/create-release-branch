@@ -273,19 +273,23 @@ export async function validateReleaseSpecification(
         unvalidatedReleaseSpecification.packages[packageName];
 
       if (versionSpecifier) {
-        switch (versionSpecifier) {
-          // TODO: Any way to avoid this?
-          case IncrementableVersionParts.major:
-          case IncrementableVersionParts.minor:
-          case IncrementableVersionParts.patch:
-            return { ...obj, [packageName]: versionSpecifier };
-          default:
-            return {
-              ...obj,
-              // Typecast: We know that this will safely parse.
-              [packageName]: semver.parse(versionSpecifier) as SemVer,
-            };
+        if (
+          Object.values(IncrementableVersionParts).includes(
+            versionSpecifier as any,
+          )
+        ) {
+          return {
+            ...obj,
+            // Typecast: We know what this is as we've checked it above.
+            [packageName]: versionSpecifier as IncrementableVersionParts,
+          };
         }
+
+        return {
+          ...obj,
+          // Typecast: We know that this will safely parse.
+          [packageName]: semver.parse(versionSpecifier) as SemVer,
+        };
       }
 
       return obj;

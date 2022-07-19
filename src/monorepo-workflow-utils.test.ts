@@ -1543,31 +1543,6 @@ describe('monorepo-workflow-utils', () => {
 });
 
 /**
- * Builds a project for use in tests, where `directoryPath` and `repositoryUrl`
- * do not have to be provided (they are filled in with reasonable defaults).
- *
- * @param overrides - The properties that will go into the object.
- * @returns The mock Project object.
- */
-/*
-function buildMockProject(
-  overrides: Unrequire<Project, 'directoryPath' | 'repositoryUrl'>,
-): Project {
-  const {
-    directoryPath = '/path/to/project',
-    repositoryUrl = 'https://repo.url',
-    ...rest
-  } = overrides;
-
-  return {
-    directoryPath,
-    repositoryUrl,
-    ...rest,
-  };
-}
-*/
-
-/**
  * Builds a project for use in tests which represents a monorepo.
  *
  * @param overrides - The properties that will go into the object.
@@ -1580,60 +1555,6 @@ function buildMockMonorepoProject(overrides: Partial<Project> = {}) {
     ...overrides,
   });
 }
-
-/**
- * Builds a package for use in tests, where `directoryPath`, `manifestPath`, and
- * `changelogPath` do not have to be provided (they are filled in with
- * reasonable defaults), and where some fields in `manifest` is prefilled based
- * on `name` and `version`.
- *
- * TODO: Reuse helper in `helpers.ts`.
- *
- * @param name - The name of the package.
- * @param version - The version of the package, as a version string.
- * @param overrides - The properties that will go into the object.
- * @returns The mock Package object.
- */
-/*
-function buildMockPackage(
-  name: string,
-  version: string,
-  overrides: Omit<
-    Unrequire<Package, 'directoryPath' | 'manifestPath' | 'changelogPath'>,
-    'manifest'
-  > & {
-    manifest: Omit<
-      Unrequire<
-        ValidatedManifest,
-        | packageManifestUtils.ManifestFieldNames.Workspaces
-        | packageManifestUtils.ManifestDependencyFieldNames
-      >,
-      | packageManifestUtils.ManifestFieldNames.Name
-      | packageManifestUtils.ManifestFieldNames.Version
-    >;
-  },
-): Package {
-  const {
-    directoryPath = `/path/to/packages/${name}`,
-    manifest,
-    manifestPath = path.join(directoryPath, 'package.json'),
-    changelogPath = path.join(directoryPath, 'CHANGELOG.md'),
-    ...rest
-  } = overrides;
-
-  return {
-    directoryPath,
-    manifest: buildMockManifest({
-      ...manifest,
-      [packageManifestUtils.ManifestFieldNames.Name]: name,
-      [packageManifestUtils.ManifestFieldNames.Version]: new SemVer(version),
-    }),
-    manifestPath,
-    changelogPath,
-    ...rest,
-  };
-}
-*/
 
 /**
  * Builds a package for use in tests which is designed to be the root package of
@@ -1661,46 +1582,6 @@ function buildMockMonorepoRootPackage(
     ...rest,
   });
 }
-
-/**
- * Builds a manifest object for use in tests, where `workspaces` and
- * `*Dependencies` fields do not have to be provided (they are filled in with
- * empty collections by default).
- *
- * TODO: Reuse helper in `helpers.ts`.
- *
- * @param overrides - The properties that will go into the object.
- * @returns The mock ValidatedManifest object.
- */
-/*
-function buildMockManifest(
-  overrides: Unrequire<
-    ValidatedManifest,
-    | packageManifestUtils.ManifestFieldNames.Workspaces
-    | packageManifestUtils.ManifestDependencyFieldNames
-  >,
-): ValidatedManifest {
-  const {
-    workspaces = [],
-    dependencies = {},
-    devDependencies = {},
-    peerDependencies = {},
-    bundledDependencies = {},
-    optionalDependencies = {},
-    ...rest
-  } = overrides;
-
-  return {
-    workspaces,
-    dependencies,
-    devDependencies,
-    peerDependencies,
-    bundledDependencies,
-    optionalDependencies,
-    ...rest,
-  };
-}
-*/
 
 /**
  * Mocks dependencies that `followMonorepoWorkflow` uses internally.
