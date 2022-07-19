@@ -4,6 +4,5 @@ This directory holds a collection of guides that explain what role this tool pla
 
 - [Understanding your project](./understanding.md)
 - [Setting up your project](./setup.md)
-- [Calling the executable](./calling.md)
 - [Using this tool](./usage.md)
 - [Addendum: Maintaining the changelog](./changelog.md)
