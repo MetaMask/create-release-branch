@@ -8,9 +8,9 @@ Start by running:
 create-release-branch
 ```
 
-The tool will generate a YAML file and open it in your editor (or, if it cannot detect an appropriate editor, output the path to the file for you to open yourself). This file contains two fields:
+The tool will generate a "release specification", which is a YAML file, and open it in your editor (or, if it cannot detect an appropriate editor, output the path to the file for you to open yourself). This file represents an object which contains two properties:
 
-- **`releaseVersion`:** Specifies the new version that you want to release. This can either be:
+- **`releaseVersion`:** Specifies the new version that you want to release. The value of this property can either be:
   - `major` if you want to bump the major part of the current version (e.g., if the current version is 1.0.0, then the release version would be 2.0.0).
   - `minor` if you want to bump the minor part of the current version (e.g. if the current version is 1.0.0, then the release version would be 1.1.0).
   - `patch` if you want to bump the patch part of the current version (e.g. if the current version is 1.0.0, then the release version would be 1.0.1).
