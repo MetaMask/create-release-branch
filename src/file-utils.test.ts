@@ -64,7 +64,7 @@ describe('file-utils', () => {
       });
     });
 
-    it.only('re-throws any error that occurs, assigning it the same code, a wrapped message, and a new stack', async () => {
+    it('re-throws any error that occurs, assigning it the same code, a wrapped message, and a new stack', async () => {
       await withSandbox(async (sandbox) => {
         await promisifiedRimraf(sandbox.directoryPath);
         const filePath = path.join(sandbox.directoryPath, 'test');
