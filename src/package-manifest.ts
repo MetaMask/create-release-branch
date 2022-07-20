@@ -24,14 +24,12 @@ export type UnvalidatedPackageManifest = Readonly<Record<string, any>>;
  * @property bundledDependencies - The set of packages that are expected to be
  * bundled when publishing the package.
  */
-export type ValidatedPackageManifest = {
+export interface ValidatedPackageManifest {
   readonly [PackageManifestFieldNames.Name]: string;
   readonly [PackageManifestFieldNames.Version]: SemVer;
   readonly [PackageManifestFieldNames.Private]: boolean;
   readonly [PackageManifestFieldNames.Workspaces]: string[];
-} & Readonly<
-  Partial<Record<PackageManifestDependenciesFieldNames, Record<string, string>>>
->;
+}
 
 /**
  * Constructs a validation error message for a field within the manifest.
@@ -267,32 +265,29 @@ export function readPackageManifestPrivateField(
  * @throws If key data within the manifest is missing (currently `name` and
  * `version`) or the value of any other fields is unexpected.
  */
-export async function readPackageManifest(
-  manifestPath: string,
-): Promise<ValidatedPackageManifest> {
-  const unvalidatedPackageManifest = await readJsonObjectFile(manifestPath);
+export async function readPackageManifest(manifestPath: string): Promise<{
+  unvalidated: UnvalidatedPackageManifest;
+  validated: ValidatedPackageManifest;
+}> {
+  const unvalidated = await readJsonObjectFile(manifestPath);
   const parentDirectory = path.dirname(manifestPath);
-  const name = readPackageManifestNameField(
-    unvalidatedPackageManifest,
-    parentDirectory,
-  );
-  const version = readPackageManifestVersionField(
-    unvalidatedPackageManifest,
-    parentDirectory,
-  );
+  const name = readPackageManifestNameField(unvalidated, parentDirectory);
+  const version = readPackageManifestVersionField(unvalidated, parentDirectory);
   const workspaces = readPackageManifestWorkspacesField(
-    unvalidatedPackageManifest,
+    unvalidated,
     parentDirectory,
   );
   const privateValue = readPackageManifestPrivateField(
-    unvalidatedPackageManifest,
+    unvalidated,
     parentDirectory,
   );
 
-  return {
+  const validated = {
     [PackageManifestFieldNames.Name]: name,
     [PackageManifestFieldNames.Version]: version,
     [PackageManifestFieldNames.Workspaces]: workspaces,
     [PackageManifestFieldNames.Private]: privateValue,
   };
+
+  return { unvalidated, validated };
 }

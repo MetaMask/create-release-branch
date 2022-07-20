@@ -9,19 +9,21 @@ describe('package-manifest', () => {
     it('reads a minimal package manifest, expanding it by filling in values for optional fields', async () => {
       await withSandbox(async (sandbox) => {
         const manifestPath = path.join(sandbox.directoryPath, 'package.json');
-        await fs.promises.writeFile(
-          manifestPath,
-          JSON.stringify({
-            name: 'foo',
-            version: '1.2.3',
-          }),
-        );
-
-        expect(await readPackageManifest(manifestPath)).toStrictEqual({
+        const unvalidated = {
+          name: 'foo',
+          version: '1.2.3',
+        };
+        const validated = {
           name: 'foo',
           version: new SemVer('1.2.3'),
           workspaces: [],
           private: false,
+        };
+        await fs.promises.writeFile(manifestPath, JSON.stringify(unvalidated));
+
+        expect(await readPackageManifest(manifestPath)).toStrictEqual({
+          unvalidated,
+          validated,
         });
       });
     });
@@ -29,20 +31,22 @@ describe('package-manifest', () => {
     it('reads a package manifest where "private" is true', async () => {
       await withSandbox(async (sandbox) => {
         const manifestPath = path.join(sandbox.directoryPath, 'package.json');
-        await fs.promises.writeFile(
-          manifestPath,
-          JSON.stringify({
-            name: 'foo',
-            version: '1.2.3',
-            private: true,
-          }),
-        );
-
-        expect(await readPackageManifest(manifestPath)).toStrictEqual({
+        const unvalidated = {
+          name: 'foo',
+          version: '1.2.3',
+          private: true,
+        };
+        const validated = {
           name: 'foo',
           version: new SemVer('1.2.3'),
           workspaces: [],
           private: true,
+        };
+        await fs.promises.writeFile(manifestPath, JSON.stringify(unvalidated));
+
+        expect(await readPackageManifest(manifestPath)).toStrictEqual({
+          unvalidated,
+          validated,
         });
       });
     });
@@ -50,20 +54,22 @@ describe('package-manifest', () => {
     it('reads a package manifest where "private" is false', async () => {
       await withSandbox(async (sandbox) => {
         const manifestPath = path.join(sandbox.directoryPath, 'package.json');
-        await fs.promises.writeFile(
-          manifestPath,
-          JSON.stringify({
-            name: 'foo',
-            version: '1.2.3',
-            private: false,
-          }),
-        );
-
-        expect(await readPackageManifest(manifestPath)).toStrictEqual({
+        const unvalidated = {
+          name: 'foo',
+          version: '1.2.3',
+          private: false,
+        };
+        const validated = {
           name: 'foo',
           version: new SemVer('1.2.3'),
           workspaces: [],
           private: false,
+        };
+        await fs.promises.writeFile(manifestPath, JSON.stringify(unvalidated));
+
+        expect(await readPackageManifest(manifestPath)).toStrictEqual({
+          unvalidated,
+          validated,
         });
       });
     });
@@ -71,21 +77,23 @@ describe('package-manifest', () => {
     it('reads a package manifest where optional fields are fully provided', async () => {
       await withSandbox(async (sandbox) => {
         const manifestPath = path.join(sandbox.directoryPath, 'package.json');
-        await fs.promises.writeFile(
-          manifestPath,
-          JSON.stringify({
-            name: 'foo',
-            version: '1.2.3',
-            workspaces: ['packages/*'],
-            private: true,
-          }),
-        );
-
-        expect(await readPackageManifest(manifestPath)).toStrictEqual({
+        const unvalidated = {
+          name: 'foo',
+          version: '1.2.3',
+          workspaces: ['packages/*'],
+          private: true,
+        };
+        const validated = {
           name: 'foo',
           version: new SemVer('1.2.3'),
           workspaces: ['packages/*'],
           private: true,
+        };
+        await fs.promises.writeFile(manifestPath, JSON.stringify(unvalidated));
+
+        expect(await readPackageManifest(manifestPath)).toStrictEqual({
+          unvalidated,
+          validated,
         });
       });
     });
@@ -93,20 +101,22 @@ describe('package-manifest', () => {
     it('reads a package manifest where the "workspaces" field is provided but empty', async () => {
       await withSandbox(async (sandbox) => {
         const manifestPath = path.join(sandbox.directoryPath, 'package.json');
-        await fs.promises.writeFile(
-          manifestPath,
-          JSON.stringify({
-            name: 'foo',
-            version: '1.2.3',
-            workspaces: [],
-          }),
-        );
-
-        expect(await readPackageManifest(manifestPath)).toStrictEqual({
+        const unvalidated = {
+          name: 'foo',
+          version: '1.2.3',
+          workspaces: [],
+        };
+        const validated = {
           name: 'foo',
           version: new SemVer('1.2.3'),
           workspaces: [],
           private: false,
+        };
+        await fs.promises.writeFile(manifestPath, JSON.stringify(unvalidated));
+
+        expect(await readPackageManifest(manifestPath)).toStrictEqual({
+          unvalidated,
+          validated,
         });
       });
     });

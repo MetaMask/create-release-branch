@@ -182,7 +182,7 @@ async function planRelease(
   ).map((packageName) => {
     const pkg = project.workspacePackages[packageName];
     const versionSpecifier = releaseSpecification.packages[packageName];
-    const currentVersion = pkg.manifest.version;
+    const currentVersion = pkg.validatedManifest.version;
     let newVersion: SemVer;
 
     if (versionSpecifier instanceof SemVer) {
@@ -242,7 +242,7 @@ async function applyUpdatesToMonorepo(
   await Promise.all(
     releasePlan.packages.map(async (workspaceReleasePlan) => {
       debug(
-        `Updating package ${workspaceReleasePlan.package.manifest.name}...`,
+        `Updating package ${workspaceReleasePlan.package.validatedManifest.name}...`,
       );
       await updatePackage({
         project,

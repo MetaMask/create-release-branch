@@ -44,6 +44,37 @@ describe('create-release-branch (functional)', () => {
           today: new Date('2022-06-24'),
         },
         async (environment) => {
+          await environment.updateJsonFile('package.json', {
+            scripts: {
+              foo: 'bar',
+            },
+          });
+          await environment.updateJsonFileWithinPackage('a', 'package.json', {
+            scripts: {
+              foo: 'bar',
+            },
+          });
+          await environment.updateJsonFileWithinPackage('b', 'package.json', {
+            scripts: {
+              foo: 'bar',
+            },
+          });
+          await environment.updateJsonFileWithinPackage('c', 'package.json', {
+            scripts: {
+              foo: 'bar',
+            },
+          });
+          await environment.updateJsonFileWithinPackage('d', 'package.json', {
+            scripts: {
+              foo: 'bar',
+            },
+          });
+          await environment.updateJsonFileWithinPackage('e', 'package.json', {
+            scripts: {
+              foo: 'bar',
+            },
+          });
+
           await environment.runTool({
             releaseSpecification: {
               packages: {
@@ -55,33 +86,47 @@ describe('create-release-branch (functional)', () => {
             },
           });
 
-          expect(await environment.readJsonFile('package.json')).toMatchObject({
+          expect(await environment.readJsonFile('package.json')).toStrictEqual({
+            name: '@scope/monorepo',
             version: '2022.6.24',
+            private: true,
+            workspaces: ['packages/*'],
+            scripts: { foo: 'bar' },
           });
           expect(
             await environment.readJsonFileWithinPackage('a', 'package.json'),
-          ).toMatchObject({
+          ).toStrictEqual({
+            name: '@scope/a',
             version: '1.0.0',
+            scripts: { foo: 'bar' },
           });
           expect(
             await environment.readJsonFileWithinPackage('b', 'package.json'),
-          ).toMatchObject({
+          ).toStrictEqual({
+            name: '@scope/b',
             version: '1.2.0',
+            scripts: { foo: 'bar' },
           });
           expect(
             await environment.readJsonFileWithinPackage('c', 'package.json'),
-          ).toMatchObject({
+          ).toStrictEqual({
+            name: '@scope/c',
             version: '2.0.14',
+            scripts: { foo: 'bar' },
           });
           expect(
             await environment.readJsonFileWithinPackage('d', 'package.json'),
-          ).toMatchObject({
+          ).toStrictEqual({
+            name: '@scope/d',
             version: '1.2.4',
+            scripts: { foo: 'bar' },
           });
           expect(
             await environment.readJsonFileWithinPackage('e', 'package.json'),
-          ).toMatchObject({
+          ).toStrictEqual({
+            name: '@scope/e',
             version: '0.0.3',
+            scripts: { foo: 'bar' },
           });
         },
       );

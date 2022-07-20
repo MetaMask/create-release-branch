@@ -18,14 +18,14 @@ describe('project', () => {
         const projectRepositoryUrl = 'https://github.com/some-org/some-repo';
         const rootPackage = buildMockPackage('root', {
           directoryPath: projectDirectoryPath,
-          manifest: buildMockManifest({
+          validatedManifest: buildMockManifest({
             workspaces: ['packages/a', 'packages/subpackages/*'],
           }),
         });
         const workspacePackages = {
           a: buildMockPackage('a', {
             directoryPath: path.join(projectDirectoryPath, 'packages', 'a'),
-            manifest: buildMockManifest(),
+            validatedManifest: buildMockManifest(),
           }),
           b: buildMockPackage('b', {
             directoryPath: path.join(
@@ -34,7 +34,7 @@ describe('project', () => {
               'subpackages',
               'b',
             ),
-            manifest: buildMockManifest(),
+            validatedManifest: buildMockManifest(),
           }),
         };
         when(jest.spyOn(repoModule, 'getRepositoryHttpsUrl'))

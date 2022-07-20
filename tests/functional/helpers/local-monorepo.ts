@@ -133,6 +133,27 @@ export default class LocalMonorepo<
   }
 
   /**
+   * Updates a JSON file within a workspace package within the project.
+   *
+   * @param packageNickname - The nickname of the workspace package, as
+   * identified in the `packages` options passed to
+   * `withMonorepoProjectEnvironment`.
+   * @param partialFilePath - The path to the desired file within the package.
+   * @param object - The new object should be merged into the file.
+   */
+  async updateJsonFileWithinPackage(
+    packageNickname: '$root$' | WorkspacePackageNickname,
+    partialFilePath: string,
+    object: Record<string, unknown>,
+  ): Promise<void> {
+    const packageDirectoryPath = this.#packages[packageNickname].directoryPath;
+    await this.updateJsonFile(
+      path.join(packageDirectoryPath, partialFilePath),
+      object,
+    );
+  }
+
+  /**
    * Writes an initial package.json for the root package as well as any
    * workspace packages (if specified).
    */
