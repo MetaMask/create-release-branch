@@ -8,7 +8,7 @@ Start by running:
 create-release-branch
 ```
 
-The tool will generate a "release specification", which is YAML file, and open it in your editor (or, if it cannot detect an appropriate editor, output the path to the file for you to open yourself). This file represents an object that contains one property, `packages`. The value of this property is also an object, where:
+The tool will generate a "release specification", which is a YAML file, and open it in your editor (or, if it cannot detect an appropriate editor, output the path to the file for you to open yourself). This file represents an object that contains one property, `packages`. The value of this property is also an object, where:
 
 - Each property is the name of the workspace package you want to release.
 - Each value specifies the new version the package should receive. This can either be:
@@ -23,10 +23,10 @@ A typical release spec, once edited, might look like this:
 
 ```
 packages:
-  @metamask/base-controller: major
-  @metamask/controller-utils: minor
-  @metamask/transaction-controller: patch
-  @metamask/assets-controllers: 1.2.3
+  "@metamask/base-controller": major
+  "@metamask/controller-utils": minor
+  "@metamask/transaction-controller": patch
+  "@metamask/assets-controllers": 1.2.3
 ```
 
 Once you've filled out the release spec, save and close it, and the tool will continue. (Or, if the tool couldn't detect your editor and you had to edit the file manually, then run `create-release-branch` again to resume).
