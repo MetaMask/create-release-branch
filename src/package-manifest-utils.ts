@@ -1,13 +1,10 @@
 import path from 'path';
-import {
-  ManifestFieldNames,
-  ManifestDependencyFieldNames,
-} from '@metamask/action-utils';
+import { ManifestFieldNames } from '@metamask/action-utils';
 import { readJsonObjectFile } from './file-utils';
-import { isTruthyString, isObject, Require } from './misc-utils';
+import { isTruthyString, Require } from './misc-utils';
 import { isValidSemver, SemVer } from './semver-utils';
 
-export { ManifestFieldNames, ManifestDependencyFieldNames };
+export { ManifestFieldNames };
 
 /**
  * An unverified representation of the data in a package's `package.json`.
@@ -16,22 +13,19 @@ export { ManifestFieldNames, ManifestDependencyFieldNames };
  *
  * TODO: Move this to action-utils.
  */
-type UnvalidatedManifest = Readonly<Partial<Record<ManifestFieldNames, any>>> &
-  Readonly<Partial<Record<ManifestDependencyFieldNames, any>>>;
+export type UnvalidatedManifest = Readonly<Record<string, any>>;
 
 /**
  * A type-checked representation of the data in a package's `package.json`.
  *
  * TODO: Move this to action-utils.
  */
-export type ValidatedManifest = {
+export interface ValidatedManifest {
   readonly [ManifestFieldNames.Name]: string;
   readonly [ManifestFieldNames.Version]: SemVer;
   readonly [ManifestFieldNames.Private]: boolean;
   readonly [ManifestFieldNames.Workspaces]: string[];
-} & Readonly<
-  Partial<Record<ManifestDependencyFieldNames, Record<string, string>>>
->;
+}
 
 /**
  * Represents options to `readManifestField`.
@@ -86,12 +80,6 @@ const validationForManifestPrivateField = {
   failureReason: 'must be true or false (if present)',
 };
 
-const validationForManifestDependenciesField = {
-  check: isValidManifestDependenciesField,
-  failureReason:
-    'must be an object with non-empty string keys and non-empty string values',
-};
-
 /**
  * Type guard to ensure that the given "version" field of a manifest is valid.
  *
@@ -138,25 +126,6 @@ function isValidManifestPrivateField(
     privateValue === undefined ||
     privateValue === true ||
     privateValue === false
-  );
-}
-
-/**
- * Type guard to ensure that the given dependencies field of a manifest is valid.
- *
- * TODO: Move this to action-utils.
- *
- * @param dependencies - The value to check.
- * @returns Whether the value is valid.
- */
-function isValidManifestDependenciesField(
-  dependencies: any,
-): dependencies is Record<string, string> {
-  return (
-    dependencies === undefined ||
-    (isObject(dependencies) &&
-      Object.keys(dependencies).every(isTruthyString) &&
-      Object.values(dependencies).every(isTruthyString))
   );
 }
 
@@ -262,36 +231,6 @@ function readManifestField<T, U>({
 }
 
 /**
- * Retrieves and checks the dependency fields of a package manifest object,
- * throwing if any of them is not present or is not the correct type.
- *
- * TODO: Move this to action-utils.
- *
- * @param manifest - The manifest data to validate.
- * @param parentDirectory - The directory of the package to which the manifest
- * belongs.
- * @returns The extracted dependency fields and their values.
- */
-function readManifestDependencyFields(
-  manifest: UnvalidatedManifest,
-  parentDirectory: string,
-) {
-  return Object.values(ManifestDependencyFieldNames).reduce(
-    (obj, fieldName) => {
-      const dependencies = readManifestField({
-        manifest,
-        parentDirectory,
-        fieldName,
-        validation: validationForManifestDependenciesField,
-        defaultValue: {},
-      });
-      return { ...obj, [fieldName]: dependencies };
-    },
-    {} as Record<ManifestDependencyFieldNames, Record<string, string>>,
-  );
-}
-
-/**
  * Reads the package manifest at the given path, verifying key data within the
  * manifest and throwing if that data is incomplete.
  *
@@ -301,9 +240,10 @@ function readManifestDependencyFields(
  * @returns Information about a correctly typed version of the manifest for a
  * package.
  */
-export async function readManifest(
-  manifestPath: string,
-): Promise<ValidatedManifest> {
+export async function readManifest(manifestPath: string): Promise<{
+  unvalidatedManifest: UnvalidatedManifest;
+  validatedManifest: ValidatedManifest;
+}> {
   const unvalidatedManifest = await readJsonObjectFile(manifestPath);
   const parentDirectory = path.dirname(manifestPath);
   const name = readManifestField({
@@ -333,16 +273,13 @@ export async function readManifest(
     validation: validationForManifestPrivateField,
     defaultValue: false,
   });
-  const dependencyFields = readManifestDependencyFields(
-    unvalidatedManifest,
-    parentDirectory,
-  );
 
-  return {
+  const validatedManifest = {
     [ManifestFieldNames.Name]: name,
     [ManifestFieldNames.Version]: version,
     [ManifestFieldNames.Workspaces]: workspaces,
     [ManifestFieldNames.Private]: privateValue,
-    ...dependencyFields,
   };
+
+  return { unvalidatedManifest, validatedManifest };
 }

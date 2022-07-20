@@ -5,7 +5,11 @@ import { isErrorWithCode } from './misc-utils';
 import { readFile, writeFile, writeJsonFile } from './file-utils';
 import { Project } from './project-utils';
 import { PackageReleasePlan } from './workflow-utils';
-import { readManifest, ValidatedManifest } from './package-manifest-utils';
+import {
+  readManifest,
+  UnvalidatedManifest,
+  ValidatedManifest,
+} from './package-manifest-utils';
 
 const MANIFEST_FILE_NAME = 'package.json';
 const CHANGELOG_FILE_NAME = 'CHANGELOG.md';
@@ -23,7 +27,8 @@ const CHANGELOG_FILE_NAME = 'CHANGELOG.md';
 export interface Package {
   directoryPath: string;
   manifestPath: string;
-  manifest: ValidatedManifest;
+  unvalidatedManifest: UnvalidatedManifest;
+  validatedManifest: ValidatedManifest;
   changelogPath: string;
 }
 
@@ -38,12 +43,15 @@ export async function readPackage(
 ): Promise<Package> {
   const manifestPath = path.join(packageDirectoryPath, MANIFEST_FILE_NAME);
   const changelogPath = path.join(packageDirectoryPath, CHANGELOG_FILE_NAME);
-  const validatedManifest = await readManifest(manifestPath);
+  const { unvalidatedManifest, validatedManifest } = await readManifest(
+    manifestPath,
+  );
 
   return {
     directoryPath: packageDirectoryPath,
     manifestPath,
-    manifest: validatedManifest,
+    validatedManifest,
+    unvalidatedManifest,
     changelogPath,
   };
 }
@@ -76,7 +84,7 @@ async function updatePackageChangelog({
   } catch (error) {
     if (isErrorWithCode(error) && error.code === 'ENOENT') {
       stderr.write(
-        `${pkg.manifest.name} does not seem to have a changelog. Skipping.\n`,
+        `${pkg.validatedManifest.name} does not seem to have a changelog. Skipping.\n`,
       );
       return;
     }
@@ -96,7 +104,7 @@ async function updatePackageChangelog({
     await writeFile(pkg.changelogPath, newChangelogContent);
   } else {
     stderr.write(
-      `Changelog for ${pkg.manifest.name} was not updated as there were no updates to make.`,
+      `Changelog for ${pkg.validatedManifest.name} was not updated as there were no updates to make.`,
     );
   }
 }
@@ -129,7 +137,7 @@ export async function updatePackage({
   } = packageReleasePlan;
 
   await writeJsonFile(pkg.manifestPath, {
-    ...pkg.manifest,
+    ...pkg.unvalidatedManifest,
     version: newVersion,
   });
 

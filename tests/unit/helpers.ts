@@ -1,10 +1,8 @@
 import path from 'path';
 import { SemVer } from 'semver';
+import { isPlainObject } from '@metamask/utils';
 import type { Package } from '../../src/package-utils';
-import {
-  ManifestFieldNames,
-  ManifestDependencyFieldNames,
-} from '../../src/package-manifest-utils';
+import { ManifestFieldNames } from '../../src/package-manifest-utils';
 import type { Project } from '../../src/project-utils';
 import type { ValidatedManifest } from '../../src/package-manifest-utils';
 
@@ -14,6 +12,16 @@ import type { ValidatedManifest } from '../../src/package-manifest-utils';
  */
 type Unrequire<T, K extends keyof T> = Omit<T, K> & {
   [P in K]+?: T[P];
+};
+
+type MockPackageOverrides = Omit<
+  Unrequire<Package, 'directoryPath' | 'manifestPath' | 'changelogPath'>,
+  'unvalidatedManifest' | 'validatedManifest'
+> & {
+  validatedManifest?: Omit<
+    Partial<ValidatedManifest>,
+    ManifestFieldNames.Name | ManifestFieldNames.Version
+  >;
 };
 
 /**
@@ -34,44 +42,49 @@ export function buildMockProject(overrides: Partial<Project> = {}): Project {
   };
 }
 
-type MockPackageOverrides = Omit<
-  Unrequire<Package, 'directoryPath' | 'manifestPath' | 'changelogPath'>,
-  'manifest'
-> & {
-  manifest?: Omit<
-    Partial<ValidatedManifest>,
-    ManifestFieldNames.Name | ManifestFieldNames.Version
-  >;
-};
-
 /**
  * Builds a package object for use in tests. All properties have default
  * values, so you can specify only the properties you care about.
  *
- * @param name - The name of the package.
- * @param args - Either the version of the package and the properties that will
- * go into the object, or just the properties.
+ * @param args - The name of the package (optional), the version of the package
+ * (optional) and the properties that will go into the object (optional).
  * @returns The mock Package object.
  */
 export function buildMockPackage(
-  name: string,
-  ...args: [string | SemVer, MockPackageOverrides] | [MockPackageOverrides] | []
+  ...args:
+    | [string, string | SemVer, MockPackageOverrides]
+    | [string, string | SemVer]
+    | [string, MockPackageOverrides]
+    | [string]
+    | [MockPackageOverrides]
+    | []
 ): Package {
-  let version, overrides;
+  let name, version, overrides;
 
-  if (args.length === 0) {
-    version = '1.0.0';
-    overrides = {};
-  } else if (args.length === 1) {
-    version = '1.0.0';
-    overrides = args[0];
-  } else {
-    version = args[0];
-    overrides = args[1];
+  switch (args.length) {
+    case 0:
+      name = 'package';
+      version = '1.0.0';
+      overrides = {};
+      break;
+    case 1:
+      name = isPlainObject(args[0]) ? 'package' : args[0];
+      version = '1.0.0';
+      overrides = isPlainObject(args[0]) ? args[0] : {};
+      break;
+    case 2:
+      name = args[0];
+      version = isPlainObject(args[1]) ? '1.0.0' : args[1];
+      overrides = isPlainObject(args[1]) ? args[1] : {};
+      break;
+    default:
+      name = args[0];
+      version = args[1];
+      overrides = args[2];
   }
 
   const {
-    manifest = {},
+    validatedManifest = {},
     directoryPath = `/path/to/packages/${name}`,
     manifestPath = path.join(directoryPath, 'package.json'),
     changelogPath = path.join(directoryPath, 'CHANGELOG.md'),
@@ -79,8 +92,9 @@ export function buildMockPackage(
 
   return {
     directoryPath,
-    manifest: buildMockManifest({
-      ...manifest,
+    unvalidatedManifest: {},
+    validatedManifest: buildMockManifest({
+      ...validatedManifest,
       [ManifestFieldNames.Name]: name,
       [ManifestFieldNames.Version]:
         version instanceof SemVer ? version : new SemVer(version),
@@ -88,6 +102,58 @@ export function buildMockPackage(
     manifestPath,
     changelogPath,
   };
+}
+
+/**
+ * Builds a package for use in tests which is designed to be the root package of
+ * a monorepo.
+ *
+ * @param args - The name of the package (optional), the version of the package
+ * (optional) and the properties that will go into the object (optional).
+ * @returns The mock Package object.
+ */
+export function buildMockMonorepoRootPackage(
+  ...args:
+    | [string, string | SemVer, MockPackageOverrides]
+    | [string, string | SemVer]
+    | [string, MockPackageOverrides]
+    | [string]
+    | [MockPackageOverrides]
+    | []
+): Package {
+  let name, version, overrides;
+
+  switch (args.length) {
+    case 0:
+      name = 'package';
+      version = '1.0.0';
+      overrides = {};
+      break;
+    case 1:
+      name = isPlainObject(args[0]) ? 'package' : args[0];
+      version = '1.0.0';
+      overrides = isPlainObject(args[0]) ? args[0] : {};
+      break;
+    case 2:
+      name = args[0];
+      version = isPlainObject(args[1]) ? '1.0.0' : args[1];
+      overrides = isPlainObject(args[1]) ? args[1] : {};
+      break;
+    default:
+      name = args[0];
+      version = args[1];
+      overrides = args[2];
+  }
+
+  const { validatedManifest, ...rest } = overrides;
+  return buildMockPackage(name, version, {
+    validatedManifest: {
+      private: true,
+      workspaces: ['packages/*'],
+      ...validatedManifest,
+    },
+    ...rest,
+  });
 }
 
 /**
@@ -105,11 +171,6 @@ export function buildMockManifest(
     [ManifestFieldNames.Version]: new SemVer('1.2.3'),
     [ManifestFieldNames.Private]: false,
     [ManifestFieldNames.Workspaces]: [],
-    [ManifestDependencyFieldNames.Bundled]: {},
-    [ManifestDependencyFieldNames.Production]: {},
-    [ManifestDependencyFieldNames.Development]: {},
-    [ManifestDependencyFieldNames.Optional]: {},
-    [ManifestDependencyFieldNames.Peer]: {},
     ...overrides,
   };
 }

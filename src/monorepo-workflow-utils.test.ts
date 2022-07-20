@@ -2,13 +2,15 @@ import fs from 'fs';
 import path from 'path';
 import { SemVer } from 'semver';
 import { withSandbox } from '../tests/helpers';
-import { buildMockPackage, buildMockProject } from '../tests/unit/helpers';
+import {
+  buildMockPackage,
+  buildMockMonorepoRootPackage,
+  buildMockProject,
+} from '../tests/unit/helpers';
 import { followMonorepoWorkflow } from './monorepo-workflow-utils';
 import * as editorUtils from './editor-utils';
 import * as envUtils from './env-utils';
 import * as packageUtils from './package-utils';
-import type { Package } from './package-utils';
-import type { ValidatedManifest } from './package-manifest-utils';
 import type { Project } from './project-utils';
 import * as releaseSpecificationUtils from './release-specification-utils';
 import * as workflowUtils from './workflow-utils';
@@ -34,29 +36,29 @@ describe('monorepo-workflow-utils', () => {
               await withSandbox(async (sandbox) => {
                 const project = buildMockMonorepoProject({
                   rootPackage: buildMockPackage('root', '2022.1.1', {
-                    manifest: {
+                    validatedManifest: {
                       private: true,
                       workspaces: ['packages/*'],
                     },
                   }),
                   workspacePackages: {
                     a: buildMockPackage('a', '1.0.0', {
-                      manifest: {
+                      validatedManifest: {
                         private: false,
                       },
                     }),
                     b: buildMockPackage('b', '1.0.0', {
-                      manifest: {
+                      validatedManifest: {
                         private: false,
                       },
                     }),
                     c: buildMockPackage('c', '1.0.0', {
-                      manifest: {
+                      validatedManifest: {
                         private: false,
                       },
                     }),
                     d: buildMockPackage('d', '1.0.0', {
-                      manifest: {
+                      validatedManifest: {
                         private: false,
                       },
                     }),
@@ -151,14 +153,14 @@ describe('monorepo-workflow-utils', () => {
               await withSandbox(async (sandbox) => {
                 const project = buildMockMonorepoProject({
                   rootPackage: buildMockPackage('root', '2022.1.1', {
-                    manifest: {
+                    validatedManifest: {
                       private: true,
                       workspaces: ['packages/*'],
                     },
                   }),
                   workspacePackages: {
                     a: buildMockPackage('a', '1.0.0', {
-                      manifest: {
+                      validatedManifest: {
                         private: false,
                       },
                     }),
@@ -244,14 +246,14 @@ describe('monorepo-workflow-utils', () => {
               await withSandbox(async (sandbox) => {
                 const project = buildMockMonorepoProject({
                   rootPackage: buildMockPackage('root', '2022.1.1', {
-                    manifest: {
+                    validatedManifest: {
                       private: true,
                       workspaces: ['packages/*'],
                     },
                   }),
                   workspacePackages: {
                     a: buildMockPackage('a', '1.0.0', {
-                      manifest: {
+                      validatedManifest: {
                         private: false,
                       },
                     }),
@@ -292,14 +294,14 @@ describe('monorepo-workflow-utils', () => {
               await withSandbox(async (sandbox) => {
                 const project = buildMockMonorepoProject({
                   rootPackage: buildMockPackage('root', '2022.1.1', {
-                    manifest: {
+                    validatedManifest: {
                       private: true,
                       workspaces: ['packages/*'],
                     },
                   }),
                   workspacePackages: {
                     a: buildMockPackage('a', '1.0.0', {
-                      manifest: {
+                      validatedManifest: {
                         private: false,
                       },
                     }),
@@ -433,14 +435,14 @@ describe('monorepo-workflow-utils', () => {
               await withSandbox(async (sandbox) => {
                 const project = buildMockMonorepoProject({
                   rootPackage: buildMockPackage('root', '2022.1.1', {
-                    manifest: {
+                    validatedManifest: {
                       private: true,
                       workspaces: ['packages/*'],
                     },
                   }),
                   workspacePackages: {
                     a: buildMockPackage('a', '1.0.0', {
-                      manifest: {
+                      validatedManifest: {
                         private: false,
                       },
                     }),
@@ -508,14 +510,14 @@ describe('monorepo-workflow-utils', () => {
               await withSandbox(async (sandbox) => {
                 const project = buildMockMonorepoProject({
                   rootPackage: buildMockPackage('root', '2022.1.1', {
-                    manifest: {
+                    validatedManifest: {
                       private: true,
                       workspaces: ['packages/*'],
                     },
                   }),
                   workspacePackages: {
                     a: buildMockPackage('a', '1.0.0', {
-                      manifest: {
+                      validatedManifest: {
                         private: false,
                       },
                     }),
@@ -608,14 +610,14 @@ describe('monorepo-workflow-utils', () => {
               await withSandbox(async (sandbox) => {
                 const project = buildMockMonorepoProject({
                   rootPackage: buildMockPackage('root', '2022.1.1', {
-                    manifest: {
+                    validatedManifest: {
                       private: true,
                       workspaces: ['packages/*'],
                     },
                   }),
                   workspacePackages: {
                     a: buildMockPackage('a', '1.0.0', {
-                      manifest: {
+                      validatedManifest: {
                         private: false,
                       },
                     }),
@@ -661,14 +663,14 @@ describe('monorepo-workflow-utils', () => {
               await withSandbox(async (sandbox) => {
                 const project = buildMockMonorepoProject({
                   rootPackage: buildMockPackage('root', '2022.1.1', {
-                    manifest: {
+                    validatedManifest: {
                       private: true,
                       workspaces: ['packages/*'],
                     },
                   }),
                   workspacePackages: {
                     a: buildMockPackage('a', '1.0.0', {
-                      manifest: {
+                      validatedManifest: {
                         private: false,
                       },
                     }),
@@ -811,29 +813,29 @@ describe('monorepo-workflow-utils', () => {
               await withSandbox(async (sandbox) => {
                 const project = buildMockMonorepoProject({
                   rootPackage: buildMockPackage('root', '2022.1.1', {
-                    manifest: {
+                    validatedManifest: {
                       private: true,
                       workspaces: ['packages/*'],
                     },
                   }),
                   workspacePackages: {
                     a: buildMockPackage('a', '1.0.0', {
-                      manifest: {
+                      validatedManifest: {
                         private: false,
                       },
                     }),
                     b: buildMockPackage('b', '1.0.0', {
-                      manifest: {
+                      validatedManifest: {
                         private: false,
                       },
                     }),
                     c: buildMockPackage('c', '1.0.0', {
-                      manifest: {
+                      validatedManifest: {
                         private: false,
                       },
                     }),
                     d: buildMockPackage('d', '1.0.0', {
-                      manifest: {
+                      validatedManifest: {
                         private: false,
                       },
                     }),
@@ -928,14 +930,14 @@ describe('monorepo-workflow-utils', () => {
               await withSandbox(async (sandbox) => {
                 const project = buildMockMonorepoProject({
                   rootPackage: buildMockPackage('root', '2022.1.1', {
-                    manifest: {
+                    validatedManifest: {
                       private: true,
                       workspaces: ['packages/*'],
                     },
                   }),
                   workspacePackages: {
                     a: buildMockPackage('a', '1.0.0', {
-                      manifest: {
+                      validatedManifest: {
                         private: false,
                       },
                     }),
@@ -1021,14 +1023,14 @@ describe('monorepo-workflow-utils', () => {
               await withSandbox(async (sandbox) => {
                 const project = buildMockMonorepoProject({
                   rootPackage: buildMockPackage('root', '2022.1.1', {
-                    manifest: {
+                    validatedManifest: {
                       private: true,
                       workspaces: ['packages/*'],
                     },
                   }),
                   workspacePackages: {
                     a: buildMockPackage('a', '1.0.0', {
-                      manifest: {
+                      validatedManifest: {
                         private: false,
                       },
                     }),
@@ -1069,14 +1071,14 @@ describe('monorepo-workflow-utils', () => {
               await withSandbox(async (sandbox) => {
                 const project = buildMockMonorepoProject({
                   rootPackage: buildMockPackage('root', '2022.1.1', {
-                    manifest: {
+                    validatedManifest: {
                       private: true,
                       workspaces: ['packages/*'],
                     },
                   }),
                   workspacePackages: {
                     a: buildMockPackage('a', '1.0.0', {
-                      manifest: {
+                      validatedManifest: {
                         private: false,
                       },
                     }),
@@ -1206,14 +1208,14 @@ describe('monorepo-workflow-utils', () => {
             await withSandbox(async (sandbox) => {
               const project = buildMockMonorepoProject({
                 rootPackage: buildMockPackage('root', '2022.1.1', {
-                  manifest: {
+                  validatedManifest: {
                     private: true,
                     workspaces: ['packages/*'],
                   },
                 }),
                 workspacePackages: {
                   a: buildMockPackage('a', '1.0.0', {
-                    manifest: {
+                    validatedManifest: {
                       private: false,
                     },
                   }),
@@ -1285,14 +1287,14 @@ describe('monorepo-workflow-utils', () => {
             await withSandbox(async (sandbox) => {
               const project = buildMockMonorepoProject({
                 rootPackage: buildMockPackage('root', '2022.1.1', {
-                  manifest: {
+                  validatedManifest: {
                     private: true,
                     workspaces: ['packages/*'],
                   },
                 }),
                 workspacePackages: {
                   a: buildMockPackage('a', '1.0.0', {
-                    manifest: {
+                    validatedManifest: {
                       private: false,
                     },
                   }),
@@ -1385,14 +1387,14 @@ describe('monorepo-workflow-utils', () => {
             await withSandbox(async (sandbox) => {
               const project = buildMockMonorepoProject({
                 rootPackage: buildMockPackage('root', '2022.1.1', {
-                  manifest: {
+                  validatedManifest: {
                     private: true,
                     workspaces: ['packages/*'],
                   },
                 }),
                 workspacePackages: {
                   a: buildMockPackage('a', '1.0.0', {
-                    manifest: {
+                    validatedManifest: {
                       private: false,
                     },
                   }),
@@ -1438,14 +1440,14 @@ describe('monorepo-workflow-utils', () => {
             await withSandbox(async (sandbox) => {
               const project = buildMockMonorepoProject({
                 rootPackage: buildMockPackage('root', '2022.1.1', {
-                  manifest: {
+                  validatedManifest: {
                     private: true,
                     workspaces: ['packages/*'],
                   },
                 }),
                 workspacePackages: {
                   a: buildMockPackage('a', '1.0.0', {
-                    manifest: {
+                    validatedManifest: {
                       private: false,
                     },
                   }),
@@ -1550,33 +1552,6 @@ function buildMockMonorepoProject(overrides: Partial<Project> = {}) {
     rootPackage: buildMockMonorepoRootPackage(),
     workspacePackages: {},
     ...overrides,
-  });
-}
-
-/**
- * Builds a package for use in tests which is designed to be the root package of
- * a monorepo.
- *
- * @param name - The name of the package.
- * @param version - The version of the package, as a version string.
- * @param overrides - The properties that will go into the object.
- * @returns The mock Package object.
- */
-function buildMockMonorepoRootPackage(
-  name = 'root',
-  version = '2022.1.1',
-  overrides: Omit<Partial<Package>, 'manifest'> & {
-    manifest?: Partial<ValidatedManifest>;
-  } = {},
-) {
-  const { manifest, ...rest } = overrides;
-  return buildMockPackage(name, version, {
-    manifest: {
-      private: true,
-      workspaces: ['packages/*'],
-      ...manifest,
-    },
-    ...rest,
   });
 }
 

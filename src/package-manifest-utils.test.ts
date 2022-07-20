@@ -9,24 +9,24 @@ describe('package-manifest-utils', () => {
     it('reads a minimal package manifest, expanding it by filling in values for optional fields', async () => {
       await withSandbox(async (sandbox) => {
         const manifestPath = path.join(sandbox.directoryPath, 'package.json');
-        await fs.promises.writeFile(
-          manifestPath,
-          JSON.stringify({
-            name: 'foo',
-            version: '1.2.3',
-          }),
-        );
-
-        expect(await readManifest(manifestPath)).toStrictEqual({
+        const unvalidatedManifest = {
+          name: 'foo',
+          version: '1.2.3',
+        };
+        const validatedManifest = {
           name: 'foo',
           version: new SemVer('1.2.3'),
           workspaces: [],
           private: false,
-          bundledDependencies: {},
-          dependencies: {},
-          devDependencies: {},
-          optionalDependencies: {},
-          peerDependencies: {},
+        };
+        await fs.promises.writeFile(
+          manifestPath,
+          JSON.stringify(unvalidatedManifest),
+        );
+
+        expect(await readManifest(manifestPath)).toStrictEqual({
+          unvalidatedManifest,
+          validatedManifest,
         });
       });
     });
@@ -34,82 +34,26 @@ describe('package-manifest-utils', () => {
     it('reads a package manifest where optional fields are fully provided', async () => {
       await withSandbox(async (sandbox) => {
         const manifestPath = path.join(sandbox.directoryPath, 'package.json');
-        await fs.promises.writeFile(
-          manifestPath,
-          JSON.stringify({
-            name: 'foo',
-            version: '1.2.3',
-            workspaces: ['packages/*'],
-            private: true,
-            bundledDependencies: {
-              foo: 'bar',
-            },
-            dependencies: {
-              foo: 'bar',
-            },
-            devDependencies: {
-              foo: 'bar',
-            },
-            optionalDependencies: {
-              foo: 'bar',
-            },
-            peerDependencies: {
-              foo: 'bar',
-            },
-          }),
-        );
-
-        expect(await readManifest(manifestPath)).toStrictEqual({
+        const unvalidatedManifest = {
+          name: 'foo',
+          version: '1.2.3',
+          workspaces: ['packages/*'],
+          private: true,
+        };
+        const validatedManifest = {
           name: 'foo',
           version: new SemVer('1.2.3'),
           workspaces: ['packages/*'],
           private: true,
-          bundledDependencies: {
-            foo: 'bar',
-          },
-          dependencies: {
-            foo: 'bar',
-          },
-          devDependencies: {
-            foo: 'bar',
-          },
-          optionalDependencies: {
-            foo: 'bar',
-          },
-          peerDependencies: {
-            foo: 'bar',
-          },
-        });
-      });
-    });
-
-    it('reads a package manifest where dependencies fields are provided but empty', async () => {
-      await withSandbox(async (sandbox) => {
-        const manifestPath = path.join(sandbox.directoryPath, 'package.json');
+        };
         await fs.promises.writeFile(
           manifestPath,
-          JSON.stringify({
-            name: 'foo',
-            version: '1.2.3',
-            private: true,
-            bundledDependencies: {},
-            dependencies: {},
-            devDependencies: {},
-            optionalDependencies: {},
-            peerDependencies: {},
-          }),
+          JSON.stringify(unvalidatedManifest),
         );
 
         expect(await readManifest(manifestPath)).toStrictEqual({
-          name: 'foo',
-          version: new SemVer('1.2.3'),
-          workspaces: [],
-          private: true,
-          bundledDependencies: {},
-          dependencies: {},
-          devDependencies: {},
-          optionalDependencies: {},
-          peerDependencies: {},
+          unvalidatedManifest,
+          validatedManifest,
         });
       });
     });
@@ -117,25 +61,25 @@ describe('package-manifest-utils', () => {
     it('reads a package manifest where the "workspaces" field is provided but empty', async () => {
       await withSandbox(async (sandbox) => {
         const manifestPath = path.join(sandbox.directoryPath, 'package.json');
-        await fs.promises.writeFile(
-          manifestPath,
-          JSON.stringify({
-            name: 'foo',
-            version: '1.2.3',
-            workspaces: [],
-          }),
-        );
-
-        expect(await readManifest(manifestPath)).toStrictEqual({
+        const unvalidatedManifest = {
+          name: 'foo',
+          version: '1.2.3',
+          workspaces: [],
+        };
+        const validatedManifest = {
           name: 'foo',
           version: new SemVer('1.2.3'),
           workspaces: [],
           private: false,
-          bundledDependencies: {},
-          dependencies: {},
-          devDependencies: {},
-          optionalDependencies: {},
-          peerDependencies: {},
+        };
+        await fs.promises.writeFile(
+          manifestPath,
+          JSON.stringify(unvalidatedManifest),
+        );
+
+        expect(await readManifest(manifestPath)).toStrictEqual({
+          unvalidatedManifest,
+          validatedManifest,
         });
       });
     });
@@ -255,96 +199,6 @@ describe('package-manifest-utils', () => {
 
         await expect(readManifest(manifestPath)).rejects.toThrow(
           'The value of "private" in the manifest for "foo" must be true or false (if present)',
-        );
-      });
-    });
-
-    it('throws if "bundledDependencies" is not an object with string keys and string values', async () => {
-      await withSandbox(async (sandbox) => {
-        const manifestPath = path.join(sandbox.directoryPath, 'package.json');
-        await fs.promises.writeFile(
-          manifestPath,
-          JSON.stringify({
-            name: 'foo',
-            version: '1.2.3',
-            bundledDependencies: 12345,
-          }),
-        );
-
-        await expect(readManifest(manifestPath)).rejects.toThrow(
-          'The value of "bundledDependencies" in the manifest for "foo" must be an object with non-empty string keys and non-empty string values',
-        );
-      });
-    });
-
-    it('throws if "dependencies" is not an object with string keys and string values', async () => {
-      await withSandbox(async (sandbox) => {
-        const manifestPath = path.join(sandbox.directoryPath, 'package.json');
-        await fs.promises.writeFile(
-          manifestPath,
-          JSON.stringify({
-            name: 'foo',
-            version: '1.2.3',
-            dependencies: 12345,
-          }),
-        );
-
-        await expect(readManifest(manifestPath)).rejects.toThrow(
-          'The value of "dependencies" in the manifest for "foo" must be an object with non-empty string keys and non-empty string values',
-        );
-      });
-    });
-
-    it('throws if "devDependencies" is not an object with string keys and string values', async () => {
-      await withSandbox(async (sandbox) => {
-        const manifestPath = path.join(sandbox.directoryPath, 'package.json');
-        await fs.promises.writeFile(
-          manifestPath,
-          JSON.stringify({
-            name: 'foo',
-            version: '1.2.3',
-            devDependencies: 12345,
-          }),
-        );
-
-        await expect(readManifest(manifestPath)).rejects.toThrow(
-          'The value of "devDependencies" in the manifest for "foo" must be an object with non-empty string keys and non-empty string values',
-        );
-      });
-    });
-
-    it('throws if "optionalDependencies" is not an object with string keys and string values', async () => {
-      await withSandbox(async (sandbox) => {
-        const manifestPath = path.join(sandbox.directoryPath, 'package.json');
-        await fs.promises.writeFile(
-          manifestPath,
-          JSON.stringify({
-            name: 'foo',
-            version: '1.2.3',
-            optionalDependencies: 12345,
-          }),
-        );
-
-        await expect(readManifest(manifestPath)).rejects.toThrow(
-          'The value of "optionalDependencies" in the manifest for "foo" must be an object with non-empty string keys and non-empty string values',
-        );
-      });
-    });
-
-    it('throws if "peerDependencies" is not an object with string keys and string values', async () => {
-      await withSandbox(async (sandbox) => {
-        const manifestPath = path.join(sandbox.directoryPath, 'package.json');
-        await fs.promises.writeFile(
-          manifestPath,
-          JSON.stringify({
-            name: 'foo',
-            version: '1.2.3',
-            peerDependencies: 12345,
-          }),
-        );
-
-        await expect(readManifest(manifestPath)).rejects.toThrow(
-          'The value of "peerDependencies" in the manifest for "foo" must be an object with non-empty string keys and non-empty string values',
         );
       });
     });

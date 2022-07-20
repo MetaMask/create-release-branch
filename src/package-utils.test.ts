@@ -3,7 +3,11 @@ import path from 'path';
 import { when } from 'jest-when';
 import * as autoChangelog from '@metamask/auto-changelog';
 import { withSandbox } from '../tests/helpers';
-import { buildMockProject, buildMockManifest } from '../tests/unit/helpers';
+import {
+  buildMockPackage,
+  buildMockProject,
+  buildMockManifest,
+} from '../tests/unit/helpers';
 import * as fileUtils from './file-utils';
 import { readPackage, updatePackage } from './package-utils';
 import * as packageManifestUtils from './package-manifest-utils';
@@ -15,16 +19,19 @@ describe('package-utils', () => {
   describe('readPackage', () => {
     it('reads information about the package located at the given directory', async () => {
       const packageDirectoryPath = '/path/to/package';
+      const unvalidatedManifest = {};
+      const validatedManifest = buildMockManifest();
       jest
         .spyOn(packageManifestUtils, 'readManifest')
-        .mockResolvedValue(buildMockManifest());
+        .mockResolvedValue({ unvalidatedManifest, validatedManifest });
 
       const pkg = await readPackage(packageDirectoryPath);
 
       expect(pkg).toStrictEqual({
         directoryPath: packageDirectoryPath,
         manifestPath: path.join(packageDirectoryPath, 'package.json'),
-        manifest: buildMockManifest(),
+        unvalidatedManifest,
+        validatedManifest,
         changelogPath: path.join(packageDirectoryPath, 'CHANGELOG.md'),
       });
     });
@@ -39,12 +46,12 @@ describe('package-utils', () => {
         };
         const manifestPath = path.join(sandbox.directoryPath, 'package.json');
         const packageReleasePlan = {
-          package: {
+          package: buildMockPackage({
             directoryPath: sandbox.directoryPath,
             manifestPath,
-            manifest: buildMockManifest(),
+            validatedManifest: buildMockManifest(),
             changelogPath: path.join(sandbox.directoryPath, 'CHANGELOG.md'),
-          },
+          }),
           newVersion: '2.0.0',
           shouldUpdateChangelog: false,
         };
@@ -67,12 +74,12 @@ describe('package-utils', () => {
         });
         const changelogPath = path.join(sandbox.directoryPath, 'CHANGELOG.md');
         const packageReleasePlan = {
-          package: {
+          package: buildMockPackage({
             directoryPath: sandbox.directoryPath,
             manifestPath: path.join(sandbox.directoryPath, 'package.json'),
-            manifest: buildMockManifest(),
+            validatedManifest: buildMockManifest(),
             changelogPath,
-          },
+          }),
           newVersion: '2.0.0',
           shouldUpdateChangelog: true,
         };
@@ -102,12 +109,12 @@ describe('package-utils', () => {
         const project = buildMockProject();
         const changelogPath = path.join(sandbox.directoryPath, 'CHANGELOG.md');
         const packageReleasePlan = {
-          package: {
+          package: buildMockPackage({
             directoryPath: sandbox.directoryPath,
             manifestPath: path.join(sandbox.directoryPath, 'package.json'),
-            manifest: buildMockManifest(),
+            validatedManifest: buildMockManifest(),
             changelogPath,
-          },
+          }),
           newVersion: '2.0.0',
           shouldUpdateChangelog: true,
         };
@@ -124,12 +131,12 @@ describe('package-utils', () => {
         const project = buildMockProject();
         const changelogPath = path.join(sandbox.directoryPath, 'CHANGELOG.md');
         const packageReleasePlan = {
-          package: {
+          package: buildMockPackage({
             directoryPath: sandbox.directoryPath,
             manifestPath: path.join(sandbox.directoryPath, 'package.json'),
-            manifest: buildMockManifest(),
+            validatedManifest: buildMockManifest(),
             changelogPath,
-          },
+          }),
           newVersion: '2.0.0',
           shouldUpdateChangelog: true,
         };
@@ -150,12 +157,12 @@ describe('package-utils', () => {
         });
         const changelogPath = path.join(sandbox.directoryPath, 'CHANGELOG.md');
         const packageReleasePlan = {
-          package: {
+          package: buildMockPackage({
             directoryPath: sandbox.directoryPath,
             manifestPath: path.join(sandbox.directoryPath, 'package.json'),
-            manifest: buildMockManifest(),
+            validatedManifest: buildMockManifest(),
             changelogPath,
-          },
+          }),
           newVersion: '2.0.0',
           shouldUpdateChangelog: true,
         };
@@ -187,12 +194,12 @@ describe('package-utils', () => {
         });
         const changelogPath = path.join(sandbox.directoryPath, 'CHANGELOG.md');
         const packageReleasePlan = {
-          package: {
+          package: buildMockPackage({
             directoryPath: sandbox.directoryPath,
             manifestPath: path.join(sandbox.directoryPath, 'package.json'),
-            manifest: buildMockManifest(),
+            validatedManifest: buildMockManifest(),
             changelogPath,
-          },
+          }),
           newVersion: '2.0.0',
           shouldUpdateChangelog: false,
         };

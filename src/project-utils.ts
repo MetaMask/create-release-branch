@@ -44,7 +44,7 @@ export async function readProject(
 
   const workspaceDirectories = (
     await Promise.all(
-      rootPackage.manifest[ManifestFieldNames.Workspaces].map(
+      rootPackage.validatedManifest[ManifestFieldNames.Workspaces].map(
         async (workspacePattern) => {
           return await promisifiedGlob(workspacePattern, {
             cwd: projectDirectoryPath,
@@ -62,7 +62,7 @@ export async function readProject(
       }),
     )
   ).reduce((obj, pkg) => {
-    return { ...obj, [pkg.manifest.name]: pkg };
+    return { ...obj, [pkg.validatedManifest.name]: pkg };
   }, {} as Record<string, Package>);
 
   const isMonorepo = Object.keys(workspacePackages).length > 0;
