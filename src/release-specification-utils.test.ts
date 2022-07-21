@@ -237,6 +237,7 @@ packages:
             c: 'patch',
             d: new SemVer('1.2.3'),
           },
+          path: releaseSpecificationPath,
         });
       });
     });
@@ -275,6 +276,7 @@ packages:
             a: 'major',
             c: 'patch',
           },
+          path: releaseSpecificationPath,
         });
       });
     });
@@ -336,7 +338,7 @@ packages:
       });
     });
 
-    it('throws if any of the keys in the "packages" property do not match the names of any workspace packages', async () => {
+    it('throws if any of the keys in the "packages" objectproperty do not match the names of any workspace packages', async () => {
       await withSandbox(async (sandbox) => {
         const project = buildMockProject({
           workspacePackages: {
@@ -372,7 +374,7 @@ packages:
       });
     });
 
-    it('throws if any of the values in the "packages" property are not valid version specifiers', async () => {
+    it('throws if any one of the values in the "packages" object is an invalid version specifier', async () => {
       await withSandbox(async (sandbox) => {
         const project = buildMockProject({
           workspacePackages: {
@@ -404,6 +406,45 @@ packages:
               '          \\(must be "major", "minor", or "patch"; or a version string with major, minor, and patch parts, such as "1\\.2\\.3"\\)',
               '- Line 3: "1.2\\.\\.\\.3\\." is not a valid version specifier for package "b"',
               '          \\(must be "major", "minor", or "patch"; or a version string with major, minor, and patch parts, such as "1\\.2\\.3"\\)',
+            ].join('\n'),
+            'u',
+          ),
+        );
+      });
+    });
+
+    it('throws if any one of the values in the "packages" object is a version string that matches the current version of the package', async () => {
+      await withSandbox(async (sandbox) => {
+        const project = buildMockProject({
+          workspacePackages: {
+            a: buildMockPackage('a', '1.2.3'),
+            b: buildMockPackage('b', '4.5.6'),
+          },
+        });
+        const releaseSpecificationPath = path.join(
+          sandbox.directoryPath,
+          'release-spec',
+        );
+        await fs.promises.writeFile(
+          releaseSpecificationPath,
+          YAML.stringify({
+            packages: {
+              a: '1.2.3',
+              b: '4.5.6',
+            },
+          }),
+        );
+
+        await expect(
+          validateReleaseSpecification(project, releaseSpecificationPath),
+        ).rejects.toThrow(
+          new RegExp(
+            [
+              '^Your release spec could not be processed due to the following issues:\n',
+              '- Line 2: "1.2.3" is not a valid version specifier for package "a"',
+              '          \\("a" is already at version "1.2.3"\\)',
+              '- Line 3: "4.5.6" is not a valid version specifier for package "b"',
+              '          \\("b" is already at version "4.5.6"\\)',
             ].join('\n'),
             'u',
           ),

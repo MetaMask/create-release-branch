@@ -23,18 +23,6 @@ export function knownKeysOf<K extends string | number | symbol>(
 }
 
 /**
- * Type guard for determining whether the given value is an error object with a
- * `code` property such as the type of error that Node throws for filesystem
- * operations, etc.
- *
- * @param error - The object to check.
- * @returns True or false, depending on the result.
- */
-export function isErrorWithCode(error: unknown): error is { code: string } {
-  return typeof error === 'object' && error !== null && 'code' in error;
-}
-
-/**
  * Given a string, resets its indentation and removes leading and trailing
  * whitespace (except for a trailing newline).
  *

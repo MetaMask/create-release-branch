@@ -2,7 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import execa, { ExecaChildProcess, Options as ExecaOptions } from 'execa';
 import deepmerge from 'deepmerge';
-import { debug, isErrorWithCode, sleepFor } from './utils';
+import { isErrorWithCode } from '../../helpers';
+import { debug, sleepFor } from './utils';
 
 /**
  * A set of options with which to customize the tool or configuration files

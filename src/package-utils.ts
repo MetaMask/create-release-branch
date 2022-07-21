@@ -4,12 +4,12 @@ import { updateChangelog } from '@metamask/auto-changelog';
 import { isErrorWithCode } from './misc-utils';
 import { readFile, writeFile, writeJsonFile } from './file-utils';
 import { Project } from './project-utils';
-import { PackageReleasePlan } from './workflow-utils';
 import {
   readManifest,
   UnvalidatedManifest,
   ValidatedManifest,
 } from './package-manifest-utils';
+import { PackageReleasePlan } from './release-plan-utils';
 
 const MANIFEST_FILE_NAME = 'package.json';
 const CHANGELOG_FILE_NAME = 'CHANGELOG.md';

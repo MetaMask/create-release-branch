@@ -14,7 +14,7 @@ const promisifiedRimraf = util.promisify(rimraf);
  * Information about the sandbox provided to tests that need access to the
  * filesystem.
  */
-interface Sandbox {
+export interface Sandbox {
   directoryPath: string;
 }
 
@@ -59,4 +59,16 @@ export async function withSandbox(fn: (sandbox: Sandbox) => any) {
   } finally {
     await promisifiedRimraf(directoryPath);
   }
+}
+
+/**
+ * Type guard for determining whether the given value is an error object with a
+ * `code` property such as the type of error that Node throws for filesystem
+ * operations, etc.
+ *
+ * @param error - The object to check.
+ * @returns True or false, depending on the result.
+ */
+export function isErrorWithCode(error: unknown): error is { code: string } {
+  return typeof error === 'object' && error !== null && 'code' in error;
 }

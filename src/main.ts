@@ -23,7 +23,10 @@ export async function main({
   stdout: Pick<WriteStream, 'write'>;
   stderr: Pick<WriteStream, 'write'>;
 }) {
-  const { project, tempDirectoryPath, reset } = await initialize(argv, cwd);
+  const { project, tempDirectoryPath, reset, today } = await initialize(
+    argv,
+    cwd,
+  );
 
   if (project.isMonorepo) {
     stdout.write(
@@ -33,6 +36,7 @@ export async function main({
       project,
       tempDirectoryPath,
       firstRemovingExistingReleaseSpecification: reset,
+      today,
       stdout,
       stderr,
     });

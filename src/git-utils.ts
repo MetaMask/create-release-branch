@@ -78,3 +78,37 @@ export async function getRepositoryHttpsUrl(
 
   throw new Error(`Unrecognized URL for git remote "origin": ${gitConfigUrl}`);
 }
+
+/**
+ * This function does three things:
+ *
+ * 1. Stages all of the changes which have been made to the repo thus far and
+ *    creates a new Git commit which carries the name of the new release.
+ * 2. Creates a new branch pointed to that commit (which also carries the name
+ *    of the new release).
+ * 3. Switches to that branch.
+ *
+ * @param projectRepositoryPath - The path to the project directory.
+ * @param releaseName - The name of the release, which will be used to name the
+ * commit and the branch.
+ */
+export async function captureChangesInReleaseBranch(
+  projectRepositoryPath: string,
+  releaseName: string,
+) {
+  // TODO: What if the index was dirty before this script was run? Or what if
+  // you're in the middle of a rebase? Might want to check that up front before
+  // changes are even made.
+  // TODO: What if this branch already exists? Append the build number?
+  await getStdoutFromGitCommandWithin(projectRepositoryPath, [
+    'checkout',
+    '-b',
+    `release/${releaseName}`,
+  ]);
+  await getStdoutFromGitCommandWithin(projectRepositoryPath, ['add', '-A']);
+  await getStdoutFromGitCommandWithin(projectRepositoryPath, [
+    'commit',
+    '-m',
+    `Release ${releaseName}`,
+  ]);
+}

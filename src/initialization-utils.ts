@@ -1,5 +1,6 @@
 import os from 'os';
 import path from 'path';
+import { getEnvironmentVariables } from './env-utils';
 import { readProject, Project } from './project-utils';
 import { readInputs } from './inputs-utils';
 
@@ -14,8 +15,15 @@ import { readInputs } from './inputs-utils';
 export async function initialize(
   argv: string[],
   cwd: string,
-): Promise<{ project: Project; tempDirectoryPath: string; reset: boolean }> {
+): Promise<{
+  project: Project;
+  tempDirectoryPath: string;
+  reset: boolean;
+  today: Date;
+}> {
   const inputs = await readInputs(argv);
+  const { TODAY } = getEnvironmentVariables();
+
   const projectDirectoryPath = path.resolve(cwd, inputs.projectDirectory);
   const project = await readProject(projectDirectoryPath);
   const tempDirectoryPath =
@@ -26,6 +34,11 @@ export async function initialize(
           project.rootPackage.validatedManifest.name.replace('/', '__'),
         )
       : path.resolve(cwd, inputs.tempDirectory);
+  const parsedTodayTimestamp =
+    TODAY === undefined ? NaN : new Date(TODAY).getTime();
+  const today = isNaN(parsedTodayTimestamp)
+    ? new Date()
+    : new Date(parsedTodayTimestamp);
 
-  return { project, tempDirectoryPath, reset: inputs.reset };
+  return { project, tempDirectoryPath, reset: inputs.reset, today };
 }
