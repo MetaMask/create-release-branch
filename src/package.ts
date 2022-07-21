@@ -9,7 +9,7 @@ import {
   ValidatedPackageManifest,
 } from './package-manifest';
 import { Project } from './project';
-import { PackageReleasePlan } from './workflow-operations';
+import { PackageReleasePlan } from './release-plan';
 
 const MANIFEST_FILE_NAME = 'package.json';
 const CHANGELOG_FILE_NAME = 'CHANGELOG.md';

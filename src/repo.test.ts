@@ -1,5 +1,9 @@
 import { when } from 'jest-when';
-import { getStdoutFromGitCommandWithin, getRepositoryHttpsUrl } from './repo';
+import {
+  getStdoutFromGitCommandWithin,
+  getRepositoryHttpsUrl,
+  captureChangesInReleaseBranch,
+} from './repo';
 import * as miscUtils from './misc-utils';
 
 jest.mock('./misc-utils');
@@ -81,6 +85,36 @@ describe('git-utils', () => {
         getRepositoryHttpsUrl(repositoryDirectoryPath),
       ).rejects.toThrow(
         'Unrecognized URL for git remote "origin": git@github.com:Foo/Bar.foo',
+      );
+    });
+  });
+
+  describe('captureChangesInReleaseBranch', () => {
+    it('checks out a new branch, stages all files, and creates a new commit', async () => {
+      const getStdoutFromCommandSpy = jest.spyOn(
+        miscUtils,
+        'getStdoutFromCommand',
+      );
+
+      await captureChangesInReleaseBranch(
+        '/path/to/project',
+        'some-release-name',
+      );
+
+      expect(getStdoutFromCommandSpy).toHaveBeenCalledWith(
+        'git',
+        ['checkout', '-b', 'release/some-release-name'],
+        { cwd: '/path/to/project' },
+      );
+      expect(getStdoutFromCommandSpy).toHaveBeenCalledWith(
+        'git',
+        ['add', '-A'],
+        { cwd: '/path/to/project' },
+      );
+      expect(getStdoutFromCommandSpy).toHaveBeenCalledWith(
+        'git',
+        ['commit', '-m', 'Release some-release-name'],
+        { cwd: '/path/to/project' },
       );
     });
   });
