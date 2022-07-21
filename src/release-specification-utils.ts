@@ -77,7 +77,6 @@ export async function generateReleaseSpecificationTemplateForMonorepo({
 ${afterEditingInstructions}
   `.trim();
 
-  // TODO: List only changed files
   const packages = Object.values(workspacePackages).reduce((obj, pkg) => {
     return { ...obj, [pkg.manifest.name]: null };
   }, {});
@@ -195,8 +194,6 @@ export async function validateReleaseSpecification(
     throw new Error(message);
   }
 
-  // TODO: Check that no packages that have not been changed have been added
-  // TODO: Check that the list of packages is not empty
   const errors: { message: string | string[]; lineNumber: number }[] = [];
   Object.keys(unvalidatedReleaseSpecification.packages).forEach(
     (packageName, index) => {

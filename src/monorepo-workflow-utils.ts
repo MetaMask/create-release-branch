@@ -96,9 +96,6 @@ export async function followMonorepoWorkflow({
     stdout.write(
       'Release spec already exists. Picking back up from previous run.\n',
     );
-    // TODO: If we end up here, then we will probably get an error later when
-    // attempting to bump versions of packages, as that may have already
-    // happened — we need to be idempotent
   } else {
     const editor = await determineEditor();
 
@@ -162,7 +159,6 @@ async function planRelease(
   releaseSpecificationPath: string,
 ): Promise<ReleasePlan> {
   const today = getToday();
-  // TODO: What if this version already exists?
   const newReleaseName = today.toISOString().replace(/T.+$/u, '');
   const newRootVersion = [
     today.getUTCFullYear(),

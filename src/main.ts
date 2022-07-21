@@ -40,6 +40,5 @@ export async function main({
     stdout.write(
       'Project does not appear to have any workspaces. Following polyrepo workflow.\n',
     );
-    // TODO
   }
 }

@@ -56,10 +56,6 @@ export async function captureChangesInReleaseBranch(
   project: Project,
   releasePlan: ReleasePlan,
 ) {
-  // TODO: What if the index was dirty before this script was run? Or what if
-  // you're in the middle of a rebase? Might want to check that up front before
-  // changes are even made.
-  // TODO: What if this branch already exists? Append the build number?
   await getStdoutFromGitCommandWithin(project.directoryPath, [
     'checkout',
     '-b',
