@@ -1,3 +1,4 @@
+import { formatISO as formatDateAsISO } from 'date-fns';
 import { getStdoutFromCommand } from './misc-utils';
 
 /**
@@ -88,23 +89,34 @@ export async function getRepositoryHttpsUrl(
  * of the new release).
  * 3. Switches to that branch.
  *
- * @param repositoryDirectoryPath - The path to the repository directory.
- * @param releaseName - The name of the release, which will be used to name the
- * commit and the branch.
+ * @param projectRepositoryPath - The path to the repository directory.
+ * @param args - The arguments.
+ * @param args.releaseDate - The release date.
+ * @param args.releaseNumber - The release number.
  */
 export async function captureChangesInReleaseBranch(
-  repositoryDirectoryPath: string,
-  releaseName: string,
+  projectRepositoryPath: string,
+  {
+    releaseDate,
+    releaseNumber,
+  }: {
+    releaseDate: Date;
+    releaseNumber: number;
+  },
 ) {
-  await getStdoutFromGitCommandWithin(repositoryDirectoryPath, [
+  const releaseDateAsISO = formatDateAsISO(releaseDate, {
+    representation: 'date',
+  });
+
+  await getStdoutFromGitCommandWithin(projectRepositoryPath, [
     'checkout',
     '-b',
-    `release/${releaseName}`,
+    `release/${releaseDateAsISO}/${releaseNumber}`,
   ]);
-  await getStdoutFromGitCommandWithin(repositoryDirectoryPath, ['add', '-A']);
-  await getStdoutFromGitCommandWithin(repositoryDirectoryPath, [
+  await getStdoutFromGitCommandWithin(projectRepositoryPath, ['add', '-A']);
+  await getStdoutFromGitCommandWithin(projectRepositoryPath, [
     'commit',
     '-m',
-    `Release ${releaseName}`,
+    `Release ${releaseDateAsISO} (R${releaseNumber})`,
   ]);
 }

@@ -1,7 +1,8 @@
 import os from 'os';
 import path from 'path';
-import { getEnvironmentVariables } from './env';
+import { parseISO as parseDateAsISO } from 'date-fns';
 import { readCommandLineArguments } from './command-line-arguments';
+import { getEnvironmentVariables } from './env';
 import { readProject, Project } from './project';
 
 interface InitialParameters {
@@ -37,7 +38,7 @@ export async function determineInitialParameters(
         )
       : path.resolve(cwd, inputs.tempDirectory);
   const parsedTodayTimestamp =
-    TODAY === undefined ? NaN : new Date(TODAY).getTime();
+    TODAY === undefined ? NaN : parseDateAsISO(TODAY).getTime();
   const today = isNaN(parsedTodayTimestamp)
     ? new Date()
     : new Date(parsedTodayTimestamp);

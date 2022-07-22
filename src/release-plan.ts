@@ -1,5 +1,6 @@
 import type { WriteStream } from 'fs';
 import { SemVer } from 'semver';
+import { formatISO as formatDateAsISO } from 'date-fns';
 import { debug } from './misc-utils';
 import { Package, updatePackage } from './package';
 import { Project } from './project';
@@ -9,17 +10,16 @@ import { ReleaseSpecification } from './release-specification';
  * Instructions for how to update the project in order to prepare it for a new
  * release.
  *
- * @property releaseName - The name of the new release. For a polyrepo or a
- * monorepo with fixed versions, this will be a version string with the shape
- * `<major>.<minor>.<patch>`; for a monorepo with independent versions, this
- * will be a version string with the shape `<year>.<month>.<day>-<build
- * number>`.
+ * @property releaseDate - The date associated with the new release.
+ * @property releaseNumber - The number of the new release, as 1 + the number of
+ * the previous release.
  * @property packages - Information about all of the packages in the project.
  * For a polyrepo, this consists of the self-same package; for a monorepo it
  * consists of the root package and any workspace packages.
  */
 export interface ReleasePlan {
-  releaseName: string;
+  releaseDate: Date;
+  releaseNumber: number;
   packages: PackageReleasePlan[];
 }
 
@@ -62,12 +62,11 @@ export async function planRelease({
   releaseSpecification: ReleaseSpecification;
   today: Date;
 }): Promise<ReleasePlan> {
-  const newReleaseName = today.toISOString().replace(/T.+$/u, '');
-  const newRootVersion = [
-    today.getUTCFullYear(),
-    today.getUTCMonth() + 1,
-    today.getUTCDate(),
-  ].join('.');
+  const newReleaseDate = formatDateAsISO(today, {
+    representation: 'date',
+  }).replace(/\D+/gu, '');
+  const newReleaseNumber = project.releaseInfo.releaseNumber + 1;
+  const newRootVersion = `${newReleaseDate}.${newReleaseNumber}.0`;
 
   const rootReleasePlan: PackageReleasePlan = {
     package: project.rootPackage,
@@ -94,7 +93,8 @@ export async function planRelease({
   });
 
   return {
-    releaseName: newReleaseName,
+    releaseDate: today,
+    releaseNumber: newReleaseNumber,
     packages: [rootReleasePlan, ...workspaceReleasePlans],
   };
 }
