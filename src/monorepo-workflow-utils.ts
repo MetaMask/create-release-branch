@@ -81,7 +81,7 @@ export async function followMonorepoWorkflow({
     const releaseSpecificationTemplate =
       await generateReleaseSpecificationTemplateForMonorepo({
         project,
-        isEditorAvailable: editor !== undefined,
+        isEditorAvailable: editor !== null,
       });
     await ensureDirectoryPathExists(tempDirectoryPath);
     await writeFile(releaseSpecificationPath, releaseSpecificationTemplate);
@@ -118,8 +118,9 @@ export async function followMonorepoWorkflow({
   });
   await executeReleasePlan(project, releasePlan, stderr);
   await removeFile(releaseSpecificationPath);
-  await captureChangesInReleaseBranch(
-    project.directoryPath,
-    releasePlan.releaseName,
-  );
+  await captureChangesInReleaseBranch({
+    projectRepositoryPath: project.directoryPath,
+    releaseDate: releasePlan.releaseDate,
+    releaseNumber: releasePlan.releaseNumber,
+  });
 }

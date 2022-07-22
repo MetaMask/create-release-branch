@@ -3,6 +3,7 @@ import glob from 'glob';
 import { getRepositoryHttpsUrl } from './git-utils';
 import { Package, readPackage } from './package-utils';
 import { ManifestFieldNames } from './package-manifest-utils';
+import { SemVer } from './semver-utils';
 
 /**
  * Represents the entire codebase on which this tool is operating.
@@ -21,9 +22,46 @@ export interface Project {
   rootPackage: Package;
   workspacePackages: Record<string, Package>;
   isMonorepo: boolean;
+  releaseInfo: ReleaseInfo;
+}
+
+interface ReleaseInfo {
+  releaseDate: Date;
+  releaseNumber: number;
 }
 
 const promisifiedGlob = util.promisify(glob);
+
+/**
+ * Reads a version string from a SemVer object and extracts the release date and
+ * release number from it.
+ *
+ * @param version - The SemVer object.
+ * @returns An object containing the release date and release number from the
+ * version string, or null if neither could be extracted.
+ */
+function parseReleaseInfoFrom(version: SemVer): ReleaseInfo | null {
+  const match = version.toString().match(/^(\d{4})(\d{2})(\d{2})\.(\d+)\.0$/u);
+
+  if (match) {
+    const year = Number(match[1]);
+    const monthNumber = Number(match[2]);
+    const day = Number(match[3]);
+    const releaseDate = new Date(year, monthNumber - 1, day, 0, 0, 0);
+    const releaseNumber = Number(match[4]);
+
+    if (
+      !isNaN(releaseDate.getTime()) &&
+      releaseDate.getFullYear() === year &&
+      releaseDate.getMonth() === monthNumber - 1 &&
+      releaseDate.getDate() === day
+    ) {
+      return { releaseDate, releaseNumber };
+    }
+  }
+
+  return null;
+}
 
 /**
  * Collects information about a project. For a polyrepo, this information will
@@ -41,6 +79,15 @@ export async function readProject(
 ): Promise<Project> {
   const repositoryUrl = await getRepositoryHttpsUrl(projectDirectoryPath);
   const rootPackage = await readPackage(projectDirectoryPath);
+  const releaseInfo = parseReleaseInfoFrom(
+    rootPackage.validatedManifest.version,
+  );
+
+  if (releaseInfo === null) {
+    throw new Error(
+      `Could not extract release date and/or release version from package "${rootPackage.validatedManifest.name}" version "${rootPackage.validatedManifest.version}". Version must be in "<yyyymmdd>.<release-version>.0" format.`,
+    );
+  }
 
   const workspaceDirectories = (
     await Promise.all(
@@ -73,5 +120,6 @@ export async function readProject(
     rootPackage,
     workspacePackages,
     isMonorepo,
+    releaseInfo,
   };
 }

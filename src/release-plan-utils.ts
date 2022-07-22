@@ -1,5 +1,6 @@
 import type { WriteStream } from 'fs';
 import { SemVer } from 'semver';
+import { format as formatDate } from 'date-fns';
 import { debug } from './misc-utils';
 import { Package, updatePackage } from './package-utils';
 import { Project } from './project-utils';
@@ -19,7 +20,8 @@ import { ReleaseSpecification } from './release-specification-utils';
  * consists of the root package and any workspace packages.
  */
 export interface ReleasePlan {
-  releaseName: string;
+  releaseDate: Date;
+  releaseNumber: number;
   packages: PackageReleasePlan[];
 }
 
@@ -62,13 +64,12 @@ export async function planRelease({
   releaseSpecification: ReleaseSpecification;
   today: Date;
 }): Promise<ReleasePlan> {
-  // TODO: What if this version already exists?
-  const newReleaseName = today.toISOString().replace(/T.+$/u, '');
-  const newRootVersion = [
-    today.getUTCFullYear(),
-    today.getUTCMonth() + 1,
-    today.getUTCDate(),
-  ].join('.');
+  const newReleaseDate = today
+    .toISOString()
+    .replace(/T.+$/u, '')
+    .replace(/\D+/gu, '');
+  const newReleaseNumber = project.releaseInfo.releaseNumber + 1;
+  const newRootVersion = `${newReleaseDate}.${newReleaseNumber}.0`;
 
   const rootReleasePlan: PackageReleasePlan = {
     package: project.rootPackage,
@@ -97,7 +98,8 @@ export async function planRelease({
   });
 
   return {
-    releaseName: newReleaseName,
+    releaseDate: today,
+    releaseNumber: newReleaseNumber,
     packages: [rootReleasePlan, ...workspaceReleasePlans],
   };
 }

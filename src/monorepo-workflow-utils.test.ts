@@ -89,21 +89,19 @@ function buildMockReleaseSpecification({
  *
  * @param overrides - The properties you want to override in the mock release
  * plan.
- * @param overrides.releaseName - The name of the new release. For a polyrepo or
- * a monorepo with fixed versions, this will be a version string with the shape
- * `<major>.<minor>.<patch>`; for a monorepo with independent versions, this
- * will be a version string with the shape `<year>.<month>.<day>-<build
- * number>`.
+ * @param overrides.releaseDate - The date of the release.
+ * @param overrides.releaseNumber - The number of the release.
  * @param overrides.packages - Information about all of the packages in the
  * project. For a polyrepo, this consists of the self-same package; for a
  * monorepo it consists of the root package and any workspace packages.
  * @returns The mock release specification.
  */
 function buildMockReleasePlan({
-  releaseName = 'release-name',
+  releaseDate = new Date(),
+  releaseNumber = 1,
   packages = [],
 }: Partial<ReleasePlan> = {}): ReleasePlan {
-  return { releaseName, packages };
+  return { releaseDate, releaseNumber, packages };
 }
 
 /**
@@ -167,8 +165,9 @@ async function setupFollowMonorepoWorkflow({
   const releaseSpecification = buildMockReleaseSpecification({
     path: releaseSpecificationPath,
   });
-  const releaseName = 'some-release-name';
-  const releasePlan = buildMockReleasePlan({ releaseName });
+  const releaseDate = new Date(2022, 0, 1);
+  const releaseNumber = 12345;
+  const releasePlan = buildMockReleasePlan({ releaseDate, releaseNumber });
   const projectDirectoryPath = '/path/to/project';
   const project = buildMockProject({ directoryPath: projectDirectoryPath });
   const today = new Date();
@@ -195,8 +194,16 @@ async function setupFollowMonorepoWorkflow({
   when(planReleaseSpy)
     .calledWith({ project, releaseSpecification, today })
     .mockResolvedValue(releasePlan);
-  executeReleasePlanSpy.mockResolvedValue();
-  captureChangesInReleaseBranchSpy.mockResolvedValue();
+  when(executeReleasePlanSpy)
+    .calledWith(project, releasePlan, stderr)
+    .mockResolvedValue();
+  when(captureChangesInReleaseBranchSpy)
+    .calledWith({
+      projectRepositoryPath: projectDirectoryPath,
+      releaseDate,
+      releaseNumber,
+    })
+    .mockResolvedValue();
 
   if (doesReleaseSpecFileExist) {
     await fs.promises.writeFile(
@@ -214,7 +221,8 @@ async function setupFollowMonorepoWorkflow({
     executeReleasePlanSpy,
     captureChangesInReleaseBranchSpy,
     releasePlan,
-    releaseName,
+    releaseDate,
+    releaseNumber,
     releaseSpecificationPath,
   };
 }
@@ -264,7 +272,8 @@ describe('monorepo-workflow-utils', () => {
             stderr,
             captureChangesInReleaseBranchSpy,
             projectDirectoryPath,
-            releaseName,
+            releaseDate,
+            releaseNumber,
           } = await setupFollowMonorepoWorkflow({
             sandbox,
             doesReleaseSpecFileExist: false,
@@ -281,10 +290,11 @@ describe('monorepo-workflow-utils', () => {
             stderr,
           });
 
-          expect(captureChangesInReleaseBranchSpy).toHaveBeenCalledWith(
-            projectDirectoryPath,
-            releaseName,
-          );
+          expect(captureChangesInReleaseBranchSpy).toHaveBeenCalledWith({
+            projectRepositoryPath: projectDirectoryPath,
+            releaseDate,
+            releaseNumber,
+          });
         });
       });
 
@@ -562,7 +572,8 @@ describe('monorepo-workflow-utils', () => {
             stderr,
             captureChangesInReleaseBranchSpy,
             projectDirectoryPath,
-            releaseName,
+            releaseDate,
+            releaseNumber,
           } = await setupFollowMonorepoWorkflow({
             sandbox,
             doesReleaseSpecFileExist: true,
@@ -577,10 +588,11 @@ describe('monorepo-workflow-utils', () => {
             stderr,
           });
 
-          expect(captureChangesInReleaseBranchSpy).toHaveBeenCalledWith(
-            projectDirectoryPath,
-            releaseName,
-          );
+          expect(captureChangesInReleaseBranchSpy).toHaveBeenCalledWith({
+            projectRepositoryPath: projectDirectoryPath,
+            releaseDate,
+            releaseNumber,
+          });
         });
       });
 
@@ -672,7 +684,8 @@ describe('monorepo-workflow-utils', () => {
             stderr,
             captureChangesInReleaseBranchSpy,
             projectDirectoryPath,
-            releaseName,
+            releaseDate,
+            releaseNumber,
           } = await setupFollowMonorepoWorkflow({
             sandbox,
             doesReleaseSpecFileExist: false,
@@ -689,10 +702,11 @@ describe('monorepo-workflow-utils', () => {
             stderr,
           });
 
-          expect(captureChangesInReleaseBranchSpy).toHaveBeenCalledWith(
-            projectDirectoryPath,
-            releaseName,
-          );
+          expect(captureChangesInReleaseBranchSpy).toHaveBeenCalledWith({
+            projectRepositoryPath: projectDirectoryPath,
+            releaseDate,
+            releaseNumber,
+          });
         });
       });
 
@@ -972,7 +986,8 @@ describe('monorepo-workflow-utils', () => {
             stderr,
             captureChangesInReleaseBranchSpy,
             projectDirectoryPath,
-            releaseName,
+            releaseDate,
+            releaseNumber,
           } = await setupFollowMonorepoWorkflow({
             sandbox,
             doesReleaseSpecFileExist: true,
@@ -989,10 +1004,11 @@ describe('monorepo-workflow-utils', () => {
             stderr,
           });
 
-          expect(captureChangesInReleaseBranchSpy).toHaveBeenCalledWith(
-            projectDirectoryPath,
-            releaseName,
-          );
+          expect(captureChangesInReleaseBranchSpy).toHaveBeenCalledWith({
+            projectRepositoryPath: projectDirectoryPath,
+            releaseDate,
+            releaseNumber,
+          });
         });
       });
 

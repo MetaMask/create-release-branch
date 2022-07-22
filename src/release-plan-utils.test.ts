@@ -11,7 +11,7 @@ describe('release-plan-utils', () => {
   describe('planRelease', () => {
     it('calculates final versions for all packages in the release spec', async () => {
       const project = buildMockProject({
-        rootPackage: buildMockPackage('root', '2022.1.1'),
+        rootPackage: buildMockPackage('root', '20220721.1.0'),
         workspacePackages: {
           a: buildMockPackage('a', '1.0.0'),
           b: buildMockPackage('b', '1.0.0'),
@@ -28,7 +28,7 @@ describe('release-plan-utils', () => {
         },
         path: '/path/to/release/spec',
       };
-      const today = new Date('2022-07-21');
+      const today = new Date(2022, 7, 1);
 
       const releasePlan = await planRelease({
         project,
@@ -37,11 +37,12 @@ describe('release-plan-utils', () => {
       });
 
       expect(releasePlan).toMatchObject({
-        releaseName: '2022-07-21',
+        releaseDate: today,
+        releaseNumber: 2,
         packages: [
           {
             package: project.rootPackage,
-            newVersion: '2022.7.21',
+            newVersion: '20220801.2.0',
           },
           {
             package: project.workspacePackages.a,
@@ -63,6 +64,33 @@ describe('release-plan-utils', () => {
       });
     });
 
+    it('merely bumps the build number in the root version if a release is being created on the same day as a previous release', async () => {
+      const project = buildMockProject({
+        rootPackage: buildMockPackage('root', '20220101.1.0'),
+        workspacePackages: {},
+      });
+      const releaseSpecification = {
+        packages: {},
+        path: '/path/to/release/spec',
+      };
+      const today = new Date(2022, 0, 1);
+
+      const releasePlan = await planRelease({
+        project,
+        releaseSpecification,
+        today,
+      });
+
+      expect(releasePlan).toMatchObject({
+        packages: [
+          {
+            package: project.rootPackage,
+            newVersion: '20220101.2.0',
+          },
+        ],
+      });
+    });
+
     it('records that the changelog for the root package does not need to be updated, while those for the workspace packages do', async () => {
       const project = buildMockProject({
         rootPackage: buildMockPackage('root'),
@@ -75,14 +103,14 @@ describe('release-plan-utils', () => {
       });
       const releaseSpecification = {
         packages: {
-          a: IncrementableVersionParts.major,
-          b: IncrementableVersionParts.major,
-          c: IncrementableVersionParts.patch,
-          d: new SemVer('1.2.3'),
+          a: new SemVer('2.0.0'),
+          b: new SemVer('2.0.0'),
+          c: new SemVer('2.0.0'),
+          d: new SemVer('2.0.0'),
         },
         path: '/path/to/release/spec',
       };
-      const today = new Date('2022-07-21');
+      const today = new Date();
 
       const releasePlan = await planRelease({
         project,
@@ -91,7 +119,6 @@ describe('release-plan-utils', () => {
       });
 
       expect(releasePlan).toMatchObject({
-        releaseName: '2022-07-21',
         packages: [
           {
             package: project.rootPackage,
@@ -122,7 +149,8 @@ describe('release-plan-utils', () => {
     it('runs updatePackage for each package in the release plan', async () => {
       const project = buildMockProject();
       const releasePlan = {
-        releaseName: 'some-release-name',
+        releaseDate: new Date(),
+        releaseNumber: 1,
         packages: [
           {
             package: buildMockPackage(),

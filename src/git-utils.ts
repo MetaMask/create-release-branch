@@ -1,3 +1,4 @@
+import { formatISO as formatDateAsISO } from 'date-fns';
 import { getStdoutFromCommand } from './misc-utils';
 
 /**
@@ -88,14 +89,24 @@ export async function getRepositoryHttpsUrl(
  *    of the new release).
  * 3. Switches to that branch.
  *
- * @param projectRepositoryPath - The path to the project directory.
- * @param releaseName - The name of the release, which will be used to name the
- * commit and the branch.
+ * @param args - The arguments.
+ * @param args.projectRepositoryPath - The path to the project directory.
+ * @param args.releaseDate - The release date.
+ * @param args.releaseNumber - The release number.
  */
-export async function captureChangesInReleaseBranch(
-  projectRepositoryPath: string,
-  releaseName: string,
-) {
+export async function captureChangesInReleaseBranch({
+  projectRepositoryPath,
+  releaseDate,
+  releaseNumber,
+}: {
+  projectRepositoryPath: string;
+  releaseDate: Date;
+  releaseNumber: number;
+}) {
+  const releaseDateAsISO = formatDateAsISO(releaseDate, {
+    representation: 'date',
+  });
+
   // TODO: What if the index was dirty before this script was run? Or what if
   // you're in the middle of a rebase? Might want to check that up front before
   // changes are even made.
@@ -103,12 +114,12 @@ export async function captureChangesInReleaseBranch(
   await getStdoutFromGitCommandWithin(projectRepositoryPath, [
     'checkout',
     '-b',
-    `release/${releaseName}`,
+    `release/${releaseDateAsISO}/${releaseNumber}`,
   ]);
   await getStdoutFromGitCommandWithin(projectRepositoryPath, ['add', '-A']);
   await getStdoutFromGitCommandWithin(projectRepositoryPath, [
     'commit',
     '-m',
-    `Release ${releaseName}`,
+    `Release ${releaseDateAsISO} (R${releaseNumber})`,
   ]);
 }
