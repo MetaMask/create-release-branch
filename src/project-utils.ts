@@ -3,7 +3,6 @@ import glob from 'glob';
 import { getRepositoryHttpsUrl } from './git-utils';
 import { Package, readPackage } from './package-utils';
 import { ManifestFieldNames } from './package-manifest-utils';
-import { SemVer } from './semver-utils';
 
 /**
  * Represents the entire codebase on which this tool is operating.
