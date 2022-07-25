@@ -36,31 +36,58 @@ const promisifiedGlob = util.promisify(glob);
  * Reads a version string from a SemVer object and extracts the release date and
  * release number from it.
  *
- * @param version - The SemVer object.
+ * @param packageVersionString - The version string of the package.
+ * @param packageName - The name of the package.
  * @returns An object containing the release date and release number from the
- * version string, or null if neither could be extracted.
+ * version string.
+ * @throws If the version string is invalid in some way.
  */
-function parseReleaseInfoFrom(version: SemVer): ReleaseInfo | null {
-  const match = version.toString().match(/^(\d{4})(\d{2})(\d{2})\.(\d+)\.0$/u);
+function parseReleaseInfoFrom(
+  packageVersionString: string,
+  packageName: string,
+): ReleaseInfo {
+  const match = packageVersionString.match(
+    /^(?<releaseDateString>(?<releaseYearString>\d{4})(?<releaseMonthString>\d{2})(?<releaseDayString>\d{2}))\.(?<releaseNumberString>\d+)\.0$/u,
+  );
+  const errorMessagePrefix = `Could not extract release info from package "${packageName}" version "${packageVersionString}"`;
 
-  if (match) {
-    const year = Number(match[1]);
-    const monthNumber = Number(match[2]);
-    const day = Number(match[3]);
-    const releaseDate = new Date(year, monthNumber - 1, day, 0, 0, 0);
-    const releaseNumber = Number(match[4]);
+  if (match?.groups) {
+    const releaseYear = Number(match.groups.releaseYearString);
+    const releaseMonthNumber = Number(match.groups.releaseMonthString);
+    const releaseDay = Number(match.groups.releaseDayString);
+    const releaseDate = new Date(
+      releaseYear,
+      releaseMonthNumber - 1,
+      releaseDay,
+      0,
+      0,
+      0,
+    );
+    const releaseNumber = Number(match.groups.releaseNumberString);
 
     if (
-      !isNaN(releaseDate.getTime()) &&
-      releaseDate.getFullYear() === year &&
-      releaseDate.getMonth() === monthNumber - 1 &&
-      releaseDate.getDate() === day
+      isNaN(releaseDate.getTime()) ||
+      releaseDate.getFullYear() !== releaseYear ||
+      releaseDate.getMonth() !== releaseMonthNumber - 1 ||
+      releaseDate.getDate() !== releaseDay
     ) {
-      return { releaseDate, releaseNumber };
+      throw new Error(
+        `${errorMessagePrefix}: "${match.groups.releaseDateString}" must be a valid date in "<yyyy><mm><dd>" format.`,
+      );
     }
+
+    if (releaseNumber === 0) {
+      throw new Error(
+        `${errorMessagePrefix}: Release version must be greater than 0.`,
+      );
+    }
+
+    return { releaseDate, releaseNumber };
   }
 
-  return null;
+  throw new Error(
+    `${errorMessagePrefix}: Must be in "<yyyymmdd>.<release-version>.0" format.`,
+  );
 }
 
 /**
@@ -80,14 +107,9 @@ export async function readProject(
   const repositoryUrl = await getRepositoryHttpsUrl(projectDirectoryPath);
   const rootPackage = await readPackage(projectDirectoryPath);
   const releaseInfo = parseReleaseInfoFrom(
-    rootPackage.validatedManifest.version,
+    rootPackage.validatedManifest.version.toString(),
+    rootPackage.validatedManifest.name,
   );
-
-  if (releaseInfo === null) {
-    throw new Error(
-      `Could not extract release date and/or release version from package "${rootPackage.validatedManifest.name}" version "${rootPackage.validatedManifest.version}". Version must be in "<yyyymmdd>.<release-version>.0" format.`,
-    );
-  }
 
   const workspaceDirectories = (
     await Promise.all(

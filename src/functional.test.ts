@@ -9,7 +9,7 @@ describe('create-release-branch (functional)', () => {
           packages: {
             $root$: {
               name: '@scope/monorepo',
-              version: '2022.1.1',
+              version: '20220101.1.0',
               directoryPath: '.',
             },
             a: {
@@ -41,7 +41,7 @@ describe('create-release-branch (functional)', () => {
           workspaces: {
             '.': ['packages/*'],
           },
-          today: new Date('2022-06-24'),
+          today: new Date(2022, 5, 24),
         },
         async (environment) => {
           await environment.updateJsonFile('package.json', {
@@ -88,7 +88,7 @@ describe('create-release-branch (functional)', () => {
 
           expect(await environment.readJsonFile('package.json')).toStrictEqual({
             name: '@scope/monorepo',
-            version: '2022.6.24',
+            version: '20220624.2.0',
             private: true,
             workspaces: ['packages/*'],
             scripts: { foo: 'bar' },
@@ -138,7 +138,7 @@ describe('create-release-branch (functional)', () => {
           packages: {
             $root$: {
               name: '@scope/monorepo',
-              version: '1.0.0',
+              version: '20220101.1.0',
               directoryPath: '.',
             },
             a: {
@@ -238,7 +238,7 @@ describe('create-release-branch (functional)', () => {
           packages: {
             $root$: {
               name: '@scope/monorepo',
-              version: '1.0.0',
+              version: '20220101.1.0',
               directoryPath: '.',
             },
             a: {
@@ -250,7 +250,7 @@ describe('create-release-branch (functional)', () => {
           workspaces: {
             '.': ['packages/*'],
           },
-          today: new Date('2022-06-24'),
+          today: new Date(2022, 5, 24),
         },
         async (environment) => {
           await environment.runScript({
@@ -275,8 +275,8 @@ describe('create-release-branch (functional)', () => {
             .trim()
             .split('\x09');
           expect(mostRecentCommitInfo.slice(0, -1)).toStrictEqual([
-            'HEAD -> release/2022-06-24',
-            'Release 2022-06-24',
+            'HEAD -> release/2022-06-24/2',
+            'Release 2022-06-24 (R2)',
           ]);
           // The most recent branch should point to the most recent commit
           const commitIdOfMostRecentBranch = (

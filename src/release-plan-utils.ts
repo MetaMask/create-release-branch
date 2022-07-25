@@ -1,6 +1,6 @@
 import type { WriteStream } from 'fs';
 import { SemVer } from 'semver';
-import { format as formatDate } from 'date-fns';
+import { formatISO as formatDateAsISO } from 'date-fns';
 import { debug } from './misc-utils';
 import { Package, updatePackage } from './package-utils';
 import { Project } from './project-utils';
@@ -64,10 +64,9 @@ export async function planRelease({
   releaseSpecification: ReleaseSpecification;
   today: Date;
 }): Promise<ReleasePlan> {
-  const newReleaseDate = today
-    .toISOString()
-    .replace(/T.+$/u, '')
-    .replace(/\D+/gu, '');
+  const newReleaseDate = formatDateAsISO(today, {
+    representation: 'date',
+  }).replace(/\D+/gu, '');
   const newReleaseNumber = project.releaseInfo.releaseNumber + 1;
   const newRootVersion = `${newReleaseDate}.${newReleaseNumber}.0`;
 

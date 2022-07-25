@@ -1,5 +1,6 @@
 import os from 'os';
 import path from 'path';
+import { parseISO as parseDateAsISO } from 'date-fns';
 import { getEnvironmentVariables } from './env-utils';
 import { readProject, Project } from './project-utils';
 import { readInputs } from './inputs-utils';
@@ -35,7 +36,7 @@ export async function initialize(
         )
       : path.resolve(cwd, inputs.tempDirectory);
   const parsedTodayTimestamp =
-    TODAY === undefined ? NaN : new Date(TODAY).getTime();
+    TODAY === undefined ? NaN : parseDateAsISO(TODAY).getTime();
   const today = isNaN(parsedTodayTimestamp)
     ? new Date()
     : new Date(parsedTodayTimestamp);

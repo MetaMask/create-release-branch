@@ -42,7 +42,7 @@ describe('initialize', () => {
       project,
       tempDirectoryPath: '/path/to/temp',
       reset: true,
-      today: new Date('2022-06-22'),
+      today: new Date(2022, 5, 22),
     });
   });
 
@@ -96,7 +96,7 @@ describe('initialize', () => {
 
   it('uses the current date if TODAY is undefined', async () => {
     const project = buildMockProject();
-    const today = new Date('2022-01-01');
+    const today = new Date(2022, 0, 1);
     when(jest.spyOn(inputsUtils, 'readInputs'))
       .calledWith(['arg1', 'arg2'])
       .mockResolvedValue({
@@ -119,7 +119,7 @@ describe('initialize', () => {
 
   it('uses the current date if TODAY is not a parsable date', async () => {
     const project = buildMockProject();
-    const today = new Date('2022-01-01');
+    const today = new Date(2022, 0, 1);
     when(jest.spyOn(inputsUtils, 'readInputs'))
       .calledWith(['arg1', 'arg2'])
       .mockResolvedValue({

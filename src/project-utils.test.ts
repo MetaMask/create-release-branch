@@ -83,7 +83,7 @@ describe('project-utils', () => {
           .mockResolvedValue(rootPackage);
 
         await expect(readProject(projectDirectoryPath)).rejects.toThrow(
-          /^Could not extract release date and\/or release version from package "root" version "1\.2\.3"/u,
+          'Could not extract release info from package "root" version "1.2.3": Must be in "<yyyymmdd>.<release-version>.0" format.',
         );
       });
     });
@@ -98,7 +98,7 @@ describe('project-utils', () => {
           .mockResolvedValue(rootPackage);
 
         await expect(readProject(projectDirectoryPath)).rejects.toThrow(
-          /^Could not extract release date and\/or release version from package "root" version "20220000\.1\.0"/u,
+          'Could not extract release info from package "root" version "20220000.1.0": "20220000" must be a valid date in "<yyyy><mm><dd>" format.',
         );
       });
     });
@@ -112,7 +112,21 @@ describe('project-utils', () => {
           .mockResolvedValue(rootPackage);
 
         await expect(readProject(projectDirectoryPath)).rejects.toThrow(
-          /^Could not extract release date and\/or release version from package "root" version "99999999\.1\.0"/u,
+          'Could not extract release info from package "root" version "99999999.1.0": "99999999" must be a valid date in "<yyyy><mm><dd>" format.',
+        );
+      });
+    });
+
+    it('throws if the release version is 0', async () => {
+      await withSandbox(async (sandbox) => {
+        const projectDirectoryPath = sandbox.directoryPath;
+        const rootPackage = buildMockPackage('root', '20220101.0.0');
+        when(jest.spyOn(packageUtils, 'readPackage'))
+          .calledWith(projectDirectoryPath)
+          .mockResolvedValue(rootPackage);
+
+        await expect(readProject(projectDirectoryPath)).rejects.toThrow(
+          'Could not extract release info from package "root" version "20220101.0.0": Release version must be greater than 0.',
         );
       });
     });
