@@ -24,6 +24,13 @@ export interface Project {
   releaseInfo: ReleaseInfo;
 }
 
+/**
+ * Information about the release of the root package of a monorepo extracted
+ * from its version string.
+ *
+ * @property releaseDate - The release date.
+ * @property releaseNumber - The release number (starting from 1).
+ */
 interface ReleaseInfo {
   releaseDate: Date;
   releaseNumber: number;
