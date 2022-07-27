@@ -10,6 +10,8 @@ import {
 } from './package-manifest';
 import { Project } from './project';
 import { PackageReleasePlan } from './release-plan';
+import { hasChangesInDirectorySinceGitTag } from './repo';
+import { SemVer } from './semver';
 
 const MANIFEST_FILE_NAME = 'package.json';
 const CHANGELOG_FILE_NAME = 'CHANGELOG.md';
@@ -30,21 +32,80 @@ export interface Package {
   unvalidatedManifest: UnvalidatedPackageManifest;
   validatedManifest: ValidatedPackageManifest;
   changelogPath: string;
+  hasChangesSinceLatestRelease: boolean;
 }
 
 /**
- * Collects information about a package.
+ * Generates possible Git tag names for the root package of a monorepo. The only
+ * tag name in use at this time is "v" + the package version.
  *
- * @param packageDirectoryPath - The path to a package within a project.
+ * @param packageVersion - The version of the package.
+ * @returns An array of possible release tag names.
+ */
+function generateMonorepoRootPackageReleaseTagNames(packageVersion: string) {
+  return [`v${packageVersion}`];
+}
+
+/**
+ * Generates possible Git tag names for the workspace package of a monorepo.
+ * Accounts for changes to `action-publish-release`, which going forward will
+ * generate tags for workspace packages in `PACKAGE_NAME/MAJOR.MINOR.PATCH`, but
+ * in the past merely generated tags for the root package.
+ *
+ * @param packageName - The name of the package.
+ * @param packageVersion - The version of the package.
+ * @param rootPackageVersion - The version of the root package.
+ * @returns An array of possible release tag names.
+ */
+function generateMonorepoWorkspacePackageReleaseTagNames(
+  packageName: string,
+  packageVersion: string,
+  rootPackageVersion: string,
+) {
+  return [`${packageName}@${packageVersion}`, `v${rootPackageVersion}`];
+}
+
+/**
+ * Collects information about the root package of a monorepo.
+ *
+ * @param args - The arguments to this function.
+ * @param args.packageDirectoryPath - The path to a package within a project.
+ * @param args.projectDirectoryPath - The path to the project directory.
+ * @param args.projectTagNames - The tag names across the whole project.
  * @returns Information about the package.
  */
-export async function readPackage(
-  packageDirectoryPath: string,
-): Promise<Package> {
+export async function readMonorepoRootPackage({
+  packageDirectoryPath,
+  projectDirectoryPath,
+  projectTagNames,
+}: {
+  packageDirectoryPath: string;
+  projectDirectoryPath: string;
+  projectTagNames: string[];
+}): Promise<Package> {
   const manifestPath = path.join(packageDirectoryPath, MANIFEST_FILE_NAME);
   const changelogPath = path.join(packageDirectoryPath, CHANGELOG_FILE_NAME);
   const { unvalidated: unvalidatedManifest, validated: validatedManifest } =
     await readPackageManifest(manifestPath);
+  const expectedReleaseTagNames = generateMonorepoRootPackageReleaseTagNames(
+    validatedManifest.version.toString(),
+  );
+  const tagNameMatchingLatestRelease = expectedReleaseTagNames.find(
+    (tagName) => {
+      return projectTagNames.includes(tagName);
+    },
+  );
+  // TODO: What if tags exist (projectTagNames.length > 0) but there is no tag
+  // for the current release (tagNameMatchingLatestRelease === undefined)?
+  // Should we fall back to the most recently created tag?
+  const hasChangesSinceLatestRelease =
+    tagNameMatchingLatestRelease === undefined
+      ? true
+      : await hasChangesInDirectorySinceGitTag(
+          projectDirectoryPath,
+          packageDirectoryPath,
+          tagNameMatchingLatestRelease,
+        );
 
   return {
     directoryPath: packageDirectoryPath,
@@ -52,6 +113,66 @@ export async function readPackage(
     validatedManifest,
     unvalidatedManifest,
     changelogPath,
+    hasChangesSinceLatestRelease,
+  };
+}
+
+/**
+ * Collects information about a workspace package within a monorepo.
+ *
+ * @param args - The arguments to this function.
+ * @param args.packageDirectoryPath - The path to a package within a project.
+ * @param args.rootPackageVersion - The version of the root package of the
+ * monorepo to which this package belongs.
+ * @param args.projectDirectoryPath - The path to the project directory.
+ * @param args.projectTagNames - The tag names across the whole project.
+ * @returns Information about the package.
+ */
+export async function readMonorepoWorkspacePackage({
+  packageDirectoryPath,
+  rootPackageVersion,
+  projectDirectoryPath,
+  projectTagNames,
+}: {
+  packageDirectoryPath: string;
+  rootPackageVersion: SemVer;
+  projectDirectoryPath: string;
+  projectTagNames: string[];
+}): Promise<Package> {
+  const manifestPath = path.join(packageDirectoryPath, MANIFEST_FILE_NAME);
+  const changelogPath = path.join(packageDirectoryPath, CHANGELOG_FILE_NAME);
+  const { unvalidated: unvalidatedManifest, validated: validatedManifest } =
+    await readPackageManifest(manifestPath);
+  const expectedReleaseTagNames =
+    generateMonorepoWorkspacePackageReleaseTagNames(
+      validatedManifest.name,
+      validatedManifest.version.toString(),
+      rootPackageVersion.toString(),
+    );
+  const tagNameMatchingLatestRelease = expectedReleaseTagNames.find(
+    (tagName) => {
+      return projectTagNames.includes(tagName);
+    },
+  );
+  // TODO: What if tags exist (projectTagNames.length > 0) but there is no tag
+  // for the current release (tagNameMatchingLatestRelease === undefined)?
+  // Should we fall back to the most recently created tag?
+  const hasChangesSinceLatestRelease =
+    tagNameMatchingLatestRelease === undefined
+      ? true
+      : await hasChangesInDirectorySinceGitTag(
+          projectDirectoryPath,
+          packageDirectoryPath,
+          tagNameMatchingLatestRelease,
+        );
+
+  return {
+    directoryPath: packageDirectoryPath,
+    manifestPath,
+    validatedManifest,
+    unvalidatedManifest,
+    changelogPath,
+    hasChangesSinceLatestRelease,
   };
 }
 

@@ -21,7 +21,13 @@ type Unrequire<T, K extends keyof T> = Omit<T, K> & {
 };
 
 type MockPackageOverrides = Omit<
-  Unrequire<Package, 'directoryPath' | 'manifestPath' | 'changelogPath'>,
+  Unrequire<
+    Package,
+    | 'directoryPath'
+    | 'manifestPath'
+    | 'changelogPath'
+    | 'hasChangesSinceLatestRelease'
+  >,
   'unvalidatedManifest' | 'validatedManifest'
 > & {
   validatedManifest?: Omit<
@@ -98,6 +104,7 @@ export function buildMockPackage(
     directoryPath = `/path/to/packages/${name}`,
     manifestPath = path.join(directoryPath, 'package.json'),
     changelogPath = path.join(directoryPath, 'CHANGELOG.md'),
+    hasChangesSinceLatestRelease = false,
   } = overrides;
 
   return {
@@ -111,6 +118,7 @@ export function buildMockPackage(
     }),
     manifestPath,
     changelogPath,
+    hasChangesSinceLatestRelease,
   };
 }
 
