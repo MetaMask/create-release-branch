@@ -97,26 +97,6 @@ export function wrapError(
 }
 
 /**
- * `Object.keys()` is intentionally generic: it returns the keys of an object,
- * but it cannot make guarantees about the contents of that object, so the type
- * of the keys is merely `string[]`. While this is technically accurate, it is
- * also unnecessary if we have an object that we own and whose contents are
- * known exactly.
- *
- * Note: This function will not work when given an object where any of the keys
- * are optional.
- *
- * @param object - The object.
- * @returns The keys of an object, typed according to the type of the object
- * itself.
- */
-export function knownKeysOf<K extends string | number | symbol>(
-  object: Record<K, any>,
-) {
-  return Object.keys(object) as K[];
-}
-
-/**
  * Retrieves the real path of an executable via `which`.
  *
  * @param executablePath - The path to an executable.
