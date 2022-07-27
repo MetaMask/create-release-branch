@@ -203,24 +203,21 @@ describe('file-utils', () => {
 
         await ensureDirectoryPathExists(directoryPath);
 
-        // We don't really need this expectations, but it is here to satisfy
-        // ESLint
-        const results = await Promise.all([
+        await expect(
           fs.promises.readdir(path.join(sandbox.directoryPath, 'foo')),
+        ).toResolve();
+        await expect(
           fs.promises.readdir(path.join(sandbox.directoryPath, 'foo', 'bar')),
+        ).toResolve();
+        await expect(
           fs.promises.readdir(
             path.join(sandbox.directoryPath, 'foo', 'bar', 'baz'),
           ),
-        ]);
-        expect(JSON.parse(JSON.stringify(results))).toStrictEqual([
-          ['bar'],
-          ['baz'],
-          [],
-        ]);
+        ).toResolve();
       });
     });
 
-    it('does nothing if the given directory already exists', async () => {
+    it('does not throw an error, returning undefined, if the given directory already exists', async () => {
       await withSandbox(async (sandbox) => {
         const directoryPath = path.join(
           sandbox.directoryPath,
@@ -234,9 +231,7 @@ describe('file-utils', () => {
           path.join(sandbox.directoryPath, 'foo', 'bar', 'baz'),
         );
 
-        // We don't really need this expectations, but it is here to satisfy
-        // ESLint
-        expect(await ensureDirectoryPathExists(directoryPath)).toBeUndefined();
+        await expect(ensureDirectoryPathExists(directoryPath)).toResolve();
       });
     });
 
