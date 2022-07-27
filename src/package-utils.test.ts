@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { when } from 'jest-when';
 import * as autoChangelog from '@metamask/auto-changelog';
+import { SemVer } from 'semver';
 import { withSandbox } from '../tests/helpers';
 import {
   buildMockPackage,
@@ -9,30 +10,332 @@ import {
   buildMockManifest,
 } from '../tests/unit/helpers';
 import * as fileUtils from './file-utils';
-import { readPackage, updatePackage } from './package-utils';
+import * as gitUtils from './git-utils';
+import {
+  readMonorepoRootPackage,
+  readMonorepoWorkspacePackage,
+  updatePackage,
+} from './package-utils';
 import * as packageManifestUtils from './package-manifest-utils';
 
 jest.mock('@metamask/auto-changelog');
+jest.mock('./git-utils');
 jest.mock('./package-manifest-utils');
 
 describe('package-utils', () => {
-  describe('readPackage', () => {
-    it('reads information about the package located at the given directory', async () => {
-      const packageDirectoryPath = '/path/to/package';
+  describe('readMonorepoRootPackage', () => {
+    it('returns information about the file structure of the package located at the given directory', async () => {
+      jest.spyOn(packageManifestUtils, 'readManifest').mockResolvedValue({
+        unvalidatedManifest: {},
+        validatedManifest: buildMockManifest(),
+      });
+
+      const pkg = await readMonorepoRootPackage({
+        packageDirectoryPath: '/path/to/package',
+        projectDirectoryPath: '/path/to/project',
+        projectTagNames: [],
+      });
+
+      expect(pkg).toMatchObject({
+        directoryPath: '/path/to/package',
+        manifestPath: '/path/to/package/package.json',
+        changelogPath: '/path/to/package/CHANGELOG.md',
+      });
+    });
+
+    it('returns information about the manifest (in both unvalidated and validated forms)', async () => {
       const unvalidatedManifest = {};
       const validatedManifest = buildMockManifest();
-      jest
-        .spyOn(packageManifestUtils, 'readManifest')
-        .mockResolvedValue({ unvalidatedManifest, validatedManifest });
+      when(jest.spyOn(packageManifestUtils, 'readManifest'))
+        .calledWith('/path/to/package/package.json')
+        .mockResolvedValue({
+          unvalidatedManifest,
+          validatedManifest,
+        });
 
-      const pkg = await readPackage(packageDirectoryPath);
+      const pkg = await readMonorepoRootPackage({
+        packageDirectoryPath: '/path/to/package',
+        projectDirectoryPath: '/path/to/project',
+        projectTagNames: [],
+      });
 
-      expect(pkg).toStrictEqual({
-        directoryPath: packageDirectoryPath,
-        manifestPath: path.join(packageDirectoryPath, 'package.json'),
+      expect(pkg).toMatchObject({
         unvalidatedManifest,
         validatedManifest,
-        changelogPath: path.join(packageDirectoryPath, 'CHANGELOG.md'),
+      });
+    });
+
+    it("returns the fact that the package has been changed since its latest release, if a tag matching the current version exists and changes have been made to the package's directory since the tag", async () => {
+      jest.spyOn(packageManifestUtils, 'readManifest').mockResolvedValue({
+        unvalidatedManifest: {},
+        validatedManifest: buildMockManifest({
+          version: new SemVer('20220101.1.0'),
+        }),
+      });
+      when(jest.spyOn(gitUtils, 'hasChangesInDirectorySinceGitTag'))
+        .calledWith('/path/to/project', '/path/to/package', '20220101.1.0')
+        .mockResolvedValue(true);
+
+      const pkg = await readMonorepoRootPackage({
+        packageDirectoryPath: '/path/to/package',
+        projectDirectoryPath: '/path/to/project',
+        projectTagNames: ['20220101.1.0'],
+      });
+
+      expect(pkg).toMatchObject({
+        hasChangesSinceLatestRelease: true,
+      });
+    });
+
+    it("returns the fact that the package has not been changed since its latest release if a tag matching the current version exists, and changes have not been made to the package's directory since the tag", async () => {
+      jest.spyOn(packageManifestUtils, 'readManifest').mockResolvedValue({
+        unvalidatedManifest: {},
+        validatedManifest: buildMockManifest({
+          version: new SemVer('20220101.1.0'),
+        }),
+      });
+      when(jest.spyOn(gitUtils, 'hasChangesInDirectorySinceGitTag'))
+        .calledWith('/path/to/project', '/path/to/package', '20220101.1.0')
+        .mockResolvedValue(false);
+
+      const pkg = await readMonorepoRootPackage({
+        packageDirectoryPath: '/path/to/package',
+        projectDirectoryPath: '/path/to/project',
+        projectTagNames: ['20220101.1.0'],
+      });
+
+      expect(pkg).toMatchObject({
+        hasChangesSinceLatestRelease: false,
+      });
+    });
+
+    it("returns the fact that the package has been changed since its latest release, if a tag matching 'v' + the current version exists and changes have been made to the package's directory since the tag", async () => {
+      jest.spyOn(packageManifestUtils, 'readManifest').mockResolvedValue({
+        unvalidatedManifest: {},
+        validatedManifest: buildMockManifest({
+          version: new SemVer('1.0.0'),
+        }),
+      });
+      when(jest.spyOn(gitUtils, 'hasChangesInDirectorySinceGitTag'))
+        .calledWith('/path/to/project', '/path/to/package', 'v1.0.0')
+        .mockResolvedValue(true);
+
+      const pkg = await readMonorepoRootPackage({
+        packageDirectoryPath: '/path/to/package',
+        projectDirectoryPath: '/path/to/project',
+        projectTagNames: ['v1.0.0'],
+      });
+
+      expect(pkg).toMatchObject({
+        hasChangesSinceLatestRelease: true,
+      });
+    });
+
+    it("returns the fact that the package has not been changed since its latest release if a tag matching 'v' + the current version exists, and changes have not been made to the package's directory since the tag", async () => {
+      jest.spyOn(packageManifestUtils, 'readManifest').mockResolvedValue({
+        unvalidatedManifest: {},
+        validatedManifest: buildMockManifest({
+          version: new SemVer('1.0.0'),
+        }),
+      });
+      when(jest.spyOn(gitUtils, 'hasChangesInDirectorySinceGitTag'))
+        .calledWith('/path/to/project', '/path/to/package', 'v1.0.0')
+        .mockResolvedValue(false);
+
+      const pkg = await readMonorepoRootPackage({
+        packageDirectoryPath: '/path/to/package',
+        projectDirectoryPath: '/path/to/project',
+        projectTagNames: ['v1.0.0'],
+      });
+
+      expect(pkg).toMatchObject({
+        hasChangesSinceLatestRelease: false,
+      });
+    });
+
+    it("returns the fact that the package has been changed since its latest release if a tag matching neither the current version nor 'v' + the current version exists", async () => {
+      jest.spyOn(packageManifestUtils, 'readManifest').mockResolvedValue({
+        unvalidatedManifest: {},
+        validatedManifest: buildMockManifest({
+          version: new SemVer('1.0.0'),
+        }),
+      });
+
+      const pkg = await readMonorepoRootPackage({
+        packageDirectoryPath: '/path/to/package',
+        projectDirectoryPath: '/path/to/project',
+        projectTagNames: [],
+      });
+
+      expect(pkg).toMatchObject({
+        hasChangesSinceLatestRelease: true,
+      });
+    });
+  });
+
+  describe('readMonorepoWorkspacePackage', () => {
+    it('returns information about the file structure of the package located at the given directory', async () => {
+      jest.spyOn(packageManifestUtils, 'readManifest').mockResolvedValue({
+        unvalidatedManifest: {},
+        validatedManifest: buildMockManifest(),
+      });
+
+      const pkg = await readMonorepoWorkspacePackage({
+        packageDirectoryPath: '/path/to/package',
+        projectDirectoryPath: '/path/to/project',
+        projectTagNames: [],
+        rootPackageVersion: new SemVer('5.0.0'),
+      });
+
+      expect(pkg).toMatchObject({
+        directoryPath: '/path/to/package',
+        manifestPath: '/path/to/package/package.json',
+        changelogPath: '/path/to/package/CHANGELOG.md',
+      });
+    });
+
+    it('returns information about the manifest (in both unvalidated and validated forms)', async () => {
+      const unvalidatedManifest = {};
+      const validatedManifest = buildMockManifest();
+      when(jest.spyOn(packageManifestUtils, 'readManifest'))
+        .calledWith('/path/to/package/package.json')
+        .mockResolvedValue({
+          unvalidatedManifest,
+          validatedManifest,
+        });
+
+      const pkg = await readMonorepoWorkspacePackage({
+        packageDirectoryPath: '/path/to/package',
+        projectDirectoryPath: '/path/to/project',
+        projectTagNames: [],
+        rootPackageVersion: new SemVer('5.0.0'),
+      });
+
+      expect(pkg).toMatchObject({
+        unvalidatedManifest,
+        validatedManifest,
+      });
+    });
+
+    it("returns the fact that the package has been changed since its latest release, if a tag matching the package name + version exists and changes have been made to the package's directory since the tag", async () => {
+      jest.spyOn(packageManifestUtils, 'readManifest').mockResolvedValue({
+        unvalidatedManifest: {},
+        validatedManifest: buildMockManifest({
+          name: '@scope/some-package',
+          version: new SemVer('1.0.0'),
+        }),
+      });
+      when(jest.spyOn(gitUtils, 'hasChangesInDirectorySinceGitTag'))
+        .calledWith(
+          '/path/to/project',
+          '/path/to/package',
+          '@scope/some-package@1.0.0',
+        )
+        .mockResolvedValue(true);
+
+      const pkg = await readMonorepoWorkspacePackage({
+        packageDirectoryPath: '/path/to/package',
+        projectDirectoryPath: '/path/to/project',
+        projectTagNames: ['@scope/some-package@1.0.0'],
+        rootPackageVersion: new SemVer('5.0.0'),
+      });
+
+      expect(pkg).toMatchObject({
+        hasChangesSinceLatestRelease: true,
+      });
+    });
+
+    it("returns the fact that the package has not been changed since its latest release if a tag matching the package name + version exists, and changes have not been made to the package's directory since the tag", async () => {
+      jest.spyOn(packageManifestUtils, 'readManifest').mockResolvedValue({
+        unvalidatedManifest: {},
+        validatedManifest: buildMockManifest({
+          name: '@scope/some-package',
+          version: new SemVer('1.0.0'),
+        }),
+      });
+      when(jest.spyOn(gitUtils, 'hasChangesInDirectorySinceGitTag'))
+        .calledWith(
+          '/path/to/project',
+          '/path/to/package',
+          '@scope/some-package@1.0.0',
+        )
+        .mockResolvedValue(false);
+
+      const pkg = await readMonorepoWorkspacePackage({
+        packageDirectoryPath: '/path/to/package',
+        projectDirectoryPath: '/path/to/project',
+        projectTagNames: ['@scope/some-package@1.0.0'],
+        rootPackageVersion: new SemVer('5.0.0'),
+      });
+
+      expect(pkg).toMatchObject({
+        hasChangesSinceLatestRelease: false,
+      });
+    });
+
+    it("returns the fact that the package has been changed since its latest release, if a tag matching 'v' + the root package version exists and changes have been made to the package's directory since the tag", async () => {
+      jest.spyOn(packageManifestUtils, 'readManifest').mockResolvedValue({
+        unvalidatedManifest: {},
+        validatedManifest: buildMockManifest({
+          version: new SemVer('1.0.0'),
+        }),
+      });
+      when(jest.spyOn(gitUtils, 'hasChangesInDirectorySinceGitTag'))
+        .calledWith('/path/to/project', '/path/to/package', 'v5.0.0')
+        .mockResolvedValue(true);
+
+      const pkg = await readMonorepoWorkspacePackage({
+        packageDirectoryPath: '/path/to/package',
+        projectDirectoryPath: '/path/to/project',
+        projectTagNames: ['v5.0.0'],
+        rootPackageVersion: new SemVer('5.0.0'),
+      });
+
+      expect(pkg).toMatchObject({
+        hasChangesSinceLatestRelease: true,
+      });
+    });
+
+    it("returns the fact that the package has not been changed since its latest release if a tag matching 'v' + the root package exists and changes have not been made to the package's directory since the tag", async () => {
+      jest.spyOn(packageManifestUtils, 'readManifest').mockResolvedValue({
+        unvalidatedManifest: {},
+        validatedManifest: buildMockManifest({
+          version: new SemVer('1.0.0'),
+        }),
+      });
+      when(jest.spyOn(gitUtils, 'hasChangesInDirectorySinceGitTag'))
+        .calledWith('/path/to/project', '/path/to/package', 'v5.0.0')
+        .mockResolvedValue(false);
+
+      const pkg = await readMonorepoWorkspacePackage({
+        packageDirectoryPath: '/path/to/package',
+        projectDirectoryPath: '/path/to/project',
+        projectTagNames: ['v5.0.0'],
+        rootPackageVersion: new SemVer('5.0.0'),
+      });
+
+      expect(pkg).toMatchObject({
+        hasChangesSinceLatestRelease: false,
+      });
+    });
+
+    it("returns the fact that the package has been changed since its latest release if a tag matching neither the package name + version nor 'v' + the root package version exists", async () => {
+      jest.spyOn(packageManifestUtils, 'readManifest').mockResolvedValue({
+        unvalidatedManifest: {},
+        validatedManifest: buildMockManifest({
+          version: new SemVer('1.0.0'),
+        }),
+      });
+
+      const pkg = await readMonorepoWorkspacePackage({
+        packageDirectoryPath: '/path/to/package',
+        projectDirectoryPath: '/path/to/project',
+        projectTagNames: [],
+        rootPackageVersion: new SemVer('5.0.0'),
+      });
+
+      expect(pkg).toMatchObject({
+        hasChangesSinceLatestRelease: true,
       });
     });
   });

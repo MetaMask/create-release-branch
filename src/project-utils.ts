@@ -1,8 +1,13 @@
 import util from 'util';
 import glob from 'glob';
-import { getRepositoryHttpsUrl } from './git-utils';
-import { Package, readPackage } from './package-utils';
+import { getRepositoryHttpsUrl, getTagNames } from './git-utils';
+import {
+  Package,
+  readMonorepoRootPackage,
+  readMonorepoWorkspacePackage,
+} from './package-utils';
 import { ManifestFieldNames } from './package-manifest-utils';
+// import { isValidSemver } from './semver-utils';
 
 /**
  * Represents the entire codebase on which this tool is operating.
@@ -37,6 +42,11 @@ interface ReleaseInfo {
 }
 
 const promisifiedGlob = util.promisify(glob);
+
+/**
+ * An error that declares an invalid monorepo release version.
+ */
+class InvalidMonorepoReleaseVersionError extends Error {}
 
 /**
  * Reads a version string from a SemVer object and extracts the release date and
@@ -77,13 +87,13 @@ function parseReleaseInfoFrom(
       releaseDate.getMonth() !== releaseMonthNumber - 1 ||
       releaseDate.getDate() !== releaseDay
     ) {
-      throw new Error(
+      throw new InvalidMonorepoReleaseVersionError(
         `${errorMessagePrefix}: "${match.groups.releaseDateString}" must be a valid date in "<yyyy><mm><dd>" format.`,
       );
     }
 
     if (releaseNumber === 0) {
-      throw new Error(
+      throw new InvalidMonorepoReleaseVersionError(
         `${errorMessagePrefix}: Release version must be greater than 0.`,
       );
     }
@@ -91,15 +101,17 @@ function parseReleaseInfoFrom(
     return { releaseDate, releaseNumber };
   }
 
-  throw new Error(
+  throw new InvalidMonorepoReleaseVersionError(
     `${errorMessagePrefix}: Must be in "<yyyymmdd>.<release-version>.0" format.`,
   );
 }
 
 /**
- * Collects information about a project. For a polyrepo, this information will
- * only cover the project's `package.json` file; for a monorepo, it will cover
- * `package.json` files for any workspaces that the monorepo defines.
+ * Collects information about a project, starting from the project directory
+ * (which is also treated as a Git repository). For a polyrepo package, this
+ * information will only cover the project's `package.json` file; for a
+ * monorepo, it will cover `package.json` files for any workspaces that the
+ * monorepo defines.
  *
  * @param projectDirectoryPath - The path to the project.
  * @returns An object that represents information about the project.
@@ -111,7 +123,12 @@ export async function readProject(
   projectDirectoryPath: string,
 ): Promise<Project> {
   const repositoryUrl = await getRepositoryHttpsUrl(projectDirectoryPath);
-  const rootPackage = await readPackage(projectDirectoryPath);
+  const tagNames = await getTagNames(projectDirectoryPath);
+  const rootPackage = await readMonorepoRootPackage({
+    packageDirectoryPath: projectDirectoryPath,
+    projectDirectoryPath,
+    projectTagNames: tagNames,
+  });
   const releaseInfo = parseReleaseInfoFrom(
     rootPackage.validatedManifest.version.toString(),
     rootPackage.validatedManifest.name,
@@ -133,7 +150,12 @@ export async function readProject(
   const workspacePackages = (
     await Promise.all(
       workspaceDirectories.map(async (directory) => {
-        return await readPackage(directory);
+        return await readMonorepoWorkspacePackage({
+          packageDirectoryPath: directory,
+          rootPackageVersion: rootPackage.validatedManifest.version,
+          projectDirectoryPath,
+          projectTagNames: tagNames,
+        });
       }),
     )
   ).reduce((obj, pkg) => {

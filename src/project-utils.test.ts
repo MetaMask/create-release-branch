@@ -1,8 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import { when } from 'jest-when';
+import { SemVer } from 'semver';
 import { withSandbox } from '../tests/helpers';
-import { buildMockManifest, buildMockPackage } from '../tests/unit/helpers';
+import { buildMockPackage } from '../tests/unit/helpers';
 import * as gitUtils from './git-utils';
 import * as packageUtils from './package-utils';
 import { readProject } from './project-utils';
@@ -16,16 +17,16 @@ describe('project-utils', () => {
       await withSandbox(async (sandbox) => {
         const projectDirectoryPath = sandbox.directoryPath;
         const projectRepositoryUrl = 'https://github.com/some-org/some-repo';
-        const rootPackage = buildMockPackage('root', '20220722.1234.0', {
+        const rootPackageVersion = new SemVer('20220722.1234.0');
+        const rootPackage = buildMockPackage('root', rootPackageVersion, {
           directoryPath: projectDirectoryPath,
-          validatedManifest: buildMockManifest({
+          validatedManifest: {
             workspaces: ['packages/a', 'packages/subpackages/*'],
-          }),
+          },
         });
         const workspacePackages = {
           a: buildMockPackage('a', {
             directoryPath: path.join(projectDirectoryPath, 'packages', 'a'),
-            validatedManifest: buildMockManifest(),
           }),
           b: buildMockPackage('b', {
             directoryPath: path.join(
@@ -34,20 +35,45 @@ describe('project-utils', () => {
               'subpackages',
               'b',
             ),
-            validatedManifest: buildMockManifest(),
           }),
         };
+        const projectTagNames = ['tag1', 'tag2', 'tag3'];
         when(jest.spyOn(gitUtils, 'getRepositoryHttpsUrl'))
           .calledWith(projectDirectoryPath)
           .mockResolvedValue(projectRepositoryUrl);
-        when(jest.spyOn(packageUtils, 'readPackage'))
+        when(jest.spyOn(gitUtils, 'getTagNames'))
           .calledWith(projectDirectoryPath)
-          .mockResolvedValue(rootPackage)
-          .calledWith(path.join(projectDirectoryPath, 'packages', 'a'))
+          .mockResolvedValue(projectTagNames);
+        when(jest.spyOn(packageUtils, 'readMonorepoRootPackage'))
+          .calledWith({
+            packageDirectoryPath: projectDirectoryPath,
+            projectDirectoryPath,
+            projectTagNames,
+          })
+          .mockResolvedValue(rootPackage);
+        when(jest.spyOn(packageUtils, 'readMonorepoWorkspacePackage'))
+          .calledWith({
+            packageDirectoryPath: path.join(
+              projectDirectoryPath,
+              'packages',
+              'a',
+            ),
+            rootPackageVersion,
+            projectDirectoryPath,
+            projectTagNames,
+          })
           .mockResolvedValue(workspacePackages.a)
-          .calledWith(
-            path.join(projectDirectoryPath, 'packages', 'subpackages', 'b'),
-          )
+          .calledWith({
+            packageDirectoryPath: path.join(
+              projectDirectoryPath,
+              'packages',
+              'subpackages',
+              'b',
+            ),
+            rootPackageVersion,
+            projectDirectoryPath,
+            projectTagNames,
+          })
           .mockResolvedValue(workspacePackages.b);
         await fs.promises.mkdir(path.join(projectDirectoryPath, 'packages'));
         await fs.promises.mkdir(
@@ -78,8 +104,11 @@ describe('project-utils', () => {
       await withSandbox(async (sandbox) => {
         const projectDirectoryPath = sandbox.directoryPath;
         const rootPackage = buildMockPackage('root', '1.2.3');
-        when(jest.spyOn(packageUtils, 'readPackage'))
+        when(jest.spyOn(gitUtils, 'getTagNames'))
           .calledWith(projectDirectoryPath)
+          .mockResolvedValue([]);
+        jest
+          .spyOn(packageUtils, 'readMonorepoRootPackage')
           .mockResolvedValue(rootPackage);
 
         await expect(readProject(projectDirectoryPath)).rejects.toThrow(
@@ -93,8 +122,11 @@ describe('project-utils', () => {
         const projectDirectoryPath = sandbox.directoryPath;
         // This evaluates to 2021-11-30
         const rootPackage = buildMockPackage('root', '20220000.1.0');
-        when(jest.spyOn(packageUtils, 'readPackage'))
+        when(jest.spyOn(gitUtils, 'getTagNames'))
           .calledWith(projectDirectoryPath)
+          .mockResolvedValue([]);
+        jest
+          .spyOn(packageUtils, 'readMonorepoRootPackage')
           .mockResolvedValue(rootPackage);
 
         await expect(readProject(projectDirectoryPath)).rejects.toThrow(
@@ -107,8 +139,11 @@ describe('project-utils', () => {
       await withSandbox(async (sandbox) => {
         const projectDirectoryPath = sandbox.directoryPath;
         const rootPackage = buildMockPackage('root', '99999999.1.0');
-        when(jest.spyOn(packageUtils, 'readPackage'))
+        when(jest.spyOn(gitUtils, 'getTagNames'))
           .calledWith(projectDirectoryPath)
+          .mockResolvedValue([]);
+        jest
+          .spyOn(packageUtils, 'readMonorepoRootPackage')
           .mockResolvedValue(rootPackage);
 
         await expect(readProject(projectDirectoryPath)).rejects.toThrow(
@@ -121,8 +156,11 @@ describe('project-utils', () => {
       await withSandbox(async (sandbox) => {
         const projectDirectoryPath = sandbox.directoryPath;
         const rootPackage = buildMockPackage('root', '20220101.0.0');
-        when(jest.spyOn(packageUtils, 'readPackage'))
+        when(jest.spyOn(gitUtils, 'getTagNames'))
           .calledWith(projectDirectoryPath)
+          .mockResolvedValue([]);
+        jest
+          .spyOn(packageUtils, 'readMonorepoRootPackage')
           .mockResolvedValue(rootPackage);
 
         await expect(readProject(projectDirectoryPath)).rejects.toThrow(

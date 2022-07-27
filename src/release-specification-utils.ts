@@ -79,8 +79,17 @@ export async function generateReleaseSpecificationTemplateForMonorepo({
 ${afterEditingInstructions}
   `.trim();
 
-  // TODO: List only changed files
-  const packages = Object.values(workspacePackages).reduce((obj, pkg) => {
+  const changedWorkspacePackages = Object.values(workspacePackages).filter(
+    (pkg) => pkg.hasChangesSinceLatestRelease,
+  );
+
+  if (changedWorkspacePackages.length === 0) {
+    throw new Error(
+      'Could not generate release specification: There are no packages that have changed since their latest release.',
+    );
+  }
+
+  const packages = changedWorkspacePackages.reduce((obj, pkg) => {
     return { ...obj, [pkg.validatedManifest.name]: null };
   }, {});
 
