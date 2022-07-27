@@ -37,7 +37,7 @@ describe('git-utils', () => {
       );
     });
 
-    it('converts a private GitHub repo URL into a public one', async () => {
+    it('converts an SSH GitHub repo URL into an HTTPS URL', async () => {
       const projectDirectoryPath = '/path/to/project';
       when(jest.spyOn(miscUtils, 'getStdoutFromCommand'))
         .calledWith('git', ['config', '--get', 'remote.origin.url'], {
