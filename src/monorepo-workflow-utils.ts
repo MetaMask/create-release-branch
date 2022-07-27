@@ -46,21 +46,20 @@ function getToday() {
  * For a monorepo, the process works like this:
  *
  * - The script generates a release spec template, listing the workspace
- *   packages in the project that have changed since the last release (or all of
- *   the packages if this would be the first release).
+ * packages in the project that have changed since the last release (or all of
+ * the packages if this would be the first release).
  * - The script then presents the template to the user so that they can specify
- *   the desired versions for each package. It first does this by attempting to
- *   locate an appropriate code editor on the user's computer (using the
- *   `EDITOR` environment variable if that is defined, otherwise `code` if it is
- *   present) and opening the file there, pausing while the user is editing the
- *   file. If no editor can be found, the script provides the user with the path
- *   to the template so that they can edit it themselves, then exits.
+ * the desired versions for each package. It first does this by attempting to
+ * locate an appropriate code editor on the user's computer (using the `EDITOR`
+ * environment variable if that is defined, otherwise `code` if it is present)
+ * and opening the file there, pausing while the user is editing the file. If no
+ * editor can be found, the script provides the user with the path to the
+ * template so that they can edit it themselves, then exits.
  * - However the user has edited the file, the script will parse and validate
- *   the information in the file, then apply the desired changes to the
- *   monorepo.
+ * the information in the file, then apply the desired changes to the monorepo.
  * - Finally, once it has made the desired changes, the script will create a Git
- *   commit that includes the changes, then create a branch using the current
- *   date as the name.
+ * commit that includes the changes, then create a branch using the current date
+ * as the name.
  *
  * @param options - The options.
  * @param options.project - Information about the project.

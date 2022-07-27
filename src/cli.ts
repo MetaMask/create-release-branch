@@ -3,7 +3,7 @@ import { main } from './main';
 /**
  * The entrypoint to this script.
  */
-async function index() {
+async function cli() {
   await main({
     argv: process.argv,
     cwd: process.cwd(),
@@ -12,7 +12,7 @@ async function index() {
   });
 }
 
-index().catch((error) => {
-  console.error(error.stack);
-  process.exit(1);
+cli().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
 });

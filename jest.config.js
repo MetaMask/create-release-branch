@@ -30,7 +30,7 @@ module.exports = {
   // An array of regexp pattern strings used to skip coverage collection
   coveragePathIgnorePatterns: [
     '/node_modules/',
-    '/src/index.ts',
+    '/src/cli.ts',
     '/src/inputs-utils.ts',
   ],
 

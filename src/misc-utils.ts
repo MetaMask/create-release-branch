@@ -19,14 +19,6 @@ export const debug = createDebug('create-release-branch:impl');
 export type Require<T, K extends keyof T> = Omit<T, K> & { [P in K]-?: T[P] };
 
 /**
- * Returns a version of the given record type where optionality is added to
- * the designated keys.
- */
-export type Unrequire<T, K extends keyof T> = Omit<T, K> & {
-  [P in K]+?: T[P];
-};
-
-/**
  * Type guard for determining whether the given value is an error object with a
  * `code` property such as the type of error that Node throws for filesystem
  * operations, etc.

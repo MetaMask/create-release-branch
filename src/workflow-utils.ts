@@ -42,9 +42,9 @@ export interface PackageReleasePlan {
  * This function does three things:
  *
  * 1. Stages all of the changes which have been made to the repo thus far and
- *    creates a new Git commit which carries the name of the new release.
+ * creates a new Git commit which carries the name of the new release.
  * 2. Creates a new branch pointed to that commit (which also carries the name
- *    of the new release).
+ * of the new release).
  * 3. Switches to that branch.
  *
  * @param project - Information about the whole project (e.g., names of packages
