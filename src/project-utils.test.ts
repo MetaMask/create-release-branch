@@ -15,7 +15,7 @@ jest.mock('./package-utils');
 
 describe('project-utils', () => {
   describe('readProject', () => {
-    it('collects information about the repository URL as well as the root and workspace packages within the project', async () => {
+    it('collects information about a monorepo project', async () => {
       await withSandbox(async (sandbox) => {
         const projectDirectoryPath = sandbox.directoryPath;
         const projectRepositoryUrl = 'https://github.com/some-org/some-repo';
@@ -69,6 +69,30 @@ describe('project-utils', () => {
           rootPackage,
           workspacePackages,
           isMonorepo: true,
+        });
+      });
+    });
+
+    it('collects information about a polyrepo project', async () => {
+      await withSandbox(async (sandbox) => {
+        const projectDirectoryPath = sandbox.directoryPath;
+        const projectRepositoryUrl = 'https://github.com/some-org/some-repo';
+        const rootPackage = buildMockPackage('root', {
+          directoryPath: projectDirectoryPath,
+        });
+        when(jest.spyOn(gitUtils, 'getRepositoryHttpsUrl'))
+          .calledWith(projectDirectoryPath)
+          .mockResolvedValue(projectRepositoryUrl);
+        when(jest.spyOn(packageUtils, 'readPackage'))
+          .calledWith(projectDirectoryPath)
+          .mockResolvedValue(rootPackage);
+
+        expect(await readProject(projectDirectoryPath)).toStrictEqual({
+          directoryPath: projectDirectoryPath,
+          repositoryUrl: projectRepositoryUrl,
+          rootPackage,
+          workspacePackages: {},
+          isMonorepo: false,
         });
       });
     });
