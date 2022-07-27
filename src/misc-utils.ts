@@ -117,10 +117,11 @@ export function knownKeysOf<K extends string | number | symbol>(
 }
 
 /**
- * Tests the given path to determine whether it represents an executable.
+ * Retrieves the real path of an executable via `which`.
  *
  * @param executablePath - The path to an executable.
- * @returns A promise for true or false, depending on the result.
+ * @returns The resolved path to the executable.
+ * @throws what `which` throws if it is not a "not found" error.
  */
 export async function resolveExecutable(
   executablePath: string,
