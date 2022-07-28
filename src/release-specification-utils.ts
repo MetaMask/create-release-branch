@@ -240,18 +240,9 @@ export async function validateReleaseSpecification(
             return [
               `${itemPrefix}${lineNumberPrefix}${error.message[0]}`,
               ...error.message.slice(1).map((line) => {
-                const spaces = [];
-
-                for (
-                  let i = 0;
-                  i < itemPrefix.length + lineNumberPrefix.length;
-                  i += 1
-                ) {
-                  spaces[i] = ' ';
-                }
-
-                const indentation = spaces.join('');
-                return `${indentation}${line}`;
+                const indentationLength =
+                  itemPrefix.length + lineNumberPrefix.length + line.length;
+                return line.padStart(indentationLength, ' ');
               }),
             ];
           }
