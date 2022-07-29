@@ -1,4 +1,4 @@
-import { getEnvironmentVariables } from './env-utils';
+import { getEnvironmentVariables } from './env';
 import { debug, resolveExecutable } from './misc-utils';
 
 /**

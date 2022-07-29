@@ -1,8 +1,10 @@
 import { buildMockProject } from '../tests/unit/helpers';
-import { captureChangesInReleaseBranch } from './workflow-utils';
-import * as gitUtils from './git-utils';
+import { captureChangesInReleaseBranch } from './workflow-operations';
+import * as repoModule from './repo';
 
-describe('workflow-utils', () => {
+jest.mock('./repo');
+
+describe('workflow-operations', () => {
   describe('captureChangesInReleaseBranch', () => {
     it('checks out a new branch named after the name of the release, stages all changes, then commits them to the branch', async () => {
       const project = buildMockProject({
@@ -13,7 +15,7 @@ describe('workflow-utils', () => {
         packages: [],
       };
       const getStdoutFromGitCommandWithinSpy = jest
-        .spyOn(gitUtils, 'getStdoutFromGitCommandWithin')
+        .spyOn(repoModule, 'getStdoutFromGitCommandWithin')
         .mockResolvedValue('the output');
 
       await captureChangesInReleaseBranch(project, releasePlan);

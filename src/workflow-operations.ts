@@ -1,6 +1,6 @@
-import { Package } from './package-utils';
-import { Project } from './project-utils';
-import { getStdoutFromGitCommandWithin } from './git-utils';
+import { Package } from './package';
+import { Project } from './project';
+import { getStdoutFromGitCommandWithin } from './repo';
 
 /**
  * Instructions for how to update the project in order to prepare it for a new
@@ -42,9 +42,9 @@ export interface PackageReleasePlan {
  * This function does three things:
  *
  * 1. Stages all of the changes which have been made to the repo thus far and
- *    creates a new Git commit which carries the name of the new release.
+ * creates a new Git commit which carries the name of the new release.
  * 2. Creates a new branch pointed to that commit (which also carries the name
- *    of the new release).
+ * of the new release).
  * 3. Switches to that branch.
  *
  * @param project - Information about the whole project (e.g., names of packages
@@ -56,10 +56,6 @@ export async function captureChangesInReleaseBranch(
   project: Project,
   releasePlan: ReleasePlan,
 ) {
-  // TODO: What if the index was dirty before this script was run? Or what if
-  // you're in the middle of a rebase? Might want to check that up front before
-  // changes are even made.
-  // TODO: What if this branch already exists? Append the build number?
   await getStdoutFromGitCommandWithin(project.directoryPath, [
     'checkout',
     '-b',

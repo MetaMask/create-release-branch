@@ -3,28 +3,28 @@ import path from 'path';
 import { SemVer } from 'semver';
 import { withSandbox } from '../tests/helpers';
 import { buildMockPackage, buildMockProject } from '../tests/unit/helpers';
-import { followMonorepoWorkflow } from './monorepo-workflow-utils';
-import * as editorUtils from './editor-utils';
-import * as envUtils from './env-utils';
-import * as packageUtils from './package-utils';
-import type { Package } from './package-utils';
-import type { ValidatedManifest } from './package-manifest-utils';
-import type { Project } from './project-utils';
-import * as releaseSpecificationUtils from './release-specification-utils';
-import * as workflowUtils from './workflow-utils';
+import { followMonorepoWorkflow } from './monorepo-workflow-operations';
+import * as editorModule from './editor';
+import * as envModule from './env';
+import * as packageModule from './package';
+import type { Package } from './package';
+import type { ValidatedManifest } from './package-manifest';
+import type { Project } from './project';
+import * as releaseSpecificationModule from './release-specification';
+import * as workflowOperations from './workflow-operations';
 
-jest.mock('./editor-utils');
-jest.mock('./env-utils');
-jest.mock('./package-utils');
-jest.mock('./release-specification-utils');
-jest.mock('./workflow-utils');
+jest.mock('./editor');
+jest.mock('./env');
+jest.mock('./package');
+jest.mock('./release-specification');
+jest.mock('./workflow-operations');
 
 /**
  * Given a Promise type, returns the type inside.
  */
 type UnwrapPromise<T> = T extends Promise<infer U> ? U : never;
 
-describe('monorepo-workflow-utils', () => {
+describe('monorepo-workflow-operations', () => {
   describe('followMonorepoWorkflow', () => {
     describe('when firstRemovingExistingReleaseSpecification is true', () => {
       describe('when a release spec file does not already exist', () => {
@@ -77,11 +77,11 @@ describe('monorepo-workflow-utils', () => {
                   },
                   validateReleaseSpecification: {
                     packages: {
-                      a: releaseSpecificationUtils.IncrementableVersionParts
+                      a: releaseSpecificationModule.IncrementableVersionParts
                         .major,
-                      b: releaseSpecificationUtils.IncrementableVersionParts
+                      b: releaseSpecificationModule.IncrementableVersionParts
                         .minor,
-                      c: releaseSpecificationUtils.IncrementableVersionParts
+                      c: releaseSpecificationModule.IncrementableVersionParts
                         .patch,
                       d: new SemVer('1.2.3'),
                     },
@@ -176,7 +176,7 @@ describe('monorepo-workflow-utils', () => {
                   },
                   validateReleaseSpecification: {
                     packages: {
-                      a: releaseSpecificationUtils.IncrementableVersionParts
+                      a: releaseSpecificationModule.IncrementableVersionParts
                         .major,
                     },
                   },
@@ -360,7 +360,7 @@ describe('monorepo-workflow-utils', () => {
                 });
                 jest
                   .spyOn(
-                    releaseSpecificationUtils,
+                    releaseSpecificationModule,
                     'waitForUserToEditReleaseSpecification',
                   )
                   .mockRejectedValue(new Error('oops'));
@@ -461,7 +461,7 @@ describe('monorepo-workflow-utils', () => {
                   },
                   validateReleaseSpecification: {
                     packages: {
-                      a: releaseSpecificationUtils.IncrementableVersionParts
+                      a: releaseSpecificationModule.IncrementableVersionParts
                         .major,
                     },
                   },
@@ -533,7 +533,7 @@ describe('monorepo-workflow-utils', () => {
                   },
                   validateReleaseSpecification: {
                     packages: {
-                      a: releaseSpecificationUtils.IncrementableVersionParts
+                      a: releaseSpecificationModule.IncrementableVersionParts
                         .major,
                     },
                   },
@@ -729,7 +729,7 @@ describe('monorepo-workflow-utils', () => {
                 });
                 jest
                   .spyOn(
-                    releaseSpecificationUtils,
+                    releaseSpecificationModule,
                     'waitForUserToEditReleaseSpecification',
                   )
                   .mockRejectedValue(new Error('oops'));
@@ -854,11 +854,11 @@ describe('monorepo-workflow-utils', () => {
                   },
                   validateReleaseSpecification: {
                     packages: {
-                      a: releaseSpecificationUtils.IncrementableVersionParts
+                      a: releaseSpecificationModule.IncrementableVersionParts
                         .major,
-                      b: releaseSpecificationUtils.IncrementableVersionParts
+                      b: releaseSpecificationModule.IncrementableVersionParts
                         .minor,
-                      c: releaseSpecificationUtils.IncrementableVersionParts
+                      c: releaseSpecificationModule.IncrementableVersionParts
                         .patch,
                       d: new SemVer('1.2.3'),
                     },
@@ -953,7 +953,7 @@ describe('monorepo-workflow-utils', () => {
                   },
                   validateReleaseSpecification: {
                     packages: {
-                      a: releaseSpecificationUtils.IncrementableVersionParts
+                      a: releaseSpecificationModule.IncrementableVersionParts
                         .major,
                     },
                   },
@@ -1134,7 +1134,7 @@ describe('monorepo-workflow-utils', () => {
                 });
                 jest
                   .spyOn(
-                    releaseSpecificationUtils,
+                    releaseSpecificationModule,
                     'waitForUserToEditReleaseSpecification',
                   )
                   .mockRejectedValue(new Error('oops'));
@@ -1235,7 +1235,7 @@ describe('monorepo-workflow-utils', () => {
                 },
                 validateReleaseSpecification: {
                   packages: {
-                    a: releaseSpecificationUtils.IncrementableVersionParts
+                    a: releaseSpecificationModule.IncrementableVersionParts
                       .major,
                   },
                 },
@@ -1310,7 +1310,7 @@ describe('monorepo-workflow-utils', () => {
                 },
                 validateReleaseSpecification: {
                   packages: {
-                    a: releaseSpecificationUtils.IncrementableVersionParts
+                    a: releaseSpecificationModule.IncrementableVersionParts
                       .major,
                   },
                 },
@@ -1506,7 +1506,7 @@ describe('monorepo-workflow-utils', () => {
               });
               jest
                 .spyOn(
-                  releaseSpecificationUtils,
+                  releaseSpecificationModule,
                   'waitForUserToEditReleaseSpecification',
                 )
                 .mockRejectedValue(new Error('oops'));
@@ -1612,54 +1612,54 @@ function mockDependencies({
   captureChangesInReleaseBranch: captureChangesInReleaseBranchValue = undefined,
 }: {
   determineEditor?: UnwrapPromise<
-    ReturnType<typeof editorUtils.determineEditor>
+    ReturnType<typeof editorModule.determineEditor>
   >;
   getEnvironmentVariables?: Partial<
-    ReturnType<typeof envUtils.getEnvironmentVariables>
+    ReturnType<typeof envModule.getEnvironmentVariables>
   >;
   generateReleaseSpecificationTemplateForMonorepo?: UnwrapPromise<
     ReturnType<
-      typeof releaseSpecificationUtils.generateReleaseSpecificationTemplateForMonorepo
+      typeof releaseSpecificationModule.generateReleaseSpecificationTemplateForMonorepo
     >
   >;
   waitForUserToEditReleaseSpecification?: UnwrapPromise<
     ReturnType<
-      typeof releaseSpecificationUtils.waitForUserToEditReleaseSpecification
+      typeof releaseSpecificationModule.waitForUserToEditReleaseSpecification
     >
   >;
   validateReleaseSpecification?: UnwrapPromise<
-    ReturnType<typeof releaseSpecificationUtils.validateReleaseSpecification>
+    ReturnType<typeof releaseSpecificationModule.validateReleaseSpecification>
   >;
-  updatePackage?: UnwrapPromise<ReturnType<typeof packageUtils.updatePackage>>;
+  updatePackage?: UnwrapPromise<ReturnType<typeof packageModule.updatePackage>>;
   captureChangesInReleaseBranch?: UnwrapPromise<
-    ReturnType<typeof workflowUtils.captureChangesInReleaseBranch>
+    ReturnType<typeof workflowOperations.captureChangesInReleaseBranch>
   >;
 }) {
   jest
-    .spyOn(editorUtils, 'determineEditor')
+    .spyOn(editorModule, 'determineEditor')
     .mockResolvedValue(determineEditorValue);
-  jest.spyOn(envUtils, 'getEnvironmentVariables').mockReturnValue({
+  jest.spyOn(envModule, 'getEnvironmentVariables').mockReturnValue({
     EDITOR: undefined,
     TODAY: undefined,
     ...getEnvironmentVariablesValue,
   });
   const generateReleaseSpecificationTemplateForMonorepoSpy = jest
     .spyOn(
-      releaseSpecificationUtils,
+      releaseSpecificationModule,
       'generateReleaseSpecificationTemplateForMonorepo',
     )
     .mockResolvedValue(generateReleaseSpecificationTemplateForMonorepoValue);
   const waitForUserToEditReleaseSpecificationSpy = jest
-    .spyOn(releaseSpecificationUtils, 'waitForUserToEditReleaseSpecification')
+    .spyOn(releaseSpecificationModule, 'waitForUserToEditReleaseSpecification')
     .mockResolvedValue(waitForUserToEditReleaseSpecificationValue);
   const validateReleaseSpecificationSpy = jest
-    .spyOn(releaseSpecificationUtils, 'validateReleaseSpecification')
+    .spyOn(releaseSpecificationModule, 'validateReleaseSpecification')
     .mockResolvedValue(validateReleaseSpecificationValue);
   const updatePackageSpy = jest
-    .spyOn(packageUtils, 'updatePackage')
+    .spyOn(packageModule, 'updatePackage')
     .mockResolvedValue(updatePackageValue);
   const captureChangesInReleaseBranchSpy = jest
-    .spyOn(workflowUtils, 'captureChangesInReleaseBranch')
+    .spyOn(workflowOperations, 'captureChangesInReleaseBranch')
     .mockResolvedValue(captureChangesInReleaseBranchValue);
 
   return {

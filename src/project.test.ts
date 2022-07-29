@@ -3,16 +3,16 @@ import path from 'path';
 import { when } from 'jest-when';
 import { withSandbox } from '../tests/helpers';
 import { buildMockManifest, buildMockPackage } from '../tests/unit/helpers';
-import * as gitUtils from './git-utils';
-import * as packageUtils from './package-utils';
-import { readProject } from './project-utils';
+import { readProject } from './project';
+import * as packageModule from './package';
+import * as repoModule from './repo';
 
-jest.mock('./git-utils');
-jest.mock('./package-utils');
+jest.mock('./package');
+jest.mock('./repo');
 
-describe('project-utils', () => {
+describe('project', () => {
   describe('readProject', () => {
-    it('collects information about the repository URL as well as the root and workspace packages within the project', async () => {
+    it('collects information about a monorepo project', async () => {
       await withSandbox(async (sandbox) => {
         const projectDirectoryPath = sandbox.directoryPath;
         const projectRepositoryUrl = 'https://github.com/some-org/some-repo';
@@ -37,10 +37,10 @@ describe('project-utils', () => {
             manifest: buildMockManifest(),
           }),
         };
-        when(jest.spyOn(gitUtils, 'getRepositoryHttpsUrl'))
+        when(jest.spyOn(repoModule, 'getRepositoryHttpsUrl'))
           .calledWith(projectDirectoryPath)
           .mockResolvedValue(projectRepositoryUrl);
-        when(jest.spyOn(packageUtils, 'readPackage'))
+        when(jest.spyOn(packageModule, 'readPackage'))
           .calledWith(projectDirectoryPath)
           .mockResolvedValue(rootPackage)
           .calledWith(path.join(projectDirectoryPath, 'packages', 'a'))
@@ -66,6 +66,30 @@ describe('project-utils', () => {
           rootPackage,
           workspacePackages,
           isMonorepo: true,
+        });
+      });
+    });
+
+    it('collects information about a polyrepo project', async () => {
+      await withSandbox(async (sandbox) => {
+        const projectDirectoryPath = sandbox.directoryPath;
+        const projectRepositoryUrl = 'https://github.com/some-org/some-repo';
+        const rootPackage = buildMockPackage('root', {
+          directoryPath: projectDirectoryPath,
+        });
+        when(jest.spyOn(repoModule, 'getRepositoryHttpsUrl'))
+          .calledWith(projectDirectoryPath)
+          .mockResolvedValue(projectRepositoryUrl);
+        when(jest.spyOn(packageModule, 'readPackage'))
+          .calledWith(projectDirectoryPath)
+          .mockResolvedValue(rootPackage);
+
+        expect(await readProject(projectDirectoryPath)).toStrictEqual({
+          directoryPath: projectDirectoryPath,
+          repositoryUrl: projectRepositoryUrl,
+          rootPackage,
+          workspacePackages: {},
+          isMonorepo: false,
         });
       });
     });

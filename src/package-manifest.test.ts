@@ -2,9 +2,9 @@ import fs from 'fs';
 import path from 'path';
 import { SemVer } from 'semver';
 import { withSandbox } from '../tests/helpers';
-import { readManifest } from './package-manifest-utils';
+import { readManifest } from './package-manifest';
 
-describe('package-manifest-utils', () => {
+describe('package-manifest', () => {
   describe('readManifest', () => {
     it('reads a minimal package manifest, expanding it by filling in values for optional fields', async () => {
       await withSandbox(async (sandbox) => {
