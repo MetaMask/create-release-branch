@@ -31,7 +31,7 @@ module.exports = {
   coveragePathIgnorePatterns: [
     '/node_modules/',
     '/src/cli.ts',
-    '/src/inputs-utils.ts',
+    '/src/command-line-arguments.ts',
   ],
 
   // Indicates which provider should be used to instrument code for coverage
