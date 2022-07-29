@@ -11,7 +11,7 @@ import * as editorModule from './editor';
 import * as envModule from './env';
 import * as packageModule from './package';
 import type { Package } from './package';
-import type { ValidatedManifest } from './package-manifest';
+import type { ValidatedPackageManifest } from './package-manifest';
 import type { Project } from './project';
 import * as releaseSpecificationModule from './release-specification';
 import * as workflowOperations from './workflow-operations';
@@ -1569,7 +1569,7 @@ function buildMockMonorepoRootPackage(
   name = 'root',
   version = '2022.1.1',
   overrides: Omit<Partial<Package>, 'manifest'> & {
-    manifest?: Partial<ValidatedManifest>;
+    manifest?: Partial<ValidatedPackageManifest>;
   } = {},
 ) {
   const { manifest, ...rest } = overrides;

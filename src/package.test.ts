@@ -19,7 +19,7 @@ describe('package', () => {
     it('reads information about the package located at the given directory', async () => {
       const packageDirectoryPath = '/path/to/package';
       jest
-        .spyOn(packageManifestModule, 'readManifest')
+        .spyOn(packageManifestModule, 'readPackageManifest')
         .mockResolvedValue(buildMockManifest());
 
       const pkg = await readPackage(packageDirectoryPath);
