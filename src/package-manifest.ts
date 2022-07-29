@@ -249,15 +249,19 @@ function readManifestField<T, U>({
  * Retrieves and checks the dependency fields of a package manifest object,
  * throwing if any of them is not present or is not the correct type.
  *
- * @param manifest - The manifest data to validate.
- * @param parentDirectory - The directory of the package to which the manifest
- * belongs.
+ * @param args - The arguments.
+ * @param args.manifest - The manifest data to validate.
+ * @param args.parentDirectory - The directory of the package to which the
+ * manifest belongs.
  * @returns The extracted dependency fields and their values.
  */
-function readManifestDependencyFields(
-  manifest: UnvalidatedManifest,
-  parentDirectory: string,
-) {
+function readManifestDependencyFields({
+  manifest,
+  parentDirectory,
+}: {
+  manifest: UnvalidatedManifest;
+  parentDirectory: string;
+}) {
   return Object.values(ManifestDependencyFieldNames).reduce(
     (obj, fieldName) => {
       const dependencies = readManifestField({
@@ -313,10 +317,10 @@ export async function readManifest(
     validation: validationForManifestPrivateField,
     defaultValue: false,
   });
-  const dependencyFields = readManifestDependencyFields(
-    unvalidatedManifest,
+  const dependencyFields = readManifestDependencyFields({
+    manifest: unvalidatedManifest,
     parentDirectory,
-  );
+  });
 
   return {
     [ManifestFieldNames.Name]: name,
