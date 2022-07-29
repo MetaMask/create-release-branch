@@ -1,16 +1,16 @@
 import { when } from 'jest-when';
-import { determineEditor } from './editor-utils';
-import * as envUtils from './env-utils';
+import { determineEditor } from './editor';
+import * as envModule from './env';
 import * as miscUtils from './misc-utils';
 
-jest.mock('./env-utils');
+jest.mock('./env');
 jest.mock('./misc-utils');
 
-describe('editor-utils', () => {
+describe('editor', () => {
   describe('determineEditor', () => {
     it('returns information about the editor from EDITOR if it resolves to an executable', async () => {
       jest
-        .spyOn(envUtils, 'getEnvironmentVariables')
+        .spyOn(envModule, 'getEnvironmentVariables')
         .mockReturnValue({ EDITOR: 'editor', TODAY: undefined });
       when(jest.spyOn(miscUtils, 'resolveExecutable'))
         .calledWith('editor')
@@ -24,7 +24,7 @@ describe('editor-utils', () => {
 
     it('falls back to VSCode if it exists and if EDITOR does not point to an executable', async () => {
       jest
-        .spyOn(envUtils, 'getEnvironmentVariables')
+        .spyOn(envModule, 'getEnvironmentVariables')
         .mockReturnValue({ EDITOR: 'editor', TODAY: undefined });
       when(jest.spyOn(miscUtils, 'resolveExecutable'))
         .calledWith('editor')
@@ -40,7 +40,7 @@ describe('editor-utils', () => {
 
     it('returns null if resolving EDITOR returns null and resolving VSCode returns null', async () => {
       jest
-        .spyOn(envUtils, 'getEnvironmentVariables')
+        .spyOn(envModule, 'getEnvironmentVariables')
         .mockReturnValue({ EDITOR: 'editor', TODAY: undefined });
       when(jest.spyOn(miscUtils, 'resolveExecutable'))
         .calledWith('editor')
@@ -53,7 +53,7 @@ describe('editor-utils', () => {
 
     it('returns null if resolving EDITOR returns null and resolving VSCode throws', async () => {
       jest
-        .spyOn(envUtils, 'getEnvironmentVariables')
+        .spyOn(envModule, 'getEnvironmentVariables')
         .mockReturnValue({ EDITOR: 'editor', TODAY: undefined });
       when(jest.spyOn(miscUtils, 'resolveExecutable'))
         .calledWith('editor')
@@ -66,7 +66,7 @@ describe('editor-utils', () => {
 
     it('returns null if resolving EDITOR throws and resolving VSCode returns null', async () => {
       jest
-        .spyOn(envUtils, 'getEnvironmentVariables')
+        .spyOn(envModule, 'getEnvironmentVariables')
         .mockReturnValue({ EDITOR: 'editor', TODAY: undefined });
       when(jest.spyOn(miscUtils, 'resolveExecutable'))
         .calledWith('editor')
@@ -79,7 +79,7 @@ describe('editor-utils', () => {
 
     it('returns null if resolving EDITOR throws and resolving VSCode throws', async () => {
       jest
-        .spyOn(envUtils, 'getEnvironmentVariables')
+        .spyOn(envModule, 'getEnvironmentVariables')
         .mockReturnValue({ EDITOR: 'editor', TODAY: undefined });
       when(jest.spyOn(miscUtils, 'resolveExecutable'))
         .calledWith('editor')
@@ -92,7 +92,7 @@ describe('editor-utils', () => {
 
     it('returns null if EDITOR is unset and resolving VSCode returns null', async () => {
       jest
-        .spyOn(envUtils, 'getEnvironmentVariables')
+        .spyOn(envModule, 'getEnvironmentVariables')
         .mockReturnValue({ EDITOR: undefined, TODAY: undefined });
       when(jest.spyOn(miscUtils, 'resolveExecutable'))
         .calledWith('code')
@@ -103,7 +103,7 @@ describe('editor-utils', () => {
 
     it('returns null if EDITOR is unset and resolving VSCode throws', async () => {
       jest
-        .spyOn(envUtils, 'getEnvironmentVariables')
+        .spyOn(envModule, 'getEnvironmentVariables')
         .mockReturnValue({ EDITOR: undefined, TODAY: undefined });
       when(jest.spyOn(miscUtils, 'resolveExecutable'))
         .calledWith('code')

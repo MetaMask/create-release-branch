@@ -30,8 +30,8 @@ module.exports = {
   // An array of regexp pattern strings used to skip coverage collection
   coveragePathIgnorePatterns: [
     '/node_modules/',
-    '/src/index.ts',
-    '/src/inputs-utils.ts',
+    '/src/cli.ts',
+    '/src/command-line-arguments.ts',
   ],
 
   // Indicates which provider should be used to instrument code for coverage
@@ -137,7 +137,7 @@ module.exports = {
   // setupFiles: [],
 
   // A list of paths to modules that run some code to configure or set up the testing framework before each test
-  // setupFilesAfterEnv: [],
+  setupFilesAfterEnv: ['./tests/setupAfterEnv.ts'],
 
   // The number of seconds after which a test is considered as slow and reported as such in the results.
   // slowTestThreshold: 5,

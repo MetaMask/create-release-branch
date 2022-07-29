@@ -1,8 +1,8 @@
 import util from 'util';
 import glob from 'glob';
-import { getRepositoryHttpsUrl } from './git-utils';
-import { Package, readPackage } from './package-utils';
-import { ManifestFieldNames } from './package-manifest-utils';
+import { Package, readPackage } from './package';
+import { PackageManifestFieldNames } from './package-manifest';
+import { getRepositoryHttpsUrl } from './repo';
 
 /**
  * Represents the entire codebase on which this tool is operating.
@@ -23,6 +23,9 @@ export interface Project {
   isMonorepo: boolean;
 }
 
+/**
+ * A promisified version of `glob`.
+ */
 const promisifiedGlob = util.promisify(glob);
 
 /**
@@ -44,7 +47,7 @@ export async function readProject(
 
   const workspaceDirectories = (
     await Promise.all(
-      rootPackage.validatedManifest[ManifestFieldNames.Workspaces].map(
+      rootPackage.validatedManifest[PackageManifestFieldNames.Workspaces].map(
         async (workspacePattern) => {
           return await promisifiedGlob(workspacePattern, {
             cwd: projectDirectoryPath,
