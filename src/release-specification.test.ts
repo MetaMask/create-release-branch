@@ -338,7 +338,7 @@ packages:
       });
     });
 
-    it('throws if any of the keys in the "packages" objectproperty do not match the names of any workspace packages', async () => {
+    it('throws if any of the keys in the "packages" object do not match the names of any workspace packages', async () => {
       await withSandbox(async (sandbox) => {
         const project = buildMockProject({
           workspacePackages: {
