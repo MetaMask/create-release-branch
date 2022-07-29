@@ -3,7 +3,10 @@ import path from 'path';
 import { updateChangelog } from '@metamask/auto-changelog';
 import { isErrorWithCode } from './misc-utils';
 import { readFile, writeFile, writeJsonFile } from './fs';
-import { readManifest, ValidatedManifest } from './package-manifest';
+import {
+  readPackageManifest,
+  ValidatedPackageManifest,
+} from './package-manifest';
 import { Project } from './project';
 import { PackageReleasePlan } from './workflow-operations';
 
@@ -23,7 +26,7 @@ const CHANGELOG_FILE_NAME = 'CHANGELOG.md';
 export interface Package {
   directoryPath: string;
   manifestPath: string;
-  manifest: ValidatedManifest;
+  manifest: ValidatedPackageManifest;
   changelogPath: string;
 }
 
@@ -38,7 +41,7 @@ export async function readPackage(
 ): Promise<Package> {
   const manifestPath = path.join(packageDirectoryPath, MANIFEST_FILE_NAME);
   const changelogPath = path.join(packageDirectoryPath, CHANGELOG_FILE_NAME);
-  const validatedManifest = await readManifest(manifestPath);
+  const validatedManifest = await readPackageManifest(manifestPath);
 
   return {
     directoryPath: packageDirectoryPath,
