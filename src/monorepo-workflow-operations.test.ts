@@ -11,8 +11,6 @@ import { followMonorepoWorkflow } from './monorepo-workflow-operations';
 import * as editorModule from './editor';
 import * as envModule from './env';
 import * as packageModule from './package';
-import type { Package } from './package';
-import type { ValidatedManifest } from './package-manifest';
 import type { Project } from './project';
 import * as releaseSpecificationModule from './release-specification';
 import * as workflowOperations from './workflow-operations';

@@ -1,7 +1,7 @@
 import util from 'util';
 import glob from 'glob';
 import { Package, readPackage } from './package';
-import { ManifestFieldNames } from './package-manifest';
+import { PackageManifestFieldNames } from './package-manifest';
 import { getRepositoryHttpsUrl } from './repo';
 
 /**
@@ -47,7 +47,7 @@ export async function readProject(
 
   const workspaceDirectories = (
     await Promise.all(
-      rootPackage.validatedManifest[ManifestFieldNames.Workspaces].map(
+      rootPackage.validatedManifest[PackageManifestFieldNames.Workspaces].map(
         async (workspacePattern) => {
           return await promisifiedGlob(workspacePattern, {
             cwd: projectDirectoryPath,

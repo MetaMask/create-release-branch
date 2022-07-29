@@ -3,10 +3,10 @@ import { SemVer } from 'semver';
 import { isPlainObject } from '@metamask/utils';
 import type { Package } from '../../src/package';
 import {
-  ManifestFieldNames,
-  ManifestDependencyFieldNames,
+  PackageManifestFieldNames,
+  PackageManifestDependenciesFieldNames,
 } from '../../src/package-manifest';
-import type { ValidatedManifest } from '../../src/package-manifest';
+import type { ValidatedPackageManifest } from '../../src/package-manifest';
 import type { Project } from '../../src/project';
 
 /**
@@ -22,8 +22,8 @@ type MockPackageOverrides = Omit<
   'unvalidatedManifest' | 'validatedManifest'
 > & {
   validatedManifest?: Omit<
-    Partial<ValidatedManifest>,
-    ManifestFieldNames.Name | ManifestFieldNames.Version
+    Partial<ValidatedPackageManifest>,
+    PackageManifestFieldNames.Name | PackageManifestFieldNames.Version
   >;
 };
 
@@ -98,8 +98,8 @@ export function buildMockPackage(
     unvalidatedManifest: {},
     validatedManifest: buildMockManifest({
       ...validatedManifest,
-      [ManifestFieldNames.Name]: name,
-      [ManifestFieldNames.Version]:
+      [PackageManifestFieldNames.Name]: name,
+      [PackageManifestFieldNames.Version]:
         version instanceof SemVer ? version : new SemVer(version),
     }),
     manifestPath,
@@ -164,21 +164,21 @@ export function buildMockMonorepoRootPackage(
  * values, so you can specify only the properties you care about.
  *
  * @param overrides - The properties to override in the manifest.
- * @returns The mock ValidatedManifest.
+ * @returns The mock ValidatedPackageManifest.
  */
 export function buildMockManifest(
-  overrides: Partial<ValidatedManifest> = {},
-): ValidatedManifest {
+  overrides: Partial<ValidatedPackageManifest> = {},
+): ValidatedPackageManifest {
   return {
-    [ManifestFieldNames.Name]: 'foo',
-    [ManifestFieldNames.Version]: new SemVer('1.2.3'),
-    [ManifestFieldNames.Private]: false,
-    [ManifestFieldNames.Workspaces]: [],
-    [ManifestDependencyFieldNames.Bundled]: {},
-    [ManifestDependencyFieldNames.Production]: {},
-    [ManifestDependencyFieldNames.Development]: {},
-    [ManifestDependencyFieldNames.Optional]: {},
-    [ManifestDependencyFieldNames.Peer]: {},
+    [PackageManifestFieldNames.Name]: 'foo',
+    [PackageManifestFieldNames.Version]: new SemVer('1.2.3'),
+    [PackageManifestFieldNames.Private]: false,
+    [PackageManifestFieldNames.Workspaces]: [],
+    [PackageManifestDependenciesFieldNames.Bundled]: {},
+    [PackageManifestDependenciesFieldNames.Production]: {},
+    [PackageManifestDependenciesFieldNames.Development]: {},
+    [PackageManifestDependenciesFieldNames.Optional]: {},
+    [PackageManifestDependenciesFieldNames.Peer]: {},
     ...overrides,
   };
 }

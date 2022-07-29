@@ -4,9 +4,9 @@ import { updateChangelog } from '@metamask/auto-changelog';
 import { isErrorWithCode } from './misc-utils';
 import { readFile, writeFile, writeJsonFile } from './fs';
 import {
-  readManifest,
-  UnvalidatedManifest,
-  ValidatedManifest,
+  readPackageManifest,
+  UnvalidatedPackageManifest,
+  ValidatedPackageManifest,
 } from './package-manifest';
 import { Project } from './project';
 import { PackageReleasePlan } from './workflow-operations';
@@ -27,8 +27,8 @@ const CHANGELOG_FILE_NAME = 'CHANGELOG.md';
 export interface Package {
   directoryPath: string;
   manifestPath: string;
-  unvalidatedManifest: UnvalidatedManifest;
-  validatedManifest: ValidatedManifest;
+  unvalidatedManifest: UnvalidatedPackageManifest;
+  validatedManifest: ValidatedPackageManifest;
   changelogPath: string;
 }
 
@@ -43,7 +43,7 @@ export async function readPackage(
 ): Promise<Package> {
   const manifestPath = path.join(packageDirectoryPath, MANIFEST_FILE_NAME);
   const changelogPath = path.join(packageDirectoryPath, CHANGELOG_FILE_NAME);
-  const { unvalidatedManifest, validatedManifest } = await readManifest(
+  const { unvalidatedManifest, validatedManifest } = await readPackageManifest(
     manifestPath,
   );
 
