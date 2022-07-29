@@ -2,9 +2,9 @@ import fs from 'fs';
 import path from 'path';
 import { SemVer } from 'semver';
 import { withSandbox } from '../tests/helpers';
-import { readManifest } from './package-manifest-utils';
+import { readManifest } from './package-manifest';
 
-describe('package-manifest-utils', () => {
+describe('package-manifest', () => {
   describe('readManifest', () => {
     it('reads a minimal package manifest, expanding it by filling in values for optional fields', async () => {
       await withSandbox(async (sandbox) => {
@@ -18,6 +18,11 @@ describe('package-manifest-utils', () => {
           version: new SemVer('1.2.3'),
           workspaces: [],
           private: false,
+          bundledDependencies: {},
+          dependencies: {},
+          devDependencies: {},
+          optionalDependencies: {},
+          peerDependencies: {},
         };
         await fs.promises.writeFile(
           manifestPath,
@@ -45,6 +50,11 @@ describe('package-manifest-utils', () => {
           version: new SemVer('1.2.3'),
           workspaces: ['packages/*'],
           private: true,
+          bundledDependencies: {},
+          dependencies: {},
+          devDependencies: {},
+          optionalDependencies: {},
+          peerDependencies: {},
         };
         await fs.promises.writeFile(
           manifestPath,
@@ -71,6 +81,11 @@ describe('package-manifest-utils', () => {
           version: new SemVer('1.2.3'),
           workspaces: [],
           private: false,
+          bundledDependencies: {},
+          dependencies: {},
+          devDependencies: {},
+          optionalDependencies: {},
+          peerDependencies: {},
         };
         await fs.promises.writeFile(
           manifestPath,
@@ -200,6 +215,50 @@ describe('package-manifest-utils', () => {
         await expect(readManifest(manifestPath)).rejects.toThrow(
           'The value of "private" in the manifest for "foo" must be true or false (if present)',
         );
+      });
+    });
+
+    [
+      'bundledDependencies',
+      'dependencies',
+      'devDependencies',
+      'optionalDependencies',
+      'peerDependencies',
+    ].forEach((fieldName) => {
+      it(`throws if "${fieldName}" is not an object`, async () => {
+        await withSandbox(async (sandbox) => {
+          const manifestPath = path.join(sandbox.directoryPath, 'package.json');
+          await fs.promises.writeFile(
+            manifestPath,
+            JSON.stringify({
+              name: 'foo',
+              version: '1.2.3',
+              [fieldName]: 12345,
+            }),
+          );
+
+          await expect(readManifest(manifestPath)).rejects.toThrow(
+            `The value of "${fieldName}" in the manifest for "foo" must be an object with non-empty string keys and non-empty string values`,
+          );
+        });
+      });
+
+      it(`throws if "${fieldName}" is not an object with string values`, async () => {
+        await withSandbox(async (sandbox) => {
+          const manifestPath = path.join(sandbox.directoryPath, 'package.json');
+          await fs.promises.writeFile(
+            manifestPath,
+            JSON.stringify({
+              name: 'foo',
+              version: '1.2.3',
+              [fieldName]: { foo: 12345 },
+            }),
+          );
+
+          await expect(readManifest(manifestPath)).rejects.toThrow(
+            `The value of "${fieldName}" in the manifest for "foo" must be an object with non-empty string keys and non-empty string values`,
+          );
+        });
       });
     });
   });

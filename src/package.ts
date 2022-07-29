@@ -2,14 +2,14 @@ import fs, { WriteStream } from 'fs';
 import path from 'path';
 import { updateChangelog } from '@metamask/auto-changelog';
 import { isErrorWithCode } from './misc-utils';
-import { readFile, writeFile, writeJsonFile } from './file-utils';
-import { Project } from './project-utils';
-import { PackageReleasePlan } from './workflow-utils';
+import { readFile, writeFile, writeJsonFile } from './fs';
 import {
   readManifest,
   UnvalidatedManifest,
   ValidatedManifest,
-} from './package-manifest-utils';
+} from './package-manifest';
+import { Project } from './project';
+import { PackageReleasePlan } from './workflow-operations';
 
 const MANIFEST_FILE_NAME = 'package.json';
 const CHANGELOG_FILE_NAME = 'CHANGELOG.md';

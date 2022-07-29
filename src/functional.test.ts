@@ -75,7 +75,7 @@ describe('create-release-branch (functional)', () => {
             },
           });
 
-          await environment.runScript({
+          await environment.runTool({
             releaseSpecification: {
               packages: {
                 a: 'major',
@@ -188,7 +188,7 @@ describe('create-release-branch (functional)', () => {
           await environment.createCommit('Update "a"');
 
           // Run the script
-          await environment.runScript({
+          await environment.runTool({
             releaseSpecification: {
               packages: {
                 a: 'major',
@@ -253,7 +253,7 @@ describe('create-release-branch (functional)', () => {
           today: new Date('2022-06-24'),
         },
         async (environment) => {
-          await environment.runScript({
+          await environment.runTool({
             releaseSpecification: {
               packages: {
                 a: 'major',

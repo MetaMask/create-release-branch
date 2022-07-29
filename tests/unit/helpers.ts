@@ -1,10 +1,13 @@
 import path from 'path';
 import { SemVer } from 'semver';
 import { isPlainObject } from '@metamask/utils';
-import type { Package } from '../../src/package-utils';
-import { ManifestFieldNames } from '../../src/package-manifest-utils';
-import type { Project } from '../../src/project-utils';
-import type { ValidatedManifest } from '../../src/package-manifest-utils';
+import type { Package } from '../../src/package';
+import {
+  ManifestFieldNames,
+  ManifestDependencyFieldNames,
+} from '../../src/package-manifest';
+import type { ValidatedManifest } from '../../src/package-manifest';
+import type { Project } from '../../src/project';
 
 /**
  * Returns a version of the given record type where optionality is added to
@@ -171,6 +174,11 @@ export function buildMockManifest(
     [ManifestFieldNames.Version]: new SemVer('1.2.3'),
     [ManifestFieldNames.Private]: false,
     [ManifestFieldNames.Workspaces]: [],
+    [ManifestDependencyFieldNames.Bundled]: {},
+    [ManifestDependencyFieldNames.Production]: {},
+    [ManifestDependencyFieldNames.Development]: {},
+    [ManifestDependencyFieldNames.Optional]: {},
+    [ManifestDependencyFieldNames.Peer]: {},
     ...overrides,
   };
 }

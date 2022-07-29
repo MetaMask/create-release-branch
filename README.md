@@ -1,21 +1,32 @@
 # @metamask/create-release-branch
 
-This is an interactive command-line tool that automates steps involved in preparing for a new release of a project. These steps include updating versions of one or more desired packages, adding a new section to said packages' changelogs which includes changes since ther previous releases, and then creating a new branch from which a pull request can be submitted for review before the release goes live.
+This is an interactive command-line tool that automates steps involved in preparing for a new release of a project. These steps include updating versions of one or more desired packages, adding a new section to said packages' changelogs which includes changes since the previous releases, and then creating a new branch from which a pull request can be submitted for review before the release goes live.
 
 ## Installation
 
-TODO
+Add this tool as a development dependency to your project:
+
+```
+yarn add --dev @metamask/create-release-branch
+```
+
+or:
+
+```
+npm install --save-dev @metamask/create-release-branch
+```
 
 ## Usage
 
-TODO
+For more on how to use this tool, please see the [docs](./docs).
 
 ## Contributing
 
 ### Setup
 
-- Install [Node.js](https://nodejs.org) version 12
+- Install [Node.js](https://nodejs.org) version 16
   - If you are using [nvm](https://github.com/creationix/nvm#installation) (recommended) running `nvm use` will automatically choose the right node version for you.
+  - Note that the version of Node used for development (in `.nvmrc`) is intentionally higher than version used for consumption (as `engines` in `package.json`), as we have not fully phased out legacy versions of Node from our products yet.
 - Install [Yarn v3](https://yarnpkg.com/getting-started/install)
 - Run `yarn install` to install dependencies and run any required post-install scripts
 
