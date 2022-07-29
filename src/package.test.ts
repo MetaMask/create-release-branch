@@ -7,19 +7,19 @@ import {
   buildMockManifest,
   withSandbox,
 } from '../tests/unit/helpers';
-import * as fileUtils from './file-utils';
-import { readPackage, updatePackage } from './package-utils';
-import * as packageManifestUtils from './package-manifest-utils';
+import { readPackage, updatePackage } from './package';
+import * as fsModule from './fs';
+import * as packageManifestModule from './package-manifest';
 
 jest.mock('@metamask/auto-changelog');
-jest.mock('./package-manifest-utils');
+jest.mock('./package-manifest');
 
-describe('package-utils', () => {
+describe('package', () => {
   describe('readPackage', () => {
     it('reads information about the package located at the given directory', async () => {
       const packageDirectoryPath = '/path/to/package';
       jest
-        .spyOn(packageManifestUtils, 'readManifest')
+        .spyOn(packageManifestModule, 'readManifest')
         .mockResolvedValue(buildMockManifest());
 
       const pkg = await readPackage(packageDirectoryPath);
@@ -114,7 +114,7 @@ describe('package-utils', () => {
           newVersion: '2.0.0',
           shouldUpdateChangelog: true,
         };
-        jest.spyOn(fileUtils, 'readFile').mockRejectedValue(new Error('oops'));
+        jest.spyOn(fsModule, 'readFile').mockRejectedValue(new Error('oops'));
 
         await expect(
           updatePackage({ project, packageReleasePlan }),

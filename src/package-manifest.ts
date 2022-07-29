@@ -3,9 +3,9 @@ import {
   ManifestFieldNames,
   ManifestDependencyFieldNames,
 } from '@metamask/action-utils';
-import { readJsonObjectFile } from './file-utils';
+import { readJsonObjectFile } from './fs';
 import { isTruthyString, isObject, Require } from './misc-utils';
-import { isValidSemver, SemVer } from './semver-utils';
+import { isValidSemver, SemVer } from './semver';
 
 export { ManifestFieldNames, ManifestDependencyFieldNames };
 

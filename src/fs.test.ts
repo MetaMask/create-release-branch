@@ -13,13 +13,13 @@ import {
   fileExists,
   ensureDirectoryPathExists,
   removeFile,
-} from './file-utils';
+} from './fs';
 
 jest.mock('@metamask/action-utils');
 
 const promisifiedRimraf = util.promisify(rimraf);
 
-describe('file-utils', () => {
+describe('fs', () => {
   describe('readFile', () => {
     it('reads the contents of the given file as a UTF-8-encoded string', async () => {
       await withSandbox(async (sandbox) => {

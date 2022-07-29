@@ -1,6 +1,6 @@
-import { getEnvironmentVariables } from './env-utils';
+import { getEnvironmentVariables } from './env';
 
-describe('env-utils', () => {
+describe('env', () => {
   describe('getEnvironmentVariables', () => {
     let existingProcessEnv: NodeJS.ProcessEnv;
 

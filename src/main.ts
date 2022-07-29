@@ -1,14 +1,16 @@
 import type { WriteStream } from 'fs';
-import { initialize } from './initialization-utils';
-import { followMonorepoWorkflow } from './monorepo-workflow-utils';
+import { determineInitialParameters } from './initial-parameters';
+import { followMonorepoWorkflow } from './monorepo-workflow-operations';
 
 /**
- * The main function for this script.
+ * The main function for this tool. Designed to not access `process.argv`,
+ * `process.env`, `process.cwd()`, `process.stdout`, or `process.stderr`
+ * directly so as to be more easily testable.
  *
  * @param args - The arguments.
- * @param args.argv - The name of this script and its arguments (as obtained via
- * `process.argv`).
- * @param args.cwd - The directory in which this script was executed.
+ * @param args.argv - The name of this executable and its arguments (as obtained
+ * via `process.argv`).
+ * @param args.cwd - The directory in which this executable was run.
  * @param args.stdout - A stream that can be used to write to standard out.
  * @param args.stderr - A stream that can be used to write to standard error.
  */
@@ -23,7 +25,8 @@ export async function main({
   stdout: Pick<WriteStream, 'write'>;
   stderr: Pick<WriteStream, 'write'>;
 }) {
-  const { project, tempDirectoryPath, reset } = await initialize(argv, cwd);
+  const { project, tempDirectoryPath, reset } =
+    await determineInitialParameters(argv, cwd);
 
   if (project.isMonorepo) {
     stdout.write(

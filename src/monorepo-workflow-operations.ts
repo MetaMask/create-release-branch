@@ -7,23 +7,23 @@ import {
   fileExists,
   removeFile,
   writeFile,
-} from './file-utils';
-import { determineEditor } from './editor-utils';
-import { getEnvironmentVariables } from './env-utils';
-import { updatePackage } from './package-utils';
-import { Project } from './project-utils';
+} from './fs';
+import { determineEditor } from './editor';
+import { getEnvironmentVariables } from './env';
+import { updatePackage } from './package';
+import { Project } from './project';
 import {
   generateReleaseSpecificationTemplateForMonorepo,
   waitForUserToEditReleaseSpecification,
   validateReleaseSpecification,
   ReleaseSpecification,
-} from './release-specification-utils';
-import { semver, SemVer } from './semver-utils';
+} from './release-specification';
+import { semver, SemVer } from './semver';
 import {
   captureChangesInReleaseBranch,
   PackageReleasePlan,
   ReleasePlan,
-} from './workflow-utils';
+} from './workflow-operations';
 
 /**
  * Creates a date from the value of the `TODAY` environment variable, falling
@@ -45,19 +45,19 @@ function getToday() {
 /**
  * For a monorepo, the process works like this:
  *
- * - The script generates a release spec template, listing the workspace
- * packages in the project that have changed since the last release (or all of
- * the packages if this would be the first release).
- * - The script then presents the template to the user so that they can specify
+ * - The tool generates a release spec template, listing the workspace packages
+ * in the project that have changed since the last release (or all of the
+ * packages if this would be the first release).
+ * - The tool then presents the template to the user so that they can specify
  * the desired versions for each package. It first does this by attempting to
  * locate an appropriate code editor on the user's computer (using the `EDITOR`
  * environment variable if that is defined, otherwise `code` if it is present)
  * and opening the file there, pausing while the user is editing the file. If no
- * editor can be found, the script provides the user with the path to the
- * template so that they can edit it themselves, then exits.
- * - However the user has edited the file, the script will parse and validate
- * the information in the file, then apply the desired changes to the monorepo.
- * - Finally, once it has made the desired changes, the script will create a Git
+ * editor can be found, the tool provides the user with the path to the template
+ * so that they can edit it themselves, then exits.
+ * - However the user has edited the file, the tool will parse and validate the
+ * information in the file, then apply the desired changes to the monorepo.
+ * - Finally, once it has made the desired changes, the tool will create a Git
  * commit that includes the changes, then create a branch using the current date
  * as the name.
  *
@@ -109,7 +109,7 @@ export async function followMonorepoWorkflow({
     if (!editor) {
       stdout.write(
         `${[
-          'A template has been generated that specifies this release. Please open the following file in your editor of choice, then re-run this script:',
+          'A template has been generated that specifies this release. Please open the following file in your editor of choice, then re-run this tool:',
           `${releaseSpecificationPath}`,
         ].join('\n\n')}\n`,
       );
@@ -190,7 +190,7 @@ async function planRelease(
       throw new Error(
         [
           `Could not apply version specifier "${versionSpecifier}" to package "${packageName}" because the current and new versions would end up being the same.`,
-          `The release spec file has been retained for you to make the necessary fixes. Once you've done this, re-run this script.`,
+          `The release spec file has been retained for you to make the necessary fixes. Once you've done this, re-run this tool.`,
           releaseSpecificationPath,
         ].join('\n\n'),
       );

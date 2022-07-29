@@ -1,7 +1,7 @@
 import os from 'os';
 import path from 'path';
-import { readProject, Project } from './project-utils';
-import { readInputs } from './inputs-utils';
+import { readCommandLineArguments } from './command-line-arguments';
+import { readProject, Project } from './project';
 
 interface InitialParameters {
   project: Project;
@@ -11,17 +11,17 @@ interface InitialParameters {
 
 /**
  * Reads the inputs given to this tool via `process.argv` and uses them to
- * gather data we can use to proceed.
+ * gather information about the project the tool can use to run.
  *
- * @param argv - The arguments to this script.
- * @param cwd - The directory in which this script was executed.
+ * @param argv - The arguments to this executable.
+ * @param cwd - The directory in which this executable was run.
  * @returns The initial parameters.
  */
-export async function initialize(
+export async function determineInitialParameters(
   argv: string[],
   cwd: string,
 ): Promise<InitialParameters> {
-  const inputs = await readInputs(argv);
+  const inputs = await readCommandLineArguments(argv);
   const projectDirectoryPath = path.resolve(cwd, inputs.projectDirectory);
   const project = await readProject(projectDirectoryPath);
   const tempDirectoryPath =

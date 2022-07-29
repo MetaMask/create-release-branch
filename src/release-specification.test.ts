@@ -13,7 +13,7 @@ import {
   generateReleaseSpecificationTemplateForMonorepo,
   waitForUserToEditReleaseSpecification,
   validateReleaseSpecification,
-} from './release-specification-utils';
+} from './release-specification';
 import * as miscUtils from './misc-utils';
 
 jest.mock('./misc-utils', () => {
@@ -23,7 +23,7 @@ jest.mock('./misc-utils', () => {
   };
 });
 
-describe('release-specification-utils', () => {
+describe('release-specification', () => {
   describe('generateReleaseSpecificationTemplateForMonorepo', () => {
     it('returns a YAML-encoded string which has a list of all workspace packages in the project', async () => {
       const project = buildMockProject({
@@ -51,8 +51,8 @@ describe('release-specification-utils', () => {
 # - an exact version with major, minor, and patch parts (e.g. "1.2.3")
 # - null (to skip the package entirely)
 #
-# When you're finished making your selections, save this file and the script
-# will continue automatically.
+# When you're finished making your selections, save this file and
+# create-release-branch will continue automatically.
 
 packages:
   a: null
@@ -88,7 +88,7 @@ packages:
 # - null (to skip the package entirely)
 #
 # When you're finished making your selections, save this file and then re-run
-# the script that generated this file.
+# create-release-branch.
 
 packages:
   a: null

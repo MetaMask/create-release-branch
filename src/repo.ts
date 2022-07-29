@@ -18,23 +18,23 @@ async function getStdoutFromCommandWithin(
 }
 
 /**
- * Runs a Git command within the given directory, obtaining the immediate
+ * Runs a Git command within the given repository, obtaining the immediate
  * output.
  *
- * @param repoDirectory - The directory of the repository.
+ * @param repositoryDirectoryPath - The directory of the repository.
  * @param args - The arguments to the command.
  * @returns The standard output of the command.
  * @throws An execa error object if the command fails in some way.
  */
 export async function getStdoutFromGitCommandWithin(
-  repoDirectory: string,
+  repositoryDirectoryPath: string,
   args: readonly string[],
 ) {
-  return await getStdoutFromCommandWithin(repoDirectory, 'git', args);
+  return await getStdoutFromCommandWithin(repositoryDirectoryPath, 'git', args);
 }
 
 /**
- * Gets the HTTPS URL of the primary remote with which the given project has
+ * Gets the HTTPS URL of the primary remote with which the given repository has
  * been configured. Assumes that the git config `remote.origin.url` string
  * matches one of:
  *
@@ -44,18 +44,18 @@ export async function getStdoutFromGitCommandWithin(
  * If the URL of the "origin" remote matches neither pattern, an error is
  * thrown.
  *
- * @param projectDirectoryPath - The path to the project directory.
+ * @param repositoryDirectoryPath - The path to the project directory.
  * @returns The HTTPS URL of the repository, e.g.
  * `https://github.com/OrganizationName/RepositoryName`.
  */
 export async function getRepositoryHttpsUrl(
-  projectDirectoryPath: string,
+  repositoryDirectoryPath: string,
 ): Promise<string> {
   const httpsPrefix = 'https://github.com';
   const sshPrefixRegex = /^git@github\.com:/u;
   const sshPostfixRegex = /\.git$/u;
   const gitConfigUrl = await getStdoutFromCommandWithin(
-    projectDirectoryPath,
+    repositoryDirectoryPath,
     'git',
     ['config', '--get', 'remote.origin.url'],
   );

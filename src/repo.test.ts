@@ -1,9 +1,6 @@
 import { when } from 'jest-when';
+import { getStdoutFromGitCommandWithin, getRepositoryHttpsUrl } from './repo';
 import * as miscUtils from './misc-utils';
-import {
-  getStdoutFromGitCommandWithin,
-  getRepositoryHttpsUrl,
-} from './git-utils';
 
 jest.mock('./misc-utils');
 
@@ -25,36 +22,36 @@ describe('git-utils', () => {
 
   describe('getRepositoryHttpsUrl', () => {
     it('returns the URL of the "origin" remote of the given repo if it looks like a HTTPS public GitHub repo URL', async () => {
-      const projectDirectoryPath = '/path/to/project';
+      const repositoryDirectoryPath = '/path/to/project';
       when(jest.spyOn(miscUtils, 'getStdoutFromCommand'))
         .calledWith('git', ['config', '--get', 'remote.origin.url'], {
-          cwd: projectDirectoryPath,
+          cwd: repositoryDirectoryPath,
         })
         .mockResolvedValue('https://github.com/foo');
 
-      expect(await getRepositoryHttpsUrl(projectDirectoryPath)).toStrictEqual(
-        'https://github.com/foo',
-      );
+      expect(
+        await getRepositoryHttpsUrl(repositoryDirectoryPath),
+      ).toStrictEqual('https://github.com/foo');
     });
 
     it('converts an SSH GitHub repo URL into an HTTPS URL', async () => {
-      const projectDirectoryPath = '/path/to/project';
+      const repositoryDirectoryPath = '/path/to/project';
       when(jest.spyOn(miscUtils, 'getStdoutFromCommand'))
         .calledWith('git', ['config', '--get', 'remote.origin.url'], {
-          cwd: projectDirectoryPath,
+          cwd: repositoryDirectoryPath,
         })
         .mockResolvedValue('git@github.com:Foo/Bar.git');
 
-      expect(await getRepositoryHttpsUrl(projectDirectoryPath)).toStrictEqual(
-        'https://github.com/Foo/Bar',
-      );
+      expect(
+        await getRepositoryHttpsUrl(repositoryDirectoryPath),
+      ).toStrictEqual('https://github.com/Foo/Bar');
     });
 
     it('throws if the URL of the "origin" remote is in an invalid format', async () => {
-      const projectDirectoryPath = '/path/to/project';
+      const repositoryDirectoryPath = '/path/to/project';
       when(jest.spyOn(miscUtils, 'getStdoutFromCommand'))
         .calledWith('git', ['config', '--get', 'remote.origin.url'], {
-          cwd: projectDirectoryPath,
+          cwd: repositoryDirectoryPath,
         })
         .mockResolvedValueOnce('foo')
         .mockResolvedValueOnce('http://github.com/Foo/Bar')
@@ -62,19 +59,27 @@ describe('git-utils', () => {
         .mockResolvedValueOnce('git@gitbar.foo:Foo/Bar.git')
         .mockResolvedValueOnce('git@github.com:Foo/Bar.foo');
 
-      await expect(getRepositoryHttpsUrl(projectDirectoryPath)).rejects.toThrow(
-        'Unrecognized URL for git remote "origin": foo',
-      );
-      await expect(getRepositoryHttpsUrl(projectDirectoryPath)).rejects.toThrow(
+      await expect(
+        getRepositoryHttpsUrl(repositoryDirectoryPath),
+      ).rejects.toThrow('Unrecognized URL for git remote "origin": foo');
+      await expect(
+        getRepositoryHttpsUrl(repositoryDirectoryPath),
+      ).rejects.toThrow(
         'Unrecognized URL for git remote "origin": http://github.com/Foo/Bar',
       );
-      await expect(getRepositoryHttpsUrl(projectDirectoryPath)).rejects.toThrow(
+      await expect(
+        getRepositoryHttpsUrl(repositoryDirectoryPath),
+      ).rejects.toThrow(
         'Unrecognized URL for git remote "origin": https://gitbar.foo/Foo/Bar',
       );
-      await expect(getRepositoryHttpsUrl(projectDirectoryPath)).rejects.toThrow(
+      await expect(
+        getRepositoryHttpsUrl(repositoryDirectoryPath),
+      ).rejects.toThrow(
         'Unrecognized URL for git remote "origin": git@gitbar.foo:Foo/Bar.git',
       );
-      await expect(getRepositoryHttpsUrl(projectDirectoryPath)).rejects.toThrow(
+      await expect(
+        getRepositoryHttpsUrl(repositoryDirectoryPath),
+      ).rejects.toThrow(
         'Unrecognized URL for git remote "origin": git@github.com:Foo/Bar.foo',
       );
     });

@@ -1,22 +1,26 @@
 import yargs from 'yargs/yargs';
 import { hideBin } from 'yargs/helpers';
 
-export interface Inputs {
+export interface CommandLineArguments {
   projectDirectory: string;
   tempDirectory: string | undefined;
   reset: boolean;
 }
 
 /**
- * Parse the arguments provided on the command line.
+ * Parses the arguments provided on the command line using `yargs`.
  *
- * @param argv - The name of this script and its arguments (as obtained via
+ * @param argv - The name of this executable and its arguments (as obtained via
  * `process.argv`).
  * @returns A promise for the `yargs` arguments object.
  */
-export async function readInputs(argv: string[]): Promise<Inputs> {
+export async function readCommandLineArguments(
+  argv: string[],
+): Promise<CommandLineArguments> {
   return await yargs(hideBin(argv))
-    .usage('This script generates a release PR.')
+    .usage(
+      'This tool prepares your project for a new release by bumping versions and updating changelogs.',
+    )
     .option('project-directory', {
       alias: 'd',
       describe: 'The directory that holds your project.',

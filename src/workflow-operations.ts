@@ -1,6 +1,6 @@
-import { Package } from './package-utils';
-import { Project } from './project-utils';
-import { getStdoutFromGitCommandWithin } from './git-utils';
+import { Package } from './package';
+import { Project } from './project';
+import { getStdoutFromGitCommandWithin } from './repo';
 
 /**
  * Instructions for how to update the project in order to prepare it for a new

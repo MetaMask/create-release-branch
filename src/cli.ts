@@ -1,7 +1,7 @@
 import { main } from './main';
 
 /**
- * The entrypoint to this script.
+ * The entrypoint to this tool.
  */
 async function cli() {
   await main({

@@ -1,7 +1,7 @@
 import fs, { WriteStream } from 'fs';
 import YAML from 'yaml';
-import { Editor } from './editor-utils';
-import { readFile } from './file-utils';
+import { Editor } from './editor';
+import { readFile } from './fs';
 import {
   debug,
   hasProperty,
@@ -9,8 +9,8 @@ import {
   isObject,
   runCommand,
 } from './misc-utils';
-import { Project } from './project-utils';
-import { isValidSemver, semver, SemVer } from './semver-utils';
+import { Project } from './project';
+import { isValidSemver, semver, SemVer } from './semver';
 
 /**
  * The SemVer-compatible parts of a version string that can be bumped by this
@@ -57,11 +57,11 @@ export async function generateReleaseSpecificationTemplateForMonorepo({
 }) {
   const afterEditingInstructions = isEditorAvailable
     ? `
-# When you're finished making your selections, save this file and the script
-# will continue automatically.`.trim()
+# When you're finished making your selections, save this file and
+# create-release-branch will continue automatically.`.trim()
     : `
 # When you're finished making your selections, save this file and then re-run
-# the script that generated this file.`.trim();
+# create-release-branch.`.trim();
 
   const instructions = `
 # The following is a list of packages in ${rootPackage.manifest.name}.
@@ -170,14 +170,14 @@ export async function validateReleaseSpecification(
       [
         'Failed to parse release spec:',
         message,
-        "The file has been retained for you to make the necessary fixes. Once you've done this, re-run this script.",
+        "The file has been retained for you to make the necessary fixes. Once you've done this, re-run this tool.",
         releaseSpecificationPath,
       ].join('\n\n'),
     );
   }
 
   const postludeForAllErrorMessages = [
-    "The release spec file has been retained for you to make the necessary fixes. Once you've done this, re-run this script.",
+    "The release spec file has been retained for you to make the necessary fixes. Once you've done this, re-run this tool.",
     releaseSpecificationPath,
   ].join('\n\n');
 
