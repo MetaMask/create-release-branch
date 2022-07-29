@@ -11,14 +11,27 @@ export { ManifestFieldNames, ManifestDependencyFieldNames };
 
 /**
  * An unverified representation of the data in a package's `package.json`.
- * (We know which properties could be present but haven't checked their types
- * yet.)
  */
-type UnvalidatedManifest = Readonly<Partial<Record<ManifestFieldNames, any>>> &
-  Readonly<Partial<Record<ManifestDependencyFieldNames, any>>>;
+export type UnvalidatedManifest = Readonly<Record<string, any>>;
 
 /**
  * A type-checked representation of the data in a package's `package.json`.
+ *
+ * @property name - The name of the package.
+ * @property version - The version of the package.
+ * @property private - Whether the package is private.
+ * @property workspaces - Paths to subpackages within the package.
+ * @property bundledDependencies - The set of packages that are expected to be
+ * bundled when publishing the package.
+ * @property dependencies - The set of packages, and their versions, that the
+ * published version of the package needs to run effectively.
+ * @property devDependencies - The set of packages, and their versions, that the
+ * the package relies upon for development purposes (such as tests or
+ * locally-run scripts).
+ * @property optionalDependencies - The set of packages, and their versions,
+ * that the package may need but is not required for use.
+ * @property peerDependencies - The set of packages, and their versions, that
+ * the package may need but is not required for use. Intended for plugins.
  */
 export type ValidatedManifest = {
   readonly [ManifestFieldNames.Name]: string;
@@ -62,26 +75,46 @@ interface ReadManifestFieldOptions<T, U> {
   transform?: (value: T) => U;
 }
 
+/**
+ * Object that includes a check for validating the "name" field of a manifest
+ * along with an error message if that validation fails.
+ */
 const validationForManifestNameField = {
   check: isTruthyString,
   failureReason: 'must be a non-empty string',
 };
 
+/**
+ * Object that includes a check for validating the "version" field of a manifest
+ * along with an error message if that validation fails.
+ */
 const validationForManifestVersionField = {
   check: isValidManifestVersionField,
   failureReason: 'must be a valid SemVer version string',
 };
 
+/**
+ * Object that includes a check for validating the "workspaces" field of a
+ * manifest along with an error message if that validation fails.
+ */
 const validationForManifestWorkspacesField = {
   check: isValidManifestWorkspacesField,
   failureReason: 'must be an array of non-empty strings (if present)',
 };
 
+/**
+ * Object that includes a check for validating the "private" field of a manifest
+ * along with an error message if that validation fails.
+ */
 const validationForManifestPrivateField = {
   check: isValidManifestPrivateField,
   failureReason: 'must be true or false (if present)',
 };
 
+/**
+ * Object that includes a check for validating any of the "dependencies" fields
+ * of a manifest along with an error message if that validation fails.
+ */
 const validationForManifestDependenciesField = {
   check: isValidManifestDependenciesField,
   failureReason:
@@ -143,7 +176,6 @@ function isValidManifestDependenciesField(
   return (
     dependencies === undefined ||
     (isObject(dependencies) &&
-      Object.keys(dependencies).every(isTruthyString) &&
       Object.values(dependencies).every(isTruthyString))
   );
 }
@@ -180,8 +212,7 @@ function buildManifestFieldValidationErrorMessage({
 }
 
 /**
- * Retrieves and validates a field within a package manifest object, throwing if
- * validation fails.
+ * Retrieves and validates a field within a package manifest object.
  *
  * @template T - The expected type of the field value (should include
  * `undefined` if not expected to present).
@@ -201,7 +232,9 @@ function buildManifestFieldValidationErrorMessage({
  * the field is not present.
  * @param args.transform - A function to call with the value after it has been
  * validated.
- * @returns The value of the field, or the default value.
+ * @returns The value of the field, or the default value if the field is not
+ * present.
+ * @throws If the validation on the field fails.
  */
 function readManifestField<T, U>(
   options: Omit<ReadManifestFieldOptions<T, U>, 'transform' | 'defaultValue'>,
@@ -246,16 +279,18 @@ function readManifestField<T, U>({
 }
 
 /**
- * Retrieves and checks the dependency fields of a package manifest object,
- * throwing if any of them is not present or is not the correct type.
+ * Retrieves and validates the "dependencies" fields of a package manifest
+ * object.
  *
  * @param args - The arguments.
  * @param args.manifest - The manifest data to validate.
  * @param args.parentDirectory - The directory of the package to which the
  * manifest belongs.
- * @returns The extracted dependency fields and their values.
+ * @returns All of the possible "dependencies" fields and their values (if any
+ * one does not exist, it defaults to `{}`).
+ * @throws If the validation on any of the dependencies fields fails.
  */
-function readManifestDependencyFields({
+function readManifestDependenciesFields({
   manifest,
   parentDirectory,
 }: {
@@ -279,11 +314,12 @@ function readManifestDependencyFields({
 
 /**
  * Reads the package manifest at the given path, verifying key data within the
- * manifest and throwing if that data is incomplete.
+ * manifest.
  *
  * @param manifestPath - The path of the manifest file.
- * @returns Information about a correctly typed version of the manifest for a
- * package.
+ * @returns The correctly typed version of the manifest.
+ * @throws If key data within the manifest is missing (currently `name` and
+ * `version`).
  */
 export async function readManifest(
   manifestPath: string,
@@ -317,7 +353,7 @@ export async function readManifest(
     validation: validationForManifestPrivateField,
     defaultValue: false,
   });
-  const dependencyFields = readManifestDependencyFields({
+  const dependencyFields = readManifestDependenciesFields({
     manifest: unvalidatedManifest,
     parentDirectory,
   });
