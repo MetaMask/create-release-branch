@@ -43,9 +43,8 @@ export async function readPackage(
 ): Promise<Package> {
   const manifestPath = path.join(packageDirectoryPath, MANIFEST_FILE_NAME);
   const changelogPath = path.join(packageDirectoryPath, CHANGELOG_FILE_NAME);
-  const { unvalidatedManifest, validatedManifest } = await readPackageManifest(
-    manifestPath,
-  );
+  const { unvalidated: unvalidatedManifest, validated: validatedManifest } =
+    await readPackageManifest(manifestPath);
 
   return {
     directoryPath: packageDirectoryPath,

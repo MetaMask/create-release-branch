@@ -23,7 +23,10 @@ describe('package', () => {
       const validatedManifest = buildMockManifest();
       jest
         .spyOn(packageManifestModule, 'readPackageManifest')
-        .mockResolvedValue({ unvalidatedManifest, validatedManifest });
+        .mockResolvedValue({
+          unvalidated: unvalidatedManifest,
+          validated: validatedManifest,
+        });
 
       const pkg = await readPackage(packageDirectoryPath);
 

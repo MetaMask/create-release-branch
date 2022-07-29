@@ -321,49 +321,50 @@ function readPackageManifestDependenciesFields({
  * manifest.
  *
  * @param manifestPath - The path of the manifest file.
- * @returns The correctly typed version of the manifest.
+ * @returns The correctly typed version of the manifest data along with the
+ * original manifest data.
  * @throws If key data within the manifest is missing (currently `name` and
  * `version`).
  */
 export async function readPackageManifest(manifestPath: string): Promise<{
-  unvalidatedManifest: UnvalidatedPackageManifest;
-  validatedManifest: ValidatedPackageManifest;
+  unvalidated: UnvalidatedPackageManifest;
+  validated: ValidatedPackageManifest;
 }> {
-  const unvalidatedManifest = await readJsonObjectFile(manifestPath);
+  const unvalidated = await readJsonObjectFile(manifestPath);
   const parentDirectory = path.dirname(manifestPath);
   const name = readPackageManifestField({
-    manifest: unvalidatedManifest,
+    manifest: unvalidated,
     parentDirectory,
     fieldName: PackageManifestFieldNames.Name,
     validation: validationForPackageManifestNameField,
   });
   const version = readPackageManifestField({
-    manifest: unvalidatedManifest,
+    manifest: unvalidated,
     parentDirectory,
     fieldName: PackageManifestFieldNames.Version,
     validation: validationForPackageManifestVersionField,
     transform: (value: string) => new SemVer(value),
   });
   const workspaces = readPackageManifestField({
-    manifest: unvalidatedManifest,
+    manifest: unvalidated,
     parentDirectory,
     fieldName: PackageManifestFieldNames.Workspaces,
     validation: validationForPackageManifestWorkspacesField,
     defaultValue: [],
   });
   const privateValue = readPackageManifestField({
-    manifest: unvalidatedManifest,
+    manifest: unvalidated,
     parentDirectory,
     fieldName: PackageManifestFieldNames.Private,
     validation: validationForPackageManifestPrivateField,
     defaultValue: false,
   });
   const dependenciesFields = readPackageManifestDependenciesFields({
-    manifest: unvalidatedManifest,
+    manifest: unvalidated,
     parentDirectory,
   });
 
-  const validatedManifest = {
+  const validated = {
     [PackageManifestFieldNames.Name]: name,
     [PackageManifestFieldNames.Version]: version,
     [PackageManifestFieldNames.Workspaces]: workspaces,
@@ -371,5 +372,5 @@ export async function readPackageManifest(manifestPath: string): Promise<{
     ...dependenciesFields,
   };
 
-  return { unvalidatedManifest, validatedManifest };
+  return { unvalidated, validated };
 }
