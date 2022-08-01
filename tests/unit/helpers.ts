@@ -40,8 +40,30 @@ const TEMP_DIRECTORY_PATH = path.join(
 );
 
 /**
- * Creates a temporary directory to hold files that a test could write, runs the
- * given function, then ensures that the directory is removed afterward.
+ * Each test gets its own randomly generated directory in a temporary directory
+ * where it can perform filesystem operations. There is a miniscule chance
+ * that more than one test will receive the same name for its directory. If this
+ * happens, then all bets are off, and we should stop running tests, because
+ * the state that we expect to be isolated to a single test has now bled into
+ * another test.
+ *
+ * @param entryPath - The path to the directory.
+ * @throws If the directory already exists (or a file exists in its place).
+ */
+async function ensureFileEntryDoesNotExist(entryPath: string): Promise<void> {
+  try {
+    await fs.promises.access(entryPath);
+    throw new Error(`${entryPath} already exists, cannot continue`);
+  } catch (error: any) {
+    if (error.code !== 'ENOENT') {
+      throw error;
+    }
+  }
+}
+
+/**
+ * Creates a temporary directory to hold files that a test could write to, runs
+ * the given function, then ensures that the directory is removed afterward.
  *
  * @param fn - The function to call.
  * @throws If the temporary directory already exists for some reason. This would
@@ -49,19 +71,7 @@ const TEMP_DIRECTORY_PATH = path.join(
  */
 export async function withSandbox(fn: (sandbox: Sandbox) => any) {
   const directoryPath = path.join(TEMP_DIRECTORY_PATH, nanoid());
-  let stats;
-
-  try {
-    await fs.promises.access(directoryPath);
-    throw new Error(
-      `Directory ${directoryPath} already exists, cannot continue`,
-    );
-  } catch (error: any) {
-    if (error.code !== 'ENOENT') {
-      throw error;
-    }
-  }
-
+  await ensureFileEntryDoesNotExist(directoryPath);
   await fs.promises.mkdir(directoryPath, { recursive: true });
 
   try {
