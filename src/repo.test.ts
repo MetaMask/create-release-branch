@@ -97,7 +97,7 @@ describe('repo', () => {
       );
 
       await captureChangesInReleaseBranch({
-        projectRepositoryPath: '/path/to/project',
+        repositoryDirectoryPath: '/path/to/project',
         releaseDate: new Date(2022, 6, 22),
         releaseNumber: 12345,
       });

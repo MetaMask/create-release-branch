@@ -189,7 +189,7 @@ describe('initial-parameters', () => {
         '/path/to/somewhere',
       );
 
-      expect(config.today).toStrictEqual(new Date('2022-01-01'));
+      expect(config.today).toStrictEqual(new Date(2022, 0, 1));
     });
 
     it('uses the current date if TODAY is undefined', async () => {

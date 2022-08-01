@@ -115,7 +115,7 @@ export async function followMonorepoWorkflow({
   await executeReleasePlan(project, releasePlan, stderr);
   await removeFile(releaseSpecificationPath);
   await captureChangesInReleaseBranch({
-    projectRepositoryPath: project.directoryPath,
+    repositoryDirectoryPath: project.directoryPath,
     releaseDate: releasePlan.releaseDate,
     releaseNumber: releasePlan.releaseNumber,
   });

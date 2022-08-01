@@ -199,7 +199,7 @@ async function setupFollowMonorepoWorkflow({
     .mockResolvedValue();
   when(captureChangesInReleaseBranchSpy)
     .calledWith({
-      projectRepositoryPath: projectDirectoryPath,
+      repositoryDirectoryPath: projectDirectoryPath,
       releaseDate,
       releaseNumber,
     })
@@ -291,7 +291,7 @@ describe('monorepo-workflow-utils', () => {
           });
 
           expect(captureChangesInReleaseBranchSpy).toHaveBeenCalledWith({
-            projectRepositoryPath: projectDirectoryPath,
+            repositoryDirectoryPath: projectDirectoryPath,
             releaseDate,
             releaseNumber,
           });
@@ -589,7 +589,7 @@ describe('monorepo-workflow-utils', () => {
           });
 
           expect(captureChangesInReleaseBranchSpy).toHaveBeenCalledWith({
-            projectRepositoryPath: projectDirectoryPath,
+            repositoryDirectoryPath: projectDirectoryPath,
             releaseDate,
             releaseNumber,
           });
@@ -703,7 +703,7 @@ describe('monorepo-workflow-utils', () => {
           });
 
           expect(captureChangesInReleaseBranchSpy).toHaveBeenCalledWith({
-            projectRepositoryPath: projectDirectoryPath,
+            repositoryDirectoryPath: projectDirectoryPath,
             releaseDate,
             releaseNumber,
           });
@@ -1005,7 +1005,7 @@ describe('monorepo-workflow-utils', () => {
           });
 
           expect(captureChangesInReleaseBranchSpy).toHaveBeenCalledWith({
-            projectRepositoryPath: projectDirectoryPath,
+            repositoryDirectoryPath: projectDirectoryPath,
             releaseDate,
             releaseNumber,
           });
