@@ -46,7 +46,7 @@ export type ValidatedPackageManifest = {
  * Represents options to `readPackageManifestField`.
  *
  * @template T - The expected type of the field value (should include
- * `undefined` if not expected to present).
+ * `undefined` if not expected to be present).
  * @template U - The return type of this function, as determined via
  * `defaultValue` (if present) or `transform` (if present).
  * @property manifest - The manifest object.
