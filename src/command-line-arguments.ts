@@ -38,5 +38,6 @@ export async function readCommandLineArguments(
       default: false,
     })
     .help()
+    .strict()
     .parse();
 }
