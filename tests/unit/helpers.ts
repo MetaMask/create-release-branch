@@ -52,13 +52,10 @@ export async function withSandbox(fn: (sandbox: Sandbox) => any) {
   let stats;
 
   try {
-    stats = await fs.promises.stat(directoryPath);
-
-    if (stats.isDirectory()) {
-      throw new Error(
-        `Directory ${directoryPath} already exists, cannot continue`,
-      );
-    }
+    await fs.promises.access(directoryPath);
+    throw new Error(
+      `Directory ${directoryPath} already exists, cannot continue`,
+    );
   } catch (error: any) {
     if (error.code !== 'ENOENT') {
       throw error;
