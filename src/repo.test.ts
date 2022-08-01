@@ -96,8 +96,7 @@ describe('repo', () => {
         'getStdoutFromCommand',
       );
 
-      await captureChangesInReleaseBranch({
-        repositoryDirectoryPath: '/path/to/project',
+      await captureChangesInReleaseBranch('/path/to/project', {
         releaseDate: new Date(2022, 6, 22),
         releaseNumber: 12345,
       });

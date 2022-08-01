@@ -198,8 +198,7 @@ async function setupFollowMonorepoWorkflow({
     .calledWith(project, releasePlan, stderr)
     .mockResolvedValue();
   when(captureChangesInReleaseBranchSpy)
-    .calledWith({
-      repositoryDirectoryPath: projectDirectoryPath,
+    .calledWith(projectDirectoryPath, {
       releaseDate,
       releaseNumber,
     })
@@ -290,11 +289,13 @@ describe('monorepo-workflow-utils', () => {
             stderr,
           });
 
-          expect(captureChangesInReleaseBranchSpy).toHaveBeenCalledWith({
-            repositoryDirectoryPath: projectDirectoryPath,
-            releaseDate,
-            releaseNumber,
-          });
+          expect(captureChangesInReleaseBranchSpy).toHaveBeenCalledWith(
+            projectDirectoryPath,
+            {
+              releaseDate,
+              releaseNumber,
+            },
+          );
         });
       });
 
@@ -588,11 +589,13 @@ describe('monorepo-workflow-utils', () => {
             stderr,
           });
 
-          expect(captureChangesInReleaseBranchSpy).toHaveBeenCalledWith({
-            repositoryDirectoryPath: projectDirectoryPath,
-            releaseDate,
-            releaseNumber,
-          });
+          expect(captureChangesInReleaseBranchSpy).toHaveBeenCalledWith(
+            projectDirectoryPath,
+            {
+              releaseDate,
+              releaseNumber,
+            },
+          );
         });
       });
 
@@ -702,11 +705,13 @@ describe('monorepo-workflow-utils', () => {
             stderr,
           });
 
-          expect(captureChangesInReleaseBranchSpy).toHaveBeenCalledWith({
-            repositoryDirectoryPath: projectDirectoryPath,
-            releaseDate,
-            releaseNumber,
-          });
+          expect(captureChangesInReleaseBranchSpy).toHaveBeenCalledWith(
+            projectDirectoryPath,
+            {
+              releaseDate,
+              releaseNumber,
+            },
+          );
         });
       });
 
@@ -1004,11 +1009,13 @@ describe('monorepo-workflow-utils', () => {
             stderr,
           });
 
-          expect(captureChangesInReleaseBranchSpy).toHaveBeenCalledWith({
-            repositoryDirectoryPath: projectDirectoryPath,
-            releaseDate,
-            releaseNumber,
-          });
+          expect(captureChangesInReleaseBranchSpy).toHaveBeenCalledWith(
+            projectDirectoryPath,
+            {
+              releaseDate,
+              releaseNumber,
+            },
+          );
         });
       });
 

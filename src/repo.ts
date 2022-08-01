@@ -89,20 +89,21 @@ export async function getRepositoryHttpsUrl(
  * of the new release).
  * 3. Switches to that branch.
  *
- * @param args - The arguments.
- * @param args.repositoryDirectoryPath - The path to the repository directory.
+ * @param repositoryDirectoryPath - The path to the repository directory.
+ * @param args - The remainder of the arguments.
  * @param args.releaseDate - The release date.
  * @param args.releaseNumber - The release number.
  */
-export async function captureChangesInReleaseBranch({
-  repositoryDirectoryPath,
-  releaseDate,
-  releaseNumber,
-}: {
-  repositoryDirectoryPath: string;
-  releaseDate: Date;
-  releaseNumber: number;
-}) {
+export async function captureChangesInReleaseBranch(
+  repositoryDirectoryPath: string,
+  {
+    releaseDate,
+    releaseNumber,
+  }: {
+    releaseDate: Date;
+    releaseNumber: number;
+  },
+) {
   const releaseDateAsISO = formatDateAsISO(releaseDate, {
     representation: 'date',
   });
