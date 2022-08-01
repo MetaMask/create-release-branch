@@ -216,7 +216,7 @@ function buildPackageManifestFieldValidationErrorMessage({
  * Retrieves and validates a field within a package manifest object.
  *
  * @template T - The expected type of the field value (should include
- * `undefined` if not expected to present).
+ * `undefined` if not expected to be present).
  * @template U - The return type of this function, as determined via
  * `defaultValue` (if present) or `transform` (if present).
  * @param args - The arguments.
