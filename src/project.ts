@@ -1,13 +1,12 @@
 import util from 'util';
 import glob from 'glob';
-import { getRepositoryHttpsUrl, getTagNames } from './git-utils';
 import {
   Package,
   readMonorepoRootPackage,
   readMonorepoWorkspacePackage,
-} from './package-utils';
-import { ManifestFieldNames } from './package-manifest-utils';
-// import { isValidSemver } from './semver-utils';
+} from './package';
+import { PackageManifestFieldNames } from './package-manifest';
+import { getRepositoryHttpsUrl, getTagNames } from './repo';
 
 /**
  * Represents the entire codebase on which this tool is operating.
@@ -41,6 +40,9 @@ interface ReleaseInfo {
   releaseNumber: number;
 }
 
+/**
+ * A promisified version of `glob`.
+ */
 const promisifiedGlob = util.promisify(glob);
 
 /**
@@ -136,7 +138,7 @@ export async function readProject(
 
   const workspaceDirectories = (
     await Promise.all(
-      rootPackage.validatedManifest[ManifestFieldNames.Workspaces].map(
+      rootPackage.validatedManifest[PackageManifestFieldNames.Workspaces].map(
         async (workspacePattern) => {
           return await promisifiedGlob(workspacePattern, {
             cwd: projectDirectoryPath,

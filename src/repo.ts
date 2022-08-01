@@ -114,7 +114,7 @@ async function getFilesChangedSince(
 }
 
 /**
- * Gets the HTTPS URL of the primary remote with which the given project has
+ * Gets the HTTPS URL of the primary remote with which the given repository has
  * been configured. Assumes that the git config `remote.origin.url` string
  * matches one of:
  *
@@ -162,33 +162,30 @@ export async function getRepositoryHttpsUrl(
  * This function does three things:
  *
  * 1. Stages all of the changes which have been made to the repo thus far and
- *    creates a new Git commit which carries the name of the new release.
+ * creates a new Git commit which carries the name of the new release.
  * 2. Creates a new branch pointed to that commit (which also carries the name
- *    of the new release).
+ * of the new release).
  * 3. Switches to that branch.
  *
- * @param args - The arguments.
- * @param args.repositoryDirectoryPath - The path to the repository directory.
+ * @param repositoryDirectoryPath - The path to the repository directory.
+ * @param args - The remainder of the arguments.
  * @param args.releaseDate - The release date.
  * @param args.releaseNumber - The release number.
  */
-export async function captureChangesInReleaseBranch({
-  repositoryDirectoryPath,
-  releaseDate,
-  releaseNumber,
-}: {
-  repositoryDirectoryPath: string;
-  releaseDate: Date;
-  releaseNumber: number;
-}) {
+export async function captureChangesInReleaseBranch(
+  repositoryDirectoryPath: string,
+  {
+    releaseDate,
+    releaseNumber,
+  }: {
+    releaseDate: Date;
+    releaseNumber: number;
+  },
+) {
   const releaseDateAsISO = formatDateAsISO(releaseDate, {
     representation: 'date',
   });
 
-  // TODO: What if the index was dirty before this script was run? Or what if
-  // you're in the middle of a rebase? Might want to check that up front before
-  // changes are even made.
-  // TODO: What if this branch already exists? Append the build number?
   await getStdoutFromGitCommandWithin(repositoryDirectoryPath, [
     'checkout',
     '-b',

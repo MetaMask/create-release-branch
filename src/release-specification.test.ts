@@ -6,15 +6,13 @@ import YAML from 'yaml';
 import { SemVer } from 'semver';
 import { withSandbox } from '../tests/helpers';
 import { buildMockProject, buildMockPackage } from '../tests/unit/helpers';
-import * as packageUtils from './package-utils';
 import {
   generateReleaseSpecificationTemplateForMonorepo,
   waitForUserToEditReleaseSpecification,
   validateReleaseSpecification,
-} from './release-specification-utils';
+} from './release-specification';
 import * as miscUtils from './misc-utils';
 
-jest.mock('./package-utils');
 jest.mock('./misc-utils', () => {
   return {
     ...jest.requireActual('./misc-utils'),
@@ -22,7 +20,7 @@ jest.mock('./misc-utils', () => {
   };
 });
 
-describe('release-specification-utils', () => {
+describe('release-specification', () => {
   describe('generateReleaseSpecificationTemplateForMonorepo', () => {
     it('returns a YAML-encoded string which has a list of all workspace packages in the project which have been changed since their latest releases', async () => {
       const project = buildMockProject({
@@ -57,8 +55,8 @@ describe('release-specification-utils', () => {
 # - an exact version with major, minor, and patch parts (e.g. "1.2.3")
 # - null (to skip the package entirely)
 #
-# When you're finished making your selections, save this file and the script
-# will continue automatically.
+# When you're finished making your selections, save this file and
+# create-release-branch will continue automatically.
 
 packages:
   a: null
@@ -121,7 +119,7 @@ packages:
 # - null (to skip the package entirely)
 #
 # When you're finished making your selections, save this file and then re-run
-# the script that generated this file.
+# create-release-branch.
 
 packages:
   a: null
@@ -374,7 +372,7 @@ packages:
       });
     });
 
-    it('throws if any of the keys in the "packages" objectproperty do not match the names of any workspace packages', async () => {
+    it('throws if any of the keys in the "packages" object do not match the names of any workspace packages', async () => {
       await withSandbox(async (sandbox) => {
         const project = buildMockProject({
           workspacePackages: {

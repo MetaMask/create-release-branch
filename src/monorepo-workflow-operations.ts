@@ -5,36 +5,35 @@ import {
   fileExists,
   removeFile,
   writeFile,
-} from './file-utils';
-import { determineEditor } from './editor-utils';
-import { captureChangesInReleaseBranch } from './git-utils';
-import { Project } from './project-utils';
-import { planRelease, executeReleasePlan } from './release-plan-utils';
+} from './fs';
+import { determineEditor } from './editor';
+import { Project } from './project';
+import { captureChangesInReleaseBranch } from './repo';
+import { planRelease, executeReleasePlan } from './release-plan';
 import {
   generateReleaseSpecificationTemplateForMonorepo,
   waitForUserToEditReleaseSpecification,
   validateReleaseSpecification,
-} from './release-specification-utils';
+} from './release-specification';
 
 /**
  * For a monorepo, the process works like this:
  *
- * - The script generates a release spec template, listing the workspace
- *   packages in the project that have changed since the last release (or all of
- *   the packages if this would be the first release).
- * - The script then presents the template to the user so that they can specify
- *   the desired versions for each package. It first does this by attempting to
- *   locate an appropriate code editor on the user's computer (using the
- *   `EDITOR` environment variable if that is defined, otherwise `code` if it is
- *   present) and opening the file there, pausing while the user is editing the
- *   file. If no editor can be found, the script provides the user with the path
- *   to the template so that they can edit it themselves, then exits.
- * - However the user has edited the file, the script will parse and validate
- *   the information in the file, then apply the desired changes to the
- *   monorepo.
- * - Finally, once it has made the desired changes, the script will create a Git
- *   commit that includes the changes, then create a branch using the current
- *   date as the name.
+ * - The tool generates a release spec template, listing the workspace packages
+ * in the project that have changed since the last release (or all of the
+ * packages if this would be the first release).
+ * - The tool then presents the template to the user so that they can specify
+ * the desired versions for each package. It first does this by attempting to
+ * locate an appropriate code editor on the user's computer (using the `EDITOR`
+ * environment variable if that is defined, otherwise `code` if it is present)
+ * and opening the file there, pausing while the user is editing the file. If no
+ * editor can be found, the tool provides the user with the path to the template
+ * so that they can edit it themselves, then exits.
+ * - However the user has edited the file, the tool will parse and validate the
+ * information in the file, then apply the desired changes to the monorepo.
+ * - Finally, once it has made the desired changes, the tool will create a Git
+ * commit that includes the changes, then create a branch using the current date
+ * as the name.
  *
  * @param options - The options.
  * @param options.project - Information about the project.
@@ -72,9 +71,6 @@ export async function followMonorepoWorkflow({
     stdout.write(
       'Release spec already exists. Picking back up from previous run.\n',
     );
-    // TODO: If we end up here, then we will probably get an error later when
-    // attempting to bump versions of packages, as that may have already
-    // happened — we need to be idempotent
   } else {
     const editor = await determineEditor();
 
@@ -89,7 +85,7 @@ export async function followMonorepoWorkflow({
     if (!editor) {
       stdout.write(
         `${[
-          'A template has been generated that specifies this release. Please open the following file in your editor of choice, then re-run this script:',
+          'A template has been generated that specifies this release. Please open the following file in your editor of choice, then re-run this tool:',
           `${releaseSpecificationPath}`,
         ].join('\n\n')}\n`,
       );
@@ -118,8 +114,7 @@ export async function followMonorepoWorkflow({
   });
   await executeReleasePlan(project, releasePlan, stderr);
   await removeFile(releaseSpecificationPath);
-  await captureChangesInReleaseBranch({
-    repositoryDirectoryPath: project.directoryPath,
+  await captureChangesInReleaseBranch(project.directoryPath, {
     releaseDate: releasePlan.releaseDate,
     releaseNumber: releasePlan.releaseNumber,
   });

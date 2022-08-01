@@ -10,7 +10,7 @@ import { wrapError, isErrorWithCode } from './misc-utils';
  *
  * @param filePath - The path to the file.
  * @returns The content of the file.
- * @throws If reading fails in any way.
+ * @throws An error with a stack trace if reading fails in any way.
  */
 export async function readFile(filePath: string): Promise<string> {
   try {
@@ -28,7 +28,7 @@ export async function readFile(filePath: string): Promise<string> {
  *
  * @param filePath - The path to the file.
  * @param content - The new content of the file.
- * @throws If writing fails in any way.
+ * @throws An error with a stack trace if writing fails in any way.
  */
 export async function writeFile(
   filePath: string,
@@ -54,6 +54,7 @@ export async function writeFile(
  * @param filePath - The path segments pointing to the JSON file. Will be passed
  * to path.join().
  * @returns The object corresponding to the parsed JSON file.
+ * @throws An error with a stack trace if reading fails in any way.
  */
 export async function readJsonObjectFile(
   filePath: string,
@@ -76,6 +77,7 @@ export async function readJsonObjectFile(
  * itself.
  * @param jsonValue - The JSON-like value to write to the file. Make sure that
  * JSON.stringify can handle it.
+ * @throws An error with a stack trace if writing fails in any way.
  */
 export async function writeJsonFile(
   filePath: string,
@@ -96,6 +98,7 @@ export async function writeJsonFile(
  *
  * @param entryPath - The path to a file (or directory) on the filesystem.
  * @returns A promise for true if the file exists or false otherwise.
+ * @throws An error with a stack trace if reading fails in any way.
  */
 export async function fileExists(entryPath: string): Promise<boolean> {
   try {
@@ -120,6 +123,7 @@ export async function fileExists(entryPath: string): Promise<boolean> {
  *
  * @param directoryPath - The path to the desired directory.
  * @returns What `fs.promises.mkdir` returns.
+ * @throws An error with a stack trace if reading fails in any way.
  */
 export async function ensureDirectoryPathExists(
   directoryPath: string,
@@ -140,6 +144,7 @@ export async function ensureDirectoryPathExists(
  *
  * @param filePath - The path to the file.
  * @returns What `fs.promises.rm` returns.
+ * @throws An error with a stack trace if removal fails in any way.
  */
 export async function removeFile(filePath: string): Promise<void> {
   try {

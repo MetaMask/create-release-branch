@@ -2,9 +2,9 @@ import type { WriteStream } from 'fs';
 import { SemVer } from 'semver';
 import { formatISO as formatDateAsISO } from 'date-fns';
 import { debug } from './misc-utils';
-import { Package, updatePackage } from './package-utils';
-import { Project } from './project-utils';
-import { ReleaseSpecification } from './release-specification-utils';
+import { Package, updatePackage } from './package';
+import { Project } from './project';
+import { ReleaseSpecification } from './release-specification';
 
 /**
  * Instructions for how to update the project in order to prepare it for a new

@@ -5,7 +5,6 @@ import {
   isErrorWithMessage,
   isErrorWithStack,
   wrapError,
-  knownKeysOf,
   resolveExecutable,
   runCommand,
   getStdoutFromCommand,
@@ -118,17 +117,6 @@ describe('misc-utils', () => {
       ).toMatchObject({
         message: 'Some prefix: Some message',
       });
-    });
-  });
-
-  describe('knownKeysOf', () => {
-    it('returns the keys of an object', () => {
-      const object = {
-        foo: 'bar',
-        baz: 'qux',
-        fizz: 'buzz',
-      };
-      expect(knownKeysOf(object)).toStrictEqual(['foo', 'baz', 'fizz']);
     });
   });
 

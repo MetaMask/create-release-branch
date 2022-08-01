@@ -4,19 +4,19 @@ import { when } from 'jest-when';
 import { MockWritable } from 'stdio-mock';
 import { withSandbox, Sandbox, isErrorWithCode } from '../tests/helpers';
 import { buildMockProject, Require } from '../tests/unit/helpers';
-import { followMonorepoWorkflow } from './monorepo-workflow-utils';
-import * as editorUtils from './editor-utils';
-import type { Editor } from './editor-utils';
-import * as gitUtils from './git-utils';
-import * as releasePlanUtils from './release-plan-utils';
-import type { ReleasePlan } from './release-plan-utils';
-import * as releaseSpecificationUtils from './release-specification-utils';
-import type { ReleaseSpecification } from './release-specification-utils';
+import { followMonorepoWorkflow } from './monorepo-workflow-operations';
+import * as editorModule from './editor';
+import type { Editor } from './editor';
+import * as releasePlanModule from './release-plan';
+import type { ReleasePlan } from './release-plan';
+import * as releaseSpecificationModule from './release-specification';
+import type { ReleaseSpecification } from './release-specification';
+import * as repoModule from './repo';
 
-jest.mock('./editor-utils');
-jest.mock('./git-utils');
-jest.mock('./release-plan-utils');
-jest.mock('./release-specification-utils');
+jest.mock('./editor');
+jest.mock('./release-plan');
+jest.mock('./release-specification');
+jest.mock('./repo');
 
 /**
  * Tests the given path to determine whether it represents a file.
@@ -44,23 +44,23 @@ async function fileExists(entryPath: string): Promise<boolean> {
  */
 function getDependencySpies() {
   return {
-    determineEditorSpy: jest.spyOn(editorUtils, 'determineEditor'),
+    determineEditorSpy: jest.spyOn(editorModule, 'determineEditor'),
     generateReleaseSpecificationTemplateForMonorepoSpy: jest.spyOn(
-      releaseSpecificationUtils,
+      releaseSpecificationModule,
       'generateReleaseSpecificationTemplateForMonorepo',
     ),
     waitForUserToEditReleaseSpecificationSpy: jest.spyOn(
-      releaseSpecificationUtils,
+      releaseSpecificationModule,
       'waitForUserToEditReleaseSpecification',
     ),
     validateReleaseSpecificationSpy: jest.spyOn(
-      releaseSpecificationUtils,
+      releaseSpecificationModule,
       'validateReleaseSpecification',
     ),
-    planReleaseSpy: jest.spyOn(releasePlanUtils, 'planRelease'),
-    executeReleasePlanSpy: jest.spyOn(releasePlanUtils, 'executeReleasePlan'),
+    planReleaseSpy: jest.spyOn(releasePlanModule, 'planRelease'),
+    executeReleasePlanSpy: jest.spyOn(releasePlanModule, 'executeReleasePlan'),
     captureChangesInReleaseBranchSpy: jest.spyOn(
-      gitUtils,
+      repoModule,
       'captureChangesInReleaseBranch',
     ),
   };
@@ -198,8 +198,7 @@ async function setupFollowMonorepoWorkflow({
     .calledWith(project, releasePlan, stderr)
     .mockResolvedValue();
   when(captureChangesInReleaseBranchSpy)
-    .calledWith({
-      repositoryDirectoryPath: projectDirectoryPath,
+    .calledWith(projectDirectoryPath, {
       releaseDate,
       releaseNumber,
     })
@@ -290,11 +289,13 @@ describe('monorepo-workflow-utils', () => {
             stderr,
           });
 
-          expect(captureChangesInReleaseBranchSpy).toHaveBeenCalledWith({
-            repositoryDirectoryPath: projectDirectoryPath,
-            releaseDate,
-            releaseNumber,
-          });
+          expect(captureChangesInReleaseBranchSpy).toHaveBeenCalledWith(
+            projectDirectoryPath,
+            {
+              releaseDate,
+              releaseNumber,
+            },
+          );
         });
       });
 
@@ -588,11 +589,13 @@ describe('monorepo-workflow-utils', () => {
             stderr,
           });
 
-          expect(captureChangesInReleaseBranchSpy).toHaveBeenCalledWith({
-            repositoryDirectoryPath: projectDirectoryPath,
-            releaseDate,
-            releaseNumber,
-          });
+          expect(captureChangesInReleaseBranchSpy).toHaveBeenCalledWith(
+            projectDirectoryPath,
+            {
+              releaseDate,
+              releaseNumber,
+            },
+          );
         });
       });
 
@@ -702,11 +705,13 @@ describe('monorepo-workflow-utils', () => {
             stderr,
           });
 
-          expect(captureChangesInReleaseBranchSpy).toHaveBeenCalledWith({
-            repositoryDirectoryPath: projectDirectoryPath,
-            releaseDate,
-            releaseNumber,
-          });
+          expect(captureChangesInReleaseBranchSpy).toHaveBeenCalledWith(
+            projectDirectoryPath,
+            {
+              releaseDate,
+              releaseNumber,
+            },
+          );
         });
       });
 
@@ -1004,11 +1009,13 @@ describe('monorepo-workflow-utils', () => {
             stderr,
           });
 
-          expect(captureChangesInReleaseBranchSpy).toHaveBeenCalledWith({
-            repositoryDirectoryPath: projectDirectoryPath,
-            releaseDate,
-            releaseNumber,
-          });
+          expect(captureChangesInReleaseBranchSpy).toHaveBeenCalledWith(
+            projectDirectoryPath,
+            {
+              releaseDate,
+              releaseNumber,
+            },
+          );
         });
       });
 

@@ -19,14 +19,6 @@ export const debug = createDebug('create-release-branch:impl');
 export type Require<T, K extends keyof T> = Omit<T, K> & { [P in K]-?: T[P] };
 
 /**
- * Returns a version of the given record type where optionality is added to
- * the designated keys.
- */
-export type Unrequire<T, K extends keyof T> = Omit<T, K> & {
-  [P in K]+?: T[P];
-};
-
-/**
  * Type guard for determining whether the given value is an error object with a
  * `code` property such as the type of error that Node throws for filesystem
  * operations, etc.
@@ -105,30 +97,11 @@ export function wrapError(
 }
 
 /**
- * `Object.keys()` is intentionally generic: it returns the keys of an object,
- * but it cannot make guarantees about the contents of that object, so the type
- * of the keys is merely `string[]`. While this is technically accurate, it is
- * also unnecessary if we have an object that we own and whose contents are
- * known exactly.
- *
- * Note: This function will not work when given an object where any of the keys
- * are optional.
- *
- * @param object - The object.
- * @returns The keys of an object, typed according to the type of the object
- * itself.
- */
-export function knownKeysOf<K extends string | number | symbol>(
-  object: Record<K, any>,
-) {
-  return Object.keys(object) as K[];
-}
-
-/**
- * Tests the given path to determine whether it represents an executable.
+ * Retrieves the real path of an executable via `which`.
  *
  * @param executablePath - The path to an executable.
- * @returns A promise for true or false, depending on the result.
+ * @returns The resolved path to the executable.
+ * @throws what `which` throws if it is not a "not found" error.
  */
 export async function resolveExecutable(
   executablePath: string,

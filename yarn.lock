@@ -908,6 +908,8 @@ __metadata:
     which: ^2.0.2
     yaml: ^2.1.1
     yargs: ^17.5.1
+  bin:
+    create-release-branch: dist/cli.js
   languageName: unknown
   linkType: soft
 

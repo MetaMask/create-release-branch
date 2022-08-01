@@ -2,16 +2,16 @@ import fs, { WriteStream } from 'fs';
 import path from 'path';
 import { updateChangelog } from '@metamask/auto-changelog';
 import { isErrorWithCode } from './misc-utils';
-import { readFile, writeFile, writeJsonFile } from './file-utils';
-import { hasChangesInDirectorySinceGitTag } from './git-utils';
-import { Project } from './project-utils';
+import { readFile, writeFile, writeJsonFile } from './fs';
 import {
-  readManifest,
-  UnvalidatedManifest,
-  ValidatedManifest,
-} from './package-manifest-utils';
-import { PackageReleasePlan } from './release-plan-utils';
-import { SemVer } from './semver-utils';
+  readPackageManifest,
+  UnvalidatedPackageManifest,
+  ValidatedPackageManifest,
+} from './package-manifest';
+import { Project } from './project';
+import { PackageReleasePlan } from './release-plan';
+import { hasChangesInDirectorySinceGitTag } from './repo';
+import { SemVer } from './semver';
 
 const MANIFEST_FILE_NAME = 'package.json';
 const CHANGELOG_FILE_NAME = 'CHANGELOG.md';
@@ -29,8 +29,8 @@ const CHANGELOG_FILE_NAME = 'CHANGELOG.md';
 export interface Package {
   directoryPath: string;
   manifestPath: string;
-  unvalidatedManifest: UnvalidatedManifest;
-  validatedManifest: ValidatedManifest;
+  unvalidatedManifest: UnvalidatedPackageManifest;
+  validatedManifest: ValidatedPackageManifest;
   changelogPath: string;
   hasChangesSinceLatestRelease: boolean;
 }
@@ -92,9 +92,8 @@ export async function readMonorepoRootPackage({
 }): Promise<Package> {
   const manifestPath = path.join(packageDirectoryPath, MANIFEST_FILE_NAME);
   const changelogPath = path.join(packageDirectoryPath, CHANGELOG_FILE_NAME);
-  const { unvalidatedManifest, validatedManifest } = await readManifest(
-    manifestPath,
-  );
+  const { unvalidated: unvalidatedManifest, validated: validatedManifest } =
+    await readPackageManifest(manifestPath);
   const expectedReleaseTagNames = generateMonorepoRootPackageReleaseTagNames(
     validatedManifest.version.toString(),
   );
@@ -146,9 +145,8 @@ export async function readMonorepoWorkspacePackage({
 }): Promise<Package> {
   const manifestPath = path.join(packageDirectoryPath, MANIFEST_FILE_NAME);
   const changelogPath = path.join(packageDirectoryPath, CHANGELOG_FILE_NAME);
-  const { unvalidatedManifest, validatedManifest } = await readManifest(
-    manifestPath,
-  );
+  const { unvalidated: unvalidatedManifest, validated: validatedManifest } =
+    await readPackageManifest(manifestPath);
   const expectedReleaseTagNames =
     generateMonorepoWorkspacePackageReleaseTagNames(
       validatedManifest.name,

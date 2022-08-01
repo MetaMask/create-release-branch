@@ -1,28 +1,30 @@
 import os from 'os';
 import path from 'path';
 import { parseISO as parseDateAsISO } from 'date-fns';
-import { getEnvironmentVariables } from './env-utils';
-import { readProject, Project } from './project-utils';
-import { readInputs } from './inputs-utils';
+import { readCommandLineArguments } from './command-line-arguments';
+import { getEnvironmentVariables } from './env';
+import { readProject, Project } from './project';
 
-/**
- * Reads the inputs given to this script via `process.argv` and uses them to
- * gather data we can use to proceed.
- *
- * @param argv - The arguments to this script.
- * @param cwd - The directory in which this script was executed.
- * @returns Information we need to proceed with the script.
- */
-export async function initialize(
-  argv: string[],
-  cwd: string,
-): Promise<{
+interface InitialParameters {
   project: Project;
   tempDirectoryPath: string;
   reset: boolean;
   today: Date;
-}> {
-  const inputs = await readInputs(argv);
+}
+
+/**
+ * Reads the inputs given to this tool via `process.argv` and uses them to
+ * gather information about the project the tool can use to run.
+ *
+ * @param argv - The arguments to this executable.
+ * @param cwd - The directory in which this executable was run.
+ * @returns The initial parameters.
+ */
+export async function determineInitialParameters(
+  argv: string[],
+  cwd: string,
+): Promise<InitialParameters> {
+  const inputs = await readCommandLineArguments(argv);
   const { TODAY } = getEnvironmentVariables();
 
   const projectDirectoryPath = path.resolve(cwd, inputs.projectDirectory);
