@@ -87,9 +87,8 @@ export default class MonorepoEnvironment<
   }
 
   /**
-   * Runs the script within the context of the project, editing the generated
-   * release spec template automatically with the given information before
-   * continuing.
+   * Runs this tool within the project, editing the generated release spec
+   * template automatically with the given information before continuing.
    *
    * @param args - The arguments to this function.
    * @param args.releaseSpecification - An object which specifies which packages
@@ -98,7 +97,7 @@ export default class MonorepoEnvironment<
    * used to fill in the release spec file that the script generates.
    * @returns The result of the command.
    */
-  async runScript({
+  async runTool({
     releaseSpecification: releaseSpecificationWithPackageNicknames,
   }: {
     releaseSpecification: ReleaseSpecification<PackageNickname>;

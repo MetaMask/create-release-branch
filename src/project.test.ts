@@ -3,14 +3,14 @@ import path from 'path';
 import { when } from 'jest-when';
 import { withSandbox } from '../tests/helpers';
 import { buildMockManifest, buildMockPackage } from '../tests/unit/helpers';
-import * as gitUtils from './git-utils';
-import * as packageUtils from './package-utils';
-import { readProject } from './project-utils';
+import { readProject } from './project';
+import * as packageModule from './package';
+import * as repoModule from './repo';
 
-jest.mock('./git-utils');
-jest.mock('./package-utils');
+jest.mock('./package');
+jest.mock('./repo');
 
-describe('project-utils', () => {
+describe('project', () => {
   describe('readProject', () => {
     it('collects information about the repository URL, release version, and packages in the project', async () => {
       await withSandbox(async (sandbox) => {
@@ -37,10 +37,10 @@ describe('project-utils', () => {
             validatedManifest: buildMockManifest(),
           }),
         };
-        when(jest.spyOn(gitUtils, 'getRepositoryHttpsUrl'))
+        when(jest.spyOn(repoModule, 'getRepositoryHttpsUrl'))
           .calledWith(projectDirectoryPath)
           .mockResolvedValue(projectRepositoryUrl);
-        when(jest.spyOn(packageUtils, 'readPackage'))
+        when(jest.spyOn(packageModule, 'readPackage'))
           .calledWith(projectDirectoryPath)
           .mockResolvedValue(rootPackage)
           .calledWith(path.join(projectDirectoryPath, 'packages', 'a'))
@@ -78,7 +78,7 @@ describe('project-utils', () => {
       await withSandbox(async (sandbox) => {
         const projectDirectoryPath = sandbox.directoryPath;
         const rootPackage = buildMockPackage('root', '1.2.3');
-        when(jest.spyOn(packageUtils, 'readPackage'))
+        when(jest.spyOn(packageModule, 'readPackage'))
           .calledWith(projectDirectoryPath)
           .mockResolvedValue(rootPackage);
 
@@ -93,7 +93,7 @@ describe('project-utils', () => {
         const projectDirectoryPath = sandbox.directoryPath;
         // This evaluates to 2021-11-30
         const rootPackage = buildMockPackage('root', '20220000.1.0');
-        when(jest.spyOn(packageUtils, 'readPackage'))
+        when(jest.spyOn(packageModule, 'readPackage'))
           .calledWith(projectDirectoryPath)
           .mockResolvedValue(rootPackage);
 
@@ -107,7 +107,7 @@ describe('project-utils', () => {
       await withSandbox(async (sandbox) => {
         const projectDirectoryPath = sandbox.directoryPath;
         const rootPackage = buildMockPackage('root', '99999999.1.0');
-        when(jest.spyOn(packageUtils, 'readPackage'))
+        when(jest.spyOn(packageModule, 'readPackage'))
           .calledWith(projectDirectoryPath)
           .mockResolvedValue(rootPackage);
 
@@ -121,7 +121,7 @@ describe('project-utils', () => {
       await withSandbox(async (sandbox) => {
         const projectDirectoryPath = sandbox.directoryPath;
         const rootPackage = buildMockPackage('root', '20220101.0.0');
-        when(jest.spyOn(packageUtils, 'readPackage'))
+        when(jest.spyOn(packageModule, 'readPackage'))
           .calledWith(projectDirectoryPath)
           .mockResolvedValue(rootPackage);
 

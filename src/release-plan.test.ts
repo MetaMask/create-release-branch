@@ -1,13 +1,14 @@
 import fs from 'fs';
 import { SemVer } from 'semver';
 import { buildMockProject, buildMockPackage } from '../tests/unit/helpers';
-import { IncrementableVersionParts } from './release-specification-utils';
-import { planRelease, executeReleasePlan } from './release-plan-utils';
-import * as packageUtils from './package-utils';
+import { planRelease, executeReleasePlan } from './release-plan';
+import * as packageModule from './package';
+import { IncrementableVersionParts } from './release-specification';
 
-jest.mock('./package-utils');
+jest.mock('./package');
+jest.mock('./release-specification');
 
-describe('release-plan-utils', () => {
+describe('release-plan', () => {
   describe('planRelease', () => {
     it('calculates final versions for all packages in the release spec', async () => {
       const project = buildMockProject({
@@ -165,7 +166,7 @@ describe('release-plan-utils', () => {
         ],
       };
       const stderr = fs.createWriteStream('/dev/null');
-      const updatePackageSpy = jest.spyOn(packageUtils, 'updatePackage');
+      const updatePackageSpy = jest.spyOn(packageModule, 'updatePackage');
 
       await executeReleasePlan(project, releasePlan, stderr);
 

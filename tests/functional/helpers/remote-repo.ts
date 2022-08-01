@@ -3,8 +3,8 @@ import path from 'path';
 import Repo from './repo';
 
 /**
- * A facade for the "remote" repo, which is only used to hold tags so that
- * `@metamask/auto-changelog` can run `git fetch --tags`.
+ * A facade for the "remote" repo, which only exists so that the tool can run
+ * `git fetch --tags`.
  */
 export default class RemoteRepo extends Repo {
   /**
