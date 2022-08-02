@@ -183,13 +183,11 @@ async function planRelease(
     const pkg = project.workspacePackages[packageName];
     const versionSpecifier = releaseSpecification.packages[packageName];
     const currentVersion = pkg.manifest.version;
-    const newVersion =
-      versionSpecifier instanceof SemVer
-        ? versionSpecifier
-        : new SemVer(currentVersion.toString()).inc(versionSpecifier);
-    const comparison = newVersion.compare(currentVersion);
+    let newVersion: SemVer;
 
     if (versionSpecifier instanceof SemVer) {
+      const comparison = versionSpecifier.compare(currentVersion);
+
       if (comparison === 0) {
         throw new Error(
           [
@@ -207,6 +205,10 @@ async function planRelease(
           ].join('\n\n'),
         );
       }
+
+      newVersion = versionSpecifier;
+    } else {
+      newVersion = new SemVer(currentVersion.toString()).inc(versionSpecifier);
     }
 
     return {
