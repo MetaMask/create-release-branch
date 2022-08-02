@@ -24,8 +24,9 @@ For more on how to use this tool, please see the [docs](./docs).
 
 ### Setup
 
-- Install [Node.js](https://nodejs.org) version 12
+- Install [Node.js](https://nodejs.org) version 16
   - If you are using [nvm](https://github.com/creationix/nvm#installation) (recommended) running `nvm use` will automatically choose the right node version for you.
+  - Note that the version of Node used for development (in `.nvmrc`) is intentionally higher than version used for consumption (as `engines` in `package.json`), as we have not fully phased out legacy versions of Node from our products yet.
 - Install [Yarn v3](https://yarnpkg.com/getting-started/install)
 - Run `yarn install` to install dependencies and run any required post-install scripts
 
