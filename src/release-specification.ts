@@ -5,7 +5,7 @@ import { readFile } from './fs';
 import {
   debug,
   hasProperty,
-  coverError,
+  wrapError,
   isObject,
   runCommand,
 } from './misc-utils';
@@ -127,7 +127,7 @@ export async function waitForUserToEditReleaseSpecification(
   stdout.write('\r\u001B[K');
 
   if (caughtError) {
-    throw coverError(
+    throw wrapError(
       'Encountered an error while waiting for the release spec to be edited.',
       caughtError,
     );
@@ -170,7 +170,7 @@ export async function validateReleaseSpecification(
   try {
     unvalidatedReleaseSpecification = YAML.parse(releaseSpecificationContents);
   } catch (error) {
-    throw coverError(
+    throw wrapError(
       [
         'Your release spec does not appear to be valid YAML.',
         afterwordForAllErrorMessages,

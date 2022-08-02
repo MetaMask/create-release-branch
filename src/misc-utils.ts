@@ -80,7 +80,7 @@ export function isErrorWithStack(error: unknown): error is { stack: string } {
  * something throwable).
  * @returns A new error object.
  */
-export function coverError(message: string, originalError: unknown) {
+export function wrapError(message: string, originalError: unknown) {
   if (isError(originalError)) {
     const error: any = new ErrorWithCause(message, { cause: originalError });
 

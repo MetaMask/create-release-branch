@@ -4,7 +4,7 @@ import {
   isErrorWithCode,
   isErrorWithMessage,
   isErrorWithStack,
-  coverError,
+  wrapError,
   resolveExecutable,
   getStdoutFromCommand,
   runCommand,
@@ -80,10 +80,10 @@ describe('misc-utils', () => {
     });
   });
 
-  describe('coverError', () => {
+  describe('wrapError', () => {
     it('returns a new Error that links to the given Error', () => {
       const originalError = new Error('oops');
-      const newError = coverError('Some message', originalError);
+      const newError = wrapError('Some message', originalError);
 
       expect(newError.message).toStrictEqual('Some message');
       expect(newError.cause).toBe(originalError);
@@ -92,13 +92,13 @@ describe('misc-utils', () => {
     it('copies over any "code" property that exists on the given Error', () => {
       const originalError: any = new Error('oops');
       originalError.code = 'CODE';
-      const newError: any = coverError('Some message', originalError);
+      const newError: any = wrapError('Some message', originalError);
 
       expect(newError.code).toStrictEqual('CODE');
     });
 
     it('returns a new Error which prefixes the given message', () => {
-      const newError = coverError('Some message', 'Some original message');
+      const newError = wrapError('Some message', 'Some original message');
 
       expect(newError.message).toBe('Some message: Some original message');
       expect(newError.cause).toBeUndefined();
