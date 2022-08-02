@@ -882,6 +882,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^4.21.0
     "@typescript-eslint/parser": ^4.21.0
     debug: ^4.3.4
+    deepmerge: ^4.2.2
     eslint: ^7.23.0
     eslint-config-prettier: ^8.1.0
     eslint-plugin-import: ^2.22.1

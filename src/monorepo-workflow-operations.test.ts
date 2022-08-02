@@ -1,11 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { SemVer } from 'semver';
-import {
-  withSandbox,
-  buildMockPackage,
-  buildMockProject,
-} from '../tests/unit/helpers';
+import { withSandbox } from '../tests/helpers';
+import { buildMockPackage, buildMockProject } from '../tests/unit/helpers';
 import { followMonorepoWorkflow } from './monorepo-workflow-operations';
 import * as editorModule from './editor';
 import * as envModule from './env';
