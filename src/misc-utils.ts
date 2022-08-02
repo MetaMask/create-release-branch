@@ -13,12 +13,6 @@ export { hasProperty, isNullOrUndefined, isObject } from '@metamask/utils';
 export const debug = createDebug('create-release-branch:impl');
 
 /**
- * Returns a version of the given record type where optionality is removed from
- * the designated keys.
- */
-export type Require<T, K extends keyof T> = Omit<T, K> & { [P in K]-?: T[P] };
-
-/**
  * Type guard for determining whether the given value is an error object with a
  * `code` property such as the type of error that Node throws for filesystem
  * operations, etc.

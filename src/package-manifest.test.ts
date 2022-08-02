@@ -293,6 +293,24 @@ describe('package-manifest', () => {
       });
     });
 
+    it('throws if "private" is not a boolean', async () => {
+      await withSandbox(async (sandbox) => {
+        const manifestPath = path.join(sandbox.directoryPath, 'package.json');
+        await fs.promises.writeFile(
+          manifestPath,
+          JSON.stringify({
+            name: 'foo',
+            version: '1.2.3',
+            private: 'whatever',
+          }),
+        );
+
+        await expect(readPackageManifest(manifestPath)).rejects.toThrow(
+          'The value of "private" in the manifest for "foo" must be true or false (if present)',
+        );
+      });
+    });
+
     [
       'bundledDependencies',
       'dependencies',
