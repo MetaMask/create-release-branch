@@ -378,17 +378,15 @@ describe('monorepo-workflow-operations', () => {
                 );
                 await fs.promises.writeFile(releaseSpecPath, 'release spec');
 
-                try {
-                  await followMonorepoWorkflow({
+                await expect(
+                  followMonorepoWorkflow({
                     project,
                     tempDirectoryPath: sandbox.directoryPath,
                     firstRemovingExistingReleaseSpecification: true,
                     stdout,
                     stderr,
-                  });
-                } catch {
-                  // ignore the error
-                }
+                  }),
+                ).rejects.toThrow(expect.anything());
 
                 expect(await fs.promises.stat(releaseSpecPath)).toStrictEqual(
                   expect.anything(),
@@ -416,17 +414,15 @@ describe('monorepo-workflow-operations', () => {
                   )
                   .mockRejectedValue(new Error('oops'));
 
-                try {
-                  await followMonorepoWorkflow({
+                await expect(
+                  followMonorepoWorkflow({
                     project,
                     tempDirectoryPath: sandbox.directoryPath,
                     firstRemovingExistingReleaseSpecification: true,
                     stdout,
                     stderr,
-                  });
-                } catch {
-                  // ignore the error
-                }
+                  }),
+                ).rejects.toThrow(expect.anything());
 
                 await expect(
                   fs.promises.readFile(
@@ -800,17 +796,15 @@ describe('monorepo-workflow-operations', () => {
                 );
                 await fs.promises.writeFile(releaseSpecPath, 'release spec');
 
-                try {
-                  await followMonorepoWorkflow({
+                await expect(
+                  followMonorepoWorkflow({
                     project,
                     tempDirectoryPath: sandbox.directoryPath,
                     firstRemovingExistingReleaseSpecification: true,
                     stdout,
                     stderr,
-                  });
-                } catch {
-                  // ignore the error
-                }
+                  }),
+                ).rejects.toThrow(expect.anything());
 
                 expect(await fs.promises.stat(releaseSpecPath)).toStrictEqual(
                   expect.anything(),
@@ -843,17 +837,15 @@ describe('monorepo-workflow-operations', () => {
                 );
                 await fs.promises.writeFile(releaseSpecPath, 'release spec');
 
-                try {
-                  await followMonorepoWorkflow({
+                await expect(
+                  followMonorepoWorkflow({
                     project,
                     tempDirectoryPath: sandbox.directoryPath,
                     firstRemovingExistingReleaseSpecification: true,
                     stdout,
                     stderr,
-                  });
-                } catch {
-                  // ignore the error
-                }
+                  }),
+                ).rejects.toThrow(expect.anything());
 
                 await expect(
                   fs.promises.readFile(releaseSpecPath, 'utf8'),
@@ -1251,17 +1243,15 @@ describe('monorepo-workflow-operations', () => {
                   },
                 });
 
-                try {
-                  await followMonorepoWorkflow({
+                await expect(
+                  followMonorepoWorkflow({
                     project,
                     tempDirectoryPath: sandbox.directoryPath,
                     firstRemovingExistingReleaseSpecification: false,
                     stdout,
                     stderr,
-                  });
-                } catch {
-                  // ignore the error
-                }
+                  }),
+                ).rejects.toThrow(expect.anything());
 
                 expect(
                   await fs.promises.stat(
@@ -1291,17 +1281,15 @@ describe('monorepo-workflow-operations', () => {
                   )
                   .mockRejectedValue(new Error('oops'));
 
-                try {
-                  await followMonorepoWorkflow({
+                await expect(
+                  followMonorepoWorkflow({
                     project,
                     tempDirectoryPath: sandbox.directoryPath,
                     firstRemovingExistingReleaseSpecification: false,
                     stdout,
                     stderr,
-                  });
-                } catch {
-                  // ignore the error
-                }
+                  }),
+                ).rejects.toThrow(expect.anything());
 
                 await expect(
                   fs.promises.readFile(
@@ -1675,17 +1663,15 @@ describe('monorepo-workflow-operations', () => {
             );
             await fs.promises.writeFile(releaseSpecPath, 'release spec');
 
-            try {
-              await followMonorepoWorkflow({
+            await expect(
+              followMonorepoWorkflow({
                 project,
                 tempDirectoryPath: sandbox.directoryPath,
                 firstRemovingExistingReleaseSpecification: false,
                 stdout,
                 stderr,
-              });
-            } catch {
-              // ignore the error
-            }
+              }),
+            ).rejects.toThrow(expect.anything());
 
             expect(await fs.promises.stat(releaseSpecPath)).toStrictEqual(
               expect.anything(),
