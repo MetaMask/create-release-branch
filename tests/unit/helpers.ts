@@ -29,6 +29,9 @@ interface Sandbox {
   directoryPath: string;
 }
 
+/**
+ * A promisified version of `rimraf`.
+ */
 const promisifiedRimraf = util.promisify(rimraf);
 
 /**

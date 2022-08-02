@@ -1,5 +1,6 @@
 import type { WriteStream } from 'fs';
 import path from 'path';
+import util from 'util';
 import rimraf from 'rimraf';
 import { debug } from './misc-utils';
 import {
@@ -24,6 +25,11 @@ import {
   PackageReleasePlan,
   ReleasePlan,
 } from './workflow-operations';
+
+/**
+ * A promisified version of `rimraf`.
+ */
+const promisifiedRimraf = util.promisify(rimraf);
 
 /**
  * Creates a date from the value of the `TODAY` environment variable, falling
@@ -88,7 +94,7 @@ export async function followMonorepoWorkflow({
   const releaseSpecificationPath = path.join(tempDirectoryPath, 'RELEASE_SPEC');
 
   if (firstRemovingExistingReleaseSpecification) {
-    await new Promise((resolve) => rimraf(releaseSpecificationPath, resolve));
+    await promisifiedRimraf(releaseSpecificationPath);
   }
 
   if (await fileExists(releaseSpecificationPath)) {
