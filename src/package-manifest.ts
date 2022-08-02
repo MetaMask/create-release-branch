@@ -4,7 +4,7 @@ import {
   ManifestDependencyFieldNames as PackageManifestDependenciesFieldNames,
 } from '@metamask/action-utils';
 import { readJsonObjectFile } from './fs';
-import { isTruthyString, isObject } from './misc-utils';
+import { isTruthyString } from './misc-utils';
 import { isValidSemver, SemVer } from './semver';
 
 export { PackageManifestFieldNames, PackageManifestDependenciesFieldNames };
@@ -23,15 +23,6 @@ export type UnvalidatedPackageManifest = Readonly<Record<string, any>>;
  * @property workspaces - Paths to subpackages within the package.
  * @property bundledDependencies - The set of packages that are expected to be
  * bundled when publishing the package.
- * @property dependencies - The set of packages, and their versions, that the
- * published version of the package needs to run effectively.
- * @property devDependencies - The set of packages, and their versions, that the
- * the package relies upon for development purposes (such as tests or
- * locally-run scripts).
- * @property optionalDependencies - The set of packages, and their versions,
- * that the package may need but is not required for use.
- * @property peerDependencies - The set of packages, and their versions, that
- * the package may need but is not required for use. Intended for plugins.
  */
 export type ValidatedPackageManifest = {
   readonly [PackageManifestFieldNames.Name]: string;
@@ -93,11 +84,6 @@ const schemata = {
   [PackageManifestFieldNames.Private]: {
     validate: isValidPackageManifestPrivateField,
     errorMessage: 'must be true or false (if present)',
-  },
-  dependencies: {
-    validate: isValidPackageManifestDependenciesField,
-    errorMessage:
-      'must be an object with non-empty string keys and non-empty string values',
   },
 };
 
@@ -273,61 +259,6 @@ export function readPackageManifestPrivateField(
 }
 
 /**
- * Type guard to ensure that the value of the dependencies field of a manifest
- * is valid.
- *
- * @param dependencies - The value to check.
- * @returns Whether the value is undefined or an object with truthy strings.
- */
-function isValidPackageManifestDependenciesField(
-  dependencies: unknown,
-): dependencies is Record<string, string> {
-  return (
-    dependencies === undefined ||
-    (isObject(dependencies) &&
-      Object.values(dependencies).every(isTruthyString))
-  );
-}
-
-/**
- * Retrieves and validates the dependencies fields of a package manifest
- * object.
- *
- * @param manifest - The manifest data to validate.
- * @param parentDirectory - The directory of the package to which the
- * manifest belongs.
- * @returns All of the possible dependencies fields and their values (if any one
- * does not exist, it defaults to `{}`).
- * @throws If any one of the dependencies fields is not an object whose values
- * are truthy strings.
- */
-function readPackageManifestDependenciesFields(
-  manifest: UnvalidatedPackageManifest,
-  parentDirectory: string,
-): Record<PackageManifestDependenciesFieldNames, Record<string, string>> {
-  return Object.values(PackageManifestDependenciesFieldNames).reduce(
-    (obj, fieldName) => {
-      const value = manifest[fieldName];
-      const schema = schemata.dependencies;
-
-      if (!schema.validate(value)) {
-        throw new Error(
-          buildPackageManifestFieldValidationErrorMessage({
-            manifest,
-            parentDirectory,
-            fieldName,
-            verbPhrase: schema.errorMessage,
-          }),
-        );
-      }
-
-      return { ...obj, [fieldName]: value ?? {} };
-    },
-    {} as Record<PackageManifestDependenciesFieldNames, Record<string, string>>,
-  );
-}
-
-/**
  * Reads the package manifest at the given path, verifying key data within the
  * manifest.
  *
@@ -357,16 +288,11 @@ export async function readPackageManifest(
     unvalidatedPackageManifest,
     parentDirectory,
   );
-  const dependenciesFields = readPackageManifestDependenciesFields(
-    unvalidatedPackageManifest,
-    parentDirectory,
-  );
 
   return {
     [PackageManifestFieldNames.Name]: name,
     [PackageManifestFieldNames.Version]: version,
     [PackageManifestFieldNames.Workspaces]: workspaces,
     [PackageManifestFieldNames.Private]: privateValue,
-    ...dependenciesFields,
   };
 }

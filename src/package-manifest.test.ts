@@ -22,11 +22,6 @@ describe('package-manifest', () => {
           version: new SemVer('1.2.3'),
           workspaces: [],
           private: false,
-          bundledDependencies: {},
-          dependencies: {},
-          devDependencies: {},
-          optionalDependencies: {},
-          peerDependencies: {},
         });
       });
     });
@@ -48,11 +43,6 @@ describe('package-manifest', () => {
           version: new SemVer('1.2.3'),
           workspaces: [],
           private: true,
-          bundledDependencies: {},
-          dependencies: {},
-          devDependencies: {},
-          optionalDependencies: {},
-          peerDependencies: {},
         });
       });
     });
@@ -74,11 +64,6 @@ describe('package-manifest', () => {
           version: new SemVer('1.2.3'),
           workspaces: [],
           private: false,
-          bundledDependencies: {},
-          dependencies: {},
-          devDependencies: {},
-          optionalDependencies: {},
-          peerDependencies: {},
         });
       });
     });
@@ -93,21 +78,6 @@ describe('package-manifest', () => {
             version: '1.2.3',
             workspaces: ['packages/*'],
             private: true,
-            bundledDependencies: {
-              foo: 'bar',
-            },
-            dependencies: {
-              foo: 'bar',
-            },
-            devDependencies: {
-              foo: 'bar',
-            },
-            optionalDependencies: {
-              foo: 'bar',
-            },
-            peerDependencies: {
-              foo: 'bar',
-            },
           }),
         );
 
@@ -116,52 +86,6 @@ describe('package-manifest', () => {
           version: new SemVer('1.2.3'),
           workspaces: ['packages/*'],
           private: true,
-          bundledDependencies: {
-            foo: 'bar',
-          },
-          dependencies: {
-            foo: 'bar',
-          },
-          devDependencies: {
-            foo: 'bar',
-          },
-          optionalDependencies: {
-            foo: 'bar',
-          },
-          peerDependencies: {
-            foo: 'bar',
-          },
-        });
-      });
-    });
-
-    it('reads a package manifest where dependencies fields are provided but empty', async () => {
-      await withSandbox(async (sandbox) => {
-        const manifestPath = path.join(sandbox.directoryPath, 'package.json');
-        await fs.promises.writeFile(
-          manifestPath,
-          JSON.stringify({
-            name: 'foo',
-            version: '1.2.3',
-            private: true,
-            bundledDependencies: {},
-            dependencies: {},
-            devDependencies: {},
-            optionalDependencies: {},
-            peerDependencies: {},
-          }),
-        );
-
-        expect(await readPackageManifest(manifestPath)).toStrictEqual({
-          name: 'foo',
-          version: new SemVer('1.2.3'),
-          workspaces: [],
-          private: true,
-          bundledDependencies: {},
-          dependencies: {},
-          devDependencies: {},
-          optionalDependencies: {},
-          peerDependencies: {},
         });
       });
     });
@@ -183,11 +107,6 @@ describe('package-manifest', () => {
           version: new SemVer('1.2.3'),
           workspaces: [],
           private: false,
-          bundledDependencies: {},
-          dependencies: {},
-          devDependencies: {},
-          optionalDependencies: {},
-          peerDependencies: {},
         });
       });
     });
@@ -308,50 +227,6 @@ describe('package-manifest', () => {
         await expect(readPackageManifest(manifestPath)).rejects.toThrow(
           'The value of "private" in the manifest for "foo" must be true or false (if present)',
         );
-      });
-    });
-
-    [
-      'bundledDependencies',
-      'dependencies',
-      'devDependencies',
-      'optionalDependencies',
-      'peerDependencies',
-    ].forEach((fieldName) => {
-      it(`throws if "${fieldName}" is not an object`, async () => {
-        await withSandbox(async (sandbox) => {
-          const manifestPath = path.join(sandbox.directoryPath, 'package.json');
-          await fs.promises.writeFile(
-            manifestPath,
-            JSON.stringify({
-              name: 'foo',
-              version: '1.2.3',
-              [fieldName]: 12345,
-            }),
-          );
-
-          await expect(readPackageManifest(manifestPath)).rejects.toThrow(
-            `The value of "${fieldName}" in the manifest for "foo" must be an object with non-empty string keys and non-empty string values`,
-          );
-        });
-      });
-
-      it(`throws if "${fieldName}" is not an object with string values`, async () => {
-        await withSandbox(async (sandbox) => {
-          const manifestPath = path.join(sandbox.directoryPath, 'package.json');
-          await fs.promises.writeFile(
-            manifestPath,
-            JSON.stringify({
-              name: 'foo',
-              version: '1.2.3',
-              [fieldName]: { foo: 12345 },
-            }),
-          );
-
-          await expect(readPackageManifest(manifestPath)).rejects.toThrow(
-            `The value of "${fieldName}" in the manifest for "foo" must be an object with non-empty string keys and non-empty string values`,
-          );
-        });
       });
     });
   });
