@@ -895,6 +895,7 @@ __metadata:
     jest-it-up: ^2.0.2
     jest-when: ^3.5.1
     nanoid: ^3.3.4
+    pony-cause: ^2.1.0
     prettier: ^2.2.1
     prettier-plugin-packagejson: ^2.2.17
     rimraf: ^3.0.2
@@ -4971,6 +4972,13 @@ __metadata:
   dependencies:
     find-up: ^4.0.0
   checksum: 9863e3f35132bf99ae1636d31ff1e1e3501251d480336edb1c211133c8d58906bed80f154a1d723652df1fda91e01c7442c2eeaf9dc83157c7ae89087e43c8d6
+  languageName: node
+  linkType: hard
+
+"pony-cause@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "pony-cause@npm:2.1.0"
+  checksum: ae1df5d97da0cfeac3d5a16abb66f7e5dffe675f8fc0811f143a46b0a3409803def538b862e4dd9825635e8268157f532b6c8e5bcdf8f99e20d482bfba93c042
   languageName: node
   linkType: hard
 

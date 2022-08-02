@@ -31,20 +31,16 @@ describe('fs', () => {
       });
     });
 
-    it('re-throws any error that occurs, assigning it the same code, a wrapped message, and a new stack', async () => {
+    it('re-throws any error that occurs as a new error that points to the original', async () => {
       await withSandbox(async (sandbox) => {
         const filePath = path.join(sandbox.directoryPath, 'nonexistent');
 
         await expect(readFile(filePath)).rejects.toThrow(
           expect.objectContaining({
-            message: expect.stringMatching(
-              new RegExp(
-                `^Could not read file '${filePath}': ENOENT: no such file or directory, open '${filePath}'`,
-                'u',
-              ),
-            ),
-            code: 'ENOENT',
-            stack: expect.anything(),
+            message: `Could not read file '${filePath}'`,
+            cause: expect.objectContaining({
+              message: `ENOENT: no such file or directory, open '${filePath}'`,
+            }),
           }),
         );
       });
@@ -64,21 +60,17 @@ describe('fs', () => {
       });
     });
 
-    it('re-throws any error that occurs, assigning it the same code, a wrapped message, and a new stack', async () => {
+    it('re-throws any error that occurs as a new error that points to the original', async () => {
       await withSandbox(async (sandbox) => {
         await promisifiedRimraf(sandbox.directoryPath);
         const filePath = path.join(sandbox.directoryPath, 'test');
 
         await expect(writeFile(filePath, 'some content 😄')).rejects.toThrow(
           expect.objectContaining({
-            message: expect.stringMatching(
-              new RegExp(
-                `^Could not write file '${filePath}': ENOENT: no such file or directory, open '${filePath}'`,
-                'u',
-              ),
-            ),
-            code: 'ENOENT',
-            stack: expect.anything(),
+            message: `Could not write file '${filePath}'`,
+            cause: expect.objectContaining({
+              message: `ENOENT: no such file or directory, open '${filePath}'`,
+            }),
           }),
         );
       });
@@ -97,20 +89,17 @@ describe('fs', () => {
       });
     });
 
-    it('re-throws any error that occurs, assigning it the same code, a wrapped message, and a new stack', async () => {
+    it('re-throws any error that occurs as a new error that points to the original', async () => {
       const filePath = '/some/file';
-      const error: any = new Error('oops');
-      error.code = 'ESOMETHING';
-      error.stack = 'some stack';
+      const error = new Error('oops');
       when(jest.spyOn(actionUtils, 'readJsonObjectFile'))
         .calledWith(filePath)
         .mockRejectedValue(error);
 
       await expect(readJsonObjectFile(filePath)).rejects.toThrow(
         expect.objectContaining({
-          message: `Could not read JSON file '${filePath}': oops`,
-          code: 'ESOMETHING',
-          stack: 'some stack',
+          message: `Could not read JSON file '${filePath}'`,
+          cause: error,
         }),
       );
     });
@@ -126,20 +115,17 @@ describe('fs', () => {
       expect(await writeJsonFile(filePath, { some: 'object' })).toBeUndefined();
     });
 
-    it('re-throws any error that occurs, assigning it the same code, a wrapped message, and a new stack', async () => {
+    it('re-throws any error that occurs as a new error that points to the original', async () => {
       const filePath = '/some/file';
-      const error: any = new Error('oops');
-      error.code = 'ESOMETHING';
-      error.stack = 'some stack';
+      const error = new Error('oops');
       when(jest.spyOn(actionUtils, 'writeJsonFile'))
         .calledWith(filePath, { some: 'object' })
         .mockRejectedValue(error);
 
       await expect(writeJsonFile(filePath, { some: 'object' })).rejects.toThrow(
         expect.objectContaining({
-          message: `Could not write JSON file '${filePath}': oops`,
-          code: 'ESOMETHING',
-          stack: 'some stack',
+          message: `Could not write JSON file '${filePath}'`,
+          cause: error,
         }),
       );
     });
@@ -183,9 +169,23 @@ describe('fs', () => {
 
       await expect(fileExists(entryPath)).rejects.toThrow(
         expect.objectContaining({
-          message: `Could not determine if file exists '${entryPath}': oops`,
-          code: 'ESOMETHING',
-          stack: 'some stack',
+          message: `Could not determine if file exists '${entryPath}'`,
+          cause: error,
+        }),
+      );
+    });
+
+    it('re-throws any error that occurs as a new error that points to the original', async () => {
+      const entryPath = '/some/file';
+      const error = new Error('oops');
+      when(jest.spyOn(fs.promises, 'stat'))
+        .calledWith(entryPath)
+        .mockRejectedValue(error);
+
+      await expect(fileExists(entryPath)).rejects.toThrow(
+        expect.objectContaining({
+          message: `Could not determine if file exists '${entryPath}'`,
+          cause: error,
         }),
       );
     });
@@ -237,18 +237,15 @@ describe('fs', () => {
 
     it('re-throws any error that occurs, assigning it the same code, a wrapped message, and a new stack', async () => {
       const directoryPath = '/some/directory';
-      const error: any = new Error('oops');
-      error.code = 'ESOMETHING';
-      error.stack = 'some stack';
+      const error = new Error('oops');
       when(jest.spyOn(fs.promises, 'mkdir'))
         .calledWith(directoryPath, { recursive: true })
         .mockRejectedValue(error);
 
       await expect(ensureDirectoryPathExists(directoryPath)).rejects.toThrow(
         expect.objectContaining({
-          message: `Could not create directory path '${directoryPath}': oops`,
-          code: 'ESOMETHING',
-          stack: 'some stack',
+          message: `Could not create directory path '${directoryPath}'`,
+          cause: error,
         }),
       );
     });
@@ -273,18 +270,15 @@ describe('fs', () => {
 
     it('re-throws any error that occurs, assigning it the same code, a wrapped message, and a new stack', async () => {
       const filePath = '/some/file';
-      const error: any = new Error('oops');
-      error.code = 'ESOMETHING';
-      error.stack = 'some stack';
+      const error = new Error('oops');
       when(jest.spyOn(fs.promises, 'rm'))
         .calledWith(filePath, { force: true })
         .mockRejectedValue(error);
 
       await expect(removeFile(filePath)).rejects.toThrow(
         expect.objectContaining({
-          message: `Could not remove file '${filePath}': oops`,
-          code: 'ESOMETHING',
-          stack: 'some stack',
+          message: `Could not remove file '${filePath}'`,
+          cause: error,
         }),
       );
     });

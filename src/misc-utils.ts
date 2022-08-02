@@ -1,9 +1,12 @@
 import which from 'which';
 import execa from 'execa';
 import createDebug from 'debug';
+import { ErrorWithCause } from 'pony-cause';
+import { isObject } from '@metamask/utils';
 
 export { isTruthyString } from '@metamask/action-utils';
-export { hasProperty, isNullOrUndefined, isObject } from '@metamask/utils';
+export { hasProperty, isNullOrUndefined } from '@metamask/utils';
+export { isObject };
 
 /**
  * A logger object for the implementation part of this project.
@@ -11,6 +14,21 @@ export { hasProperty, isNullOrUndefined, isObject } from '@metamask/utils';
  * @see The [debug](https://www.npmjs.com/package/debug) package.
  */
 export const debug = createDebug('create-release-branch:impl');
+
+/**
+ * Type guard for determining whether the given value is an instance of Error.
+ * For errors generated via `fs.promises`, `error instanceof Error` won't work,
+ * so we have to come up with another way of testing.
+ *
+ * @param error - The object to check.
+ * @returns True or false, depending on the result.
+ */
+function isError(error: unknown): error is Error {
+  return (
+    error instanceof Error ||
+    (isObject(error) && error.constructor.name === 'Error')
+  );
+}
 
 /**
  * Type guard for determining whether the given value is an error object with a
@@ -49,45 +67,31 @@ export function isErrorWithStack(error: unknown): error is { stack: string } {
 }
 
 /**
- * Builds a new error object by optionally prepending a prefix or appending a
- * suffix to the error's message (or the error itself, it is a string). Retains
- * the `code` and `stack` of the original error object if they exist.
+ * Builds a new error object, linking to the original error via the `cause`
+ * property if it is an Error.
  *
  * This function is useful to reframe error messages in general, but is
  * _critical_ when interacting with any of Node's filesystem functions as
  * provided via `fs.promises`, because these do not produce stack traces in the
  * case of an I/O error (see <https://github.com/nodejs/node/issues/30944>).
  *
- * @param errorLike - Any value that can be thrown.
- * @param buildMessage - A function that can be used to build the message of the
- * new error object. It's passed an object that has a `message` property, and
- * returns that `message` by default.
+ * @param message - The desired message of the new error.
+ * @param originalError - The error that you want to cover (either an Error or
+ * something throwable).
  * @returns A new error object.
  */
-export function wrapError(
-  errorLike: unknown,
-  buildMessage: (props: { message: string }) => string = (props) =>
-    props.message,
-) {
-  const message = isErrorWithMessage(errorLike)
-    ? errorLike.message
-    : String(errorLike);
-  const code = isErrorWithCode(errorLike) ? errorLike.code : undefined;
-  const stack = isErrorWithStack(errorLike) ? errorLike.stack : undefined;
-  const errorWithStack: Error & {
-    code?: string | undefined;
-    stack?: string | undefined;
-  } = new Error(buildMessage({ message }));
+export function coverError(message: string, originalError: unknown) {
+  if (isError(originalError)) {
+    const error: any = new ErrorWithCause(message, { cause: originalError });
 
-  if (code !== undefined) {
-    errorWithStack.code = code;
+    if (isErrorWithCode(originalError)) {
+      error.code = originalError.code;
+    }
+
+    return error;
   }
 
-  if (stack !== undefined) {
-    errorWithStack.stack = stack;
-  }
-
-  return errorWithStack;
+  return new Error(`${message}: ${originalError}`);
 }
 
 /**

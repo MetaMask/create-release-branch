@@ -4,7 +4,7 @@ import {
   isErrorWithCode,
   isErrorWithMessage,
   isErrorWithStack,
-  wrapError,
+  coverError,
   resolveExecutable,
   getStdoutFromCommand,
   runCommand,
@@ -80,41 +80,28 @@ describe('misc-utils', () => {
     });
   });
 
-  describe('wrapError', () => {
-    it('wraps the given error object by prepending the given prefix to its message', () => {
-      const error = new Error('Some message');
+  describe('coverError', () => {
+    it('returns a new Error that links to the given Error', () => {
+      const originalError = new Error('oops');
+      const newError = coverError('Some message', originalError);
 
-      expect(
-        wrapError(error, ({ message }) => `Some prefix: ${message}`),
-      ).toMatchObject({
-        message: 'Some prefix: Some message',
-      });
+      expect(newError.message).toStrictEqual('Some message');
+      expect(newError.cause).toBe(originalError);
     });
 
-    it('returns a new error object that retains the "code" property of the original error object', () => {
-      const error: any = new Error('foo');
-      error.code = 'ESOMETHING';
+    it('copies over any "code" property that exists on the given Error', () => {
+      const originalError: any = new Error('oops');
+      originalError.code = 'CODE';
+      const newError: any = coverError('Some message', originalError);
 
-      expect(wrapError(error)).toMatchObject({
-        code: 'ESOMETHING',
-      });
+      expect(newError.code).toStrictEqual('CODE');
     });
 
-    it('returns a new error object that retains the "stack" property of the original error object', () => {
-      const error: any = new Error('foo');
-      error.stack = 'some stack';
+    it('returns a new Error which prefixes the given message', () => {
+      const newError = coverError('Some message', 'Some original message');
 
-      expect(wrapError(error)).toMatchObject({
-        stack: 'some stack',
-      });
-    });
-
-    it('wraps the given string by prepending the given prefix to it', () => {
-      expect(
-        wrapError('Some message', ({ message }) => `Some prefix: ${message}`),
-      ).toMatchObject({
-        message: 'Some prefix: Some message',
-      });
+      expect(newError.message).toBe('Some message: Some original message');
+      expect(newError.cause).toBeUndefined();
     });
   });
 

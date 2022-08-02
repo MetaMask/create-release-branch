@@ -3,7 +3,7 @@ import {
   readJsonObjectFile as underlyingReadJsonObjectFile,
   writeJsonFile as underlyingWriteJsonFile,
 } from '@metamask/action-utils';
-import { wrapError, isErrorWithCode } from './misc-utils';
+import { coverError, isErrorWithCode } from './misc-utils';
 
 /**
  * Reads the file at the given path, assuming its content is encoded as UTF-8.
@@ -16,10 +16,7 @@ export async function readFile(filePath: string): Promise<string> {
   try {
     return await fs.promises.readFile(filePath, 'utf8');
   } catch (error) {
-    throw wrapError(
-      error,
-      ({ message }) => `Could not read file '${filePath}': ${message}`,
-    );
+    throw coverError(`Could not read file '${filePath}'`, error);
   }
 }
 
@@ -37,10 +34,7 @@ export async function writeFile(
   try {
     await fs.promises.writeFile(filePath, content);
   } catch (error) {
-    throw wrapError(
-      error,
-      ({ message }) => `Could not write file '${filePath}': ${message}`,
-    );
+    throw coverError(`Could not write file '${filePath}'`, error);
   }
 }
 
@@ -62,10 +56,7 @@ export async function readJsonObjectFile(
   try {
     return await underlyingReadJsonObjectFile(filePath);
   } catch (error) {
-    throw wrapError(
-      error,
-      ({ message }) => `Could not read JSON file '${filePath}': ${message}`,
-    );
+    throw coverError(`Could not read JSON file '${filePath}'`, error);
   }
 }
 
@@ -86,10 +77,7 @@ export async function writeJsonFile(
   try {
     await underlyingWriteJsonFile(filePath, jsonValue);
   } catch (error) {
-    throw wrapError(
-      error,
-      ({ message }) => `Could not write JSON file '${filePath}': ${message}`,
-    );
+    throw coverError(`Could not write JSON file '${filePath}'`, error);
   }
 }
 
@@ -109,10 +97,9 @@ export async function fileExists(entryPath: string): Promise<boolean> {
       return false;
     }
 
-    throw wrapError(
+    throw coverError(
+      `Could not determine if file exists '${entryPath}'`,
       error,
-      ({ message }) =>
-        `Could not determine if file exists '${entryPath}': ${message}`,
     );
   }
 }
@@ -131,10 +118,9 @@ export async function ensureDirectoryPathExists(
   try {
     return await fs.promises.mkdir(directoryPath, { recursive: true });
   } catch (error) {
-    throw wrapError(
+    throw coverError(
+      `Could not create directory path '${directoryPath}'`,
       error,
-      ({ message }) =>
-        `Could not create directory path '${directoryPath}': ${message}`,
     );
   }
 }
@@ -150,9 +136,6 @@ export async function removeFile(filePath: string): Promise<void> {
   try {
     return await fs.promises.rm(filePath, { force: true });
   } catch (error) {
-    throw wrapError(
-      error,
-      ({ message }) => `Could not remove file '${filePath}': ${message}`,
-    );
+    throw coverError(`Could not remove file '${filePath}'`, error);
   }
 }

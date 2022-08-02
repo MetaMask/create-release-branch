@@ -182,6 +182,7 @@ packages:
         path: '/path/to/editor',
         args: ['arg1', 'arg2'],
       };
+      const error = new Error('oops');
       when(jest.spyOn(miscUtils, 'runCommand'))
         .calledWith(
           '/path/to/editor',
@@ -191,12 +192,16 @@ packages:
             shell: true,
           },
         )
-        .mockRejectedValue(new Error('oops'));
+        .mockRejectedValue(error);
 
       await expect(
         waitForUserToEditReleaseSpecification(releaseSpecificationPath, editor),
       ).rejects.toThrow(
-        'Encountered an error while waiting for the release spec to be edited: oops',
+        expect.objectContaining({
+          message:
+            'Encountered an error while waiting for the release spec to be edited.',
+          cause: error,
+        }),
       );
     });
   });
@@ -294,7 +299,14 @@ packages:
         await expect(
           validateReleaseSpecification(project, releaseSpecificationPath),
         ).rejects.toThrow(
-          /^Failed to parse release spec:\n\nMissing closing "quote at line 1/u,
+          expect.objectContaining({
+            message: expect.stringMatching(
+              /^Your release spec does not appear to be valid YAML\.\n/u,
+            ),
+            cause: expect.objectContaining({
+              message: expect.stringMatching(/^Missing closing "quote/u),
+            }),
+          }),
         );
       });
     });

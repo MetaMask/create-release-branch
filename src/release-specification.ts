@@ -5,7 +5,7 @@ import { readFile } from './fs';
 import {
   debug,
   hasProperty,
-  wrapError,
+  coverError,
   isObject,
   runCommand,
 } from './misc-utils';
@@ -127,10 +127,9 @@ export async function waitForUserToEditReleaseSpecification(
   stdout.write('\r\u001B[K');
 
   if (caughtError) {
-    throw wrapError(
+    throw coverError(
+      'Encountered an error while waiting for the release spec to be edited.',
       caughtError,
-      ({ message }) =>
-        `Encountered an error while waiting for the release spec to be edited: ${message}`,
     );
   }
 }
@@ -163,23 +162,22 @@ export async function validateReleaseSpecification(
     packages: Record<string, string | null>;
   };
 
+  const afterwordForAllErrorMessages = [
+    "The release spec file has been retained for you to edit again and make the necessary fixes. Once you've done this, re-run this tool.",
+    releaseSpecificationPath,
+  ].join('\n\n');
+
   try {
     unvalidatedReleaseSpecification = YAML.parse(releaseSpecificationContents);
   } catch (error) {
-    throw wrapError(error, ({ message }) =>
+    throw coverError(
       [
-        'Failed to parse release spec:',
-        message,
-        "The file has been retained for you to make the necessary fixes. Once you've done this, re-run this tool.",
-        releaseSpecificationPath,
+        'Your release spec does not appear to be valid YAML.',
+        afterwordForAllErrorMessages,
       ].join('\n\n'),
+      error,
     );
   }
-
-  const postludeForAllErrorMessages = [
-    "The release spec file has been retained for you to make the necessary fixes. Once you've done this, re-run this tool.",
-    releaseSpecificationPath,
-  ].join('\n\n');
 
   if (
     !isObject(unvalidatedReleaseSpecification) ||
@@ -189,7 +187,7 @@ export async function validateReleaseSpecification(
       `Your release spec could not be processed because it needs to be an object with a \`packages\` property. The value of \`packages\` must itself be an object, where each key is a workspace package in the project and each value is a version specifier ("major", "minor", or "patch"; or a version string with major, minor, and patch parts, such as "1.2.3").`,
       `Here is the parsed version of the file you provided:`,
       JSON.stringify(unvalidatedReleaseSpecification, null, 2),
-      postludeForAllErrorMessages,
+      afterwordForAllErrorMessages,
     ].join('\n\n');
     throw new Error(message);
   }
@@ -250,7 +248,7 @@ export async function validateReleaseSpecification(
           return `${itemPrefix}${lineNumberPrefix}${error.message}`;
         })
         .join('\n'),
-      postludeForAllErrorMessages,
+      afterwordForAllErrorMessages,
     ].join('\n\n');
     throw new Error(message);
   }
