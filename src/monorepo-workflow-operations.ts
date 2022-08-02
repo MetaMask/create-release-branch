@@ -19,7 +19,7 @@ import {
   validateReleaseSpecification,
   ReleaseSpecification,
 } from './release-specification';
-import { semver, SemVer } from './semver';
+import { SemVer } from './semver';
 import {
   captureChangesInReleaseBranch,
   PackageReleasePlan,
@@ -185,26 +185,33 @@ async function planRelease(
     const currentVersion = pkg.manifest.version;
     const newVersion =
       versionSpecifier instanceof SemVer
-        ? versionSpecifier.toString()
-        : new SemVer(currentVersion.toString())
-            .inc(versionSpecifier)
-            .toString();
+        ? versionSpecifier
+        : new SemVer(currentVersion.toString()).inc(versionSpecifier);
+    const comparison = newVersion.compare(currentVersion);
 
-    const versionDiff = semver.diff(currentVersion.toString(), newVersion);
-
-    if (versionDiff === null) {
-      throw new Error(
-        [
-          `Could not apply version specifier "${versionSpecifier}" to package "${packageName}" because the current and new versions would end up being the same.`,
-          `The release spec file has been retained for you to make the necessary fixes. Once you've done this, re-run this tool.`,
-          releaseSpecificationPath,
-        ].join('\n\n'),
-      );
+    if (versionSpecifier instanceof SemVer) {
+      if (comparison === 0) {
+        throw new Error(
+          [
+            `Could not update package "${packageName}" to "${versionSpecifier}" as that is already the current version.`,
+            `The release spec file has been retained for you to make the necessary fixes. Once you've done this, re-run this tool.`,
+            releaseSpecificationPath,
+          ].join('\n\n'),
+        );
+      } else if (comparison < 0) {
+        throw new Error(
+          [
+            `Could not update package "${packageName}" to "${versionSpecifier}" as it is less than the current version "${currentVersion}".`,
+            `The release spec file has been retained for you to make the necessary fixes. Once you've done this, re-run this tool.`,
+            releaseSpecificationPath,
+          ].join('\n\n'),
+        );
+      }
     }
 
     return {
       package: pkg,
-      newVersion,
+      newVersion: newVersion.toString(),
       shouldUpdateChangelog: true,
     };
   });

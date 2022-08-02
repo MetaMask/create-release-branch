@@ -286,7 +286,55 @@ describe('monorepo-workflow-operations', () => {
                     stderr,
                   }),
                 ).rejects.toThrow(
-                  /^Could not apply version specifier "1.0.0" to package "a" because the current and new versions would end up being the same./u,
+                  /^Could not update package "a" to "1.0.0" as that is already the current version./u,
+                );
+              });
+            });
+
+            it("throws if a version specifier for a package within the edited release spec, when applied, would result in a backward change to the package's version", async () => {
+              await withSandbox(async (sandbox) => {
+                const project = buildMockMonorepoProject({
+                  rootPackage: buildMockPackage('root', '2022.1.1', {
+                    manifest: {
+                      private: true,
+                      workspaces: ['packages/*'],
+                    },
+                  }),
+                  workspacePackages: {
+                    a: buildMockPackage('a', '1.0.3', {
+                      manifest: {
+                        private: false,
+                      },
+                    }),
+                  },
+                });
+                const stdout = fs.createWriteStream('/dev/null');
+                const stderr = fs.createWriteStream('/dev/null');
+                mockDependencies({
+                  determineEditor: {
+                    path: '/some/editor',
+                    args: [],
+                  },
+                  getEnvironmentVariables: {
+                    TODAY: '2022-06-12',
+                  },
+                  validateReleaseSpecification: {
+                    packages: {
+                      a: new SemVer('1.0.2'),
+                    },
+                  },
+                });
+
+                await expect(
+                  followMonorepoWorkflow({
+                    project,
+                    tempDirectoryPath: sandbox.directoryPath,
+                    firstRemovingExistingReleaseSpecification: true,
+                    stdout,
+                    stderr,
+                  }),
+                ).rejects.toThrow(
+                  /^Could not update package "a" to "1.0.2" as it is less than the current version "1.0.3"./u,
                 );
               });
             });
@@ -655,7 +703,60 @@ describe('monorepo-workflow-operations', () => {
                     stderr,
                   }),
                 ).rejects.toThrow(
-                  /^Could not apply version specifier "1.0.0" to package "a" because the current and new versions would end up being the same./u,
+                  /^Could not update package "a" to "1.0.0" as that is already the current version./u,
+                );
+              });
+            });
+
+            it("throws if a version specifier for a package within the edited release spec, when applied, would result in a backward change to the package's version", async () => {
+              await withSandbox(async (sandbox) => {
+                const project = buildMockMonorepoProject({
+                  rootPackage: buildMockPackage('root', '2022.1.1', {
+                    manifest: {
+                      private: true,
+                      workspaces: ['packages/*'],
+                    },
+                  }),
+                  workspacePackages: {
+                    a: buildMockPackage('a', '1.0.3', {
+                      manifest: {
+                        private: false,
+                      },
+                    }),
+                  },
+                });
+                const stdout = fs.createWriteStream('/dev/null');
+                const stderr = fs.createWriteStream('/dev/null');
+                mockDependencies({
+                  determineEditor: {
+                    path: '/some/editor',
+                    args: [],
+                  },
+                  getEnvironmentVariables: {
+                    TODAY: '2022-06-12',
+                  },
+                  validateReleaseSpecification: {
+                    packages: {
+                      a: new SemVer('1.0.2'),
+                    },
+                  },
+                });
+                const releaseSpecPath = path.join(
+                  sandbox.directoryPath,
+                  'RELEASE_SPEC',
+                );
+                await fs.promises.writeFile(releaseSpecPath, 'release spec');
+
+                await expect(
+                  followMonorepoWorkflow({
+                    project,
+                    tempDirectoryPath: sandbox.directoryPath,
+                    firstRemovingExistingReleaseSpecification: true,
+                    stdout,
+                    stderr,
+                  }),
+                ).rejects.toThrow(
+                  /^Could not update package "a" to "1.0.2" as it is less than the current version "1.0.3"./u,
                 );
               });
             });
@@ -1063,7 +1164,55 @@ describe('monorepo-workflow-operations', () => {
                     stderr,
                   }),
                 ).rejects.toThrow(
-                  /^Could not apply version specifier "1.0.0" to package "a" because the current and new versions would end up being the same./u,
+                  /^Could not update package "a" to "1.0.0" as that is already the current version./u,
+                );
+              });
+            });
+
+            it("throws if a version specifier for a package within the edited release spec, when applied, would result in a backward change to the package's version", async () => {
+              await withSandbox(async (sandbox) => {
+                const project = buildMockMonorepoProject({
+                  rootPackage: buildMockPackage('root', '2022.1.1', {
+                    manifest: {
+                      private: true,
+                      workspaces: ['packages/*'],
+                    },
+                  }),
+                  workspacePackages: {
+                    a: buildMockPackage('a', '1.0.3', {
+                      manifest: {
+                        private: false,
+                      },
+                    }),
+                  },
+                });
+                const stdout = fs.createWriteStream('/dev/null');
+                const stderr = fs.createWriteStream('/dev/null');
+                mockDependencies({
+                  determineEditor: {
+                    path: '/some/editor',
+                    args: [],
+                  },
+                  getEnvironmentVariables: {
+                    TODAY: '2022-06-12',
+                  },
+                  validateReleaseSpecification: {
+                    packages: {
+                      a: new SemVer('1.0.2'),
+                    },
+                  },
+                });
+
+                await expect(
+                  followMonorepoWorkflow({
+                    project,
+                    tempDirectoryPath: sandbox.directoryPath,
+                    firstRemovingExistingReleaseSpecification: false,
+                    stdout,
+                    stderr,
+                  }),
+                ).rejects.toThrow(
+                  /^Could not update package "a" to "1.0.2" as it is less than the current version "1.0.3"./u,
                 );
               });
             });
@@ -1429,7 +1578,60 @@ describe('monorepo-workflow-operations', () => {
                 stderr,
               }),
             ).rejects.toThrow(
-              /^Could not apply version specifier "1.0.0" to package "a" because the current and new versions would end up being the same./u,
+              /^Could not update package "a" to "1.0.0" as that is already the current version./u,
+            );
+          });
+        });
+
+        it("throws if a version specifier for a package within the edited release spec, when applied, would result in a backward change to the package's version", async () => {
+          await withSandbox(async (sandbox) => {
+            const project = buildMockMonorepoProject({
+              rootPackage: buildMockPackage('root', '2022.1.1', {
+                manifest: {
+                  private: true,
+                  workspaces: ['packages/*'],
+                },
+              }),
+              workspacePackages: {
+                a: buildMockPackage('a', '1.0.3', {
+                  manifest: {
+                    private: false,
+                  },
+                }),
+              },
+            });
+            const stdout = fs.createWriteStream('/dev/null');
+            const stderr = fs.createWriteStream('/dev/null');
+            mockDependencies({
+              determineEditor: {
+                path: '/some/editor',
+                args: [],
+              },
+              getEnvironmentVariables: {
+                TODAY: '2022-06-12',
+              },
+              validateReleaseSpecification: {
+                packages: {
+                  a: new SemVer('1.0.2'),
+                },
+              },
+            });
+            const releaseSpecPath = path.join(
+              sandbox.directoryPath,
+              'RELEASE_SPEC',
+            );
+            await fs.promises.writeFile(releaseSpecPath, 'release spec');
+
+            await expect(
+              followMonorepoWorkflow({
+                project,
+                tempDirectoryPath: sandbox.directoryPath,
+                firstRemovingExistingReleaseSpecification: false,
+                stdout,
+                stderr,
+              }),
+            ).rejects.toThrow(
+              /^Could not update package "a" to "1.0.2" as it is less than the current version "1.0.3"./u,
             );
           });
         });
