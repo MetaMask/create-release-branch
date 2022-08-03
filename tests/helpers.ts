@@ -4,6 +4,8 @@ import path from 'path';
 import util from 'util';
 import { nanoid } from 'nanoid';
 import rimraf from 'rimraf';
+import type { ExecaError } from 'execa';
+import { hasProperty, isObject } from '@metamask/utils';
 
 /**
  * A promisified version of `rimraf`.
@@ -71,4 +73,21 @@ export async function withSandbox(fn: (sandbox: Sandbox) => any) {
  */
 export function isErrorWithCode(error: unknown): error is { code: string } {
   return typeof error === 'object' && error !== null && 'code' in error;
+}
+
+/**
+ * Type guard for determining whether the given value is an error object
+ * produced by `execa`.
+ *
+ * @param error - The possible error object.
+ * @returns True or false, depending on the result.
+ */
+export function isExecaError(error: unknown): error is ExecaError {
+  return (
+    isObject(error) &&
+    hasProperty(error, 'message') &&
+    hasProperty(error, 'shortMessage') &&
+    hasProperty(error, 'isCanceled') &&
+    hasProperty(error, 'exitCode')
+  );
 }

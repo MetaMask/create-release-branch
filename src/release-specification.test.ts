@@ -47,7 +47,7 @@ describe('release-specification', () => {
         `
 # The following is a list of packages in monorepo.
 # Please indicate the packages for which you want to create a new release
-# by updating "null" (which does nothing) to one of the following:
+# by updating "null" to one of the following:
 #
 # - "major" (if you want to bump the major part of the package's version)
 # - "minor" (if you want to bump the minor part of the package's version)
@@ -110,7 +110,7 @@ packages:
         `
 # The following is a list of packages in monorepo.
 # Please indicate the packages for which you want to create a new release
-# by updating "null" (which does nothing) to one of the following:
+# by updating "null" to one of the following:
 #
 # - "major" (if you want to bump the major part of the package's version)
 # - "minor" (if you want to bump the minor part of the package's version)
@@ -276,7 +276,7 @@ packages:
       });
     });
 
-    it('removes packages which have "null" as their version specifier', async () => {
+    it('removes packages from the release spec which have "null" as their version specifier', async () => {
       await withSandbox(async (sandbox) => {
         const project = buildMockProject({
           workspacePackages: {
@@ -295,6 +295,45 @@ packages:
             packages: {
               a: 'major',
               b: null,
+              c: 'patch',
+            },
+          }),
+        );
+
+        const releaseSpecification = await validateReleaseSpecification(
+          project,
+          releaseSpecificationPath,
+        );
+
+        expect(releaseSpecification).toStrictEqual({
+          packages: {
+            a: 'major',
+            c: 'patch',
+          },
+          path: releaseSpecificationPath,
+        });
+      });
+    });
+
+    it('removes packages from the release spec which have "intentionally-skip" as their version specifier', async () => {
+      await withSandbox(async (sandbox) => {
+        const project = buildMockProject({
+          workspacePackages: {
+            a: buildMockPackage('a'),
+            b: buildMockPackage('b'),
+            c: buildMockPackage('c'),
+          },
+        });
+        const releaseSpecificationPath = path.join(
+          sandbox.directoryPath,
+          'release-spec',
+        );
+        await fs.promises.writeFile(
+          releaseSpecificationPath,
+          YAML.stringify({
+            packages: {
+              a: 'major',
+              b: 'intentionally-skip',
               c: 'patch',
             },
           }),
@@ -399,8 +438,8 @@ packages:
           new RegExp(
             [
               '^Your release spec could not be processed due to the following issues:\n',
-              '- Line 2: "foo" is not a package in the project',
-              '- Line 3: "bar" is not a package in the project',
+              '\\* Line 2: "foo" is not a package in the project',
+              '\\* Line 3: "bar" is not a package in the project',
             ].join('\n'),
             'u',
           ),
@@ -436,9 +475,9 @@ packages:
           new RegExp(
             [
               '^Your release spec could not be processed due to the following issues:\n',
-              '- Line 2: "asdflksdaf" is not a valid version specifier for package "a"',
+              '\\* Line 2: "asdflksdaf" is not a valid version specifier for package "a"',
               '          \\(must be "major", "minor", or "patch"; or a version string with major, minor, and patch parts, such as "1\\.2\\.3"\\)',
-              '- Line 3: "1.2\\.\\.\\.3\\." is not a valid version specifier for package "b"',
+              '\\* Line 3: "1.2\\.\\.\\.3\\." is not a valid version specifier for package "b"',
               '          \\(must be "major", "minor", or "patch"; or a version string with major, minor, and patch parts, such as "1\\.2\\.3"\\)',
             ].join('\n'),
             'u',
@@ -475,13 +514,125 @@ packages:
           new RegExp(
             [
               '^Your release spec could not be processed due to the following issues:\n',
-              '- Line 2: "1.2.3" is not a valid version specifier for package "a"',
+              '\\* Line 2: "1.2.3" is not a valid version specifier for package "a"',
               '          \\("a" is already at version "1.2.3"\\)',
-              '- Line 3: "4.5.6" is not a valid version specifier for package "b"',
+              '\\* Line 3: "4.5.6" is not a valid version specifier for package "b"',
               '          \\("b" is already at version "4.5.6"\\)',
             ].join('\n'),
             'u',
           ),
+        );
+      });
+    });
+
+    it('throws if there are any packages not listed in the release spec which have changed', async () => {
+      await withSandbox(async (sandbox) => {
+        const project = buildMockProject({
+          workspacePackages: {
+            a: buildMockPackage('a', {
+              hasChangesSinceLatestRelease: true,
+            }),
+            b: buildMockPackage('b', {
+              hasChangesSinceLatestRelease: true,
+            }),
+            c: buildMockPackage('c', {
+              hasChangesSinceLatestRelease: true,
+            }),
+          },
+        });
+        const releaseSpecificationPath = path.join(
+          sandbox.directoryPath,
+          'release-spec',
+        );
+        await fs.promises.writeFile(
+          releaseSpecificationPath,
+          YAML.stringify({
+            packages: {
+              a: 'major',
+            },
+          }),
+        );
+
+        await expect(
+          validateReleaseSpecification(project, releaseSpecificationPath),
+        ).rejects.toThrow(
+          `
+Your release spec could not be processed due to the following issues:
+
+* The following packages, which have changed since their latest release, are missing.
+
+  - b
+  - c
+
+  Consider including them in the release spec so that any packages that rely on them won't break in production.
+
+  If you are ABSOLUTELY SURE that this won't occur, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:
+
+    packages:
+      b: intentionally-skip
+      c: intentionally-skip
+
+The release spec file has been retained for you to make the necessary fixes. Once you've done this, re-run this tool.
+
+${releaseSpecificationPath}
+`.trim(),
+        );
+      });
+    });
+
+    it('throws if there are any packages listed in the release spec which have changed but their version specifiers are null', async () => {
+      await withSandbox(async (sandbox) => {
+        const project = buildMockProject({
+          workspacePackages: {
+            a: buildMockPackage('a', {
+              hasChangesSinceLatestRelease: true,
+            }),
+            b: buildMockPackage('b', {
+              hasChangesSinceLatestRelease: true,
+            }),
+            c: buildMockPackage('c', {
+              hasChangesSinceLatestRelease: true,
+            }),
+          },
+        });
+        const releaseSpecificationPath = path.join(
+          sandbox.directoryPath,
+          'release-spec',
+        );
+        await fs.promises.writeFile(
+          releaseSpecificationPath,
+          YAML.stringify({
+            packages: {
+              a: 'major',
+              b: null,
+              c: null,
+            },
+          }),
+        );
+
+        await expect(
+          validateReleaseSpecification(project, releaseSpecificationPath),
+        ).rejects.toThrow(
+          `
+Your release spec could not be processed due to the following issues:
+
+* The following packages, which have changed since their latest release, are missing.
+
+  - b
+  - c
+
+  Consider including them in the release spec so that any packages that rely on them won't break in production.
+
+  If you are ABSOLUTELY SURE that this won't occur, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:
+
+    packages:
+      b: intentionally-skip
+      c: intentionally-skip
+
+The release spec file has been retained for you to make the necessary fixes. Once you've done this, re-run this tool.
+
+${releaseSpecificationPath}
+`.trim(),
         );
       });
     });

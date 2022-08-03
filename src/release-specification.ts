@@ -40,6 +40,9 @@ export interface ReleaseSpecification {
   path: string;
 }
 
+const SKIP_PACKAGE_DIRECTIVE = null;
+const INTENTIONALLY_SKIP_PACKAGE_DIRECTIVE = 'intentionally-skip';
+
 /**
  * Generates a skeleton for a release specification, which describes how a
  * project should be updated.
@@ -68,7 +71,7 @@ export async function generateReleaseSpecificationTemplateForMonorepo({
   const instructions = `
 # The following is a list of packages in ${rootPackage.validatedManifest.name}.
 # Please indicate the packages for which you want to create a new release
-# by updating "null" (which does nothing) to one of the following:
+# by updating "null" to one of the following:
 #
 # - "major" (if you want to bump the major part of the package's version)
 # - "minor" (if you want to bump the minor part of the package's version)
@@ -90,7 +93,7 @@ ${afterEditingInstructions}
   }
 
   const packages = changedWorkspacePackages.reduce((obj, pkg) => {
-    return { ...obj, [pkg.validatedManifest.name]: null };
+    return { ...obj, [pkg.validatedManifest.name]: SKIP_PACKAGE_DIRECTIVE };
   }, {});
 
   return [instructions, YAML.stringify({ packages })].join('\n\n');
@@ -163,9 +166,6 @@ export async function validateReleaseSpecification(
   project: Project,
   releaseSpecificationPath: string,
 ): Promise<ReleaseSpecification> {
-  const workspacePackageNames = Object.values(project.workspacePackages).map(
-    (pkg) => pkg.validatedManifest.name,
-  );
   const releaseSpecificationContents = await readFile(releaseSpecificationPath);
   const indexOfFirstUsableLine = releaseSpecificationContents
     .split('\n')
@@ -206,14 +206,51 @@ export async function validateReleaseSpecification(
     throw new Error(message);
   }
 
-  const errors: { message: string | string[]; lineNumber: number }[] = [];
+  const errors: { message: string | string[]; lineNumber?: number }[] = [];
+
+  const changedPackageNames = Object.keys(project.workspacePackages).filter(
+    (packageName) =>
+      project.workspacePackages[packageName].hasChangesSinceLatestRelease,
+  );
+  const missingChangedPackageNames = changedPackageNames.filter(
+    (packageName) =>
+      !hasProperty(unvalidatedReleaseSpecification.packages, packageName) ||
+      unvalidatedReleaseSpecification.packages[packageName] === null,
+  );
+
+  if (missingChangedPackageNames.length > 0) {
+    errors.push({
+      message: [
+        'The following packages, which have changed since their latest release, are missing.',
+        missingChangedPackageNames
+          .map((packageName) => `  - ${packageName}`)
+          .join('\n'),
+        "  Consider including them in the release spec so that any packages that rely on them won't break in production.",
+        `  If you are ABSOLUTELY SURE that this won't occur, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:`,
+        YAML.stringify({
+          packages: missingChangedPackageNames.reduce((object, packageName) => {
+            return {
+              ...object,
+              [packageName]: INTENTIONALLY_SKIP_PACKAGE_DIRECTIVE,
+            };
+          }, {}),
+        })
+          .trim()
+          .split('\n')
+          .map((line) => `    ${line}`)
+          .join('\n'),
+      ].join('\n\n'),
+    });
+  }
+
   Object.keys(unvalidatedReleaseSpecification.packages).forEach(
     (packageName, index) => {
-      const versionSpecifier =
+      const versionSpecifierOrDirective =
         unvalidatedReleaseSpecification.packages[packageName];
       const lineNumber = indexOfFirstUsableLine + index + 2;
+      const pkg = project.workspacePackages[packageName];
 
-      if (!workspacePackageNames.includes(packageName)) {
+      if (pkg === undefined) {
         errors.push({
           message: `${JSON.stringify(
             packageName,
@@ -223,14 +260,15 @@ export async function validateReleaseSpecification(
       }
 
       if (
-        versionSpecifier !== null &&
-        !hasProperty(IncrementableVersionParts, versionSpecifier) &&
-        !isValidSemver(versionSpecifier)
+        versionSpecifierOrDirective !== SKIP_PACKAGE_DIRECTIVE &&
+        versionSpecifierOrDirective !== INTENTIONALLY_SKIP_PACKAGE_DIRECTIVE &&
+        !hasProperty(IncrementableVersionParts, versionSpecifierOrDirective) &&
+        !isValidSemver(versionSpecifierOrDirective)
       ) {
         errors.push({
           message: [
             `${JSON.stringify(
-              versionSpecifier,
+              versionSpecifierOrDirective,
             )} is not a valid version specifier for package "${packageName}"`,
             `(must be "major", "minor", or "patch"; or a version string with major, minor, and patch parts, such as "1.2.3")`,
           ],
@@ -239,17 +277,15 @@ export async function validateReleaseSpecification(
       }
 
       if (
-        isValidSemver(versionSpecifier) &&
-        project.workspacePackages[
-          packageName
-        ].validatedManifest.version.toString() === versionSpecifier
+        isValidSemver(versionSpecifierOrDirective) &&
+        pkg.validatedManifest.version.toString() === versionSpecifierOrDirective
       ) {
         errors.push({
           message: [
             `${JSON.stringify(
-              versionSpecifier,
+              versionSpecifierOrDirective,
             )} is not a valid version specifier for package "${packageName}"`,
-            `("${packageName}" is already at version "${versionSpecifier}")`,
+            `("${packageName}" is already at version "${versionSpecifierOrDirective}")`,
           ],
           lineNumber,
         });
@@ -262,7 +298,12 @@ export async function validateReleaseSpecification(
       'Your release spec could not be processed due to the following issues:',
       errors
         .flatMap((error) => {
-          const itemPrefix = '- ';
+          const itemPrefix = '* ';
+
+          if (error.lineNumber === undefined) {
+            return `${itemPrefix}${error.message}`;
+          }
+
           const lineNumberPrefix = `Line ${error.lineNumber}: `;
 
           if (Array.isArray(error.message)) {
@@ -286,26 +327,30 @@ export async function validateReleaseSpecification(
 
   const packages = Object.keys(unvalidatedReleaseSpecification.packages).reduce(
     (obj, packageName) => {
-      const versionSpecifier =
+      const versionSpecifierOrDirective =
         unvalidatedReleaseSpecification.packages[packageName];
 
-      if (versionSpecifier) {
+      if (
+        versionSpecifierOrDirective !== SKIP_PACKAGE_DIRECTIVE &&
+        versionSpecifierOrDirective !== INTENTIONALLY_SKIP_PACKAGE_DIRECTIVE
+      ) {
         if (
           Object.values(IncrementableVersionParts).includes(
-            versionSpecifier as any,
+            versionSpecifierOrDirective as any,
           )
         ) {
           return {
             ...obj,
             // Typecast: We know what this is as we've checked it above.
-            [packageName]: versionSpecifier as IncrementableVersionParts,
+            [packageName]:
+              versionSpecifierOrDirective as IncrementableVersionParts,
           };
         }
 
         return {
           ...obj,
           // Typecast: We know that this will safely parse.
-          [packageName]: semver.parse(versionSpecifier) as SemVer,
+          [packageName]: semver.parse(versionSpecifierOrDirective) as SemVer,
         };
       }
 

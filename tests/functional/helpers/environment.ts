@@ -1,3 +1,4 @@
+import path from 'path';
 import LocalRepo from './local-repo';
 import RemoteRepo from './remote-repo';
 import Repo from './repo';
@@ -43,6 +44,8 @@ export default abstract class Environment<SpecificLocalRepo extends LocalRepo> {
 
   protected localRepo: SpecificLocalRepo;
 
+  tempDirectoryPath: string;
+
   readJsonFile: SpecificLocalRepo['readJsonFile'];
 
   readFile: SpecificLocalRepo['readFile'];
@@ -64,6 +67,10 @@ export default abstract class Environment<SpecificLocalRepo extends LocalRepo> {
       environmentDirectoryPath: directoryPath,
     });
     this.localRepo = this.buildLocalRepo(options);
+    this.tempDirectoryPath = path.join(
+      this.localRepo.getWorkingDirectoryPath(),
+      'tmp',
+    );
     this.readJsonFile = this.localRepo.readJsonFile.bind(this.localRepo);
     this.readFile = this.localRepo.readFile.bind(this.localRepo);
     this.updateJsonFile = this.localRepo.updateJsonFile.bind(this.localRepo);
