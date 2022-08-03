@@ -10,11 +10,9 @@ import { ReleaseSpecification } from './release-specification';
  * Instructions for how to update the project in order to prepare it for a new
  * release.
  *
- * @property releaseName - The name of the new release. For a polyrepo or a
- * monorepo with fixed versions, this will be a version string with the shape
- * `<major>.<minor>.<patch>`; for a monorepo with independent versions, this
- * will be a version string with the shape `<year>.<month>.<day>-<build
- * number>`.
+ * @property releaseDate - The date associated with the new release.
+ * @property releaseNumber - The number of the new release, as 1 + the number of
+ * the previous release.
  * @property packages - Information about all of the packages in the project.
  * For a polyrepo, this consists of the self-same package; for a monorepo it
  * consists of the root package and any workspace packages.
