@@ -148,11 +148,10 @@ export default abstract class Repo {
     // so close together that it ends up confusing commands like `git rev-list`
     // (which sorts commits in chronological order). Sleeping for a bit seems to
     // solve this problem.
-    const now = new Date();
     const timeSincePreviousCommit =
       this.#latestCommitTime === undefined
         ? null
-        : now.getTime() - this.#latestCommitTime.getTime();
+        : new Date().getTime() - this.#latestCommitTime.getTime();
 
     if (
       timeSincePreviousCommit !== null &&
@@ -163,7 +162,7 @@ export default abstract class Repo {
 
     await this.runCommand('git', ['add', '-A']);
     const result = await this.runCommand('git', ['commit', '-m', message]);
-    this.#latestCommitTime = now;
+    this.#latestCommitTime = new Date();
     return result;
   }
 
