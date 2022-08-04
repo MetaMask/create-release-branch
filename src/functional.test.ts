@@ -87,7 +87,7 @@ describe('create-release-branch (functional)', () => {
       );
     });
 
-    it("updates each of the specified package's changelog by adding a new section which lists all commits concerning the package over the entire history of the repo", async () => {
+    it("updates each of the specified packages' changelogs by adding a new section which lists all commits concerning the package over the entire history of the repo", async () => {
       await withMonorepoProjectEnvironment(
         {
           packages: {
