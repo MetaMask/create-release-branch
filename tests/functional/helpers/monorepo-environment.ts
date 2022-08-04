@@ -22,8 +22,8 @@ import { debug } from './utils';
  */
 export interface MonorepoEnvironmentOptions<PackageNickname extends string>
   extends EnvironmentOptions {
-  packages?: Record<PackageNickname, PackageSpecification>;
-  workspaces?: Record<string, string[]>;
+  packages: Record<PackageNickname, PackageSpecification>;
+  workspaces: Record<string, string[]>;
   today?: Date;
 }
 
@@ -38,7 +38,7 @@ interface ReleaseSpecification<PackageNickname extends string> {
 }
 
 /**
- * This class configures Environment such that the "local" repo becomes a
+ * This class configures the environment such that the "local" repo becomes a
  * monorepo.
  */
 export default class MonorepoEnvironment<
@@ -54,10 +54,13 @@ export default class MonorepoEnvironment<
 
   #today: Date | undefined;
 
-  constructor({ today, ...rest }: MonorepoEnvironmentOptions<PackageNickname>) {
+  constructor({
+    today,
+    packages,
+    ...rest
+  }: MonorepoEnvironmentOptions<PackageNickname>) {
     super(rest);
-    this.#packages =
-      rest.packages ?? ({} as Record<PackageNickname, PackageSpecification>);
+    this.#packages = packages;
     this.#today = today;
     this.readFileWithinPackage = this.localRepo.readFileWithinPackage.bind(
       this.localRepo,
