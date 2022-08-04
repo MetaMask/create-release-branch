@@ -194,7 +194,7 @@ export default abstract class Repo {
       env: {
         ...env,
         DEBUG_COLORS: '1',
-      } as NodeJS.ProcessEnv,
+      },
       ...remainingOptions,
     });
 
