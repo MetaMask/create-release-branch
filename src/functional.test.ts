@@ -93,7 +93,7 @@ describe('create-release-branch (functional)', () => {
           packages: {
             $root$: {
               name: '@scope/monorepo',
-              version: '1.0.0',
+              version: '2022.1.1',
               directoryPath: '.',
             },
             a: {
@@ -193,7 +193,7 @@ describe('create-release-branch (functional)', () => {
           packages: {
             $root$: {
               name: '@scope/monorepo',
-              version: '1.0.0',
+              version: '2022.1.1',
               directoryPath: '.',
             },
             a: {

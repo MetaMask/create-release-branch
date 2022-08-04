@@ -113,8 +113,8 @@ export default abstract class LocalRepo extends Repo {
   }
 
   /**
-   * Returns the name of the sole or main package that this repo represents. Overridden
-   * in subclasses.
+   * Returns the name of the sole or main package that this repo represents.
+   * Overridden in subclasses.
    */
   protected abstract getPackageName(): string;
 
