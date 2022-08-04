@@ -8,7 +8,7 @@ import Environment, {
   PackageSpecification,
 } from './environment';
 import LocalMonorepo from './local-monorepo';
-import { debug } from './utils';
+import { debug, knownKeysOf } from './utils';
 
 /**
  * A set of configuration options for a {@link MonorepoEnvironment}. In addition
@@ -108,15 +108,12 @@ export default class MonorepoEnvironment<
       'release-spec',
     );
     const releaseSpecificationWithPackageNames = {
-      packages: Object.keys(
+      packages: knownKeysOf(
         releaseSpecificationWithPackageNicknames.packages,
       ).reduce((obj, packageNickname) => {
-        const packageSpecification =
-          this.#packages[packageNickname as PackageNickname];
+        const packageSpecification = this.#packages[packageNickname];
         const versionSpecifier =
-          releaseSpecificationWithPackageNicknames.packages[
-            packageNickname as PackageNickname
-          ];
+          releaseSpecificationWithPackageNicknames.packages[packageNickname];
         return { ...obj, [packageSpecification.name]: versionSpecifier };
       }, {}),
     };
