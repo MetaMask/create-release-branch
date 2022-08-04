@@ -37,7 +37,9 @@ export interface EnvironmentOptions {
  * we need to take from within the test.
  */
 export default abstract class Environment<SpecificLocalRepo extends LocalRepo> {
-  protected directoryPath: string;
+  protected directoryPath: EnvironmentOptions['directoryPath'];
+
+  protected createInitialCommit: boolean;
 
   protected remoteRepo: Repo;
 
@@ -58,8 +60,9 @@ export default abstract class Environment<SpecificLocalRepo extends LocalRepo> {
   createCommit: SpecificLocalRepo['createCommit'];
 
   constructor(options: EnvironmentOptions) {
-    const { directoryPath } = options;
+    const { directoryPath, createInitialCommit = true } = options;
     this.directoryPath = directoryPath;
+    this.createInitialCommit = createInitialCommit;
     this.remoteRepo = new RemoteRepo({
       environmentDirectoryPath: directoryPath,
     });

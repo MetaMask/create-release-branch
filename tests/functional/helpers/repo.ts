@@ -28,7 +28,7 @@ export default abstract class Repo {
   /**
    * The directory that holds the environment that created this repo.
    */
-  protected environmentDirectoryPath: string;
+  protected environmentDirectoryPath: RepoOptions['environmentDirectoryPath'];
 
   /**
    * The time at which the last commit was created. Used to determine whether we

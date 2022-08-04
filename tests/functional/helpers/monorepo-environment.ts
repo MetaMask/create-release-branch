@@ -20,9 +20,10 @@ import { debug, knownKeysOf } from './utils';
  * @property today - The date that will be used for new releases. Will be
  * translated to the TODAY environment variables.
  */
-export interface MonorepoEnvironmentOptions<PackageNickname extends string>
-  extends EnvironmentOptions {
-  packages: Record<PackageNickname, PackageSpecification>;
+export interface MonorepoEnvironmentOptions<
+  WorkspacePackageNickname extends string,
+> extends EnvironmentOptions {
+  packages: Record<WorkspacePackageNickname, PackageSpecification>;
   workspaces: Record<string, string[]>;
   today?: Date;
 }
@@ -33,8 +34,8 @@ export interface MonorepoEnvironmentOptions<PackageNickname extends string>
  * @property packages - The workspace packages within this repo that will be
  * released.
  */
-interface ReleaseSpecification<PackageNickname extends string> {
-  packages: Partial<Record<PackageNickname, string>>;
+interface ReleaseSpecification<WorkspacePackageNickname extends string> {
+  packages: Partial<Record<WorkspacePackageNickname, string>>;
 }
 
 /**
@@ -42,25 +43,24 @@ interface ReleaseSpecification<PackageNickname extends string> {
  * monorepo.
  */
 export default class MonorepoEnvironment<
-  PackageNickname extends string,
-> extends Environment<LocalMonorepo<PackageNickname>> {
-  readFileWithinPackage: LocalMonorepo<PackageNickname>['readFileWithinPackage'];
+  WorkspacePackageNickname extends string,
+> extends Environment<LocalMonorepo<WorkspacePackageNickname>> {
+  readFileWithinPackage: LocalMonorepo<WorkspacePackageNickname>['readFileWithinPackage'];
 
-  writeFileWithinPackage: LocalMonorepo<PackageNickname>['writeFileWithinPackage'];
+  writeFileWithinPackage: LocalMonorepo<WorkspacePackageNickname>['writeFileWithinPackage'];
 
-  readJsonFileWithinPackage: LocalMonorepo<PackageNickname>['readJsonFileWithinPackage'];
+  readJsonFileWithinPackage: LocalMonorepo<WorkspacePackageNickname>['readJsonFileWithinPackage'];
 
-  #packages: Record<PackageNickname, PackageSpecification>;
+  #packages: MonorepoEnvironmentOptions<WorkspacePackageNickname>['packages'];
 
-  #today: Date | undefined;
+  #today: MonorepoEnvironmentOptions<WorkspacePackageNickname>['today'];
 
   constructor({
     today,
-    packages,
     ...rest
-  }: MonorepoEnvironmentOptions<PackageNickname>) {
+  }: MonorepoEnvironmentOptions<WorkspacePackageNickname>) {
     super(rest);
-    this.#packages = packages;
+    this.#packages = rest.packages;
     this.#today = today;
     this.readFileWithinPackage = this.localRepo.readFileWithinPackage.bind(
       this.localRepo,
@@ -70,20 +70,6 @@ export default class MonorepoEnvironment<
     );
     this.readJsonFileWithinPackage =
       this.localRepo.readJsonFileWithinPackage.bind(this.localRepo);
-  }
-
-  protected buildLocalRepo({
-    packages = {} as Record<PackageNickname, PackageSpecification>,
-    workspaces = {},
-    createInitialCommit = true,
-  }: MonorepoEnvironmentOptions<PackageNickname>) {
-    return new LocalMonorepo<PackageNickname>({
-      environmentDirectoryPath: this.directoryPath,
-      remoteRepoDirectoryPath: this.remoteRepo.getWorkingDirectoryPath(),
-      packages,
-      workspaces,
-      createInitialCommit,
-    });
   }
 
   /**
@@ -101,7 +87,7 @@ export default class MonorepoEnvironment<
   async runTool({
     releaseSpecification: releaseSpecificationWithPackageNicknames,
   }: {
-    releaseSpecification: ReleaseSpecification<PackageNickname>;
+    releaseSpecification: ReleaseSpecification<WorkspacePackageNickname>;
   }): Promise<ExecaReturnValue<string>> {
     const releaseSpecificationPath = path.join(
       this.directoryPath,
@@ -168,5 +154,19 @@ cat "${releaseSpecificationPath}" > "$1"
     );
 
     return result;
+  }
+
+  protected buildLocalRepo({
+    packages,
+    workspaces,
+    createInitialCommit = true,
+  }: MonorepoEnvironmentOptions<WorkspacePackageNickname>): LocalMonorepo<WorkspacePackageNickname> {
+    return new LocalMonorepo<WorkspacePackageNickname>({
+      environmentDirectoryPath: this.directoryPath,
+      remoteRepoDirectoryPath: this.remoteRepo.getWorkingDirectoryPath(),
+      packages,
+      workspaces,
+      createInitialCommit,
+    });
   }
 }

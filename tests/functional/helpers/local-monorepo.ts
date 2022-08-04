@@ -11,9 +11,9 @@ import { knownKeysOf } from './utils';
  * root).
  * @property workspaces - The known workspaces within this repo.
  */
-export interface LocalMonorepoOptions<PackageNickname extends string>
+export interface LocalMonorepoOptions<WorkspacePackageNickname extends string>
   extends LocalRepoOptions {
-  packages: Record<PackageNickname, PackageSpecification>;
+  packages: Record<WorkspacePackageNickname, PackageSpecification>;
   workspaces: Record<string, string[]>;
 }
 
@@ -22,23 +22,23 @@ export interface LocalMonorepoOptions<PackageNickname extends string>
  * to a monorepo.
  */
 export default class LocalMonorepo<
-  PackageNickname extends string,
+  WorkspacePackageNickname extends string,
 > extends LocalRepo {
   /**
    * The known packages within this repo (including the root).
    */
-  #packages: Record<'$root$' | PackageNickname, PackageSpecification>;
+  #packages: Record<'$root$' | WorkspacePackageNickname, PackageSpecification>;
 
   /**
    * The known workspaces within this repo.
    */
-  #workspaces: Record<string, string[]>;
+  #workspaces: LocalMonorepoOptions<WorkspacePackageNickname>['workspaces'];
 
   constructor({
     packages,
     workspaces,
     ...rest
-  }: LocalMonorepoOptions<PackageNickname>) {
+  }: LocalMonorepoOptions<WorkspacePackageNickname>) {
     super(rest);
     this.#packages = {
       $root$: {
@@ -61,7 +61,7 @@ export default class LocalMonorepo<
    * @returns The content of the file.
    */
   async readFileWithinPackage(
-    packageNickname: '$root$' | PackageNickname,
+    packageNickname: '$root$' | WorkspacePackageNickname,
     partialFilePath: string,
   ) {
     const packageDirectoryPath = this.#packages[packageNickname].directoryPath;
@@ -80,7 +80,7 @@ export default class LocalMonorepo<
    * @returns The object which the JSON file holds.
    */
   async readJsonFileWithinPackage(
-    packageNickname: '$root$' | PackageNickname,
+    packageNickname: '$root$' | WorkspacePackageNickname,
     partialFilePath: string,
   ) {
     const packageDirectoryPath = this.#packages[packageNickname].directoryPath;
@@ -99,7 +99,7 @@ export default class LocalMonorepo<
    * @param contents - The desired contents of the file.
    */
   async writeFileWithinPackage(
-    packageNickname: '$root$' | PackageNickname,
+    packageNickname: '$root$' | WorkspacePackageNickname,
     partialFilePath: string,
     contents: string,
   ): Promise<void> {
@@ -121,7 +121,7 @@ export default class LocalMonorepo<
    * @param object - The new object that the file should represent.
    */
   async writeJsonFileWithinPackage(
-    packageNickname: '$root$' | PackageNickname,
+    packageNickname: '$root$' | WorkspacePackageNickname,
     partialFilePath: string,
     object: Record<string, unknown>,
   ): Promise<void> {

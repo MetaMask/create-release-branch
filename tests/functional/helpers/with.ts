@@ -33,7 +33,7 @@ export async function withProtectedProcessEnv<T>(callback: () => Promise<T>) {
 }
 
 /**
- * Builds a monorepo project in a temporary directory, then yields the given
+ * Builds a monorepo project in a temporary directory, then calls the given
  * function with information about that project.
  *
  * @param options - The configuration options for the environment.
@@ -43,14 +43,14 @@ export async function withProtectedProcessEnv<T>(callback: () => Promise<T>) {
  */
 export async function withMonorepoProjectEnvironment<
   CallbackReturnValue,
-  PackageNickname extends string,
+  WorkspacePackageNickname extends string,
 >(
   options: Omit<
-    MonorepoEnvironmentOptions<PackageNickname>,
-    'name' | 'directoryPath'
+    MonorepoEnvironmentOptions<WorkspacePackageNickname>,
+    'directoryPath'
   >,
   callback: (
-    environment: MonorepoEnvironment<PackageNickname>,
+    environment: MonorepoEnvironment<WorkspacePackageNickname>,
   ) => Promise<CallbackReturnValue>,
 ) {
   return withProtectedProcessEnv(async () => {
