@@ -18,10 +18,10 @@ export interface PackageSpecification {
 }
 
 /**
- * A set of options with which to configure the tool or the repos
- * against which the tool is run.
+ * A set of configuration options for an {@link Environment}.
  *
- * @property sandbox - The directory out of which this environment will operate.
+ * @property directoryPath - The directory out of which this environment will
+ * operate.
  * @property createInitialCommit - Usually when a repo is initialized, a commit
  * is created (which will contain starting `package.json` files). You can use
  * this option to disable that if you need to create your own commits for

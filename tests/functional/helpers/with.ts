@@ -36,8 +36,7 @@ export async function withProtectedProcessEnv<T>(callback: () => Promise<T>) {
  * Builds a monorepo project in a temporary directory, then yields the given
  * function with information about that project.
  *
- * @param options - The options with which to initialize the environment in
- * which the project will be interacted with.
+ * @param options - The configuration options for the environment.
  * @param callback - A function which will be called with an object that can be
  * used to interact with the project.
  * @returns Whatever the callback returns.

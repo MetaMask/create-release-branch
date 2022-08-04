@@ -11,13 +11,14 @@ import LocalMonorepo from './local-monorepo';
 import { debug } from './utils';
 
 /**
- * A set of options with which to configure the tool or the repos
- * against which the tool is run. In addition to the options listed
- * in {@link EnvironmentOptions}, these include:
+ * A set of configuration options for a {@link MonorepoEnvironment}. In addition
+ * to the options listed in {@link EnvironmentOptions}, these include:
  *
  * @property packages - The known packages within this repo (including the
  * root).
  * @property workspaces - The known workspaces within this repo.
+ * @property today - The date that will be used for new releases. Will be
+ * translated to the TODAY environment variables.
  */
 export interface MonorepoEnvironmentOptions<PackageNickname extends string>
   extends EnvironmentOptions {

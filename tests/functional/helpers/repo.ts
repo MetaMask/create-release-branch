@@ -5,8 +5,7 @@ import deepmerge from 'deepmerge';
 import { debug, isErrorWithCode, sleepFor } from './utils';
 
 /**
- * A set of options with which to customize the tool or configuration files
- * within this repo.
+ * A set of configuration options for a {@link Repo}.
  *
  * @property environmentDirectoryPath - The directory that holds the environment
  * that created this repo.

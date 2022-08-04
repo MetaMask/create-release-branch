@@ -2,9 +2,8 @@ import path from 'path';
 import Repo, { RepoOptions } from './repo';
 
 /**
- * A set of options with which to customize the tool or configuration files
- * within this repo. In addition to those listed in {@type RepoOptions}, these
- * include:
+ * A set of configuration options for a {@link LocalRepo}. In addition to the
+ * options listed in {@link RepoOptions}, these include:
  *
  * @property remoteRepoDirectoryPath - The directory that holds the "remote"
  * companion of this repo.

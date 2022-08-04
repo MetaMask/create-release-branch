@@ -4,8 +4,8 @@ import LocalRepo, { LocalRepoOptions } from './local-repo';
 import { knownKeysOf } from './utils';
 
 /**
- * A set of options with which to customize the tool or configuration files
- * within this repo.
+ * A set of configuration options for a {@link LocalMonorepo}. In addition
+ * to the options listed in {@link LocalRepoOptions}, these include:
  *
  * @property packages - The known packages within this repo (including the
  * root).
