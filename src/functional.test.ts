@@ -187,7 +187,7 @@ describe('create-release-branch (functional)', () => {
       );
     });
 
-    it('commits the updates and saves the new commit to a new branch, then switches to that branch', async () => {
+    it('switches to a new release branch and commits the changes', async () => {
       await withMonorepoProjectEnvironment(
         {
           packages: {
