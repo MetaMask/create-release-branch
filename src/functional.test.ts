@@ -216,35 +216,35 @@ describe('create-release-branch (functional)', () => {
             },
           });
 
-          // The most recent commit should be called the right thing, and
-          // should be the current one, and should also be called
-          // `release/YYYY-MM-DD`
-          const mostRecentCommitInfo = (
-            await environment.runCommand('git', [
-              'log',
-              '--pretty=%D%x09%s%x09%H',
-              '--date-order',
-              '--max-count=1',
-            ])
-          ).stdout
-            .trim()
-            .split('\x09');
-          expect(mostRecentCommitInfo.slice(0, -1)).toStrictEqual([
-            'HEAD -> release/2022-06-24',
-            'Release 2022-06-24',
-          ]);
-          // The most recent branch should point to the most recent commit
-          const commitIdOfMostRecentBranch = (
+          // Tests four things:
+          // * The latest commit should be called "Release YYYY-MM-DD"
+          // * The latest branch should be called "release/YYYY-MM-DD"
+          // * The latest branch should point to the latest commit
+          // * The latest commit should be the current commit (HEAD)
+          const [latestCommitSubject, latestCommitId, latestCommitRevsMarker] =
+            (
+              await environment.runCommand('git', [
+                'log',
+                '--pretty=%s%x09%H%x09%D',
+                '--date-order',
+                '--max-count=1',
+              ])
+            ).stdout.split('\x09');
+          const latestCommitRevs = latestCommitRevsMarker.split(' -> ');
+          const latestBranchCommitId = (
             await environment.runCommand('git', [
               'rev-list',
               '--branches',
               '--date-order',
               '--max-count=1',
             ])
-          ).stdout.trim();
-          expect(mostRecentCommitInfo[2]).toStrictEqual(
-            commitIdOfMostRecentBranch,
-          );
+          ).stdout;
+          expect(latestCommitSubject).toStrictEqual('Release 2022-06-24');
+          expect(latestCommitRevs).toStrictEqual([
+            'HEAD',
+            'release/2022-06-24',
+          ]);
+          expect(latestCommitId).toStrictEqual(latestBranchCommitId);
         },
       );
     });
