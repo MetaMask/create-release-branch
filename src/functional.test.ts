@@ -218,9 +218,9 @@ describe('create-release-branch (functional)', () => {
 
           // Tests four things:
           // * The latest commit should be called "Release YYYY-MM-DD"
+          // * The latest commit should be the current commit (HEAD)
           // * The latest branch should be called "release/YYYY-MM-DD"
           // * The latest branch should point to the latest commit
-          // * The latest commit should be the current commit (HEAD)
           const [latestCommitSubject, latestCommitId, latestCommitRevsMarker] =
             (
               await environment.runCommand('git', [
@@ -240,11 +240,9 @@ describe('create-release-branch (functional)', () => {
             ])
           ).stdout;
           expect(latestCommitSubject).toStrictEqual('Release 2022-06-24');
-          expect(latestCommitRevs).toStrictEqual([
-            'HEAD',
-            'release/2022-06-24',
-          ]);
-          expect(latestCommitId).toStrictEqual(latestBranchCommitId);
+          expect(latestCommitRevs).toContain('HEAD');
+          expect(latestCommitRevs).toContain('release/2022-06-24');
+          expect(latestBranchCommitId).toStrictEqual(latestCommitId);
         },
       );
     });
