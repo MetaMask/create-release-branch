@@ -1,5 +1,6 @@
 import path from 'path';
 import Repo, { RepoOptions } from './repo';
+import { buildChangelog } from './utils';
 
 /**
  * A set of configuration options for a {@link LocalRepo}. In addition to the
@@ -88,17 +89,13 @@ export default abstract class LocalRepo extends Repo {
 
     await this.writeFile(
       'CHANGELOG.md',
-      `
-# Changelog
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
+      buildChangelog(
+        `
 ## [Unreleased]
 
 [Unreleased]: https://github.com/example-org/example-repo/commits/main
       `.slice(1),
+      ),
     );
 
     if (this.#createInitialCommit) {
