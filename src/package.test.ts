@@ -2,13 +2,10 @@ import fs from 'fs';
 import path from 'path';
 import { when } from 'jest-when';
 import * as autoChangelog from '@metamask/auto-changelog';
-import {
-  buildMockProject,
-  buildMockManifest,
-  withSandbox,
-} from '../tests/unit/helpers';
-import { readPackage, updatePackage } from './package';
+import { withSandbox } from '../tests/helpers';
+import { buildMockProject, buildMockManifest } from '../tests/unit/helpers';
 import * as fsModule from './fs';
+import { readPackage, updatePackage } from './package';
 import * as packageManifestModule from './package-manifest';
 
 jest.mock('@metamask/auto-changelog');
