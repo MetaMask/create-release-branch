@@ -2,6 +2,8 @@
 
 This is an interactive command-line tool that automates steps involved in preparing for a new release of a project. These steps include updating versions of one or more desired packages, adding a new section to said packages' changelogs which includes changes since the previous releases, and then creating a new branch from which a pull request can be submitted for review before the release goes live.
 
+> <table><tr><td><p align="center"><b>⚠️ HEADS UP ⚠️</b></p><div align="center">This tool is under development. We don't recommend you use this for any projects just yet.</div></td></tr></table>
+
 ## Installation
 
 Add this tool as a development dependency to your project:
