@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@metamask/action-utils": "^0.0.2",
-    "@metamask/utils": "^2.1.0",
+    "@metamask/utils": "^3.0.1",
     "debug": "^4.3.4",
     "execa": "^5.0.0",
     "glob": "^8.0.3",
