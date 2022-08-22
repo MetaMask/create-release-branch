@@ -51,6 +51,8 @@ export default class MonorepoEnvironment<
 
   readJsonFileWithinPackage: LocalMonorepo<WorkspacePackageNickname>['readJsonFileWithinPackage'];
 
+  updateJsonFileWithinPackage: LocalMonorepo<WorkspacePackageNickname>['updateJsonFileWithinPackage'];
+
   #packages: MonorepoEnvironmentOptions<WorkspacePackageNickname>['packages'];
 
   #today: MonorepoEnvironmentOptions<WorkspacePackageNickname>['today'];
@@ -70,6 +72,8 @@ export default class MonorepoEnvironment<
     );
     this.readJsonFileWithinPackage =
       this.localRepo.readJsonFileWithinPackage.bind(this.localRepo);
+    this.updateJsonFileWithinPackage =
+      this.localRepo.updateJsonFileWithinPackage.bind(this.localRepo);
   }
 
   /**

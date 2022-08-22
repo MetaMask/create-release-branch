@@ -64,7 +64,7 @@ export async function generateReleaseSpecificationTemplateForMonorepo({
 # create-release-branch.`.trim();
 
   const instructions = `
-# The following is a list of packages in ${rootPackage.manifest.name}.
+# The following is a list of packages in ${rootPackage.validatedManifest.name}.
 # Please indicate the packages for which you want to create a new release
 # by updating "null" (which does nothing) to one of the following:
 #
@@ -78,7 +78,7 @@ ${afterEditingInstructions}
   `.trim();
 
   const packages = Object.values(workspacePackages).reduce((obj, pkg) => {
-    return { ...obj, [pkg.manifest.name]: null };
+    return { ...obj, [pkg.validatedManifest.name]: null };
   }, {});
 
   return [instructions, YAML.stringify({ packages })].join('\n\n');
@@ -151,7 +151,7 @@ export async function validateReleaseSpecification(
   releaseSpecificationPath: string,
 ): Promise<ReleaseSpecification> {
   const workspacePackageNames = Object.values(project.workspacePackages).map(
-    (pkg) => pkg.manifest.name,
+    (pkg) => pkg.validatedManifest.name,
   );
   const releaseSpecificationContents = await readFile(releaseSpecificationPath);
   const indexOfFirstUsableLine = releaseSpecificationContents

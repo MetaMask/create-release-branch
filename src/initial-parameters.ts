@@ -29,7 +29,7 @@ export async function determineInitialParameters(
       ? path.join(
           os.tmpdir(),
           'create-release-branch',
-          project.rootPackage.manifest.name.replace('/', '__'),
+          project.rootPackage.validatedManifest.name.replace('/', '__'),
         )
       : path.resolve(cwd, inputs.tempDirectory);
 

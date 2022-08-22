@@ -5,6 +5,7 @@ import { isErrorWithCode } from './misc-utils';
 import { readFile, writeFile, writeJsonFile } from './fs';
 import {
   readPackageManifest,
+  UnvalidatedPackageManifest,
   ValidatedPackageManifest,
 } from './package-manifest';
 import { Project } from './project';
@@ -26,7 +27,8 @@ const CHANGELOG_FILE_NAME = 'CHANGELOG.md';
 export interface Package {
   directoryPath: string;
   manifestPath: string;
-  manifest: ValidatedPackageManifest;
+  unvalidatedManifest: UnvalidatedPackageManifest;
+  validatedManifest: ValidatedPackageManifest;
   changelogPath: string;
 }
 
@@ -41,12 +43,14 @@ export async function readPackage(
 ): Promise<Package> {
   const manifestPath = path.join(packageDirectoryPath, MANIFEST_FILE_NAME);
   const changelogPath = path.join(packageDirectoryPath, CHANGELOG_FILE_NAME);
-  const validatedManifest = await readPackageManifest(manifestPath);
+  const { unvalidated: unvalidatedManifest, validated: validatedManifest } =
+    await readPackageManifest(manifestPath);
 
   return {
     directoryPath: packageDirectoryPath,
     manifestPath,
-    manifest: validatedManifest,
+    validatedManifest,
+    unvalidatedManifest,
     changelogPath,
   };
 }
@@ -79,7 +83,7 @@ async function updatePackageChangelog({
   } catch (error) {
     if (isErrorWithCode(error) && error.code === 'ENOENT') {
       stderr.write(
-        `${pkg.manifest.name} does not seem to have a changelog. Skipping.\n`,
+        `${pkg.validatedManifest.name} does not seem to have a changelog. Skipping.\n`,
       );
       return;
     }
@@ -99,7 +103,7 @@ async function updatePackageChangelog({
     await writeFile(pkg.changelogPath, newChangelogContent);
   } else {
     stderr.write(
-      `Changelog for ${pkg.manifest.name} was not updated as there were no updates to make.`,
+      `Changelog for ${pkg.validatedManifest.name} was not updated as there were no updates to make.`,
     );
   }
 }
@@ -132,7 +136,7 @@ export async function updatePackage({
   } = packageReleasePlan;
 
   await writeJsonFile(pkg.manifestPath, {
-    ...pkg.manifest,
+    ...pkg.unvalidatedManifest,
     version: newVersion,
   });
 
