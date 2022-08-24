@@ -5,7 +5,6 @@ declare global {
   namespace jest {
     interface Matchers<R> {
       toResolve(): Promise<R>;
-      toBeRejected(): Promise<R>;
     }
   }
 }
@@ -78,51 +77,6 @@ expect.extend({
           message: () =>
             `This message should never get produced because .isNot is disallowed.`,
           pass: true,
-        };
-  },
-
-  /**
-   * Tests that the given promise is rejected within a certain amount of time
-   * (which defaults to the time that Jest tests wait before timing out as
-   * configured in the Jest configuration file).
-   *
-   * Inspired by <https://stackoverflow.com/a/68409467/260771>.
-   *
-   * @param promise - The promise to test.
-   * @returns The result of the matcher.
-   */
-  async toBeRejected(promise: Promise<any>) {
-    if (this.isNot) {
-      throw new Error(
-        'Using `.not.toBeRejected()` is not supported. Use .toResolve() instead.',
-      );
-    }
-
-    let resolutionValue: any;
-    let rejectionValue: any;
-
-    try {
-      resolutionValue = await Promise.race([
-        promise,
-        treatUnresolvedAfter(TIME_TO_WAIT_UNTIL_UNRESOLVED),
-      ]);
-    } catch (e) {
-      rejectionValue = e;
-    }
-
-    return rejectionValue !== undefined || resolutionValue === UNRESOLVED
-      ? {
-          message: () =>
-            `This message should never get produced because .isNot is disallowed.`,
-          pass: true,
-        }
-      : {
-          message: () => {
-            return `Expected promise to be rejected after ${TIME_TO_WAIT_UNTIL_UNRESOLVED}ms, but it ${
-              rejectionValue === undefined ? 'did not' : 'resolved'
-            }.`;
-          },
-          pass: false,
         };
   },
 });

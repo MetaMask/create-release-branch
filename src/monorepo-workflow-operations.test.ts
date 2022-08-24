@@ -332,7 +332,7 @@ describe('monorepo-workflow-operations', () => {
               stdout,
               stderr,
             }),
-          ).toBeRejected();
+          ).rejects.toThrow(expect.anything());
 
           expect(executeReleasePlanSpy).not.toHaveBeenCalled();
         });
@@ -362,7 +362,7 @@ describe('monorepo-workflow-operations', () => {
               stdout,
               stderr,
             }),
-          ).toBeRejected();
+          ).rejects.toThrow(expect.anything());
 
           expect(captureChangesInReleaseBranchSpy).not.toHaveBeenCalled();
         });
@@ -387,7 +387,7 @@ describe('monorepo-workflow-operations', () => {
               stdout,
               stderr,
             }),
-          ).toBeRejected();
+          ).rejects.toThrow(expect.anything());
 
           expect(await fileExists(releaseSpecificationPath)).toBe(false);
         });
@@ -734,7 +734,7 @@ describe('monorepo-workflow-operations', () => {
               stdout,
               stderr,
             }),
-          ).toBeRejected();
+          ).rejects.toThrow(expect.anything());
 
           expect(executeReleasePlanSpy).not.toHaveBeenCalled();
         });
@@ -764,7 +764,7 @@ describe('monorepo-workflow-operations', () => {
               stdout,
               stderr,
             }),
-          ).toBeRejected();
+          ).rejects.toThrow(expect.anything());
 
           expect(captureChangesInReleaseBranchSpy).not.toHaveBeenCalled();
         });
@@ -789,7 +789,7 @@ describe('monorepo-workflow-operations', () => {
               stdout,
               stderr,
             }),
-          ).toBeRejected();
+          ).rejects.toThrow(expect.anything());
 
           expect(await fileExists(releaseSpecificationPath)).toBe(false);
         });
@@ -1028,7 +1028,7 @@ describe('monorepo-workflow-operations', () => {
               stdout,
               stderr,
             }),
-          ).toBeRejected();
+          ).rejects.toThrow(expect.anything());
 
           expect(executeReleasePlanSpy).not.toHaveBeenCalled();
         });
@@ -1058,7 +1058,7 @@ describe('monorepo-workflow-operations', () => {
               stdout,
               stderr,
             }),
-          ).toBeRejected();
+          ).rejects.toThrow(expect.anything());
 
           expect(captureChangesInReleaseBranchSpy).not.toHaveBeenCalled();
         });
@@ -1083,7 +1083,7 @@ describe('monorepo-workflow-operations', () => {
               stdout,
               stderr,
             }),
-          ).toBeRejected();
+          ).rejects.toThrow(expect.anything());
 
           expect(await fileExists(releaseSpecificationPath)).toBe(false);
         });
