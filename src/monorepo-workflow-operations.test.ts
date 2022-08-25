@@ -598,29 +598,6 @@ describe('monorepo-workflow-operations', () => {
           expect(await fileExists(releaseSpecificationPath)).toBe(false);
         });
       });
-
-      it('does not remove the release spec file', async () => {
-        await withSandbox(async (sandbox) => {
-          const { project, today, stdout, stderr, releaseSpecificationPath } =
-            await setupFollowMonorepoWorkflow({
-              sandbox,
-              doesReleaseSpecFileExist: false,
-              isEditorAvailable: false,
-              errorUponEditingReleaseSpec: null,
-            });
-
-          await followMonorepoWorkflow({
-            project,
-            tempDirectoryPath: sandbox.directoryPath,
-            firstRemovingExistingReleaseSpecification: false,
-            today,
-            stdout,
-            stderr,
-          });
-
-          expect(await fileExists(releaseSpecificationPath)).toBe(true);
-        });
-      });
     });
 
     describe('when firstRemovingExistingReleaseSpecification is true, the release spec file does not already exist, an editor is available, and editing the release spec will succeed', () => {
