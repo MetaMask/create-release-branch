@@ -221,7 +221,7 @@ async function setupFollowMonorepoWorkflow({
 
 describe('monorepo-workflow-operations', () => {
   describe('followMonorepoWorkflow', () => {
-    describe('when firstRemovingExistingReleaseSpecification is false, the release spec file does not already exist, an editor is available, and editing will succeed', () => {
+    describe('when firstRemovingExistingReleaseSpecification is false, the release spec file does not already exist, an editor is available, and editing the release spec will succeed', () => {
       it('executes the edited release spec', async () => {
         await withSandbox(async (sandbox) => {
           const {
@@ -312,7 +312,7 @@ describe('monorepo-workflow-operations', () => {
       });
     });
 
-    describe('when firstRemovingExistingReleaseSpecification is false, the release spec file does not already exist, an editor is available, and editing will not succeed', () => {
+    describe('when firstRemovingExistingReleaseSpecification is false, the release spec file does not already exist, an editor is available, and editing the release spec will not succeed', () => {
       it('does not try to execute the edited release spec', async () => {
         await withSandbox(async (sandbox) => {
           const { project, today, stdout, stderr, executeReleasePlanSpy } =
@@ -623,7 +623,7 @@ describe('monorepo-workflow-operations', () => {
       });
     });
 
-    describe('when firstRemovingExistingReleaseSpecification is true, the release spec file does not already exist, an editor is available, and editing will succeed', () => {
+    describe('when firstRemovingExistingReleaseSpecification is true, the release spec file does not already exist, an editor is available, and editing the release spec will succeed', () => {
       it('executes the edited release spec', async () => {
         await withSandbox(async (sandbox) => {
           const {
@@ -714,7 +714,7 @@ describe('monorepo-workflow-operations', () => {
       });
     });
 
-    describe('when firstRemovingExistingReleaseSpecification is true, the release spec file does not already exist, an editor is available, and editing will not succeed', () => {
+    describe('when firstRemovingExistingReleaseSpecification is true, the release spec file does not already exist, an editor is available, and editing the release spec will not succeed', () => {
       it('does not try to execute the edited release spec', async () => {
         await withSandbox(async (sandbox) => {
           const { project, today, stdout, stderr, executeReleasePlanSpy } =
@@ -917,7 +917,7 @@ describe('monorepo-workflow-operations', () => {
       });
     });
 
-    describe('when firstRemovingExistingReleaseSpecification is true, the release spec file already exists, an editor is available, and editing will succeed', () => {
+    describe('when firstRemovingExistingReleaseSpecification is true, the release spec file already exists, an editor is available, and editing the release spec will succeed', () => {
       it('executes the edited release spec', async () => {
         await withSandbox(async (sandbox) => {
           const {
@@ -1008,7 +1008,7 @@ describe('monorepo-workflow-operations', () => {
       });
     });
 
-    describe('when firstRemovingExistingReleaseSpecification is true, the release spec file already exists, an editor is available, and editing will not succeed', () => {
+    describe('when firstRemovingExistingReleaseSpecification is true, the release spec file already exists, an editor is available, and editing the release spec will not succeed', () => {
       it('does not try to execute the edited release spec', async () => {
         await withSandbox(async (sandbox) => {
           const { project, today, stdout, stderr, executeReleasePlanSpy } =
