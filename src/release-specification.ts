@@ -33,9 +33,11 @@ type VersionSpecifier = IncrementableVersionParts | SemVer;
  * it for a new release.
  *
  * @property packages - A mapping of package names to version specifiers.
+ * @property path - The path to the original release specification file.
  */
 export interface ReleaseSpecification {
   packages: Record<string, VersionSpecifier>;
+  path: string;
 }
 
 /**
@@ -223,6 +225,34 @@ export async function validateReleaseSpecification(
           lineNumber,
         });
       }
+
+      if (isValidSemver(versionSpecifier)) {
+        const comparison = new SemVer(versionSpecifier).compare(
+          project.workspacePackages[packageName].validatedManifest.version,
+        );
+
+        if (comparison === 0) {
+          errors.push({
+            message: [
+              `${JSON.stringify(
+                versionSpecifier,
+              )} is not a valid version specifier for package "${packageName}"`,
+              `("${packageName}" is already at version "${versionSpecifier}")`,
+            ],
+            lineNumber,
+          });
+        } else if (comparison < 0) {
+          errors.push({
+            message: [
+              `${JSON.stringify(
+                versionSpecifier,
+              )} is not a valid version specifier for package "${packageName}"`,
+              `("${packageName}" is at a greater version "${project.workspacePackages[packageName].validatedManifest.version}")`,
+            ],
+            lineNumber,
+          });
+        }
+      }
     },
   );
 
@@ -283,5 +313,5 @@ export async function validateReleaseSpecification(
     {} as ReleaseSpecification['packages'],
   );
 
-  return { packages };
+  return { packages, path: releaseSpecificationPath };
 }

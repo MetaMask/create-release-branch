@@ -7,6 +7,12 @@ import type { ValidatedPackageManifest } from '../../src/package-manifest';
 import type { Project } from '../../src/project';
 
 /**
+ * Returns a version of the given record type where optionality is removed from
+ * the designated keys.
+ */
+export type Require<T, K extends keyof T> = Omit<T, K> & { [P in K]-?: T[P] };
+
+/**
  * Returns a version of the given record type where optionality is added to
  * the designated keys.
  */
@@ -102,58 +108,6 @@ export function buildMockPackage(
     manifestPath,
     changelogPath,
   };
-}
-
-/**
- * Builds a package for use in tests which is designed to be the root package of
- * a monorepo.
- *
- * @param args - The name of the package (optional), the version of the package
- * (optional) and the properties that will go into the object (optional).
- * @returns The mock Package object.
- */
-export function buildMockMonorepoRootPackage(
-  ...args:
-    | [string, string | SemVer, MockPackageOverrides]
-    | [string, string | SemVer]
-    | [string, MockPackageOverrides]
-    | [string]
-    | [MockPackageOverrides]
-    | []
-): Package {
-  let name, version, overrides;
-
-  switch (args.length) {
-    case 0:
-      name = 'package';
-      version = '1.0.0';
-      overrides = {};
-      break;
-    case 1:
-      name = isPlainObject(args[0]) ? 'package' : args[0];
-      version = '1.0.0';
-      overrides = isPlainObject(args[0]) ? args[0] : {};
-      break;
-    case 2:
-      name = args[0];
-      version = isPlainObject(args[1]) ? '1.0.0' : args[1];
-      overrides = isPlainObject(args[1]) ? args[1] : {};
-      break;
-    default:
-      name = args[0];
-      version = args[1];
-      overrides = args[2];
-  }
-
-  const { validatedManifest, ...rest } = overrides;
-  return buildMockPackage(name, version, {
-    validatedManifest: {
-      private: true,
-      workspaces: ['packages/*'],
-      ...validatedManifest,
-    },
-    ...rest,
-  });
 }
 
 /**

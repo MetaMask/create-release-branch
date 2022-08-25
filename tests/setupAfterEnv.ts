@@ -47,7 +47,9 @@ expect.extend({
    */
   async toResolve(promise: Promise<any>) {
     if (this.isNot) {
-      throw new Error('Using `.not.toResolve(...)` is not supported.');
+      throw new Error(
+        'Using `.not.toResolve()` is not supported. Use .rejects.toThrow(expect.anything()) instead.',
+      );
     }
 
     let resolutionValue: any;

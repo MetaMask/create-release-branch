@@ -1,8 +1,5 @@
 import type { WriteStream } from 'fs';
 import path from 'path';
-import util from 'util';
-import rimraf from 'rimraf';
-import { debug } from './misc-utils';
 import {
   ensureDirectoryPathExists,
   fileExists,
@@ -10,43 +7,14 @@ import {
   writeFile,
 } from './fs';
 import { determineEditor } from './editor';
-import { getEnvironmentVariables } from './env';
-import { updatePackage } from './package';
 import { Project } from './project';
+import { planRelease, executeReleasePlan } from './release-plan';
+import { captureChangesInReleaseBranch } from './repo';
 import {
   generateReleaseSpecificationTemplateForMonorepo,
   waitForUserToEditReleaseSpecification,
   validateReleaseSpecification,
-  ReleaseSpecification,
 } from './release-specification';
-import { SemVer } from './semver';
-import {
-  captureChangesInReleaseBranch,
-  PackageReleasePlan,
-  ReleasePlan,
-} from './workflow-operations';
-
-/**
- * A promisified version of `rimraf`.
- */
-const promisifiedRimraf = util.promisify(rimraf);
-
-/**
- * Creates a date from the value of the `TODAY` environment variable, falling
- * back to the current date if it is invalid or was not provided. This will be
- * used to assign a name to the new release in the case of a monorepo with
- * independent versions.
- *
- * @returns A date that represents "today".
- */
-function getToday() {
-  const { TODAY } = getEnvironmentVariables();
-  const parsedTodayTimestamp =
-    TODAY === undefined ? NaN : new Date(TODAY).getTime();
-  return isNaN(parsedTodayTimestamp)
-    ? new Date()
-    : new Date(parsedTodayTimestamp);
-}
 
 /**
  * For a monorepo, the process works like this:
@@ -75,6 +43,7 @@ function getToday() {
  * possible for a release specification that was created in a previous run to
  * stick around (due to an error). This will ensure that the file is removed
  * first.
+ * @param options.today - The current date.
  * @param options.stdout - A stream that can be used to write to standard out.
  * @param options.stderr - A stream that can be used to write to standard error.
  */
@@ -82,22 +51,23 @@ export async function followMonorepoWorkflow({
   project,
   tempDirectoryPath,
   firstRemovingExistingReleaseSpecification,
+  today,
   stdout,
   stderr,
 }: {
   project: Project;
   tempDirectoryPath: string;
   firstRemovingExistingReleaseSpecification: boolean;
+  today: Date;
   stdout: Pick<WriteStream, 'write'>;
   stderr: Pick<WriteStream, 'write'>;
 }) {
   const releaseSpecificationPath = path.join(tempDirectoryPath, 'RELEASE_SPEC');
 
-  if (firstRemovingExistingReleaseSpecification) {
-    await promisifiedRimraf(releaseSpecificationPath);
-  }
-
-  if (await fileExists(releaseSpecificationPath)) {
+  if (
+    !firstRemovingExistingReleaseSpecification &&
+    (await fileExists(releaseSpecificationPath))
+  ) {
     stdout.write(
       'Release spec already exists. Picking back up from previous run.\n',
     );
@@ -107,7 +77,7 @@ export async function followMonorepoWorkflow({
     const releaseSpecificationTemplate =
       await generateReleaseSpecificationTemplateForMonorepo({
         project,
-        isEditorAvailable: editor !== undefined,
+        isEditorAvailable: editor !== null,
       });
     await ensureDirectoryPathExists(tempDirectoryPath);
     await writeFile(releaseSpecificationPath, releaseSpecificationTemplate);
@@ -137,118 +107,15 @@ export async function followMonorepoWorkflow({
     project,
     releaseSpecificationPath,
   );
-  const releasePlan = await planRelease(
+  const releasePlan = await planRelease({
     project,
     releaseSpecification,
-    releaseSpecificationPath,
-  );
-  await applyUpdatesToMonorepo(project, releasePlan, stderr);
-  await removeFile(releaseSpecificationPath);
-  await captureChangesInReleaseBranch(project, releasePlan);
-}
-
-/**
- * Uses the release specification to calculate the final versions of all of the
- * packages that we want to update, as well as a new release name.
- *
- * @param project - Information about the whole project (e.g., names of packages
- * and where they can found).
- * @param releaseSpecification - A parsed version of the release spec entered by
- * the user.
- * @param releaseSpecificationPath - The path to the release specification file.
- * @returns A promise for information about the new release.
- */
-async function planRelease(
-  project: Project,
-  releaseSpecification: ReleaseSpecification,
-  releaseSpecificationPath: string,
-): Promise<ReleasePlan> {
-  const today = getToday();
-  const newReleaseName = today.toISOString().replace(/T.+$/u, '');
-  const newRootVersion = [
-    today.getUTCFullYear(),
-    today.getUTCMonth() + 1,
-    today.getUTCDate(),
-  ].join('.');
-
-  const rootReleasePlan: PackageReleasePlan = {
-    package: project.rootPackage,
-    newVersion: newRootVersion,
-    shouldUpdateChangelog: false,
-  };
-
-  const workspaceReleasePlans: PackageReleasePlan[] = Object.keys(
-    releaseSpecification.packages,
-  ).map((packageName) => {
-    const pkg = project.workspacePackages[packageName];
-    const versionSpecifier = releaseSpecification.packages[packageName];
-    const currentVersion = pkg.validatedManifest.version;
-    let newVersion: SemVer;
-
-    if (versionSpecifier instanceof SemVer) {
-      const comparison = versionSpecifier.compare(currentVersion);
-
-      if (comparison === 0) {
-        throw new Error(
-          [
-            `Could not update package "${packageName}" to "${versionSpecifier}" as that is already the current version.`,
-            `The release spec file has been retained for you to make the necessary fixes. Once you've done this, re-run this tool.`,
-            releaseSpecificationPath,
-          ].join('\n\n'),
-        );
-      } else if (comparison < 0) {
-        throw new Error(
-          [
-            `Could not update package "${packageName}" to "${versionSpecifier}" as it is less than the current version "${currentVersion}".`,
-            `The release spec file has been retained for you to make the necessary fixes. Once you've done this, re-run this tool.`,
-            releaseSpecificationPath,
-          ].join('\n\n'),
-        );
-      }
-
-      newVersion = versionSpecifier;
-    } else {
-      newVersion = new SemVer(currentVersion.toString()).inc(versionSpecifier);
-    }
-
-    return {
-      package: pkg,
-      newVersion: newVersion.toString(),
-      shouldUpdateChangelog: true,
-    };
+    today,
   });
-
-  return {
-    releaseName: newReleaseName,
-    packages: [rootReleasePlan, ...workspaceReleasePlans],
-  };
-}
-
-/**
- * Bumps versions and updates changelogs of packages within the monorepo
- * according to the release plan.
- *
- * @param project - Information about the whole project (e.g., names of packages
- * and where they can found).
- * @param releasePlan - Compiled instructions on how exactly to update the
- * project in order to prepare a new release.
- * @param stderr - A stream that can be used to write to standard error.
- */
-async function applyUpdatesToMonorepo(
-  project: Project,
-  releasePlan: ReleasePlan,
-  stderr: Pick<WriteStream, 'write'>,
-) {
-  await Promise.all(
-    releasePlan.packages.map(async (workspaceReleasePlan) => {
-      debug(
-        `Updating package ${workspaceReleasePlan.package.validatedManifest.name}...`,
-      );
-      await updatePackage({
-        project,
-        packageReleasePlan: workspaceReleasePlan,
-        stderr,
-      });
-    }),
+  await executeReleasePlan(project, releasePlan, stderr);
+  await removeFile(releaseSpecificationPath);
+  await captureChangesInReleaseBranch(
+    project.directoryPath,
+    releasePlan.releaseName,
   );
 }
