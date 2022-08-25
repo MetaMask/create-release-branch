@@ -77,7 +77,7 @@ export async function followMonorepoWorkflow({
     const releaseSpecificationTemplate =
       await generateReleaseSpecificationTemplateForMonorepo({
         project,
-        isEditorAvailable: editor !== undefined,
+        isEditorAvailable: editor !== null,
       });
     await ensureDirectoryPathExists(tempDirectoryPath);
     await writeFile(releaseSpecificationPath, releaseSpecificationTemplate);
