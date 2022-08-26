@@ -63,8 +63,9 @@ export async function planRelease({
   today: Date;
 }): Promise<ReleasePlan> {
   const newReleaseDate = formatDateAsISO(today, {
+    format: 'basic',
     representation: 'date',
-  }).replace(/\D+/gu, '');
+  });
   const newReleaseNumber = project.releaseInfo.releaseNumber + 1;
   const newRootVersion = `${newReleaseDate}.${newReleaseNumber}.0`;
 
