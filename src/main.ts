@@ -25,7 +25,7 @@ export async function main({
   stdout: Pick<WriteStream, 'write'>;
   stderr: Pick<WriteStream, 'write'>;
 }) {
-  const { project, tempDirectoryPath, reset, today } =
+  const { project, tempDirectoryPath, today, phase } =
     await determineInitialParameters(argv, cwd);
 
   if (project.isMonorepo) {
@@ -35,7 +35,7 @@ export async function main({
     await followMonorepoWorkflow({
       project,
       tempDirectoryPath,
-      firstRemovingExistingReleaseSpecification: reset,
+      phase,
       today,
       stdout,
       stderr,

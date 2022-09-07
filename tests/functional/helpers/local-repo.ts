@@ -15,6 +15,7 @@ import Repo, { RepoOptions } from './repo';
  */
 export interface LocalRepoOptions extends RepoOptions {
   remoteRepoDirectoryPath: string;
+  repositoryUrl: string;
   createInitialCommit: boolean;
 }
 
@@ -29,6 +30,11 @@ export default abstract class LocalRepo extends Repo {
   #remoteRepoDirectoryPath: string;
 
   /**
+   * The URL of the repository.
+   */
+  #repositoryUrl: LocalRepoOptions['repositoryUrl'];
+
+  /**
    * Usually when this repo is initialized, a commit is created (which will
    * contain starting `package.json` files). You can use this option to disable
    * that if you need to create your own commits for clarity.
@@ -37,11 +43,13 @@ export default abstract class LocalRepo extends Repo {
 
   constructor({
     remoteRepoDirectoryPath,
+    repositoryUrl,
     createInitialCommit,
     ...rest
   }: LocalRepoOptions) {
     super(rest);
     this.#remoteRepoDirectoryPath = remoteRepoDirectoryPath;
+    this.#repositoryUrl = repositoryUrl;
     this.#createInitialCommit = createInitialCommit;
   }
 
@@ -74,7 +82,7 @@ export default abstract class LocalRepo extends Repo {
       'remote',
       'add',
       'origin',
-      'https://github.com/example-org/example-repo',
+      this.#repositoryUrl,
     ]);
     await this.runCommand('git', [
       'config',

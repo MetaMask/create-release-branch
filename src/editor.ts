@@ -23,7 +23,7 @@ export interface Editor {
  */
 export async function determineEditor(): Promise<Editor | null> {
   let executablePath: string | null = null;
-  const executableArgs: string[] = [];
+  let executableArgs: string[] = [];
   const { EDITOR } = getEnvironmentVariables();
 
   if (EDITOR !== undefined) {
@@ -39,9 +39,12 @@ export async function determineEditor(): Promise<Editor | null> {
   if (executablePath === null) {
     try {
       executablePath = await resolveExecutable('code');
+      console.log('executablePath', executablePath);
       // Waits until the file is closed before returning
       executableArgs.push('--wait');
     } catch (error) {
+      executablePath = null;
+      executableArgs = [];
       debug(
         `Could not resolve path to VSCode: ${error}, continuing regardless`,
       );

@@ -1,6 +1,24 @@
 import { withMonorepoProjectEnvironment } from '../tests/functional/helpers/with';
 import { buildChangelog } from '../tests/functional/helpers/utils';
 
+const defaultOptions = {
+  packages: {
+    $root$: {
+      name: '@scope/monorepo',
+      version: '20220101.1.0',
+      directoryPath: '.',
+    },
+    a: {
+      name: '@scope/a',
+      version: '1.0.0',
+      directoryPath: 'packages/a',
+    },
+  },
+  workspaces: {
+    '.': ['packages/*'],
+  },
+};
+
 describe('create-release-branch (functional)', () => {
   describe('against a monorepo with independent versions', () => {
     it('updates the version of the root package to be the current date along with the versions of the specified packages', async () => {
@@ -36,7 +54,6 @@ describe('create-release-branch (functional)', () => {
           workspaces: {
             '.': ['packages/*'],
           },
-          today: new Date(2022, 5, 24),
         },
         async (environment) => {
           await environment.updateJsonFile('package.json', {
@@ -66,6 +83,7 @@ describe('create-release-branch (functional)', () => {
           });
 
           await environment.runTool({
+            today: new Date(2022, 5, 24),
             releaseSpecification: {
               packages: {
                 a: 'major',
@@ -118,6 +136,7 @@ describe('create-release-branch (functional)', () => {
     it("updates each of the specified package's changelog by adding a new section which lists all commits concerning the package over the entire history of the repo", async () => {
       await withMonorepoProjectEnvironment(
         {
+          repositoryUrl: 'https://github.com/example-org/example-repo',
           packages: {
             $root$: {
               name: '@scope/monorepo',
@@ -233,10 +252,10 @@ describe('create-release-branch (functional)', () => {
           workspaces: {
             '.': ['packages/*'],
           },
-          today: new Date(2022, 5, 24),
         },
         async (environment) => {
           await environment.runTool({
+            today: new Date(2022, 5, 24),
             releaseSpecification: {
               packages: {
                 a: 'major',
@@ -310,11 +329,11 @@ describe('create-release-branch (functional)', () => {
           workspaces: {
             '.': ['packages/*'],
           },
-          today: new Date(2022, 5, 24),
         },
         async (environment) => {
           await expect(
             environment.runTool({
+              today: new Date(2022, 5, 24),
               releaseSpecification: {
                 packages: {
                   a: 'major',
@@ -384,6 +403,231 @@ The release spec file has been retained for you to make the necessary fixes. Onc
             name: '@scope/d',
             version: '1.0.0',
           });
+        },
+      );
+    });
+
+    it('errors if both --continue and --abort are given', async () => {
+      await withMonorepoProjectEnvironment(
+        defaultOptions,
+        async (environment) => {
+          await expect(
+            environment.runTool({
+              args: ['--continue', '--abort'],
+            }),
+          ).rejects.toThrowExecaError(
+            /^Error: You cannot provide both --continue and --abort\./u,
+          );
+        },
+      );
+    });
+
+    it.only('errors if re-run without --continue or --abort after a release spec has already been generated', async () => {
+      await withMonorepoProjectEnvironment(
+        defaultOptions,
+        async (environment) => {
+          // Run tool once without an editor set to get it to generate the
+          // release spec template and quit immediately
+          const result = await environment.runTool({
+            withEditorUnavailable: true,
+          });
+          console.log('all', result.all);
+
+          // Run the tool again
+          await expect(environment.runTool()).rejects.toThrowExecaError(
+            `
+Error: It looks like you are in the middle of a run. This could either mean that you haven't edited the release spec yet, or you have and the tool unexpectedly stopped while executing it.
+
+You can re-run this tool with --continue if you want to resume the run, or you can use --abort if you want to revert all changes made so far and start over.
+
+If you need to access the release spec again, here is its path:
+
+<<release-spec-file-path>>
+<<backtrace>>
+`.trim(),
+            {
+              replacements: [
+                {
+                  from: `${environment.tempDirectoryPath}/RELEASE_SPEC`,
+                  to: '<<release-spec-file-path>>',
+                },
+              ],
+            },
+          );
+        },
+      );
+    }, 10000);
+
+    it('errors if --continue is given but no release spec has been generated yet', async () => {
+      await withMonorepoProjectEnvironment(
+        defaultOptions,
+        async (environment) => {
+          await expect(
+            environment.runTool({
+              args: ['--continue'],
+            }),
+          ).rejects.toThrowExecaError(
+            `
+Error: It looks like you are in the middle of a run. Please ensure that the release spec is to your liking and re-run this tool with --continue to resume the run. Or, run --abort if you want to discard the run and all existing changes.
+
+The path to the release spec is:
+
+<<release-spec-file-path>>
+<<backtrace>>
+`.trim(),
+            {
+              replacements: [
+                {
+                  from: `${environment.tempDirectoryPath}/RELEASE_SPEC`,
+                  to: '<<release-spec-file-path>>',
+                },
+              ],
+            },
+          );
+        },
+      );
+    });
+
+    it('re-applies a previously edited template spec to the project when --continue is given, even if some changes have already been applied', async () => {
+      await withMonorepoProjectEnvironment(
+        {
+          repositoryUrl: 'https://github.com/example-org/example-repo',
+          packages: {
+            $root$: {
+              name: '@scope/monorepo',
+              version: '20220101.1.0',
+              directoryPath: '.',
+            },
+            a: {
+              name: '@scope/a',
+              version: '1.0.0',
+              directoryPath: 'packages/a',
+            },
+            b: {
+              name: '@scope/b',
+              version: '1.0.0',
+              directoryPath: 'packages/b',
+            },
+            c: {
+              name: '@scope/c',
+              version: '1.0.0',
+              directoryPath: 'packages/c',
+            },
+          },
+          workspaces: {
+            '.': ['packages/*'],
+          },
+          createInitialCommit: false,
+        },
+        async (environment) => {
+          // Create an initial commit
+          await environment.createCommit('Initial commit');
+
+          // Run tool once without an editor set to get it to generate the
+          // release spec template and quit immediately
+          await environment.runTool({
+            today: new Date(2022, 5, 24),
+            withEditorUnavailable: true,
+          });
+
+          // Manually apply some changes to the repo to simulate the tool
+          // crashing midway through a run
+          await environment.updateJsonFile('package.json', {
+            version: '20220624.2.0',
+          });
+          await environment.updateJsonFileWithinPackage('a', 'package.json', {
+            version: '2.0.0',
+          });
+          await environment.writeFileWithinPackage(
+            'b',
+            'CHANGELOG.md',
+            buildChangelog(`
+              ## [Unreleased]
+
+              ## [2.0.0]
+              ### Uncategorized
+              - Initial commit
+
+              [Unreleased]: https://github.com/example-org/example-repo/compare/v2.0.0...HEAD
+              [2.0.0]: https://github.com/example-org/example-repo/releases/tag/v2.0.0
+            `),
+          );
+
+          // Re-run the tool, using `--continue` this time
+          await environment.runTool({
+            today: new Date(2022, 5, 24),
+            args: ['--continue'],
+            releaseSpecification: {
+              packages: {
+                a: 'major',
+                b: 'major',
+                c: 'major',
+              },
+            },
+          });
+
+          // The changes that were already applied should remain, and the
+          // remaining changes should be applied
+          expect(await environment.readJsonFile('package.json')).toMatchObject({
+            version: '20220624.2.0',
+          });
+          expect(
+            await environment.readJsonFileWithinPackage('a', 'package.json'),
+          ).toMatchObject({
+            version: '2.0.0',
+          });
+          expect(
+            await environment.readFileWithinPackage('a', 'CHANGELOG.md'),
+          ).toStrictEqual(
+            buildChangelog(`
+              ## [Unreleased]
+
+              ## [2.0.0]
+              ### Uncategorized
+              - Initial commit
+
+              [Unreleased]: https://github.com/example-org/example-repo/compare/v2.0.0...HEAD
+              [2.0.0]: https://github.com/example-org/example-repo/releases/tag/v2.0.0
+            `),
+          );
+          expect(
+            await environment.readJsonFileWithinPackage('b', 'package.json'),
+          ).toStrictEqual({
+            version: '2.0.0',
+          });
+          expect(
+            await environment.readFileWithinPackage('b', 'CHANGELOG.md'),
+          ).toStrictEqual(
+            buildChangelog(`
+              ## [Unreleased]
+
+              ## [2.0.0]
+              ### Uncategorized
+              - Initial commit
+
+              [Unreleased]: https://github.com/example-org/example-repo/compare/v2.0.0...HEAD
+              [2.0.0]: https://github.com/example-org/example-repo/releases/tag/v2.0.0
+            `),
+          );
+          expect(
+            await environment.readJsonFileWithinPackage('c', 'package.json'),
+          ).toStrictEqual({
+            version: '2.0.0',
+          });
+          expect(
+            await environment.readFileWithinPackage('c', 'CHANGELOG.md'),
+          ).toStrictEqual(
+            buildChangelog(`
+              ## [Unreleased]
+
+              ## [2.0.0]
+              ### Uncategorized
+              - Initial commit
+
+              [Unreleased]: https://github.com/example-org/example-repo/compare/v2.0.0...HEAD
+              [2.0.0]: https://github.com/example-org/example-repo/releases/tag/v2.0.0
+            `),
+          );
         },
       );
     });

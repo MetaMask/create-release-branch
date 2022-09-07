@@ -27,10 +27,13 @@ export interface PackageSpecification {
  * is created (which will contain starting `package.json` files). You can use
  * this option to disable that if you need to create your own commits for
  * clarity.
+ * @property repositoryUrl - The URL that the local repository will be
+ * configured with.
  */
 export interface EnvironmentOptions {
   directoryPath: string;
   createInitialCommit?: boolean;
+  repositoryUrl?: string;
 }
 
 /**

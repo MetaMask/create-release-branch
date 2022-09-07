@@ -43,7 +43,7 @@ export default class LocalMonorepo<
     this.#packages = {
       $root$: {
         name: 'monorepo',
-        version: '1.0.0',
+        version: '20220101.1.0',
         directoryPath: '.',
       },
       ...packages,

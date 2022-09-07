@@ -4,7 +4,8 @@ import { hideBin } from 'yargs/helpers';
 export interface CommandLineArguments {
   projectDirectory: string;
   tempDirectory: string | undefined;
-  reset: boolean;
+  continue: boolean;
+  abort: boolean;
 }
 
 /**
@@ -31,12 +32,29 @@ export async function readCommandLineArguments(
         'The directory that is used to hold temporary files, such as the release spec template.',
       type: 'string',
     })
-    .option('reset', {
+    .option('continue', {
+      describe: 'Resumes a previous run by re-running the release spec.',
+      type: 'boolean',
+      default: false,
+    })
+    .option('abort', {
       describe:
-        'Removes any cached files from a previous run that may have been created.',
+        'Reverts all uncommitted file changes which have been made and removes the generated release spec.',
       type: 'boolean',
       default: false,
     })
     .help()
+    .check((args) => {
+      if (args.continue && args.abort) {
+        throw new Error('You cannot provide both --continue and --abort.');
+      } else {
+        return true;
+      }
+    })
+    .fail(async (_message, error, y) => {
+      console.warn(`${error}\n\n${y.help()}`);
+      /* eslint-disable-next-line */
+      process.exit(1);
+    })
     .parse();
 }

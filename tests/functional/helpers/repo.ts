@@ -182,11 +182,14 @@ export default abstract class Repo {
     args?: readonly string[] | undefined,
     options?: ExecaOptions<string> | undefined,
   ): Promise<ExecaChildProcess<string>> {
-    const { env, ...remainingOptions } =
-      options === undefined ? { env: {} } : options;
+    const { env = {}, ...remainingOptions } =
+      options === undefined ? {} : options;
 
     debug(
-      'Running command `%s %s`...',
+      'Running command `%s %s %s`...',
+      Object.keys(env)
+        .map((key) => `${key}="${env[key]}"`)
+        .join(' '),
       executableName,
       args?.map((arg) => (arg.includes(' ') ? `"${arg}"` : arg)).join(' '),
     );
