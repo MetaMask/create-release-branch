@@ -41,7 +41,6 @@ describe('create-release-branch (functional)', () => {
           workspaces: {
             '.': ['packages/*'],
           },
-          today: new Date(2022, 5, 24),
         },
         async (environment) => {
           await environment.updateJsonFile('package.json', {
@@ -250,7 +249,6 @@ describe('create-release-branch (functional)', () => {
           workspaces: {
             '.': ['packages/*'],
           },
-          today: new Date(2022, 5, 24),
         },
         async (environment) => {
           await environment.runTool({

@@ -17,15 +17,12 @@ import { debug, knownKeysOf } from './utils';
  * @property packages - The known packages within this repo (including the
  * root).
  * @property workspaces - The known workspaces within this repo.
- * @property today - The date that will be used for new releases. Will be
- * translated to the TODAY environment variables.
  */
 export interface MonorepoEnvironmentOptions<
   WorkspacePackageNickname extends string,
 > extends EnvironmentOptions {
   packages: Record<WorkspacePackageNickname, PackageSpecification>;
   workspaces: Record<string, string[]>;
-  today?: Date;
 }
 
 /**
@@ -55,15 +52,9 @@ export default class MonorepoEnvironment<
 
   #packages: MonorepoEnvironmentOptions<WorkspacePackageNickname>['packages'];
 
-  #today: MonorepoEnvironmentOptions<WorkspacePackageNickname>['today'];
-
-  constructor({
-    today,
-    ...rest
-  }: MonorepoEnvironmentOptions<WorkspacePackageNickname>) {
-    super(rest);
-    this.#packages = rest.packages;
-    this.#today = today;
+  constructor(options: MonorepoEnvironmentOptions<WorkspacePackageNickname>) {
+    super(options);
+    this.#packages = options.packages;
     this.readFileWithinPackage = this.localRepo.readFileWithinPackage.bind(
       this.localRepo,
     );
@@ -133,9 +124,6 @@ cat "${releaseSpecificationPath}" > "$1"
 
     const env = {
       EDITOR: releaseSpecificationEditorPath,
-      ...(this.#today === undefined
-        ? {}
-        : { TODAY: this.#today.toISOString().replace(/T.+$/u, '') }),
     };
 
     const result = await this.localRepo.runCommand(
