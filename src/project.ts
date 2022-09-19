@@ -6,11 +6,17 @@ import { getRepositoryHttpsUrl } from './repo';
 import { SemVer } from './semver';
 
 /**
- * Information about the release of the root package of a monorepo extracted
- * from its version string.
+ * The release version of the root package of a monorepo extracted from its
+ * version string.
  *
- * @property releaseDate - The release date.
- * @property releaseNumber - The release number (starting from 1).
+ * @property ordinaryNumber - The number assigned to the release if it
+ * introduces new changes that haven't appeared in any previous release; it will
+ * be 0 if there haven't been any releases yet.
+ * @property backportNumber - A backport release is a change ported from one
+ * ordinary release to a previous ordinary release. This, then, is the number
+ * which identifies this release relative to other backport releases under the
+ * same ordinary release, starting from 1; it will be 0 if there aren't any
+ * backport releases for the ordinary release yet.
  */
 interface ReleaseVersion {
   ordinaryNumber: number;
