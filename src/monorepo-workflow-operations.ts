@@ -43,7 +43,6 @@ import {
  * possible for a release specification that was created in a previous run to
  * stick around (due to an error). This will ensure that the file is removed
  * first.
- * @param options.today - The current date.
  * @param options.stdout - A stream that can be used to write to standard out.
  * @param options.stderr - A stream that can be used to write to standard error.
  */
@@ -51,14 +50,12 @@ export async function followMonorepoWorkflow({
   project,
   tempDirectoryPath,
   firstRemovingExistingReleaseSpecification,
-  today,
   stdout,
   stderr,
 }: {
   project: Project;
   tempDirectoryPath: string;
   firstRemovingExistingReleaseSpecification: boolean;
-  today: Date;
   stdout: Pick<WriteStream, 'write'>;
   stderr: Pick<WriteStream, 'write'>;
 }) {
@@ -110,12 +107,10 @@ export async function followMonorepoWorkflow({
   const releasePlan = await planRelease({
     project,
     releaseSpecification,
-    today,
   });
   await executeReleasePlan(project, releasePlan, stderr);
   await removeFile(releaseSpecificationPath);
   await captureChangesInReleaseBranch(project.directoryPath, {
-    releaseDate: releasePlan.releaseDate,
-    releaseNumber: releasePlan.releaseNumber,
+    releaseVersion: releasePlan.newVersion,
   });
 }

@@ -32,7 +32,7 @@ describe('initial-parameters', () => {
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
-        .mockReturnValue({ TODAY: '2022-06-22', EDITOR: undefined });
+        .mockReturnValue({ EDITOR: undefined });
       when(jest.spyOn(projectModule, 'readProject'))
         .calledWith('/path/to/project')
         .mockResolvedValue(project);
@@ -46,7 +46,6 @@ describe('initial-parameters', () => {
         project,
         tempDirectoryPath: '/path/to/temp',
         reset: true,
-        today: new Date(2022, 5, 22),
       });
     });
 
@@ -63,7 +62,7 @@ describe('initial-parameters', () => {
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
-        .mockReturnValue({ TODAY: undefined, EDITOR: undefined });
+        .mockReturnValue({ EDITOR: undefined });
       const readProjectSpy = jest
         .spyOn(projectModule, 'readProject')
         .mockResolvedValue(project);
@@ -84,7 +83,7 @@ describe('initial-parameters', () => {
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
-        .mockReturnValue({ TODAY: undefined, EDITOR: undefined });
+        .mockReturnValue({ EDITOR: undefined });
       when(jest.spyOn(projectModule, 'readProject'))
         .calledWith('/path/to/project')
         .mockResolvedValue(project);
@@ -110,7 +109,7 @@ describe('initial-parameters', () => {
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
-        .mockReturnValue({ TODAY: undefined, EDITOR: undefined });
+        .mockReturnValue({ EDITOR: undefined });
       when(jest.spyOn(projectModule, 'readProject'))
         .calledWith('/path/to/project')
         .mockResolvedValue(project);
@@ -136,7 +135,7 @@ describe('initial-parameters', () => {
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
-        .mockReturnValue({ TODAY: undefined, EDITOR: undefined });
+        .mockReturnValue({ EDITOR: undefined });
       when(jest.spyOn(projectModule, 'readProject'))
         .calledWith('/path/to/project')
         .mockResolvedValue(project);
@@ -160,7 +159,7 @@ describe('initial-parameters', () => {
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
-        .mockReturnValue({ TODAY: undefined, EDITOR: undefined });
+        .mockReturnValue({ EDITOR: undefined });
       when(jest.spyOn(projectModule, 'readProject'))
         .calledWith('/path/to/project')
         .mockResolvedValue(project);
@@ -171,82 +170,6 @@ describe('initial-parameters', () => {
       );
 
       expect(config.reset).toBe(false);
-    });
-
-    it("returns initial parameters including today's date, derived from the TODAY environment variable", async () => {
-      const project = buildMockProject();
-      when(jest.spyOn(commandLineArgumentsModule, 'readCommandLineArguments'))
-        .calledWith(['arg1', 'arg2'])
-        .mockResolvedValue({
-          projectDirectory: '/path/to/project',
-          tempDirectory: '/path/to/temp',
-          reset: true,
-        });
-      jest
-        .spyOn(envModule, 'getEnvironmentVariables')
-        .mockReturnValue({ TODAY: '2022-01-01', EDITOR: undefined });
-      when(jest.spyOn(projectModule, 'readProject'))
-        .calledWith('/path/to/project')
-        .mockResolvedValue(project);
-
-      const config = await determineInitialParameters(
-        ['arg1', 'arg2'],
-        '/path/to/somewhere',
-      );
-
-      expect(config.today).toStrictEqual(new Date(2022, 0, 1));
-    });
-
-    it('uses the current date if TODAY is undefined', async () => {
-      const project = buildMockProject();
-      const today = new Date(2022, 0, 1);
-      when(jest.spyOn(commandLineArgumentsModule, 'readCommandLineArguments'))
-        .calledWith(['arg1', 'arg2'])
-        .mockResolvedValue({
-          projectDirectory: '/path/to/project',
-          tempDirectory: undefined,
-          reset: true,
-        });
-      jest
-        .spyOn(envModule, 'getEnvironmentVariables')
-        .mockReturnValue({ TODAY: undefined, EDITOR: undefined });
-      when(jest.spyOn(projectModule, 'readProject'))
-        .calledWith('/path/to/project')
-        .mockResolvedValue(project);
-      jest.setSystemTime(today);
-
-      const config = await determineInitialParameters(
-        ['arg1', 'arg2'],
-        '/path/to/cwd',
-      );
-
-      expect(config.today).toStrictEqual(today);
-    });
-
-    it('uses the current date if TODAY is not a parsable date', async () => {
-      const project = buildMockProject();
-      const today = new Date(2022, 0, 1);
-      when(jest.spyOn(commandLineArgumentsModule, 'readCommandLineArguments'))
-        .calledWith(['arg1', 'arg2'])
-        .mockResolvedValue({
-          projectDirectory: '/path/to/project',
-          tempDirectory: undefined,
-          reset: true,
-        });
-      jest
-        .spyOn(envModule, 'getEnvironmentVariables')
-        .mockReturnValue({ TODAY: 'asdfgdasf', EDITOR: undefined });
-      when(jest.spyOn(projectModule, 'readProject'))
-        .calledWith('/path/to/project')
-        .mockResolvedValue(project);
-      jest.setSystemTime(today);
-
-      const config = await determineInitialParameters(
-        ['arg1', 'arg2'],
-        '/path/to/cwd',
-      );
-
-      expect(config.today).toStrictEqual(today);
     });
   });
 });

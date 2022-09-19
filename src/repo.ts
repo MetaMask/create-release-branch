@@ -1,4 +1,3 @@
-import { formatISO as formatDateAsISO } from 'date-fns';
 import { getStdoutFromCommand } from './misc-utils';
 
 /**
@@ -91,32 +90,21 @@ export async function getRepositoryHttpsUrl(
  *
  * @param projectRepositoryPath - The path to the repository directory.
  * @param args - The arguments.
- * @param args.releaseDate - The release date.
- * @param args.releaseNumber - The release number.
+ * @param args.releaseVersion - The release version.
  */
 export async function captureChangesInReleaseBranch(
   projectRepositoryPath: string,
-  {
-    releaseDate,
-    releaseNumber,
-  }: {
-    releaseDate: Date;
-    releaseNumber: number;
-  },
+  { releaseVersion }: { releaseVersion: string },
 ) {
-  const releaseDateAsISO = formatDateAsISO(releaseDate, {
-    representation: 'date',
-  });
-
   await getStdoutFromGitCommandWithin(projectRepositoryPath, [
     'checkout',
     '-b',
-    `release/${releaseDateAsISO}/${releaseNumber}`,
+    `release/${releaseVersion}`,
   ]);
   await getStdoutFromGitCommandWithin(projectRepositoryPath, ['add', '-A']);
   await getStdoutFromGitCommandWithin(projectRepositoryPath, [
     'commit',
     '-m',
-    `Release ${releaseDateAsISO} (R${releaseNumber})`,
+    `Release ${releaseVersion}`,
   ]);
 }

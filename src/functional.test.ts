@@ -9,7 +9,7 @@ describe('create-release-branch (functional)', () => {
           packages: {
             $root$: {
               name: '@scope/monorepo',
-              version: '20220101.1.0',
+              version: '1.0.0',
               directoryPath: '.',
             },
             a: {
@@ -88,7 +88,7 @@ describe('create-release-branch (functional)', () => {
 
           expect(await environment.readJsonFile('package.json')).toStrictEqual({
             name: '@scope/monorepo',
-            version: '20220624.2.0',
+            version: '2.0.0',
             private: true,
             workspaces: ['packages/*'],
             scripts: { foo: 'bar' },
@@ -138,7 +138,7 @@ describe('create-release-branch (functional)', () => {
           packages: {
             $root$: {
               name: '@scope/monorepo',
-              version: '20220101.1.0',
+              version: '1.0.0',
               directoryPath: '.',
             },
             a: {
@@ -238,7 +238,7 @@ describe('create-release-branch (functional)', () => {
           packages: {
             $root$: {
               name: '@scope/monorepo',
-              version: '20220101.1.0',
+              version: '1.0.0',
               directoryPath: '.',
             },
             a: {
@@ -262,9 +262,9 @@ describe('create-release-branch (functional)', () => {
           });
 
           // Tests four things:
-          // * The latest commit should be called "Release YYYY-MM-DD (RN)"
+          // * The latest commit should be called "Release 1.0.0"
           // * The latest commit should be the current commit (HEAD)
-          // * The latest branch should be called "release/YYYY-MM-DD/N"
+          // * The latest branch should be called "release/1.0.0"
           // * The latest branch should point to the latest commit
           const [latestCommitSubject, latestCommitId, latestCommitRevsMarker] =
             (
@@ -284,9 +284,9 @@ describe('create-release-branch (functional)', () => {
               '--max-count=1',
             ])
           ).stdout;
-          expect(latestCommitSubject).toStrictEqual('Release 2022-06-24 (R2)');
+          expect(latestCommitSubject).toStrictEqual('Release 2.0.0');
           expect(latestCommitRevs).toContain('HEAD');
-          expect(latestCommitRevs).toContain('release/2022-06-24/2');
+          expect(latestCommitRevs).toContain('release/2.0.0');
           expect(latestBranchCommitId).toStrictEqual(latestCommitId);
         },
       );

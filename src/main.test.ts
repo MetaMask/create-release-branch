@@ -10,7 +10,6 @@ jest.mock('./monorepo-workflow-operations');
 describe('main', () => {
   it('executes the monorepo workflow if the project is a monorepo', async () => {
     const project = buildMockProject({ isMonorepo: true });
-    const today = new Date();
     const stdout = fs.createWriteStream('/dev/null');
     const stderr = fs.createWriteStream('/dev/null');
     jest
@@ -19,7 +18,6 @@ describe('main', () => {
         project,
         tempDirectoryPath: '/path/to/temp/directory',
         reset: false,
-        today,
       });
     const followMonorepoWorkflowSpy = jest
       .spyOn(monorepoWorkflowOperations, 'followMonorepoWorkflow')
@@ -36,7 +34,6 @@ describe('main', () => {
       project,
       tempDirectoryPath: '/path/to/temp/directory',
       firstRemovingExistingReleaseSpecification: false,
-      today,
       stdout,
       stderr,
     });
@@ -44,7 +41,6 @@ describe('main', () => {
 
   it('executes the polyrepo workflow if the project is within a polyrepo', async () => {
     const project = buildMockProject({ isMonorepo: false });
-    const today = new Date();
     const stdout = fs.createWriteStream('/dev/null');
     const stderr = fs.createWriteStream('/dev/null');
     jest
@@ -53,7 +49,6 @@ describe('main', () => {
         project,
         tempDirectoryPath: '/path/to/temp/directory',
         reset: false,
-        today,
       });
     const followMonorepoWorkflowSpy = jest
       .spyOn(monorepoWorkflowOperations, 'followMonorepoWorkflow')

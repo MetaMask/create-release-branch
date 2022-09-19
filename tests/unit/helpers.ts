@@ -44,9 +44,9 @@ export function buildMockProject(overrides: Partial<Project> = {}): Project {
     rootPackage: buildMockPackage('root'),
     workspacePackages: {},
     isMonorepo: false,
-    releaseInfo: {
-      releaseDate: new Date(),
-      releaseNumber: 1,
+    releaseVersion: {
+      ordinaryNumber: 1,
+      backportNumber: 0,
     },
     ...overrides,
   };

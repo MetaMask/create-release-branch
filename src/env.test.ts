@@ -16,12 +16,10 @@ describe('env', () => {
 
     it('returns only the environment variables from process.env that we use in this tool', () => {
       process.env.EDITOR = 'editor';
-      process.env.TODAY = 'today';
       process.env.EXTRA = 'extra';
 
       expect(getEnvironmentVariables()).toStrictEqual({
         EDITOR: 'editor',
-        TODAY: 'today',
       });
     });
   });

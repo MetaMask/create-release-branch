@@ -97,13 +97,12 @@ describe('git-utils', () => {
       );
 
       await captureChangesInReleaseBranch('/path/to/project', {
-        releaseDate: new Date(2022, 6, 22),
-        releaseNumber: 12345,
+        releaseVersion: '1.0.0',
       });
 
       expect(getStdoutFromCommandSpy).toHaveBeenCalledWith(
         'git',
-        ['checkout', '-b', 'release/2022-07-22/12345'],
+        ['checkout', '-b', 'release/1.0.0'],
         { cwd: '/path/to/project' },
       );
       expect(getStdoutFromCommandSpy).toHaveBeenCalledWith(
@@ -113,7 +112,7 @@ describe('git-utils', () => {
       );
       expect(getStdoutFromCommandSpy).toHaveBeenCalledWith(
         'git',
-        ['commit', '-m', 'Release 2022-07-22 (R12345)'],
+        ['commit', '-m', 'Release 1.0.0'],
         { cwd: '/path/to/project' },
       );
     });
