@@ -238,37 +238,33 @@ export async function getTagNames(
 }
 
 /**
- * Calculates whether there have been any commits since the given tag that
- * include changes to any of the files within the given directory.
+ * Calculates whether there have been any commits in the given repo since the
+ * given tag that include changes to any of the files within the given
+ * subdirectory within that repo. The result is cached so that multiple calls
+ * using the same tag name do not re-request the diff.
  *
  * @param repositoryDirectoryPath - The path to the repository directory.
- * @param directoryPath - The path to a subdirectory within the repository.
+ * @param subdirectoryPath - The path to a subdirectory within the repository.
  * @param tagName - The name of a tag in the repository.
  * @returns True or false, depending on the result.
  */
 export async function hasChangesInDirectorySinceGitTag(
   repositoryDirectoryPath: string,
-  directoryPath: string,
+  subdirectoryPath: string,
   tagName: string,
 ): Promise<boolean> {
-  let changedFilePaths: string[];
-
-  if (tagName in CHANGED_FILE_PATHS_BY_TAG_NAME) {
-    changedFilePaths = CHANGED_FILE_PATHS_BY_TAG_NAME[tagName];
-  } else {
-    changedFilePaths = await getFilesChangedSince(
+  if (!(tagName in CHANGED_FILE_PATHS_BY_TAG_NAME)) {
+    const changedFilePaths = await getFilesChangedSince(
       repositoryDirectoryPath,
       tagName,
     );
-    // This function is the only thing that updates
-    // CHANGED_FILE_PATHS_BY_TAG_NAME, so there's no chance that it would get
-    // updated while the promise above is being resolved.
-    // TODO: Use mutex?
-    /* eslint-disable-next-line require-atomic-updates */
-    CHANGED_FILE_PATHS_BY_TAG_NAME[tagName] = changedFilePaths;
+
+    if (!(tagName in CHANGED_FILE_PATHS_BY_TAG_NAME)) {
+      CHANGED_FILE_PATHS_BY_TAG_NAME[tagName] = changedFilePaths;
+    }
   }
 
-  return changedFilePaths.some((filePath) => {
-    return filePath.startsWith(directoryPath);
+  return CHANGED_FILE_PATHS_BY_TAG_NAME[tagName].some((filePath) => {
+    return filePath.startsWith(subdirectoryPath);
   });
 }
