@@ -11,7 +11,7 @@ describe('release-plan-utils', () => {
   describe('planRelease', () => {
     it('calculates final versions for all packages in the release spec', async () => {
       const project = buildMockProject({
-        rootPackage: buildMockPackage('root', '2022.1.1'),
+        rootPackage: buildMockPackage('root', '1.0.0'),
         workspacePackages: {
           a: buildMockPackage('a', '1.0.0'),
           b: buildMockPackage('b', '1.0.0'),
@@ -28,20 +28,18 @@ describe('release-plan-utils', () => {
         },
         path: '/path/to/release/spec',
       };
-      const today = new Date('2022-07-21');
 
       const releasePlan = await planRelease({
         project,
         releaseSpecification,
-        today,
       });
 
       expect(releasePlan).toMatchObject({
-        releaseName: '2022-07-21',
+        newVersion: '2.0.0',
         packages: [
           {
             package: project.rootPackage,
-            newVersion: '2022.7.21',
+            newVersion: '2.0.0',
           },
           {
             package: project.workspacePackages.a,
@@ -75,23 +73,20 @@ describe('release-plan-utils', () => {
       });
       const releaseSpecification = {
         packages: {
-          a: IncrementableVersionParts.major,
-          b: IncrementableVersionParts.major,
-          c: IncrementableVersionParts.patch,
-          d: new SemVer('1.2.3'),
+          a: new SemVer('2.0.0'),
+          b: new SemVer('2.0.0'),
+          c: new SemVer('2.0.0'),
+          d: new SemVer('2.0.0'),
         },
         path: '/path/to/release/spec',
       };
-      const today = new Date('2022-07-21');
 
       const releasePlan = await planRelease({
         project,
         releaseSpecification,
-        today,
       });
 
       expect(releasePlan).toMatchObject({
-        releaseName: '2022-07-21',
         packages: [
           {
             package: project.rootPackage,
@@ -122,7 +117,7 @@ describe('release-plan-utils', () => {
     it('runs updatePackage for each package in the release plan', async () => {
       const project = buildMockProject();
       const releasePlan = {
-        releaseName: 'some-release-name',
+        newVersion: '1.0.0',
         packages: [
           {
             package: buildMockPackage(),

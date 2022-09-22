@@ -1,6 +1,5 @@
 interface Env {
   EDITOR: string | undefined;
-  TODAY: string | undefined;
 }
 
 /**
@@ -10,7 +9,7 @@ interface Env {
  * this tool needs to access, whether their values are defined or not.
  */
 export function getEnvironmentVariables(): Env {
-  return ['EDITOR', 'TODAY'].reduce((object, key) => {
+  return ['EDITOR'].reduce((object, key) => {
     return { ...object, [key]: process.env[key] };
   }, {} as Env);
 }

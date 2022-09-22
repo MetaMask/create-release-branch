@@ -1,6 +1,5 @@
 import os from 'os';
 import path from 'path';
-import { getEnvironmentVariables } from './env';
 import { readCommandLineArguments } from './command-line-arguments';
 import { readProject, Project } from './project';
 
@@ -8,7 +7,6 @@ interface InitialParameters {
   project: Project;
   tempDirectoryPath: string;
   reset: boolean;
-  today: Date;
 }
 
 /**
@@ -24,7 +22,6 @@ export async function determineInitialParameters(
   cwd: string,
 ): Promise<InitialParameters> {
   const inputs = await readCommandLineArguments(argv);
-  const { TODAY } = getEnvironmentVariables();
 
   const projectDirectoryPath = path.resolve(cwd, inputs.projectDirectory);
   const project = await readProject(projectDirectoryPath);
@@ -36,11 +33,6 @@ export async function determineInitialParameters(
           project.rootPackage.validatedManifest.name.replace('/', '__'),
         )
       : path.resolve(cwd, inputs.tempDirectory);
-  const parsedTodayTimestamp =
-    TODAY === undefined ? NaN : new Date(TODAY).getTime();
-  const today = isNaN(parsedTodayTimestamp)
-    ? new Date()
-    : new Date(parsedTodayTimestamp);
 
-  return { project, tempDirectoryPath, reset: inputs.reset, today };
+  return { project, tempDirectoryPath, reset: inputs.reset };
 }

@@ -12,11 +12,11 @@ jest.mock('./repo');
 
 describe('project', () => {
   describe('readProject', () => {
-    it('collects information about a monorepo project', async () => {
+    it('collects information about the repository URL, release version, and packages in the project', async () => {
       await withSandbox(async (sandbox) => {
         const projectDirectoryPath = sandbox.directoryPath;
         const projectRepositoryUrl = 'https://github.com/some-org/some-repo';
-        const rootPackage = buildMockPackage('root', {
+        const rootPackage = buildMockPackage('root', '4.38.0', {
           directoryPath: projectDirectoryPath,
           validatedManifest: buildMockManifest({
             workspaces: ['packages/a', 'packages/subpackages/*'],
@@ -66,30 +66,10 @@ describe('project', () => {
           rootPackage,
           workspacePackages,
           isMonorepo: true,
-        });
-      });
-    });
-
-    it('collects information about a polyrepo project', async () => {
-      await withSandbox(async (sandbox) => {
-        const projectDirectoryPath = sandbox.directoryPath;
-        const projectRepositoryUrl = 'https://github.com/some-org/some-repo';
-        const rootPackage = buildMockPackage('root', {
-          directoryPath: projectDirectoryPath,
-        });
-        when(jest.spyOn(repoModule, 'getRepositoryHttpsUrl'))
-          .calledWith(projectDirectoryPath)
-          .mockResolvedValue(projectRepositoryUrl);
-        when(jest.spyOn(packageModule, 'readPackage'))
-          .calledWith(projectDirectoryPath)
-          .mockResolvedValue(rootPackage);
-
-        expect(await readProject(projectDirectoryPath)).toStrictEqual({
-          directoryPath: projectDirectoryPath,
-          repositoryUrl: projectRepositoryUrl,
-          rootPackage,
-          workspacePackages: {},
-          isMonorepo: false,
+          releaseVersion: {
+            ordinaryNumber: 4,
+            backportNumber: 38,
+          },
         });
       });
     });

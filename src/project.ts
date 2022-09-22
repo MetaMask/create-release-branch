@@ -3,6 +3,25 @@ import glob from 'glob';
 import { Package, readPackage } from './package';
 import { PackageManifestFieldNames } from './package-manifest';
 import { getRepositoryHttpsUrl } from './repo';
+import { SemVer } from './semver';
+
+/**
+ * The release version of the root package of a monorepo extracted from its
+ * version string.
+ *
+ * @property ordinaryNumber - The number assigned to the release if it
+ * introduces new changes that haven't appeared in any previous release; it will
+ * be 0 if there haven't been any releases yet.
+ * @property backportNumber - A backport release is a change ported from one
+ * ordinary release to a previous ordinary release. This, then, is the number
+ * which identifies this release relative to other backport releases under the
+ * same ordinary release, starting from 1; it will be 0 if there aren't any
+ * backport releases for the ordinary release yet.
+ */
+interface ReleaseVersion {
+  ordinaryNumber: number;
+  backportNumber: number;
+}
 
 /**
  * Represents the entire codebase on which this tool is operating.
@@ -21,12 +40,29 @@ export interface Project {
   rootPackage: Package;
   workspacePackages: Record<string, Package>;
   isMonorepo: boolean;
+  releaseVersion: ReleaseVersion;
 }
 
 /**
  * A promisified version of `glob`.
  */
 const promisifiedGlob = util.promisify(glob);
+
+/**
+ * Given a SemVer version object, interprets the "major" part of the version
+ * as the ordinary release number and the "minor" part as the backport release
+ * number in the context of the ordinary release.
+ *
+ * @param packageVersion - The version of the package.
+ * @returns An object containing the ordinary and backport numbers in the
+ * version.
+ */
+function examineReleaseVersion(packageVersion: SemVer): ReleaseVersion {
+  return {
+    ordinaryNumber: packageVersion.major,
+    backportNumber: packageVersion.minor,
+  };
+}
 
 /**
  * Collects information about a project. For a polyrepo, this information will
@@ -44,6 +80,9 @@ export async function readProject(
 ): Promise<Project> {
   const repositoryUrl = await getRepositoryHttpsUrl(projectDirectoryPath);
   const rootPackage = await readPackage(projectDirectoryPath);
+  const releaseVersion = examineReleaseVersion(
+    rootPackage.validatedManifest.version,
+  );
 
   const workspaceDirectories = (
     await Promise.all(
@@ -76,5 +115,6 @@ export async function readProject(
     rootPackage,
     workspacePackages,
     isMonorepo,
+    releaseVersion,
   };
 }

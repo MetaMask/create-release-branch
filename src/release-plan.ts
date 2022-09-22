@@ -9,17 +9,21 @@ import { ReleaseSpecification } from './release-specification';
  * Instructions for how to update the project in order to prepare it for a new
  * release.
  *
- * @property releaseName - The name of the new release. For a polyrepo or a
- * monorepo with fixed versions, this will be a version string with the shape
- * `<major>.<minor>.<patch>`; for a monorepo with independent versions, this
- * will be a version string with the shape `<year>.<month>.<day>-<build
- * number>`.
- * @property packages - Information about all of the packages in the project.
- * For a polyrepo, this consists of the self-same package; for a monorepo it
- * consists of the root package and any workspace packages.
+ * @property newVersion - The new version that should be released, encompassing
+ * one or more updates to packages within the project. This is always a
+ * SemVer-compatible string, though the meaning of each number depends on the
+ * type of project. For a polyrepo package or a monorepo with fixed versions,
+ * the format of the version string is "MAJOR.MINOR.PATCH"; for a monorepo with
+ * independent versions, it is "ORDINARY.BACKPORT.0", where `BACKPORT` is used
+ * to name a release that sits between two ordinary releases, and `ORDINARY` is
+ * used to name any other (non-backport) release.
+ * @property packages - Describes how the packages in the project should be
+ * updated. For a polyrepo package, this list will only contain the package
+ * itself; for a monorepo package it will consist of the root package and any
+ * workspace packages that will be included in the release.
  */
 export interface ReleasePlan {
-  releaseName: string;
+  newVersion: string;
   packages: PackageReleasePlan[];
 }
 
@@ -28,8 +32,8 @@ export interface ReleasePlan {
  * it for a new release.
  *
  * @property package - Information about the package.
- * @property newVersion - The new version to which the package should be
- * updated.
+ * @property newVersion - The new version for the package, as a
+ * SemVer-compatible string.
  * @property shouldUpdateChangelog - Whether or not the changelog for the
  * package should get updated. For a polyrepo, this will always be true; for a
  * monorepo, this will be true only for workspace packages (the root package
@@ -50,28 +54,20 @@ export interface PackageReleasePlan {
  * packages and where they can found).
  * @param args.releaseSpecification - A parsed version of the release spec
  * entered by the user.
- * @param args.today - The current date.
  * @returns A promise for information about the new release.
  */
 export async function planRelease({
   project,
   releaseSpecification,
-  today,
 }: {
   project: Project;
   releaseSpecification: ReleaseSpecification;
-  today: Date;
 }): Promise<ReleasePlan> {
-  const newReleaseName = today.toISOString().replace(/T.+$/u, '');
-  const newRootVersion = [
-    today.getUTCFullYear(),
-    today.getUTCMonth() + 1,
-    today.getUTCDate(),
-  ].join('.');
+  const newReleaseVersion = `${project.releaseVersion.ordinaryNumber + 1}.0.0`;
 
   const rootReleasePlan: PackageReleasePlan = {
     package: project.rootPackage,
-    newVersion: newRootVersion,
+    newVersion: newReleaseVersion,
     shouldUpdateChangelog: false,
   };
 
@@ -94,7 +90,7 @@ export async function planRelease({
   });
 
   return {
-    releaseName: newReleaseName,
+    newVersion: newReleaseVersion,
     packages: [rootReleasePlan, ...workspaceReleasePlans],
   };
 }

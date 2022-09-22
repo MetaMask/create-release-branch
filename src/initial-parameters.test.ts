@@ -32,7 +32,7 @@ describe('initial-parameters', () => {
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
-        .mockReturnValue({ TODAY: '2022-06-22', EDITOR: undefined });
+        .mockReturnValue({ EDITOR: undefined });
       when(jest.spyOn(projectModule, 'readProject'))
         .calledWith('/path/to/project')
         .mockResolvedValue(project);
@@ -46,7 +46,6 @@ describe('initial-parameters', () => {
         project,
         tempDirectoryPath: '/path/to/temp',
         reset: true,
-        today: new Date('2022-06-22'),
       });
     });
 
@@ -63,7 +62,7 @@ describe('initial-parameters', () => {
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
-        .mockReturnValue({ TODAY: undefined, EDITOR: undefined });
+        .mockReturnValue({ EDITOR: undefined });
       const readProjectSpy = jest
         .spyOn(projectModule, 'readProject')
         .mockResolvedValue(project);
@@ -84,7 +83,7 @@ describe('initial-parameters', () => {
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
-        .mockReturnValue({ TODAY: undefined, EDITOR: undefined });
+        .mockReturnValue({ EDITOR: undefined });
       when(jest.spyOn(projectModule, 'readProject'))
         .calledWith('/path/to/project')
         .mockResolvedValue(project);
@@ -110,7 +109,7 @@ describe('initial-parameters', () => {
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
-        .mockReturnValue({ TODAY: undefined, EDITOR: undefined });
+        .mockReturnValue({ EDITOR: undefined });
       when(jest.spyOn(projectModule, 'readProject'))
         .calledWith('/path/to/project')
         .mockResolvedValue(project);
@@ -125,56 +124,52 @@ describe('initial-parameters', () => {
       );
     });
 
-    it('uses the current date if the TODAY environment variable was not provided', async () => {
+    it('returns initial parameters including reset: true, derived from a command-line argument of "--reset true"', async () => {
       const project = buildMockProject();
-      const today = new Date('2022-01-01');
       when(jest.spyOn(commandLineArgumentsModule, 'readCommandLineArguments'))
         .calledWith(['arg1', 'arg2'])
         .mockResolvedValue({
           projectDirectory: '/path/to/project',
-          tempDirectory: undefined,
+          tempDirectory: '/path/to/temp',
           reset: true,
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
-        .mockReturnValue({ TODAY: undefined, EDITOR: undefined });
+        .mockReturnValue({ EDITOR: undefined });
       when(jest.spyOn(projectModule, 'readProject'))
         .calledWith('/path/to/project')
         .mockResolvedValue(project);
-      jest.setSystemTime(today);
 
       const config = await determineInitialParameters(
         ['arg1', 'arg2'],
-        '/path/to/cwd',
+        '/path/to/somewhere',
       );
 
-      expect(config.today).toStrictEqual(today);
+      expect(config.reset).toBe(true);
     });
 
-    it('uses the current date if TODAY is not a parsable date', async () => {
+    it('returns initial parameters including reset: false, derived from a command-line argument of "--reset false"', async () => {
       const project = buildMockProject();
-      const today = new Date('2022-01-01');
       when(jest.spyOn(commandLineArgumentsModule, 'readCommandLineArguments'))
         .calledWith(['arg1', 'arg2'])
         .mockResolvedValue({
           projectDirectory: '/path/to/project',
-          tempDirectory: undefined,
-          reset: true,
+          tempDirectory: '/path/to/temp',
+          reset: false,
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
-        .mockReturnValue({ TODAY: 'asdfgdasf', EDITOR: undefined });
+        .mockReturnValue({ EDITOR: undefined });
       when(jest.spyOn(projectModule, 'readProject'))
         .calledWith('/path/to/project')
         .mockResolvedValue(project);
-      jest.setSystemTime(today);
 
       const config = await determineInitialParameters(
         ['arg1', 'arg2'],
-        '/path/to/cwd',
+        '/path/to/somewhere',
       );
 
-      expect(config.today).toStrictEqual(today);
+      expect(config.reset).toBe(false);
     });
   });
 });

@@ -96,14 +96,13 @@ describe('git-utils', () => {
         'getStdoutFromCommand',
       );
 
-      await captureChangesInReleaseBranch(
-        '/path/to/project',
-        'some-release-name',
-      );
+      await captureChangesInReleaseBranch('/path/to/project', {
+        releaseVersion: '1.0.0',
+      });
 
       expect(getStdoutFromCommandSpy).toHaveBeenCalledWith(
         'git',
-        ['checkout', '-b', 'release/some-release-name'],
+        ['checkout', '-b', 'release/1.0.0'],
         { cwd: '/path/to/project' },
       );
       expect(getStdoutFromCommandSpy).toHaveBeenCalledWith(
@@ -113,7 +112,7 @@ describe('git-utils', () => {
       );
       expect(getStdoutFromCommandSpy).toHaveBeenCalledWith(
         'git',
-        ['commit', '-m', 'Release some-release-name'],
+        ['commit', '-m', 'Release 1.0.0'],
         { cwd: '/path/to/project' },
       );
     });

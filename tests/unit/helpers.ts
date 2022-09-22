@@ -44,6 +44,10 @@ export function buildMockProject(overrides: Partial<Project> = {}): Project {
     rootPackage: buildMockPackage('root'),
     workspacePackages: {},
     isMonorepo: false,
+    releaseVersion: {
+      ordinaryNumber: 1,
+      backportNumber: 0,
+    },
     ...overrides,
   };
 }

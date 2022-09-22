@@ -88,23 +88,23 @@ export async function getRepositoryHttpsUrl(
  * of the new release).
  * 3. Switches to that branch.
  *
- * @param repositoryDirectoryPath - The path to the repository directory.
- * @param releaseName - The name of the release, which will be used to name the
- * commit and the branch.
+ * @param projectRepositoryPath - The path to the repository directory.
+ * @param args - The arguments.
+ * @param args.releaseVersion - The release version.
  */
 export async function captureChangesInReleaseBranch(
-  repositoryDirectoryPath: string,
-  releaseName: string,
+  projectRepositoryPath: string,
+  { releaseVersion }: { releaseVersion: string },
 ) {
-  await getStdoutFromGitCommandWithin(repositoryDirectoryPath, [
+  await getStdoutFromGitCommandWithin(projectRepositoryPath, [
     'checkout',
     '-b',
-    `release/${releaseName}`,
+    `release/${releaseVersion}`,
   ]);
-  await getStdoutFromGitCommandWithin(repositoryDirectoryPath, ['add', '-A']);
-  await getStdoutFromGitCommandWithin(repositoryDirectoryPath, [
+  await getStdoutFromGitCommandWithin(projectRepositoryPath, ['add', '-A']);
+  await getStdoutFromGitCommandWithin(projectRepositoryPath, [
     'commit',
     '-m',
-    `Release ${releaseName}`,
+    `Release ${releaseVersion}`,
   ]);
 }
