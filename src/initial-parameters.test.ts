@@ -124,7 +124,7 @@ describe('initial-parameters', () => {
       );
     });
 
-    it('returns initial parameters including reset: false, derived from a command-line argument of "--reset true"', async () => {
+    it('returns initial parameters including reset: true, derived from a command-line argument of "--reset true"', async () => {
       const project = buildMockProject();
       when(jest.spyOn(commandLineArgumentsModule, 'readCommandLineArguments'))
         .calledWith(['arg1', 'arg2'])
