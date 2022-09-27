@@ -131,7 +131,7 @@ describe('repo', () => {
       ]);
     });
 
-    it.only('returns an empty array if the repo has no tags as long as it was not cloned shallowly', async () => {
+    it('returns an empty array if the repo has no tags as long as it was not cloned shallowly', async () => {
       when(jest.spyOn(miscUtils, 'runCommand'))
         .calledWith('git', ['fetch', '--tags'], {
           cwd: '/path/to/repo',
