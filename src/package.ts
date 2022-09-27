@@ -1,5 +1,6 @@
 import fs, { WriteStream } from 'fs';
 import path from 'path';
+import { format } from 'util';
 import { updateChangelog } from '@metamask/auto-changelog';
 import { isErrorWithCode } from './misc-utils';
 import { readFile, writeFile, writeJsonFile } from './fs';
@@ -36,6 +37,23 @@ export interface Package {
 }
 
 /**
+ * Creates a sentence by connecting the given clauses with the given connector.
+ *
+ * @param connector - The connector, such as "and" or "or".
+ * @param clauses - The clauses.
+ * @returns The full sentence.
+ */
+function connectClausesWith(connector: string, clauses: string[]) {
+  if (clauses.length < 3) {
+    return clauses.join(` ${connector} `);
+  }
+
+  return [clauses.slice(0, -1).join(`, `), clauses[clauses.length - 1]].join(
+    `, ${connector}`,
+  );
+}
+
+/**
  * Generates possible Git tag names for the root package of a monorepo. The only
  * tag name in use at this time is "v" + the package version.
  *
@@ -49,20 +67,17 @@ function generateMonorepoRootPackageReleaseTagNames(packageVersion: string) {
 /**
  * Generates possible Git tag names for the workspace package of a monorepo.
  * Accounts for changes to `action-publish-release`, which going forward will
- * generate tags for workspace packages in `PACKAGE_NAME/MAJOR.MINOR.PATCH`, but
- * in the past merely generated tags for the root package.
+ * generate tags for workspace packages in `PACKAGE_NAME@MAJOR.MINOR.PATCH`.
  *
  * @param packageName - The name of the package.
  * @param packageVersion - The version of the package.
- * @param rootPackageVersion - The version of the root package.
  * @returns An array of possible release tag names.
  */
 function generateMonorepoWorkspacePackageReleaseTagNames(
   packageName: string,
   packageVersion: string,
-  rootPackageVersion: string,
 ) {
-  return [`${packageName}@${packageVersion}`, `v${rootPackageVersion}`];
+  return [`${packageName}@${packageVersion}`];
 }
 
 /**
@@ -95,9 +110,24 @@ export async function readMonorepoRootPackage({
       return projectTagNames.includes(tagName);
     },
   );
-  // TODO: What if tags exist (projectTagNames.length > 0) but there is no tag
-  // for the current release (tagNameMatchingLatestRelease === undefined)?
-  // Should we fall back to the most recently created tag?
+
+  if (
+    projectTagNames.length > 0 &&
+    tagNameMatchingLatestRelease === undefined
+  ) {
+    throw new Error(
+      format(
+        'The package %s has no Git tag for its current version %s (expected %s), so this tool is unable to determine whether it should be included in this release. You will need to create a tag for this package in order to proceed.',
+        validatedManifest.name,
+        validatedManifest.version,
+        connectClausesWith(
+          'or',
+          expectedReleaseTagNames.map((tagName) => `"${tagName}"`),
+        ),
+      ),
+    );
+  }
+
   const hasChangesSinceLatestRelease =
     tagNameMatchingLatestRelease === undefined
       ? true
@@ -122,7 +152,9 @@ export async function readMonorepoRootPackage({
  *
  * @param args - The arguments to this function.
  * @param args.packageDirectoryPath - The path to a package within a project.
- * @param args.rootPackageVersion - The version of the root package of the
+ * @param args.rootPackageName - The name of the root package within the
+ * monorepo to which this package belongs.
+ * @param args.rootPackageVersion - The version of the root package within the
  * monorepo to which this package belongs.
  * @param args.projectDirectoryPath - The path to the project directory.
  * @param args.projectTagNames - The tag names across the whole project.
@@ -130,11 +162,13 @@ export async function readMonorepoRootPackage({
  */
 export async function readMonorepoWorkspacePackage({
   packageDirectoryPath,
+  rootPackageName,
   rootPackageVersion,
   projectDirectoryPath,
   projectTagNames,
 }: {
   packageDirectoryPath: string;
+  rootPackageName: string;
   rootPackageVersion: SemVer;
   projectDirectoryPath: string;
   projectTagNames: string[];
@@ -143,20 +177,45 @@ export async function readMonorepoWorkspacePackage({
   const changelogPath = path.join(packageDirectoryPath, CHANGELOG_FILE_NAME);
   const { unvalidated: unvalidatedManifest, validated: validatedManifest } =
     await readPackageManifest(manifestPath);
-  const expectedReleaseTagNames =
+  const expectedWorkspacePackageReleaseTagNames =
     generateMonorepoWorkspacePackageReleaseTagNames(
       validatedManifest.name,
       validatedManifest.version.toString(),
-      rootPackageVersion.toString(),
     );
-  const tagNameMatchingLatestRelease = expectedReleaseTagNames.find(
-    (tagName) => {
-      return projectTagNames.includes(tagName);
-    },
-  );
-  // TODO: What if tags exist (projectTagNames.length > 0) but there is no tag
-  // for the current release (tagNameMatchingLatestRelease === undefined)?
-  // Should we fall back to the most recently created tag?
+  const expectedRootPackageReleaseTagNames =
+    generateMonorepoRootPackageReleaseTagNames(rootPackageVersion.toString());
+  const tagNameMatchingLatestRelease = [
+    ...expectedWorkspacePackageReleaseTagNames,
+    ...expectedRootPackageReleaseTagNames,
+  ].find((tagName) => {
+    return projectTagNames.includes(tagName);
+  });
+
+  if (
+    projectTagNames.length > 0 &&
+    tagNameMatchingLatestRelease === undefined
+  ) {
+    throw new Error(
+      format(
+        'The workspace package %s has no Git tag for its current version %s (expected %s), and the root package %s has no Git tag for its current version %s (expected %s), so this tool is unable to determine whether the workspace package should be included in this release. You will need to create tags for both of these packages in order to proceed.',
+        validatedManifest.name,
+        validatedManifest.version,
+        connectClausesWith(
+          'or',
+          expectedWorkspacePackageReleaseTagNames.map(
+            (tagName) => `"${tagName}"`,
+          ),
+        ),
+        rootPackageName,
+        rootPackageVersion,
+        connectClausesWith(
+          'or',
+          expectedRootPackageReleaseTagNames.map((tagName) => `"${tagName}"`),
+        ),
+      ),
+    );
+  }
+
   const hasChangesSinceLatestRelease =
     tagNameMatchingLatestRelease === undefined
       ? true

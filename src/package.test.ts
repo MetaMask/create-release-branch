@@ -67,6 +67,33 @@ describe('package', () => {
       });
     });
 
+    it('throws if a tag matching the current version does not exist', async () => {
+      jest
+        .spyOn(packageManifestModule, 'readPackageManifest')
+        .mockResolvedValue({
+          unvalidated: {},
+          validated: buildMockManifest({
+            name: 'some-package',
+            version: new SemVer('1.0.0'),
+          }),
+        });
+      when(jest.spyOn(repoModule, 'hasChangesInDirectorySinceGitTag'))
+        .calledWith('/path/to/project', '/path/to/package', 'v1.0.0')
+        .mockResolvedValue(true);
+
+      const promiseForPkg = readMonorepoRootPackage({
+        packageDirectoryPath: '/path/to/package',
+        projectDirectoryPath: '/path/to/project',
+        projectTagNames: ['some-tag'],
+      });
+
+      await expect(promiseForPkg).rejects.toThrow(
+        new Error(
+          'The package some-package has no Git tag for its current version 1.0.0 (expected "v1.0.0"), so this tool is unable to determine whether it should be included in this release. You will need to create a tag for this package in order to proceed.',
+        ),
+      );
+    });
+
     it("returns the fact that the package has been changed since its latest release, if a tag matching the current version exists and changes have been made to the package's directory since the tag", async () => {
       jest
         .spyOn(packageManifestModule, 'readPackageManifest')
@@ -198,6 +225,7 @@ describe('package', () => {
         packageDirectoryPath: '/path/to/package',
         projectDirectoryPath: '/path/to/project',
         projectTagNames: [],
+        rootPackageName: 'root-package',
         rootPackageVersion: new SemVer('5.0.0'),
       });
 
@@ -222,6 +250,7 @@ describe('package', () => {
         packageDirectoryPath: '/path/to/package',
         projectDirectoryPath: '/path/to/project',
         projectTagNames: [],
+        rootPackageName: 'root-package',
         rootPackageVersion: new SemVer('5.0.0'),
       });
 
@@ -229,6 +258,34 @@ describe('package', () => {
         unvalidatedManifest,
         validatedManifest,
       });
+    });
+
+    it('throws if a tag matching the current version does not exist', async () => {
+      const unvalidatedManifest = {};
+      const validatedManifest = buildMockManifest({
+        name: 'workspace-package',
+        version: new SemVer('1.0.0'),
+      });
+      when(jest.spyOn(packageManifestModule, 'readPackageManifest'))
+        .calledWith('/path/to/package/package.json')
+        .mockResolvedValue({
+          unvalidated: unvalidatedManifest,
+          validated: validatedManifest,
+        });
+
+      const promiseForPkg = readMonorepoWorkspacePackage({
+        packageDirectoryPath: '/path/to/package',
+        projectDirectoryPath: '/path/to/project',
+        projectTagNames: ['some-tag'],
+        rootPackageName: 'root-package',
+        rootPackageVersion: new SemVer('5.0.0'),
+      });
+
+      await expect(promiseForPkg).rejects.toThrow(
+        new Error(
+          'The workspace package workspace-package has no Git tag for its current version 1.0.0 (expected "workspace-package@1.0.0"), and the root package root-package has no Git tag for its current version 5.0.0 (expected "v5.0.0"), so this tool is unable to determine whether the workspace package should be included in this release. You will need to create tags for both of these packages in order to proceed.',
+        ),
+      );
     });
 
     it("returns the fact that the package has been changed since its latest release, if a tag matching the package name + version exists and changes have been made to the package's directory since the tag", async () => {
@@ -253,6 +310,7 @@ describe('package', () => {
         packageDirectoryPath: '/path/to/package',
         projectDirectoryPath: '/path/to/project',
         projectTagNames: ['@scope/some-package@1.0.0'],
+        rootPackageName: 'root-package',
         rootPackageVersion: new SemVer('5.0.0'),
       });
 
@@ -283,6 +341,7 @@ describe('package', () => {
         packageDirectoryPath: '/path/to/package',
         projectDirectoryPath: '/path/to/project',
         projectTagNames: ['@scope/some-package@1.0.0'],
+        rootPackageName: 'root-package',
         rootPackageVersion: new SemVer('5.0.0'),
       });
 
@@ -308,6 +367,7 @@ describe('package', () => {
         packageDirectoryPath: '/path/to/package',
         projectDirectoryPath: '/path/to/project',
         projectTagNames: ['v5.0.0'],
+        rootPackageName: 'root-package',
         rootPackageVersion: new SemVer('5.0.0'),
       });
 
@@ -333,6 +393,7 @@ describe('package', () => {
         packageDirectoryPath: '/path/to/package',
         projectDirectoryPath: '/path/to/project',
         projectTagNames: ['v5.0.0'],
+        rootPackageName: 'root-package',
         rootPackageVersion: new SemVer('5.0.0'),
       });
 
@@ -355,6 +416,7 @@ describe('package', () => {
         packageDirectoryPath: '/path/to/package',
         projectDirectoryPath: '/path/to/project',
         projectTagNames: [],
+        rootPackageName: 'root-package',
         rootPackageVersion: new SemVer('5.0.0'),
       });
 
