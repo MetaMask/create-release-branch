@@ -106,23 +106,11 @@ describe('repo', () => {
 
   describe('getTagNames', () => {
     it('returns all of the tag names that match a known format, sorted from earliest created to latest created', async () => {
-      when(jest.spyOn(miscUtils, 'runCommand'))
-        .calledWith('git', ['fetch', '--tags'], {
-          cwd: '/path/to/repo',
-        })
-        .mockResolvedValue();
       when(jest.spyOn(miscUtils, 'getLinesFromCommand'))
-        .calledWith('git', ['tag', '--merged'], {
+        .calledWith('git', ['tag', '--merged', '--sort', 'version:refname'], {
           cwd: '/path/to/repo',
         })
-        .mockResolvedValue(['unsorted'])
-        .calledWith('git', ['rev-list', '--tags', '--date-order'], {
-          cwd: '/path/to/repo',
-        })
-        .mockResolvedValue(['sorted']);
-      when(jest.spyOn(miscUtils, 'placeInSpecificOrder'))
-        .calledWith(['unsorted'], ['sorted'])
-        .mockReturnValue(['tag1', 'tag2', 'tag3']);
+        .mockResolvedValue(['tag1', 'tag2', 'tag3']);
 
       expect(await getTagNames('/path/to/repo')).toStrictEqual([
         'tag1',
@@ -132,17 +120,8 @@ describe('repo', () => {
     });
 
     it('returns an empty array if the repo has no tags as long as it was not cloned shallowly', async () => {
-      when(jest.spyOn(miscUtils, 'runCommand'))
-        .calledWith('git', ['fetch', '--tags'], {
-          cwd: '/path/to/repo',
-        })
-        .mockResolvedValue();
       when(jest.spyOn(miscUtils, 'getLinesFromCommand'))
-        .calledWith('git', ['tag', '--merged'], {
-          cwd: '/path/to/repo',
-        })
-        .mockResolvedValue([])
-        .calledWith('git', ['rev-list', '--tags', '--date-order'], {
+        .calledWith('git', ['tag', '--merged', '--sort', 'version:refname'], {
           cwd: '/path/to/repo',
         })
         .mockResolvedValue([]);
@@ -151,25 +130,13 @@ describe('repo', () => {
           cwd: '/path/to/repo',
         })
         .mockResolvedValue('false');
-      when(jest.spyOn(miscUtils, 'placeInSpecificOrder'))
-        .calledWith([], [])
-        .mockReturnValue([]);
 
       expect(await getTagNames('/path/to/repo')).toStrictEqual([]);
     });
 
     it('throws if the repo has no tags but it was cloned shallowly', async () => {
-      when(jest.spyOn(miscUtils, 'runCommand'))
-        .calledWith('git', ['fetch', '--tags'], {
-          cwd: '/path/to/repo',
-        })
-        .mockResolvedValue();
       when(jest.spyOn(miscUtils, 'getLinesFromCommand'))
-        .calledWith('git', ['tag', '--merged'], {
-          cwd: '/path/to/repo',
-        })
-        .mockResolvedValue([])
-        .calledWith('git', ['rev-list', '--tags', '--date-order'], {
+        .calledWith('git', ['tag', '--merged', '--sort', 'version:refname'], {
           cwd: '/path/to/repo',
         })
         .mockResolvedValue([]);
@@ -185,17 +152,8 @@ describe('repo', () => {
     });
 
     it('throws if "git rev-parse --is-shallow-repository" returns neither "true" nor "false"', async () => {
-      when(jest.spyOn(miscUtils, 'runCommand'))
-        .calledWith('git', ['fetch', '--tags'], {
-          cwd: '/path/to/repo',
-        })
-        .mockResolvedValue();
       when(jest.spyOn(miscUtils, 'getLinesFromCommand'))
-        .calledWith('git', ['tag', '--merged'], {
-          cwd: '/path/to/repo',
-        })
-        .mockResolvedValue([])
-        .calledWith('git', ['rev-list', '--tags', '--date-order'], {
+        .calledWith('git', ['tag', '--merged', '--sort', 'version:refname'], {
           cwd: '/path/to/repo',
         })
         .mockResolvedValue([]);

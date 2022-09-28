@@ -172,29 +172,3 @@ export async function getLinesFromCommand(
   const { stdout } = await execa(command, args, options);
   return stdout.split('\n').filter((value) => value !== '');
 }
-
-/**
- * Reorders the given set of strings according to the sort order.
- *
- * @param unsortedStrings - A set of strings that need to be sorted.
- * @param sortedStrings - A set of strings that designate the order in which
- * the first set of strings should be placed.
- * @returns A sorted version of `unsortedStrings`.
- */
-export function placeInSpecificOrder(
-  unsortedStrings: string[],
-  sortedStrings: string[],
-): string[] {
-  const unsortedStringsCopy = unsortedStrings.slice();
-  const newSortedStrings: string[] = [];
-  sortedStrings.forEach((string) => {
-    const index = unsortedStringsCopy.indexOf(string);
-
-    if (index !== -1) {
-      unsortedStringsCopy.splice(index, 1);
-      newSortedStrings.push(string);
-    }
-  });
-  newSortedStrings.push(...unsortedStringsCopy);
-  return newSortedStrings;
-}

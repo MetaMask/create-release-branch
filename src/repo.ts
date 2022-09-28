@@ -2,7 +2,6 @@ import {
   runCommand,
   getStdoutFromCommand,
   getLinesFromCommand,
-  placeInSpecificOrder,
 } from './misc-utils';
 
 const CHANGED_FILE_PATHS_BY_TAG_NAME: Record<string, string[]> = {};
@@ -208,22 +207,20 @@ export async function getTagNames(
 ): Promise<string[]> {
   await runGitCommandWithin(repositoryDirectoryPath, 'fetch', ['--tags']);
 
-  // The --merged flag ensures that we only get tags that are parents of or
-  // equal to the current HEAD.
-  const unsortedMergedTagNames = await getLinesFromGitCommandWithin(
+  const tagNames = await getLinesFromGitCommandWithin(
     repositoryDirectoryPath,
     'tag',
-    ['--merged'],
-  );
-  const sortedComprehensiveTagNames = await getLinesFromGitCommandWithin(
-    repositoryDirectoryPath,
-    'rev-list',
-    ['--tags', '--date-order'],
+    [
+      // The --merged flag ensures that we only get tags that are parents of or
+      // equal to the current HEAD.
+      '--merged',
+      '--sort',
+      'version:refname',
+    ],
   );
 
   if (
-    unsortedMergedTagNames.length === 0 &&
-    sortedComprehensiveTagNames.length === 0 &&
+    tagNames.length === 0 &&
     !(await hasCompleteGitHistory(repositoryDirectoryPath))
   ) {
     throw new Error(
@@ -231,10 +228,7 @@ export async function getTagNames(
     );
   }
 
-  return placeInSpecificOrder(
-    unsortedMergedTagNames,
-    sortedComprehensiveTagNames,
-  );
+  return tagNames;
 }
 
 /**
