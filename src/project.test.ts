@@ -17,13 +17,18 @@ describe('project', () => {
       await withSandbox(async (sandbox) => {
         const projectDirectoryPath = sandbox.directoryPath;
         const projectRepositoryUrl = 'https://github.com/some-org/some-repo';
+        const rootPackageName = 'root';
         const rootPackageVersion = new SemVer('4.38.0');
-        const rootPackage = buildMockPackage('root', rootPackageVersion, {
-          directoryPath: projectDirectoryPath,
-          validatedManifest: {
-            workspaces: ['packages/a', 'packages/subpackages/*'],
+        const rootPackage = buildMockPackage(
+          rootPackageName,
+          rootPackageVersion,
+          {
+            directoryPath: projectDirectoryPath,
+            validatedManifest: {
+              workspaces: ['packages/a', 'packages/subpackages/*'],
+            },
           },
-        });
+        );
         const workspacePackages = {
           a: buildMockPackage('a', {
             directoryPath: path.join(projectDirectoryPath, 'packages', 'a'),
@@ -58,6 +63,7 @@ describe('project', () => {
               'packages',
               'a',
             ),
+            rootPackageName,
             rootPackageVersion,
             projectDirectoryPath,
             projectTagNames,
@@ -70,6 +76,7 @@ describe('project', () => {
               'subpackages',
               'b',
             ),
+            rootPackageName,
             rootPackageVersion,
             projectDirectoryPath,
             projectTagNames,

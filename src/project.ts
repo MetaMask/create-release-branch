@@ -112,6 +112,7 @@ export async function readProject(
       workspaceDirectories.map(async (directory) => {
         return await readMonorepoWorkspacePackage({
           packageDirectoryPath: directory,
+          rootPackageName: rootPackage.validatedManifest.name,
           rootPackageVersion: rootPackage.validatedManifest.version,
           projectDirectoryPath,
           projectTagNames: tagNames,
