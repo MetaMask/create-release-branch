@@ -214,36 +214,4 @@ describe('misc-utils', () => {
       expect(lines).toStrictEqual(['  line 1', 'line 2', '   line 3   ']);
     });
   });
-
-  describe('placeInSpecificOrder', () => {
-    it('returns the first set of strings if the second set of strings is the same', () => {
-      expect(
-        placeInSpecificOrder(['foo', 'bar', 'baz'], ['foo', 'bar', 'baz']),
-      ).toStrictEqual(['foo', 'bar', 'baz']);
-    });
-
-    it('returns the first set of strings if the second set of strings is completely different', () => {
-      expect(
-        placeInSpecificOrder(['foo', 'bar', 'baz'], ['qux', 'blargh']),
-      ).toStrictEqual(['foo', 'bar', 'baz']);
-    });
-
-    it('returns the second set of strings if both sets of strings exactly have the same elements (just in a different order)', () => {
-      expect(
-        placeInSpecificOrder(
-          ['foo', 'qux', 'bar', 'baz'],
-          ['baz', 'foo', 'bar', 'qux'],
-        ),
-      ).toStrictEqual(['baz', 'foo', 'bar', 'qux']);
-    });
-
-    it('returns the first set of strings with the items common to both sets rearranged according to the second set, placing those unique to the first set last', () => {
-      expect(
-        placeInSpecificOrder(
-          ['foo', 'zing', 'qux', 'bar', 'baz', 'zam'],
-          ['baz', 'foo', 'bar', 'bam', 'qux', 'zox'],
-        ),
-      ).toStrictEqual(['baz', 'foo', 'bar', 'qux', 'zing', 'zam']);
-    });
-  });
 });
