@@ -9,7 +9,6 @@ import {
   runCommand,
   getStdoutFromCommand,
   getLinesFromCommand,
-  placeInSpecificOrder,
 } from './misc-utils';
 
 jest.mock('which');
