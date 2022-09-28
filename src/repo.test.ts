@@ -107,7 +107,7 @@ describe('repo', () => {
   describe('getTagNames', () => {
     it('returns all of the tag names that match a known format, sorted from earliest created to latest created', async () => {
       when(jest.spyOn(miscUtils, 'getLinesFromCommand'))
-        .calledWith('git', ['tag', '--merged', '--sort', 'version:refname'], {
+        .calledWith('git', ['tag', '--sort=version:refname', '--merged'], {
           cwd: '/path/to/repo',
         })
         .mockResolvedValue(['tag1', 'tag2', 'tag3']);
@@ -121,7 +121,7 @@ describe('repo', () => {
 
     it('returns an empty array if the repo has no tags as long as it was not cloned shallowly', async () => {
       when(jest.spyOn(miscUtils, 'getLinesFromCommand'))
-        .calledWith('git', ['tag', '--merged', '--sort', 'version:refname'], {
+        .calledWith('git', ['tag', '--sort=version:refname', '--merged'], {
           cwd: '/path/to/repo',
         })
         .mockResolvedValue([]);
@@ -136,7 +136,7 @@ describe('repo', () => {
 
     it('throws if the repo has no tags but it was cloned shallowly', async () => {
       when(jest.spyOn(miscUtils, 'getLinesFromCommand'))
-        .calledWith('git', ['tag', '--merged', '--sort', 'version:refname'], {
+        .calledWith('git', ['tag', '--sort=version:refname', '--merged'], {
           cwd: '/path/to/repo',
         })
         .mockResolvedValue([]);
@@ -153,7 +153,7 @@ describe('repo', () => {
 
     it('throws if "git rev-parse --is-shallow-repository" returns neither "true" nor "false"', async () => {
       when(jest.spyOn(miscUtils, 'getLinesFromCommand'))
-        .calledWith('git', ['tag', '--merged', '--sort', 'version:refname'], {
+        .calledWith('git', ['tag', '--sort=version:refname', '--merged'], {
           cwd: '/path/to/repo',
         })
         .mockResolvedValue([]);

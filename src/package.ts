@@ -37,23 +37,6 @@ export interface Package {
 }
 
 /**
- * Creates a sentence by connecting the given clauses with the given connector.
- *
- * @param connector - The connector, such as "and" or "or".
- * @param clauses - The clauses.
- * @returns The full sentence.
- */
-function connectClausesWith(connector: string, clauses: string[]) {
-  if (clauses.length < 3) {
-    return clauses.join(` ${connector} `);
-  }
-
-  return [clauses.slice(0, -1).join(`, `), clauses[clauses.length - 1]].join(
-    `, ${connector}`,
-  );
-}
-
-/**
  * Generates possible Git tag names for the root package of a monorepo. The only
  * tag name in use at this time is "v" + the package version.
  *
@@ -120,10 +103,7 @@ export async function readMonorepoRootPackage({
         'The package %s has no Git tag for its current version %s (expected %s), so this tool is unable to determine whether it should be included in this release. You will need to create a tag for this package in order to proceed.',
         validatedManifest.name,
         validatedManifest.version,
-        connectClausesWith(
-          'or',
-          expectedReleaseTagNames.map((tagName) => `"${tagName}"`),
-        ),
+        expectedReleaseTagNames.map((tagName) => `"${tagName}"`).join(', '),
       ),
     );
   }
@@ -200,18 +180,14 @@ export async function readMonorepoWorkspacePackage({
         'The workspace package %s has no Git tag for its current version %s (expected %s), and the root package %s has no Git tag for its current version %s (expected %s), so this tool is unable to determine whether the workspace package should be included in this release. You will need to create tags for both of these packages in order to proceed.',
         validatedManifest.name,
         validatedManifest.version,
-        connectClausesWith(
-          'or',
-          expectedWorkspacePackageReleaseTagNames.map(
-            (tagName) => `"${tagName}"`,
-          ),
-        ),
+        expectedWorkspacePackageReleaseTagNames
+          .map((tagName) => `"${tagName}"`)
+          .join(', '),
         rootPackageName,
         rootPackageVersion,
-        connectClausesWith(
-          'or',
-          expectedRootPackageReleaseTagNames.map((tagName) => `"${tagName}"`),
-        ),
+        expectedRootPackageReleaseTagNames
+          .map((tagName) => `"${tagName}"`)
+          .join(', '),
       ),
     );
   }

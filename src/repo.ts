@@ -211,11 +211,10 @@ export async function getTagNames(
     repositoryDirectoryPath,
     'tag',
     [
+      '--sort=version:refname',
       // The --merged flag ensures that we only get tags that are parents of or
       // equal to the current HEAD.
       '--merged',
-      '--sort',
-      'version:refname',
     ],
   );
 
