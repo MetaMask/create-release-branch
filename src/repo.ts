@@ -194,8 +194,8 @@ export async function captureChangesInReleaseBranch(
 }
 
 /**
- * Retrieves the names of the tags in the given repo, sorted by earliest created
- * to latest created. As this fetches tags from the remote first, you are
+ * Retrieves the names of the tags in the given repo, sorted by ascending
+ * semantic version order. As this fetches tags from the remote first, you are
  * advised to only run this once.
  *
  * @param repositoryDirectoryPath - The path to the repository directory.

@@ -105,7 +105,7 @@ describe('repo', () => {
   });
 
   describe('getTagNames', () => {
-    it('returns all of the tag names that match a known format, sorted from earliest created to latest created', async () => {
+    it('returns all of the tag names that match a known format, sorted by ascending semantic version order', async () => {
       when(jest.spyOn(miscUtils, 'getLinesFromCommand'))
         .calledWith('git', ['tag', '--sort=version:refname', '--merged'], {
           cwd: '/path/to/repo',
