@@ -69,10 +69,8 @@ function examineReleaseVersion(packageVersion: SemVer): ReleaseVersion {
 }
 
 /**
- * Collects information about a project. For a polyrepo package, this
- * information will only cover the project's `package.json` file; for a
- * monorepo, it will cover `package.json` files for any workspaces that the
- * monorepo defines.
+ * Collects information about a monorepo — its root package as well as any
+ * packages within workspaces specified via the root `package.json`.
  *
  * @param projectDirectoryPath - The path to the project.
  * @returns An object that represents information about the project.
