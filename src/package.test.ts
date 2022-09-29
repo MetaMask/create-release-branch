@@ -354,35 +354,6 @@ describe('package', () => {
       });
     });
 
-    it("prints a warning if a tag matching 'v' + the root package version exists instead of the package name + version", async () => {
-      const stderr = new MockWritable();
-      jest
-        .spyOn(packageManifestModule, 'readPackageManifest')
-        .mockResolvedValue({
-          unvalidated: {},
-          validated: buildMockManifest({
-            name: 'workspace-package',
-            version: new SemVer('1.0.0'),
-          }),
-        });
-      when(jest.spyOn(repoModule, 'hasChangesInDirectorySinceGitTag'))
-        .calledWith('/path/to/project', '/path/to/package', 'v5.0.0')
-        .mockResolvedValue(false);
-
-      await readMonorepoWorkspacePackage({
-        packageDirectoryPath: '/path/to/package',
-        projectDirectoryPath: '/path/to/project',
-        projectTagNames: ['v5.0.0'],
-        rootPackageName: 'root-package',
-        rootPackageVersion: new SemVer('5.0.0'),
-        stderr,
-      });
-
-      expect(stderr.data()).toStrictEqual(
-        'WARNING: It appears that the package workspace-package is missing a Git tag for its current release 1.0.0 (expected: "1.0.0"). This tool can make do with the tag that exists for root package ("v5.0.0"), but you should create this tag as soon as possible.',
-      );
-    });
-
     it("flags the package as having been changed since its latest release if a tag matching neither the package name + version nor 'v' + the root package version exists", async () => {
       jest
         .spyOn(packageManifestModule, 'readPackageManifest')
