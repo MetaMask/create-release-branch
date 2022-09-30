@@ -6,8 +6,9 @@ import {
   isErrorWithStack,
   wrapError,
   resolveExecutable,
-  getStdoutFromCommand,
   runCommand,
+  getStdoutFromCommand,
+  getLinesFromCommand,
 } from './misc-utils';
 
 jest.mock('which');
@@ -135,6 +136,24 @@ describe('misc-utils', () => {
     });
   });
 
+  describe('runCommand', () => {
+    it('runs the command, discarding its output', async () => {
+      const execaSpy = jest
+        .spyOn(execaModule, 'default')
+        // Typecast: It's difficult to provide a full return value for execa
+        .mockResolvedValue({ stdout: '   some output  ' } as any);
+
+      const result = await runCommand('some command', ['arg1', 'arg2'], {
+        all: true,
+      });
+
+      expect(execaSpy).toHaveBeenCalledWith('some command', ['arg1', 'arg2'], {
+        all: true,
+      });
+      expect(result).toBeUndefined();
+    });
+  });
+
   describe('getStdoutFromCommand', () => {
     it('executes the given command and returns a version of the standard out from the command with whitespace trimmed', async () => {
       const execaSpy = jest
@@ -155,21 +174,43 @@ describe('misc-utils', () => {
     });
   });
 
-  describe('runCommand', () => {
-    it('runs the command, discarding its output', async () => {
+  describe('getLinesFromCommand', () => {
+    it('executes the given command and returns the standard out from the command split into lines', async () => {
       const execaSpy = jest
         .spyOn(execaModule, 'default')
         // Typecast: It's difficult to provide a full return value for execa
-        .mockResolvedValue({ stdout: '   some output  ' } as any);
+        .mockResolvedValue({ stdout: 'line 1\nline 2\nline 3' } as any);
 
-      const result = await runCommand('some command', ['arg1', 'arg2'], {
-        all: true,
-      });
+      const lines = await getLinesFromCommand(
+        'some command',
+        ['arg1', 'arg2'],
+        { all: true },
+      );
 
       expect(execaSpy).toHaveBeenCalledWith('some command', ['arg1', 'arg2'], {
         all: true,
       });
-      expect(result).toBeUndefined();
+      expect(lines).toStrictEqual(['line 1', 'line 2', 'line 3']);
+    });
+
+    it('does not strip leading and trailing whitespace from the output, but does remove empty lines', async () => {
+      const execaSpy = jest
+        .spyOn(execaModule, 'default')
+        // Typecast: It's difficult to provide a full return value for execa
+        .mockResolvedValue({
+          stdout: '  line 1\nline 2\n\n   line 3   \n',
+        } as any);
+
+      const lines = await getLinesFromCommand(
+        'some command',
+        ['arg1', 'arg2'],
+        { all: true },
+      );
+
+      expect(execaSpy).toHaveBeenCalledWith('some command', ['arg1', 'arg2'], {
+        all: true,
+      });
+      expect(lines).toStrictEqual(['  line 1', 'line 2', '   line 3   ']);
     });
   });
 });

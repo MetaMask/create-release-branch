@@ -119,6 +119,23 @@ export async function resolveExecutable(
 }
 
 /**
+ * Runs a command, discarding its output.
+ *
+ * @param command - The command to execute.
+ * @param args - The positional arguments to the command.
+ * @param options - The options to `execa`.
+ * @throws An `execa` error object if the command fails in some way.
+ * @see `execa`.
+ */
+export async function runCommand(
+  command: string,
+  args?: readonly string[] | undefined,
+  options?: execa.Options<string> | undefined,
+): Promise<void> {
+  await execa(command, args, options);
+}
+
+/**
  * Runs a command, retrieving the standard output with leading and trailing
  * whitespace removed.
  *
@@ -138,18 +155,20 @@ export async function getStdoutFromCommand(
 }
 
 /**
- * Runs a command, discarding its output.
+ * Runs a Git command, splitting up the immediate output into lines.
  *
  * @param command - The command to execute.
  * @param args - The positional arguments to the command.
  * @param options - The options to `execa`.
+ * @returns The standard output of the command.
  * @throws An `execa` error object if the command fails in some way.
  * @see `execa`.
  */
-export async function runCommand(
+export async function getLinesFromCommand(
   command: string,
   args?: readonly string[] | undefined,
   options?: execa.Options<string> | undefined,
-): Promise<void> {
-  await execa(command, args, options);
+): Promise<string[]> {
+  const { stdout } = await execa(command, args, options);
+  return stdout.split('\n').filter((value) => value !== '');
 }

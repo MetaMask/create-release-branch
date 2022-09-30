@@ -22,12 +22,19 @@ jest.mock('./misc-utils', () => {
 
 describe('release-specification', () => {
   describe('generateReleaseSpecificationTemplateForMonorepo', () => {
-    it('returns a YAML-encoded string which has a list of all workspace packages in the project', async () => {
+    it('returns a YAML-encoded string which has a list of all workspace packages in the project which have been changed since their latest releases', async () => {
       const project = buildMockProject({
         rootPackage: buildMockPackage('monorepo'),
         workspacePackages: {
-          a: buildMockPackage('a'),
-          b: buildMockPackage('b'),
+          a: buildMockPackage('a', {
+            hasChangesSinceLatestRelease: true,
+          }),
+          b: buildMockPackage('b', {
+            hasChangesSinceLatestRelease: false,
+          }),
+          c: buildMockPackage('c', {
+            hasChangesSinceLatestRelease: true,
+          }),
         },
       });
 
@@ -53,8 +60,31 @@ describe('release-specification', () => {
 
 packages:
   a: null
-  b: null
+  c: null
 `.slice(1),
+      );
+    });
+
+    it('throws if no packages have been changed', async () => {
+      const project = buildMockProject({
+        rootPackage: buildMockPackage('monorepo'),
+        workspacePackages: {
+          a: buildMockPackage('a', {
+            hasChangesSinceLatestRelease: false,
+          }),
+          b: buildMockPackage('b', {
+            hasChangesSinceLatestRelease: false,
+          }),
+        },
+      });
+
+      await expect(
+        generateReleaseSpecificationTemplateForMonorepo({
+          project,
+          isEditorAvailable: false,
+        }),
+      ).rejects.toThrow(
+        'Could not generate release specification: There are no packages that have changed since their latest release.',
       );
     });
 
@@ -62,8 +92,12 @@ packages:
       const project = buildMockProject({
         rootPackage: buildMockPackage('monorepo'),
         workspacePackages: {
-          a: buildMockPackage('a'),
-          b: buildMockPackage('b'),
+          a: buildMockPackage('a', {
+            hasChangesSinceLatestRelease: true,
+          }),
+          b: buildMockPackage('b', {
+            hasChangesSinceLatestRelease: true,
+          }),
         },
       });
 

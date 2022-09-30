@@ -1,8 +1,13 @@
 import util from 'util';
 import glob from 'glob';
-import { Package, readPackage } from './package';
+import { WriteStreamLike } from './fs';
+import {
+  Package,
+  readMonorepoRootPackage,
+  readMonorepoWorkspacePackage,
+} from './package';
 import { PackageManifestFieldNames } from './package-manifest';
-import { getRepositoryHttpsUrl } from './repo';
+import { getRepositoryHttpsUrl, getTagNames } from './repo';
 import { SemVer } from './semver';
 
 /**
@@ -65,11 +70,12 @@ function examineReleaseVersion(packageVersion: SemVer): ReleaseVersion {
 }
 
 /**
- * Collects information about a project. For a polyrepo, this information will
- * only cover the project's `package.json` file; for a monorepo, it will cover
- * `package.json` files for any workspaces that the monorepo defines.
+ * Collects information about a monorepo — its root package as well as any
+ * packages within workspaces specified via the root `package.json`.
  *
  * @param projectDirectoryPath - The path to the project.
+ * @param args - Additional arguments.
+ * @param args.stderr - A stream that can be used to write to standard error.
  * @returns An object that represents information about the project.
  * @throws if the project does not contain a root `package.json` (polyrepo and
  * monorepo) or if any of the workspaces specified in the root `package.json` do
@@ -77,9 +83,15 @@ function examineReleaseVersion(packageVersion: SemVer): ReleaseVersion {
  */
 export async function readProject(
   projectDirectoryPath: string,
+  { stderr }: { stderr: WriteStreamLike },
 ): Promise<Project> {
   const repositoryUrl = await getRepositoryHttpsUrl(projectDirectoryPath);
-  const rootPackage = await readPackage(projectDirectoryPath);
+  const tagNames = await getTagNames(projectDirectoryPath);
+  const rootPackage = await readMonorepoRootPackage({
+    packageDirectoryPath: projectDirectoryPath,
+    projectDirectoryPath,
+    projectTagNames: tagNames,
+  });
   const releaseVersion = examineReleaseVersion(
     rootPackage.validatedManifest.version,
   );
@@ -100,7 +112,14 @@ export async function readProject(
   const workspacePackages = (
     await Promise.all(
       workspaceDirectories.map(async (directory) => {
-        return await readPackage(directory);
+        return await readMonorepoWorkspacePackage({
+          packageDirectoryPath: directory,
+          rootPackageName: rootPackage.validatedManifest.name,
+          rootPackageVersion: rootPackage.validatedManifest.version,
+          projectDirectoryPath,
+          projectTagNames: tagNames,
+          stderr,
+        });
       }),
     )
   ).reduce((obj, pkg) => {

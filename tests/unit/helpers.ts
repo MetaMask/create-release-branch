@@ -1,3 +1,4 @@
+import fs from 'fs';
 import path from 'path';
 import { SemVer } from 'semver';
 import { isPlainObject } from '@metamask/utils';
@@ -21,7 +22,13 @@ type Unrequire<T, K extends keyof T> = Omit<T, K> & {
 };
 
 type MockPackageOverrides = Omit<
-  Unrequire<Package, 'directoryPath' | 'manifestPath' | 'changelogPath'>,
+  Unrequire<
+    Package,
+    | 'directoryPath'
+    | 'manifestPath'
+    | 'changelogPath'
+    | 'hasChangesSinceLatestRelease'
+  >,
   'unvalidatedManifest' | 'validatedManifest'
 > & {
   validatedManifest?: Omit<
@@ -98,6 +105,7 @@ export function buildMockPackage(
     directoryPath = `/path/to/packages/${name}`,
     manifestPath = path.join(directoryPath, 'package.json'),
     changelogPath = path.join(directoryPath, 'CHANGELOG.md'),
+    hasChangesSinceLatestRelease = false,
   } = overrides;
 
   return {
@@ -111,6 +119,7 @@ export function buildMockPackage(
     }),
     manifestPath,
     changelogPath,
+    hasChangesSinceLatestRelease,
   };
 }
 
@@ -131,4 +140,14 @@ export function buildMockManifest(
     [PackageManifestFieldNames.Workspaces]: [],
     ...overrides,
   };
+}
+
+/**
+ * Creates a write stream that discards all messages sent to it. This is useful
+ * as a default value for functions that need to take a `stdout` or `stderr`.
+ *
+ * @returns The write stream.
+ */
+export function createNoopWriteStream(): fs.WriteStream {
+  return fs.createWriteStream('/dev/null');
 }

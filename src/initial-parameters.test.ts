@@ -1,7 +1,11 @@
 import os from 'os';
 import path from 'path';
 import { when } from 'jest-when';
-import { buildMockProject, buildMockPackage } from '../tests/unit/helpers';
+import {
+  buildMockProject,
+  buildMockPackage,
+  createNoopWriteStream,
+} from '../tests/unit/helpers';
 import { determineInitialParameters } from './initial-parameters';
 import * as commandLineArgumentsModule from './command-line-arguments';
 import * as envModule from './env';
@@ -23,6 +27,7 @@ describe('initial-parameters', () => {
 
     it('returns an object derived from command-line arguments and environment variables that contains data necessary to run the workflow', async () => {
       const project = buildMockProject();
+      const stderr = createNoopWriteStream();
       when(jest.spyOn(commandLineArgumentsModule, 'readCommandLineArguments'))
         .calledWith(['arg1', 'arg2'])
         .mockResolvedValue({
@@ -34,13 +39,14 @@ describe('initial-parameters', () => {
         .spyOn(envModule, 'getEnvironmentVariables')
         .mockReturnValue({ EDITOR: undefined });
       when(jest.spyOn(projectModule, 'readProject'))
-        .calledWith('/path/to/project')
+        .calledWith('/path/to/project', { stderr })
         .mockResolvedValue(project);
 
-      const config = await determineInitialParameters(
-        ['arg1', 'arg2'],
-        '/path/to/somewhere',
-      );
+      const config = await determineInitialParameters({
+        argv: ['arg1', 'arg2'],
+        cwd: '/path/to/somewhere',
+        stderr,
+      });
 
       expect(config).toStrictEqual({
         project,
@@ -53,6 +59,7 @@ describe('initial-parameters', () => {
       const project = buildMockProject({
         rootPackage: buildMockPackage(),
       });
+      const stderr = createNoopWriteStream();
       when(jest.spyOn(commandLineArgumentsModule, 'readCommandLineArguments'))
         .calledWith(['arg1', 'arg2'])
         .mockResolvedValue({
@@ -67,13 +74,20 @@ describe('initial-parameters', () => {
         .spyOn(projectModule, 'readProject')
         .mockResolvedValue(project);
 
-      await determineInitialParameters(['arg1', 'arg2'], '/path/to/cwd');
+      await determineInitialParameters({
+        argv: ['arg1', 'arg2'],
+        cwd: '/path/to/cwd',
+        stderr,
+      });
 
-      expect(readProjectSpy).toHaveBeenCalledWith('/path/to/cwd/project');
+      expect(readProjectSpy).toHaveBeenCalledWith('/path/to/cwd/project', {
+        stderr,
+      });
     });
 
     it('resolves the given temporary directory relative to the current working directory', async () => {
       const project = buildMockProject();
+      const stderr = createNoopWriteStream();
       when(jest.spyOn(commandLineArgumentsModule, 'readCommandLineArguments'))
         .calledWith(['arg1', 'arg2'])
         .mockResolvedValue({
@@ -85,13 +99,14 @@ describe('initial-parameters', () => {
         .spyOn(envModule, 'getEnvironmentVariables')
         .mockReturnValue({ EDITOR: undefined });
       when(jest.spyOn(projectModule, 'readProject'))
-        .calledWith('/path/to/project')
+        .calledWith('/path/to/project', { stderr })
         .mockResolvedValue(project);
 
-      const config = await determineInitialParameters(
-        ['arg1', 'arg2'],
-        '/path/to/cwd',
-      );
+      const config = await determineInitialParameters({
+        argv: ['arg1', 'arg2'],
+        cwd: '/path/to/cwd',
+        stderr,
+      });
 
       expect(config.tempDirectoryPath).toStrictEqual('/path/to/cwd/tmp');
     });
@@ -100,6 +115,7 @@ describe('initial-parameters', () => {
       const project = buildMockProject({
         rootPackage: buildMockPackage('@foo/bar'),
       });
+      const stderr = createNoopWriteStream();
       when(jest.spyOn(commandLineArgumentsModule, 'readCommandLineArguments'))
         .calledWith(['arg1', 'arg2'])
         .mockResolvedValue({
@@ -111,13 +127,14 @@ describe('initial-parameters', () => {
         .spyOn(envModule, 'getEnvironmentVariables')
         .mockReturnValue({ EDITOR: undefined });
       when(jest.spyOn(projectModule, 'readProject'))
-        .calledWith('/path/to/project')
+        .calledWith('/path/to/project', { stderr })
         .mockResolvedValue(project);
 
-      const config = await determineInitialParameters(
-        ['arg1', 'arg2'],
-        '/path/to/cwd',
-      );
+      const config = await determineInitialParameters({
+        argv: ['arg1', 'arg2'],
+        cwd: '/path/to/cwd',
+        stderr,
+      });
 
       expect(config.tempDirectoryPath).toStrictEqual(
         path.join(os.tmpdir(), 'create-release-branch', '@foo__bar'),
@@ -126,6 +143,7 @@ describe('initial-parameters', () => {
 
     it('returns initial parameters including reset: true, derived from a command-line argument of "--reset true"', async () => {
       const project = buildMockProject();
+      const stderr = createNoopWriteStream();
       when(jest.spyOn(commandLineArgumentsModule, 'readCommandLineArguments'))
         .calledWith(['arg1', 'arg2'])
         .mockResolvedValue({
@@ -137,19 +155,21 @@ describe('initial-parameters', () => {
         .spyOn(envModule, 'getEnvironmentVariables')
         .mockReturnValue({ EDITOR: undefined });
       when(jest.spyOn(projectModule, 'readProject'))
-        .calledWith('/path/to/project')
+        .calledWith('/path/to/project', { stderr })
         .mockResolvedValue(project);
 
-      const config = await determineInitialParameters(
-        ['arg1', 'arg2'],
-        '/path/to/somewhere',
-      );
+      const config = await determineInitialParameters({
+        argv: ['arg1', 'arg2'],
+        cwd: '/path/to/somewhere',
+        stderr,
+      });
 
       expect(config.reset).toBe(true);
     });
 
     it('returns initial parameters including reset: false, derived from a command-line argument of "--reset false"', async () => {
       const project = buildMockProject();
+      const stderr = createNoopWriteStream();
       when(jest.spyOn(commandLineArgumentsModule, 'readCommandLineArguments'))
         .calledWith(['arg1', 'arg2'])
         .mockResolvedValue({
@@ -161,13 +181,14 @@ describe('initial-parameters', () => {
         .spyOn(envModule, 'getEnvironmentVariables')
         .mockReturnValue({ EDITOR: undefined });
       when(jest.spyOn(projectModule, 'readProject'))
-        .calledWith('/path/to/project')
+        .calledWith('/path/to/project', { stderr })
         .mockResolvedValue(project);
 
-      const config = await determineInitialParameters(
-        ['arg1', 'arg2'],
-        '/path/to/somewhere',
-      );
+      const config = await determineInitialParameters({
+        argv: ['arg1', 'arg2'],
+        cwd: '/path/to/somewhere',
+        stderr,
+      });
 
       expect(config.reset).toBe(false);
     });
