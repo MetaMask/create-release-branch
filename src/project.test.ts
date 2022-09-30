@@ -3,7 +3,7 @@ import path from 'path';
 import { when } from 'jest-when';
 import { SemVer } from 'semver';
 import { withSandbox } from '../tests/helpers';
-import { buildMockPackage } from '../tests/unit/helpers';
+import { buildMockPackage, createNoopWriteStream } from '../tests/unit/helpers';
 import { readProject } from './project';
 import * as packageModule from './package';
 import * as repoModule from './repo';
@@ -43,6 +43,7 @@ describe('project', () => {
           }),
         };
         const projectTagNames = ['tag1', 'tag2', 'tag3'];
+        const stderr = createNoopWriteStream();
         when(jest.spyOn(repoModule, 'getRepositoryHttpsUrl'))
           .calledWith(projectDirectoryPath)
           .mockResolvedValue(projectRepositoryUrl);
@@ -67,6 +68,7 @@ describe('project', () => {
             rootPackageVersion,
             projectDirectoryPath,
             projectTagNames,
+            stderr,
           })
           .mockResolvedValue(workspacePackages.a)
           .calledWith({
@@ -80,6 +82,7 @@ describe('project', () => {
             rootPackageVersion,
             projectDirectoryPath,
             projectTagNames,
+            stderr,
           })
           .mockResolvedValue(workspacePackages.b);
         await fs.promises.mkdir(path.join(projectDirectoryPath, 'packages'));
@@ -93,7 +96,9 @@ describe('project', () => {
           path.join(projectDirectoryPath, 'packages', 'subpackages', 'b'),
         );
 
-        expect(await readProject(projectDirectoryPath)).toStrictEqual({
+        expect(
+          await readProject(projectDirectoryPath, { stderr }),
+        ).toStrictEqual({
           directoryPath: projectDirectoryPath,
           repositoryUrl: projectRepositoryUrl,
           rootPackage,

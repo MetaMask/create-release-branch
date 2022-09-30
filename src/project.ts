@@ -1,5 +1,6 @@
 import util from 'util';
 import glob from 'glob';
+import { WriteStreamLike } from './fs';
 import {
   Package,
   readMonorepoRootPackage,
@@ -73,6 +74,8 @@ function examineReleaseVersion(packageVersion: SemVer): ReleaseVersion {
  * packages within workspaces specified via the root `package.json`.
  *
  * @param projectDirectoryPath - The path to the project.
+ * @param args - Additional arguments.
+ * @param args.stderr - A stream that can be used to write to standard error.
  * @returns An object that represents information about the project.
  * @throws if the project does not contain a root `package.json` (polyrepo and
  * monorepo) or if any of the workspaces specified in the root `package.json` do
@@ -80,6 +83,7 @@ function examineReleaseVersion(packageVersion: SemVer): ReleaseVersion {
  */
 export async function readProject(
   projectDirectoryPath: string,
+  { stderr }: { stderr: WriteStreamLike },
 ): Promise<Project> {
   const repositoryUrl = await getRepositoryHttpsUrl(projectDirectoryPath);
   const tagNames = await getTagNames(projectDirectoryPath);
@@ -114,6 +118,7 @@ export async function readProject(
           rootPackageVersion: rootPackage.validatedManifest.version,
           projectDirectoryPath,
           projectTagNames: tagNames,
+          stderr,
         });
       }),
     )

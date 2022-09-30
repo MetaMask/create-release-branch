@@ -26,7 +26,7 @@ export async function main({
   stderr: Pick<WriteStream, 'write'>;
 }) {
   const { project, tempDirectoryPath, reset } =
-    await determineInitialParameters(argv, cwd);
+    await determineInitialParameters({ argv, cwd, stderr });
 
   if (project.isMonorepo) {
     stdout.write(

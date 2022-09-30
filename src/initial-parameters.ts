@@ -1,6 +1,7 @@
 import os from 'os';
 import path from 'path';
 import { readCommandLineArguments } from './command-line-arguments';
+import { WriteStreamLike } from './fs';
 import { readProject, Project } from './project';
 
 interface InitialParameters {
@@ -13,18 +14,25 @@ interface InitialParameters {
  * Reads the inputs given to this tool via `process.argv` and uses them to
  * gather information about the project the tool can use to run.
  *
- * @param argv - The arguments to this executable.
- * @param cwd - The directory in which this executable was run.
+ * @param args - The arguments to this function.
+ * @param args.argv - The arguments to this executable.
+ * @param args.cwd - The directory in which this executable was run.
+ * @param args.stderr - A stream that can be used to write to standard error.
  * @returns The initial parameters.
  */
-export async function determineInitialParameters(
-  argv: string[],
-  cwd: string,
-): Promise<InitialParameters> {
+export async function determineInitialParameters({
+  argv,
+  cwd,
+  stderr,
+}: {
+  argv: string[];
+  cwd: string;
+  stderr: WriteStreamLike;
+}): Promise<InitialParameters> {
   const inputs = await readCommandLineArguments(argv);
 
   const projectDirectoryPath = path.resolve(cwd, inputs.projectDirectory);
-  const project = await readProject(projectDirectoryPath);
+  const project = await readProject(projectDirectoryPath, { stderr });
   const tempDirectoryPath =
     inputs.tempDirectory === undefined
       ? path.join(
