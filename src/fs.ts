@@ -6,6 +6,12 @@ import {
 import { wrapError, isErrorWithCode } from './misc-utils';
 
 /**
+ * Represents a writeable stream, such as that represented by `process.stdout`
+ * or `process.stderr`, or a fake one provided in tests.
+ */
+export type WriteStreamLike = Pick<fs.WriteStream, 'write'>;
+
+/**
  * Reads the file at the given path, assuming its content is encoded as UTF-8.
  *
  * @param filePath - The path to the file.

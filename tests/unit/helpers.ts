@@ -1,3 +1,4 @@
+import fs from 'fs';
 import path from 'path';
 import { SemVer } from 'semver';
 import { isPlainObject } from '@metamask/utils';
@@ -139,4 +140,14 @@ export function buildMockManifest(
     [PackageManifestFieldNames.Workspaces]: [],
     ...overrides,
   };
+}
+
+/**
+ * Creates a write stream that discards all messages sent to it. This is useful
+ * as a default value for functions that need to take a `stdout` or `stderr`.
+ *
+ * @returns The write stream.
+ */
+export function createNoopWriteStream(): fs.WriteStream {
+  return fs.createWriteStream('/dev/null');
 }

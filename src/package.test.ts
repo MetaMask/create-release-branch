@@ -3,11 +3,13 @@ import path from 'path';
 import { when } from 'jest-when';
 import * as autoChangelog from '@metamask/auto-changelog';
 import { SemVer } from 'semver';
+import { MockWritable } from 'stdio-mock';
 import { withSandbox } from '../tests/helpers';
 import {
   buildMockPackage,
   buildMockProject,
   buildMockManifest,
+  createNoopWriteStream,
 } from '../tests/unit/helpers';
 import {
   readMonorepoRootPackage,
@@ -65,33 +67,6 @@ describe('package', () => {
         unvalidatedManifest,
         validatedManifest,
       });
-    });
-
-    it('throws if a tag matching the current version does not exist', async () => {
-      jest
-        .spyOn(packageManifestModule, 'readPackageManifest')
-        .mockResolvedValue({
-          unvalidated: {},
-          validated: buildMockManifest({
-            name: 'some-package',
-            version: new SemVer('1.0.0'),
-          }),
-        });
-      when(jest.spyOn(repoModule, 'hasChangesInDirectorySinceGitTag'))
-        .calledWith('/path/to/project', '/path/to/package', 'v1.0.0')
-        .mockResolvedValue(true);
-
-      const promiseForPkg = readMonorepoRootPackage({
-        packageDirectoryPath: '/path/to/package',
-        projectDirectoryPath: '/path/to/project',
-        projectTagNames: ['some-tag'],
-      });
-
-      await expect(promiseForPkg).rejects.toThrow(
-        new Error(
-          'The package some-package has no Git tag for its current version 1.0.0 (expected "v1.0.0"), so this tool is unable to determine whether it should be included in this release. You will need to create a tag for this package in order to proceed.',
-        ),
-      );
     });
 
     it("flags the package as having been changed since its latest release if a tag matching the current version exists and changes have been made to the package's directory since the tag", async () => {
@@ -162,10 +137,38 @@ describe('package', () => {
         hasChangesSinceLatestRelease: true,
       });
     });
+
+    it('throws if a tag matching the current version does not exist', async () => {
+      jest
+        .spyOn(packageManifestModule, 'readPackageManifest')
+        .mockResolvedValue({
+          unvalidated: {},
+          validated: buildMockManifest({
+            name: '@scope/workspace-package',
+            version: new SemVer('1.0.0'),
+          }),
+        });
+      when(jest.spyOn(repoModule, 'hasChangesInDirectorySinceGitTag'))
+        .calledWith('/path/to/project', '/path/to/package', 'v1.0.0')
+        .mockResolvedValue(true);
+
+      const promiseForPkg = readMonorepoRootPackage({
+        packageDirectoryPath: '/path/to/package',
+        projectDirectoryPath: '/path/to/project',
+        projectTagNames: ['some-tag'],
+      });
+
+      await expect(promiseForPkg).rejects.toThrow(
+        new Error(
+          'The package @scope/workspace-package has no Git tag for its current version 1.0.0 (expected "v1.0.0"), so this tool is unable to determine whether it should be included in this release. You will need to create a tag for this package in order to proceed.',
+        ),
+      );
+    });
   });
 
   describe('readMonorepoWorkspacePackage', () => {
     it('returns information about the file structure of the package located at the given directory', async () => {
+      const stderr = createNoopWriteStream();
       jest
         .spyOn(packageManifestModule, 'readPackageManifest')
         .mockResolvedValue({
@@ -179,6 +182,7 @@ describe('package', () => {
         projectTagNames: [],
         rootPackageName: 'root-package',
         rootPackageVersion: new SemVer('5.0.0'),
+        stderr,
       });
 
       expect(pkg).toMatchObject({
@@ -191,6 +195,7 @@ describe('package', () => {
     it('returns information about the manifest (in both unvalidated and validated forms)', async () => {
       const unvalidatedManifest = {};
       const validatedManifest = buildMockManifest();
+      const stderr = createNoopWriteStream();
       when(jest.spyOn(packageManifestModule, 'readPackageManifest'))
         .calledWith('/path/to/package/package.json')
         .mockResolvedValue({
@@ -204,6 +209,7 @@ describe('package', () => {
         projectTagNames: [],
         rootPackageName: 'root-package',
         rootPackageVersion: new SemVer('5.0.0'),
+        stderr,
       });
 
       expect(pkg).toMatchObject({
@@ -212,41 +218,14 @@ describe('package', () => {
       });
     });
 
-    it('throws if a tag matching the current version does not exist', async () => {
-      const unvalidatedManifest = {};
-      const validatedManifest = buildMockManifest({
-        name: 'workspace-package',
-        version: new SemVer('1.0.0'),
-      });
-      when(jest.spyOn(packageManifestModule, 'readPackageManifest'))
-        .calledWith('/path/to/package/package.json')
-        .mockResolvedValue({
-          unvalidated: unvalidatedManifest,
-          validated: validatedManifest,
-        });
-
-      const promiseForPkg = readMonorepoWorkspacePackage({
-        packageDirectoryPath: '/path/to/package',
-        projectDirectoryPath: '/path/to/project',
-        projectTagNames: ['some-tag'],
-        rootPackageName: 'root-package',
-        rootPackageVersion: new SemVer('5.0.0'),
-      });
-
-      await expect(promiseForPkg).rejects.toThrow(
-        new Error(
-          'The workspace package workspace-package has no Git tag for its current version 1.0.0 (expected "workspace-package@1.0.0"), and the root package root-package has no Git tag for its current version 5.0.0 (expected "v5.0.0"), so this tool is unable to determine whether the workspace package should be included in this release. You will need to create tags for both of these packages in order to proceed.',
-        ),
-      );
-    });
-
     it("flags the package as having been changed since its latest release if a tag matching the package name + version exists and changes have been made to the package's directory since the tag", async () => {
+      const stderr = createNoopWriteStream();
       jest
         .spyOn(packageManifestModule, 'readPackageManifest')
         .mockResolvedValue({
           unvalidated: {},
           validated: buildMockManifest({
-            name: '@scope/some-package',
+            name: '@scope/workspace-package',
             version: new SemVer('1.0.0'),
           }),
         });
@@ -254,16 +233,17 @@ describe('package', () => {
         .calledWith(
           '/path/to/project',
           '/path/to/package',
-          '@scope/some-package@1.0.0',
+          '@scope/workspace-package@1.0.0',
         )
         .mockResolvedValue(true);
 
       const pkg = await readMonorepoWorkspacePackage({
         packageDirectoryPath: '/path/to/package',
         projectDirectoryPath: '/path/to/project',
-        projectTagNames: ['@scope/some-package@1.0.0'],
+        projectTagNames: ['@scope/workspace-package@1.0.0'],
         rootPackageName: 'root-package',
         rootPackageVersion: new SemVer('5.0.0'),
+        stderr,
       });
 
       expect(pkg).toMatchObject({
@@ -272,12 +252,13 @@ describe('package', () => {
     });
 
     it("does not flag the package as having been changed since its latest release if a tag matching the package name + version exists, but changes have not been made to the package's directory since the tag", async () => {
+      const stderr = createNoopWriteStream();
       jest
         .spyOn(packageManifestModule, 'readPackageManifest')
         .mockResolvedValue({
           unvalidated: {},
           validated: buildMockManifest({
-            name: '@scope/some-package',
+            name: '@scope/workspace-package',
             version: new SemVer('1.0.0'),
           }),
         });
@@ -285,16 +266,17 @@ describe('package', () => {
         .calledWith(
           '/path/to/project',
           '/path/to/package',
-          '@scope/some-package@1.0.0',
+          '@scope/workspace-package@1.0.0',
         )
         .mockResolvedValue(false);
 
       const pkg = await readMonorepoWorkspacePackage({
         packageDirectoryPath: '/path/to/package',
         projectDirectoryPath: '/path/to/project',
-        projectTagNames: ['@scope/some-package@1.0.0'],
+        projectTagNames: ['@scope/workspace-package@1.0.0'],
         rootPackageName: 'root-package',
         rootPackageVersion: new SemVer('5.0.0'),
+        stderr,
       });
 
       expect(pkg).toMatchObject({
@@ -303,11 +285,13 @@ describe('package', () => {
     });
 
     it("flags the package as having been changed since its latest release if a tag matching 'v' + the root package version exists instead of the package name + version, and changes have been made to the package's directory since the tag", async () => {
+      const stderr = createNoopWriteStream();
       jest
         .spyOn(packageManifestModule, 'readPackageManifest')
         .mockResolvedValue({
           unvalidated: {},
           validated: buildMockManifest({
+            name: '@scope/workspace-package',
             version: new SemVer('1.0.0'),
           }),
         });
@@ -321,6 +305,7 @@ describe('package', () => {
         projectTagNames: ['v5.0.0'],
         rootPackageName: 'root-package',
         rootPackageVersion: new SemVer('5.0.0'),
+        stderr,
       });
 
       expect(pkg).toMatchObject({
@@ -329,6 +314,7 @@ describe('package', () => {
     });
 
     it("does not flag the package as having been changed since its latest release if a tag matching 'v' + the root package version exists instead of the package name + version, but changes have not been made to the package's directory since the tag", async () => {
+      const stderr = createNoopWriteStream();
       jest
         .spyOn(packageManifestModule, 'readPackageManifest')
         .mockResolvedValue({
@@ -347,6 +333,7 @@ describe('package', () => {
         projectTagNames: ['v5.0.0'],
         rootPackageName: 'root-package',
         rootPackageVersion: new SemVer('5.0.0'),
+        stderr,
       });
 
       expect(pkg).toMatchObject({
@@ -354,7 +341,8 @@ describe('package', () => {
       });
     });
 
-    it("flags the package as having been changed since its latest release if a tag matching neither the package name + version nor 'v' + the root package version exists", async () => {
+    it('flags the package as having been changed since its latest release if the project has no tags', async () => {
+      const stderr = createNoopWriteStream();
       jest
         .spyOn(packageManifestModule, 'readPackageManifest')
         .mockResolvedValue({
@@ -370,11 +358,66 @@ describe('package', () => {
         projectTagNames: [],
         rootPackageName: 'root-package',
         rootPackageVersion: new SemVer('5.0.0'),
+        stderr,
       });
 
       expect(pkg).toMatchObject({
         hasChangesSinceLatestRelease: true,
       });
+    });
+
+    it("prints a warning if a tag matching 'v' + the root package version exists instead of the package name + version", async () => {
+      const stderr = new MockWritable();
+      when(jest.spyOn(packageManifestModule, 'readPackageManifest'))
+        .calledWith('/path/to/package/package.json')
+        .mockResolvedValue({
+          unvalidated: {},
+          validated: buildMockManifest({
+            name: '@scope/workspace-package',
+            version: new SemVer('1.0.0'),
+          }),
+        });
+
+      await readMonorepoWorkspacePackage({
+        packageDirectoryPath: '/path/to/package',
+        projectDirectoryPath: '/path/to/project',
+        projectTagNames: ['v5.0.0'],
+        rootPackageName: 'root-package',
+        rootPackageVersion: new SemVer('5.0.0'),
+        stderr,
+      });
+
+      expect(stderr.data()).toStrictEqual([
+        'WARNING: Could not determine changes for workspace package @scope/workspace-package version 1.0.0 based on Git tag "@scope/workspace-package@1.0.0"; using tag for root package root-package version 5.0.0, "v5.0.0", instead.\n',
+      ]);
+    });
+
+    it("throws if the project has tags, but neither a tag matching the package name + version nor 'v' + the root package version exists", async () => {
+      const stderr = createNoopWriteStream();
+      when(jest.spyOn(packageManifestModule, 'readPackageManifest'))
+        .calledWith('/path/to/package/package.json')
+        .mockResolvedValue({
+          unvalidated: {},
+          validated: buildMockManifest({
+            name: '@scope/workspace-package',
+            version: new SemVer('1.0.0'),
+          }),
+        });
+
+      const promise = readMonorepoWorkspacePackage({
+        packageDirectoryPath: '/path/to/package',
+        projectDirectoryPath: '/path/to/project',
+        projectTagNames: ['some-tag'],
+        rootPackageName: 'root-package',
+        rootPackageVersion: new SemVer('5.0.0'),
+        stderr,
+      });
+
+      await expect(promise).rejects.toThrow(
+        new Error(
+          'The current release of workspace package @scope/workspace-package, 1.0.0, has no corresponding Git tag "@scope/workspace-package@1.0.0", and the current release of root package root-package, 5.0.0, has no tag "v5.0.0". Hence, this tool is unable to know whether the workspace package changed and should be included in this release. You will need to create tags for both of these packages in order to proceed.',
+        ),
+      );
     });
   });
 
