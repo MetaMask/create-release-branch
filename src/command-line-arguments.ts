@@ -5,6 +5,7 @@ export interface CommandLineArguments {
   projectDirectory: string;
   tempDirectory: string | undefined;
   reset: boolean;
+  backport: boolean;
 }
 
 /**
@@ -34,6 +35,12 @@ export async function readCommandLineArguments(
     .option('reset', {
       describe:
         'Removes any cached files from a previous run that may have been created.',
+      type: 'boolean',
+      default: false,
+    })
+    .option('backport', {
+      describe:
+        'Instructs the tool to bump the second part of the version rather than the first for a backport release.',
       type: 'boolean',
       default: false,
     })

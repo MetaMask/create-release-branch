@@ -7,6 +7,7 @@ import { buildMockProject, Require } from '../tests/unit/helpers';
 import { followMonorepoWorkflow } from './monorepo-workflow-operations';
 import * as editorModule from './editor';
 import type { Editor } from './editor';
+import { ReleaseType } from './initial-parameters';
 import * as releaseSpecificationModule from './release-specification';
 import type { ReleaseSpecification } from './release-specification';
 import * as releasePlanModule from './release-plan';
@@ -147,6 +148,7 @@ function buildMockEditor({
  * `executeReleasePlan` will throw.
  * @param args.releaseVersion - The new version that the release plan will
  * contain.
+ * @param args.releaseType - The type of release.
  * @returns Mock functions and other data that can be used in tests to make
  * assertions.
  */
@@ -159,6 +161,7 @@ async function setupFollowMonorepoWorkflow({
   errorUponPlanningRelease,
   errorUponExecutingReleasePlan,
   releaseVersion = '1.0.0',
+  releaseType = 'ordinary',
 }: {
   sandbox: Sandbox;
   doesReleaseSpecFileExist: boolean;
@@ -168,6 +171,7 @@ async function setupFollowMonorepoWorkflow({
   errorUponPlanningRelease?: Error;
   errorUponExecutingReleasePlan?: Error;
   releaseVersion?: string;
+  releaseType?: ReleaseType;
 }) {
   const {
     determineEditorSpy,
@@ -218,11 +222,11 @@ async function setupFollowMonorepoWorkflow({
 
   if (errorUponPlanningRelease) {
     when(planReleaseSpy)
-      .calledWith({ project, releaseSpecification })
+      .calledWith({ project, releaseSpecification, releaseType })
       .mockRejectedValue(errorUponPlanningRelease);
   } else {
     when(planReleaseSpy)
-      .calledWith({ project, releaseSpecification })
+      .calledWith({ project, releaseSpecification, releaseType })
       .mockResolvedValue(releasePlan);
   }
 
@@ -256,6 +260,8 @@ async function setupFollowMonorepoWorkflow({
     stderr,
     generateReleaseSpecificationTemplateForMonorepoSpy,
     waitForUserToEditReleaseSpecificationSpy,
+    releaseSpecification,
+    planReleaseSpy,
     executeReleasePlanSpy,
     captureChangesInReleaseBranchSpy,
     releasePlan,
@@ -267,6 +273,70 @@ async function setupFollowMonorepoWorkflow({
 describe('monorepo-workflow-operations', () => {
   describe('followMonorepoWorkflow', () => {
     describe('when firstRemovingExistingReleaseSpecification is false, the release spec file does not already exist, and an editor is available', () => {
+      it('plans an ordinary release if given releaseType: "ordinary"', async () => {
+        await withSandbox(async (sandbox) => {
+          const {
+            project,
+            stdout,
+            stderr,
+            releaseSpecification,
+            planReleaseSpy,
+          } = await setupFollowMonorepoWorkflow({
+            sandbox,
+            doesReleaseSpecFileExist: false,
+            isEditorAvailable: true,
+            releaseType: 'ordinary',
+          });
+
+          await followMonorepoWorkflow({
+            project,
+            tempDirectoryPath: sandbox.directoryPath,
+            firstRemovingExistingReleaseSpecification: false,
+            releaseType: 'ordinary',
+            stdout,
+            stderr,
+          });
+
+          expect(planReleaseSpy).toHaveBeenCalledWith({
+            project,
+            releaseSpecification,
+            releaseType: 'ordinary',
+          });
+        });
+      });
+
+      it('plans a backport release if given releaseType: "backport"', async () => {
+        await withSandbox(async (sandbox) => {
+          const {
+            project,
+            stdout,
+            stderr,
+            releaseSpecification,
+            planReleaseSpy,
+          } = await setupFollowMonorepoWorkflow({
+            sandbox,
+            doesReleaseSpecFileExist: false,
+            isEditorAvailable: true,
+            releaseType: 'backport',
+          });
+
+          await followMonorepoWorkflow({
+            project,
+            tempDirectoryPath: sandbox.directoryPath,
+            firstRemovingExistingReleaseSpecification: false,
+            releaseType: 'backport',
+            stdout,
+            stderr,
+          });
+
+          expect(planReleaseSpy).toHaveBeenCalledWith({
+            project,
+            releaseSpecification,
+            releaseType: 'backport',
+          });
+        });
+      });
+
       it('attempts to execute the release spec if it was successfully edited', async () => {
         await withSandbox(async (sandbox) => {
           const {
@@ -285,6 +355,7 @@ describe('monorepo-workflow-operations', () => {
             project,
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: false,
+            releaseType: 'ordinary',
             stdout,
             stderr,
           });
@@ -316,6 +387,7 @@ describe('monorepo-workflow-operations', () => {
             project,
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: false,
+            releaseType: 'ordinary',
             stdout,
             stderr,
           });
@@ -340,6 +412,7 @@ describe('monorepo-workflow-operations', () => {
             project,
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: false,
+            releaseType: 'ordinary',
             stdout,
             stderr,
           });
@@ -363,6 +436,7 @@ describe('monorepo-workflow-operations', () => {
               project,
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: false,
+              releaseType: 'ordinary',
               stdout,
               stderr,
             }),
@@ -387,6 +461,7 @@ describe('monorepo-workflow-operations', () => {
               project,
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: false,
+              releaseType: 'ordinary',
               stdout,
               stderr,
             }),
@@ -411,6 +486,7 @@ describe('monorepo-workflow-operations', () => {
               project,
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: false,
+              releaseType: 'ordinary',
               stdout,
               stderr,
             }),
@@ -436,6 +512,7 @@ describe('monorepo-workflow-operations', () => {
               project,
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: false,
+              releaseType: 'ordinary',
               stdout,
               stderr,
             }),
@@ -459,6 +536,7 @@ describe('monorepo-workflow-operations', () => {
               project,
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: false,
+              releaseType: 'ordinary',
               stdout,
               stderr,
             }),
@@ -484,6 +562,7 @@ describe('monorepo-workflow-operations', () => {
               project,
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: false,
+              releaseType: 'ordinary',
               stdout,
               stderr,
             }),
@@ -509,6 +588,7 @@ describe('monorepo-workflow-operations', () => {
               project,
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: false,
+              releaseType: 'ordinary',
               stdout,
               stderr,
             }),
@@ -533,6 +613,7 @@ describe('monorepo-workflow-operations', () => {
             project,
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: false,
+            releaseType: 'ordinary',
             stdout,
             stderr,
           });
@@ -554,6 +635,7 @@ describe('monorepo-workflow-operations', () => {
             project,
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: false,
+            releaseType: 'ordinary',
             stdout,
             stderr,
           });
@@ -576,6 +658,7 @@ describe('monorepo-workflow-operations', () => {
             project,
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: false,
+            releaseType: 'ordinary',
             stdout,
             stderr,
           });
@@ -599,6 +682,7 @@ describe('monorepo-workflow-operations', () => {
             project,
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: false,
+            releaseType: 'ordinary',
             stdout,
             stderr,
           });
@@ -625,6 +709,7 @@ describe('monorepo-workflow-operations', () => {
             project,
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: false,
+            releaseType: 'ordinary',
             stdout,
             stderr,
           });
@@ -632,6 +717,68 @@ describe('monorepo-workflow-operations', () => {
           expect(
             waitForUserToEditReleaseSpecificationSpy,
           ).not.toHaveBeenCalled();
+        });
+      });
+
+      it('plans an ordinary release if given releaseType: "ordinary"', async () => {
+        await withSandbox(async (sandbox) => {
+          const {
+            project,
+            stdout,
+            stderr,
+            releaseSpecification,
+            planReleaseSpy,
+          } = await setupFollowMonorepoWorkflow({
+            sandbox,
+            doesReleaseSpecFileExist: true,
+            releaseType: 'ordinary',
+          });
+
+          await followMonorepoWorkflow({
+            project,
+            tempDirectoryPath: sandbox.directoryPath,
+            firstRemovingExistingReleaseSpecification: false,
+            releaseType: 'ordinary',
+            stdout,
+            stderr,
+          });
+
+          expect(planReleaseSpy).toHaveBeenCalledWith({
+            project,
+            releaseSpecification,
+            releaseType: 'ordinary',
+          });
+        });
+      });
+
+      it('plans a backport release if given releaseType: "backport"', async () => {
+        await withSandbox(async (sandbox) => {
+          const {
+            project,
+            stdout,
+            stderr,
+            releaseSpecification,
+            planReleaseSpy,
+          } = await setupFollowMonorepoWorkflow({
+            sandbox,
+            doesReleaseSpecFileExist: true,
+            releaseType: 'backport',
+          });
+
+          await followMonorepoWorkflow({
+            project,
+            tempDirectoryPath: sandbox.directoryPath,
+            firstRemovingExistingReleaseSpecification: false,
+            releaseType: 'backport',
+            stdout,
+            stderr,
+          });
+
+          expect(planReleaseSpy).toHaveBeenCalledWith({
+            project,
+            releaseSpecification,
+            releaseType: 'backport',
+          });
         });
       });
 
@@ -652,6 +799,7 @@ describe('monorepo-workflow-operations', () => {
             project,
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: false,
+            releaseType: 'ordinary',
             stdout,
             stderr,
           });
@@ -682,6 +830,7 @@ describe('monorepo-workflow-operations', () => {
             project,
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: false,
+            releaseType: 'ordinary',
             stdout,
             stderr,
           });
@@ -705,6 +854,7 @@ describe('monorepo-workflow-operations', () => {
             project,
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: false,
+            releaseType: 'ordinary',
             stdout,
             stderr,
           });
@@ -728,6 +878,7 @@ describe('monorepo-workflow-operations', () => {
               project,
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: false,
+              releaseType: 'ordinary',
               stdout,
               stderr,
             }),
@@ -752,6 +903,7 @@ describe('monorepo-workflow-operations', () => {
               project,
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: false,
+              releaseType: 'ordinary',
               stdout,
               stderr,
             }),
@@ -776,6 +928,7 @@ describe('monorepo-workflow-operations', () => {
               project,
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: false,
+              releaseType: 'ordinary',
               stdout,
               stderr,
             }),
@@ -787,6 +940,70 @@ describe('monorepo-workflow-operations', () => {
     });
 
     describe('when firstRemovingExistingReleaseSpecification is true, the release spec file does not already exist, and an editor is available', () => {
+      it('plans an ordinary release if given releaseType: "ordinary"', async () => {
+        await withSandbox(async (sandbox) => {
+          const {
+            project,
+            stdout,
+            stderr,
+            releaseSpecification,
+            planReleaseSpy,
+          } = await setupFollowMonorepoWorkflow({
+            sandbox,
+            doesReleaseSpecFileExist: false,
+            isEditorAvailable: true,
+            releaseType: 'ordinary',
+          });
+
+          await followMonorepoWorkflow({
+            project,
+            tempDirectoryPath: sandbox.directoryPath,
+            firstRemovingExistingReleaseSpecification: true,
+            releaseType: 'ordinary',
+            stdout,
+            stderr,
+          });
+
+          expect(planReleaseSpy).toHaveBeenCalledWith({
+            project,
+            releaseSpecification,
+            releaseType: 'ordinary',
+          });
+        });
+      });
+
+      it('plans a backport release if given releaseType: "backport"', async () => {
+        await withSandbox(async (sandbox) => {
+          const {
+            project,
+            stdout,
+            stderr,
+            releaseSpecification,
+            planReleaseSpy,
+          } = await setupFollowMonorepoWorkflow({
+            sandbox,
+            doesReleaseSpecFileExist: false,
+            isEditorAvailable: true,
+            releaseType: 'backport',
+          });
+
+          await followMonorepoWorkflow({
+            project,
+            tempDirectoryPath: sandbox.directoryPath,
+            firstRemovingExistingReleaseSpecification: true,
+            releaseType: 'backport',
+            stdout,
+            stderr,
+          });
+
+          expect(planReleaseSpy).toHaveBeenCalledWith({
+            project,
+            releaseSpecification,
+            releaseType: 'backport',
+          });
+        });
+      });
+
       it('attempts to execute the release spec if it was successfully edited', async () => {
         await withSandbox(async (sandbox) => {
           const {
@@ -805,6 +1022,7 @@ describe('monorepo-workflow-operations', () => {
             project,
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: true,
+            releaseType: 'ordinary',
             stdout,
             stderr,
           });
@@ -836,6 +1054,7 @@ describe('monorepo-workflow-operations', () => {
             project,
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: true,
+            releaseType: 'ordinary',
             stdout,
             stderr,
           });
@@ -860,6 +1079,7 @@ describe('monorepo-workflow-operations', () => {
             project,
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: true,
+            releaseType: 'ordinary',
             stdout,
             stderr,
           });
@@ -883,6 +1103,7 @@ describe('monorepo-workflow-operations', () => {
               project,
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: true,
+              releaseType: 'ordinary',
               stdout,
               stderr,
             }),
@@ -907,6 +1128,7 @@ describe('monorepo-workflow-operations', () => {
               project,
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: true,
+              releaseType: 'ordinary',
               stdout,
               stderr,
             }),
@@ -931,6 +1153,7 @@ describe('monorepo-workflow-operations', () => {
               project,
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: true,
+              releaseType: 'ordinary',
               stdout,
               stderr,
             }),
@@ -956,6 +1179,7 @@ describe('monorepo-workflow-operations', () => {
               project,
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: true,
+              releaseType: 'ordinary',
               stdout,
               stderr,
             }),
@@ -979,6 +1203,7 @@ describe('monorepo-workflow-operations', () => {
               project,
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: true,
+              releaseType: 'ordinary',
               stdout,
               stderr,
             }),
@@ -1004,6 +1229,7 @@ describe('monorepo-workflow-operations', () => {
               project,
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: true,
+              releaseType: 'ordinary',
               stdout,
               stderr,
             }),
@@ -1029,6 +1255,7 @@ describe('monorepo-workflow-operations', () => {
               project,
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: true,
+              releaseType: 'ordinary',
               stdout,
               stderr,
             }),
@@ -1053,6 +1280,7 @@ describe('monorepo-workflow-operations', () => {
             project,
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: true,
+            releaseType: 'ordinary',
             stdout,
             stderr,
           });
@@ -1074,6 +1302,7 @@ describe('monorepo-workflow-operations', () => {
             project,
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: true,
+            releaseType: 'ordinary',
             stdout,
             stderr,
           });
@@ -1096,6 +1325,7 @@ describe('monorepo-workflow-operations', () => {
             project,
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: true,
+            releaseType: 'ordinary',
             stdout,
             stderr,
           });
@@ -1119,6 +1349,7 @@ describe('monorepo-workflow-operations', () => {
             project,
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: true,
+            releaseType: 'ordinary',
             stdout,
             stderr,
           });
@@ -1146,6 +1377,7 @@ describe('monorepo-workflow-operations', () => {
             project,
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: true,
+            releaseType: 'ordinary',
             stdout,
             stderr,
           });
@@ -1155,6 +1387,70 @@ describe('monorepo-workflow-operations', () => {
           ).toHaveBeenCalledWith({
             project,
             isEditorAvailable: true,
+          });
+        });
+      });
+
+      it('plans an ordinary release if given releaseType: "ordinary"', async () => {
+        await withSandbox(async (sandbox) => {
+          const {
+            project,
+            stdout,
+            stderr,
+            releaseSpecification,
+            planReleaseSpy,
+          } = await setupFollowMonorepoWorkflow({
+            sandbox,
+            doesReleaseSpecFileExist: true,
+            isEditorAvailable: true,
+            releaseType: 'ordinary',
+          });
+
+          await followMonorepoWorkflow({
+            project,
+            tempDirectoryPath: sandbox.directoryPath,
+            firstRemovingExistingReleaseSpecification: true,
+            releaseType: 'ordinary',
+            stdout,
+            stderr,
+          });
+
+          expect(planReleaseSpy).toHaveBeenCalledWith({
+            project,
+            releaseSpecification,
+            releaseType: 'ordinary',
+          });
+        });
+      });
+
+      it('plans a backport release if given releaseType: "backport"', async () => {
+        await withSandbox(async (sandbox) => {
+          const {
+            project,
+            stdout,
+            stderr,
+            releaseSpecification,
+            planReleaseSpy,
+          } = await setupFollowMonorepoWorkflow({
+            sandbox,
+            doesReleaseSpecFileExist: true,
+            isEditorAvailable: true,
+            releaseType: 'backport',
+          });
+
+          await followMonorepoWorkflow({
+            project,
+            tempDirectoryPath: sandbox.directoryPath,
+            firstRemovingExistingReleaseSpecification: true,
+            releaseType: 'backport',
+            stdout,
+            stderr,
+          });
+
+          expect(planReleaseSpy).toHaveBeenCalledWith({
+            project,
+            releaseSpecification,
+            releaseType: 'backport',
           });
         });
       });
@@ -1177,6 +1473,7 @@ describe('monorepo-workflow-operations', () => {
             project,
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: true,
+            releaseType: 'ordinary',
             stdout,
             stderr,
           });
@@ -1208,6 +1505,7 @@ describe('monorepo-workflow-operations', () => {
             project,
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: true,
+            releaseType: 'ordinary',
             stdout,
             stderr,
           });
@@ -1232,6 +1530,7 @@ describe('monorepo-workflow-operations', () => {
             project,
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: true,
+            releaseType: 'ordinary',
             stdout,
             stderr,
           });
@@ -1255,6 +1554,7 @@ describe('monorepo-workflow-operations', () => {
               project,
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: true,
+              releaseType: 'ordinary',
               stdout,
               stderr,
             }),
@@ -1279,6 +1579,7 @@ describe('monorepo-workflow-operations', () => {
               project,
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: true,
+              releaseType: 'ordinary',
               stdout,
               stderr,
             }),
@@ -1303,6 +1604,7 @@ describe('monorepo-workflow-operations', () => {
               project,
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: true,
+              releaseType: 'ordinary',
               stdout,
               stderr,
             }),
@@ -1328,6 +1630,7 @@ describe('monorepo-workflow-operations', () => {
               project,
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: true,
+              releaseType: 'ordinary',
               stdout,
               stderr,
             }),
@@ -1351,6 +1654,7 @@ describe('monorepo-workflow-operations', () => {
               project,
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: true,
+              releaseType: 'ordinary',
               stdout,
               stderr,
             }),
@@ -1376,6 +1680,7 @@ describe('monorepo-workflow-operations', () => {
               project,
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: true,
+              releaseType: 'ordinary',
               stdout,
               stderr,
             }),
@@ -1401,6 +1706,7 @@ describe('monorepo-workflow-operations', () => {
               project,
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: true,
+              releaseType: 'ordinary',
               stdout,
               stderr,
             }),
@@ -1429,6 +1735,7 @@ describe('monorepo-workflow-operations', () => {
             project,
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: true,
+            releaseType: 'ordinary',
             stdout,
             stderr,
           });
@@ -1455,6 +1762,7 @@ describe('monorepo-workflow-operations', () => {
             project,
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: true,
+            releaseType: 'ordinary',
             stdout,
             stderr,
           });
@@ -1476,6 +1784,7 @@ describe('monorepo-workflow-operations', () => {
             project,
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: true,
+            releaseType: 'ordinary',
             stdout,
             stderr,
           });
@@ -1498,6 +1807,7 @@ describe('monorepo-workflow-operations', () => {
             project,
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: true,
+            releaseType: 'ordinary',
             stdout,
             stderr,
           });
@@ -1521,6 +1831,7 @@ describe('monorepo-workflow-operations', () => {
             project,
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: true,
+            releaseType: 'ordinary',
             stdout,
             stderr,
           });

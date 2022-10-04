@@ -7,6 +7,7 @@ import {
   writeFile,
 } from './fs';
 import { determineEditor } from './editor';
+import { ReleaseType } from './initial-parameters';
 import { Project } from './project';
 import { planRelease, executeReleasePlan } from './release-plan';
 import { captureChangesInReleaseBranch } from './repo';
@@ -35,27 +36,31 @@ import {
  * commit that includes the changes, then create a branch using the current date
  * as the name.
  *
- * @param options - The options.
- * @param options.project - Information about the project.
- * @param options.tempDirectoryPath - A directory in which to hold the generated
+ * @param args - The arguments to this function.
+ * @param args.project - Information about the project.
+ * @param args.tempDirectoryPath - A directory in which to hold the generated
  * release spec file.
- * @param options.firstRemovingExistingReleaseSpecification - Sometimes it's
+ * @param args.firstRemovingExistingReleaseSpecification - Sometimes it's
  * possible for a release specification that was created in a previous run to
  * stick around (due to an error). This will ensure that the file is removed
  * first.
- * @param options.stdout - A stream that can be used to write to standard out.
- * @param options.stderr - A stream that can be used to write to standard error.
+ * @param args.releaseType - The type of release ("ordinary" or "backport"),
+ * which affects how the version is bumped.
+ * @param args.stdout - A stream that can be used to write to standard out.
+ * @param args.stderr - A stream that can be used to write to standard error.
  */
 export async function followMonorepoWorkflow({
   project,
   tempDirectoryPath,
   firstRemovingExistingReleaseSpecification,
+  releaseType,
   stdout,
   stderr,
 }: {
   project: Project;
   tempDirectoryPath: string;
   firstRemovingExistingReleaseSpecification: boolean;
+  releaseType: ReleaseType;
   stdout: Pick<WriteStream, 'write'>;
   stderr: Pick<WriteStream, 'write'>;
 }) {
@@ -107,6 +112,7 @@ export async function followMonorepoWorkflow({
   const releasePlan = await planRelease({
     project,
     releaseSpecification,
+    releaseType,
   });
   await executeReleasePlan(project, releasePlan, stderr);
   await removeFile(releaseSpecificationPath);
