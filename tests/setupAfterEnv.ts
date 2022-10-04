@@ -1,6 +1,18 @@
 import type { ExecaReturnValue } from 'execa';
 import { isExecaError } from './helpers';
 
+/**
+ * Matches a line that appears in a stack trace. For example, all of these
+ * should match:
+ *
+ * - "     at c (/private/tmp/error.js:10:9)"
+ * - "     at b (/private/tmp/error.js:6:3)"
+ * - "     at a (/private/tmp/error.js:2:3)"
+ * - "     at Object.<anonymous> (/private/tmp/error.js:13:1)"
+ * - "     at Module._compile (node:internal/modules/cjs/loader:1105:14)"
+ */
+const STACK_TRACE_LINE_REGEX = /^\s+at.+\)$/msu;
+
 declare global {
   // Using `namespace` here is okay because this is how the Jest types are
   // defined.
@@ -107,8 +119,8 @@ expect.extend({
       if (isExecaError(error)) {
         const stderr = [
           {
-            from: /^\s+at.+\)$/msu,
-            to: '<<backtrace>>',
+            from: STACK_TRACE_LINE_REGEX,
+            to: '<<stack-trace>>',
           },
           ...replacements,
         ].reduce((string, { from, to }) => {

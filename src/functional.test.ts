@@ -337,7 +337,7 @@ Error: Your release spec could not be processed due to the following issues:
 The release spec file has been retained for you to edit again and make the necessary fixes. Once you've done this, re-run this tool.
 
 <<release-spec-file-path>>
-<<backtrace>>
+<<stack-trace>>
 `.trim(),
             {
               replacements: [
