@@ -9,7 +9,7 @@ jest.mock('./package');
 
 describe('release-plan-utils', () => {
   describe('planRelease', () => {
-    it('calculates final versions for all packages in the release spec', async () => {
+    it('calculates final versions for all packages in the release spec, including bumping the ordinary part of the root package if this is an ordinary release', async () => {
       const project = buildMockProject({
         rootPackage: buildMockPackage('root', '1.0.0'),
         workspacePackages: {
@@ -32,6 +32,7 @@ describe('release-plan-utils', () => {
       const releasePlan = await planRelease({
         project,
         releaseSpecification,
+        releaseType: 'ordinary',
       });
 
       expect(releasePlan).toMatchObject({
@@ -40,6 +41,59 @@ describe('release-plan-utils', () => {
           {
             package: project.rootPackage,
             newVersion: '2.0.0',
+          },
+          {
+            package: project.workspacePackages.a,
+            newVersion: '2.0.0',
+          },
+          {
+            package: project.workspacePackages.b,
+            newVersion: '1.1.0',
+          },
+          {
+            package: project.workspacePackages.c,
+            newVersion: '1.0.1',
+          },
+          {
+            package: project.workspacePackages.d,
+            newVersion: '1.2.3',
+          },
+        ],
+      });
+    });
+
+    it('calculates final versions for all packages in the release spec, including bumping the backport part of the root package if this is a backport release', async () => {
+      const project = buildMockProject({
+        rootPackage: buildMockPackage('root', '1.0.0'),
+        workspacePackages: {
+          a: buildMockPackage('a', '1.0.0'),
+          b: buildMockPackage('b', '1.0.0'),
+          c: buildMockPackage('c', '1.0.0'),
+          d: buildMockPackage('d', '1.0.0'),
+        },
+      });
+      const releaseSpecification = {
+        packages: {
+          a: IncrementableVersionParts.major,
+          b: IncrementableVersionParts.minor,
+          c: IncrementableVersionParts.patch,
+          d: new SemVer('1.2.3'),
+        },
+        path: '/path/to/release/spec',
+      };
+
+      const releasePlan = await planRelease({
+        project,
+        releaseSpecification,
+        releaseType: 'backport',
+      });
+
+      expect(releasePlan).toMatchObject({
+        newVersion: '1.1.0',
+        packages: [
+          {
+            package: project.rootPackage,
+            newVersion: '1.1.0',
           },
           {
             package: project.workspacePackages.a,
@@ -84,6 +138,7 @@ describe('release-plan-utils', () => {
       const releasePlan = await planRelease({
         project,
         releaseSpecification,
+        releaseType: 'ordinary',
       });
 
       expect(releasePlan).toMatchObject({

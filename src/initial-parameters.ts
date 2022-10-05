@@ -4,10 +4,22 @@ import { readCommandLineArguments } from './command-line-arguments';
 import { WriteStreamLike } from './fs';
 import { readProject, Project } from './project';
 
+/**
+ * The type of release being created as determined by the parent release.
+ *
+ * - An *ordinary* release includes features or fixes applied against the
+ * latest release and is designated by bumping the first part of that release's
+ * version string.
+ * - A *backport* release includes fixes applied against a previous release and
+ * is designated by bumping the second part of that release's version string.
+ */
+export type ReleaseType = 'ordinary' | 'backport';
+
 interface InitialParameters {
   project: Project;
   tempDirectoryPath: string;
   reset: boolean;
+  releaseType: ReleaseType;
 }
 
 /**
@@ -29,18 +41,23 @@ export async function determineInitialParameters({
   cwd: string;
   stderr: WriteStreamLike;
 }): Promise<InitialParameters> {
-  const inputs = await readCommandLineArguments(argv);
+  const args = await readCommandLineArguments(argv);
 
-  const projectDirectoryPath = path.resolve(cwd, inputs.projectDirectory);
+  const projectDirectoryPath = path.resolve(cwd, args.projectDirectory);
   const project = await readProject(projectDirectoryPath, { stderr });
   const tempDirectoryPath =
-    inputs.tempDirectory === undefined
+    args.tempDirectory === undefined
       ? path.join(
           os.tmpdir(),
           'create-release-branch',
           project.rootPackage.validatedManifest.name.replace('/', '__'),
         )
-      : path.resolve(cwd, inputs.tempDirectory);
+      : path.resolve(cwd, args.tempDirectory);
 
-  return { project, tempDirectoryPath, reset: inputs.reset };
+  return {
+    project,
+    tempDirectoryPath,
+    reset: args.reset,
+    releaseType: args.backport ? 'backport' : 'ordinary',
+  };
 }
