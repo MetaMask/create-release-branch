@@ -131,7 +131,7 @@ cat "${releaseSpecificationPath}" > "$1"
       '--project-directory',
       this.localRepo.getWorkingDirectoryPath(),
       '--temp-directory',
-      path.join(this.localRepo.getWorkingDirectoryPath(), 'tmp'),
+      this.tempDirectoryPath,
       ...additionalArgs,
     ];
     const env = {
