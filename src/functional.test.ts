@@ -463,7 +463,7 @@ The release spec file has been retained for you to edit again and make the neces
       );
     });
 
-    it('does not update the changelogs of any packages that have been tagged with --intentionally-skip', async () => {
+    it('does not update the changelogs of any packages that have been tagged with intentionally-skip', async () => {
       await withMonorepoProjectEnvironment(
         {
           packages: {
