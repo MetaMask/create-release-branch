@@ -1,3 +1,4 @@
+import path from 'path';
 import {
   runCommand,
   getStdoutFromCommand,
@@ -112,11 +113,14 @@ async function getFilesChangedSince(
   repositoryDirectoryPath: string,
   tagName: string,
 ): Promise<string[]> {
-  return await getLinesFromGitCommandWithin(repositoryDirectoryPath, 'diff', [
-    tagName,
-    'HEAD',
-    '--name-only',
-  ]);
+  const partialFilePaths = await getLinesFromGitCommandWithin(
+    repositoryDirectoryPath,
+    'diff',
+    [tagName, 'HEAD', '--name-only'],
+  );
+  return partialFilePaths.map((partialFilePath) =>
+    path.join(repositoryDirectoryPath, partialFilePath),
+  );
 }
 
 /**
