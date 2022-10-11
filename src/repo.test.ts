@@ -175,10 +175,7 @@ describe('repo', () => {
         .calledWith('git', ['diff', 'v1.0.0', 'HEAD', '--name-only'], {
           cwd: '/path/to/repo',
         })
-        .mockResolvedValue([
-          '/path/to/repo/file1',
-          '/path/to/repo/subdirectory/file1',
-        ]);
+        .mockResolvedValue(['file1', 'subdirectory/file1']);
 
       const hasChanges = await hasChangesInDirectorySinceGitTag(
         '/path/to/repo',
@@ -194,7 +191,7 @@ describe('repo', () => {
         .calledWith('git', ['diff', 'v2.0.0', 'HEAD', '--name-only'], {
           cwd: '/path/to/repo',
         })
-        .mockResolvedValue(['/path/to/repo/file1', '/path/to/repo/file2']);
+        .mockResolvedValue(['file1', 'file2']);
 
       const hasChanges = await hasChangesInDirectorySinceGitTag(
         '/path/to/repo',
