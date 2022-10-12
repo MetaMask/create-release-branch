@@ -1,5 +1,7 @@
 # Using the tool in a monorepo with fixed versions
 
+> <table><tr><td><b>👋 HEADS UP!</b> This is an aspirational document; the tool does not support this workflow yet.</td></tr></table>
+
 For a monorepo using a "fixed" versioning strategy, the tool needs to know not only which version you want to release, but also which packages you want to release.
 
 Start by running:

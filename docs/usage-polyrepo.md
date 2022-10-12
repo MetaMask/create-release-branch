@@ -1,5 +1,7 @@
 # Using the tool for a polyrepo package
 
+> <table><tr><td><b>👋 HEADS UP!</b> This is an aspirational document; the tool does not support this workflow yet.</td></tr></table>
+
 For a package within a polyrepo architecture, the tool needs to know the new version of the package you want to release. This can happen one of two ways:
 
 1. You can have the tool determine the release version automatically by bumping the major, minor, or patch part of the current version.
