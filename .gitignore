@@ -1,6 +1,9 @@
 .DS_Store
-dist/
 coverage/
+
+# Build
+dist/
+tmp/
 
 # Logs
 logs
