@@ -6,7 +6,7 @@
     "type": "git",
     "url": "https://github.com/MetaMask/create-release-branch.git"
   },
-  "bin": "bin/create-release-branch",
+  "bin": "bin/create-release-branch.js",
   "files": [
     "bin/",
     "dist/"
