@@ -6,13 +6,14 @@
     "type": "git",
     "url": "https://github.com/MetaMask/create-release-branch.git"
   },
-  "bin": "dist/cli.js",
+  "bin": "bin/create-release-branch",
   "files": [
+    "bin/",
     "dist/"
   ],
   "scripts": {
-    "build": "./scripts/build.sh",
-    "build:clean": "rimraf dist tmp && yarn build",
+    "build": "yarn tsc --project tsconfig.build.json",
+    "build:clean": "rimraf dist && yarn build",
     "lint": "yarn lint:eslint && yarn lint:misc --check",
     "lint:eslint": "eslint . --cache --ext js,ts",
     "lint:fix": "yarn lint:eslint --fix && yarn lint:misc --write",
