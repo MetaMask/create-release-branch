@@ -6,8 +6,9 @@
     "type": "git",
     "url": "https://github.com/MetaMask/create-release-branch.git"
   },
-  "bin": "dist/cli.js",
+  "bin": "bin/create-release-branch.js",
   "files": [
+    "bin/",
     "dist/"
   ],
   "scripts": {
@@ -17,7 +18,7 @@
     "lint:eslint": "eslint . --cache --ext js,ts",
     "lint:fix": "yarn lint:eslint --fix && yarn lint:misc --write",
     "lint:misc": "prettier '**/*.json' '**/*.md' '!CHANGELOG.md' '**/*.yml' '!.yarnrc.yml' --ignore-path .gitignore --no-error-on-unmatched-pattern",
-    "prepack": "yarn build:clean && chmod +x dist/cli.js && yarn lint && yarn test",
+    "prepack": "yarn lint && yarn build:clean && yarn test",
     "test": "jest && jest-it-up",
     "test:watch": "jest --watch"
   },
