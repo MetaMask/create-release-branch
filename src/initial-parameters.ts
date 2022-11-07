@@ -15,12 +15,12 @@ import { readProject, Project } from './project';
  */
 export type ReleaseType = 'ordinary' | 'backport';
 
-interface InitialParameters {
+type InitialParameters = {
   project: Project;
   tempDirectoryPath: string;
   reset: boolean;
   releaseType: ReleaseType;
-}
+};
 
 /**
  * Reads the inputs given to this tool via `process.argv` and uses them to

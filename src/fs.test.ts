@@ -27,7 +27,7 @@ describe('fs', () => {
 
         await fs.promises.writeFile(filePath, 'some content 😄');
 
-        expect(await readFile(filePath)).toStrictEqual('some content 😄');
+        expect(await readFile(filePath)).toBe('some content 😄');
       });
     });
 
@@ -54,7 +54,7 @@ describe('fs', () => {
 
         await writeFile(filePath, 'some content 😄');
 
-        expect(await fs.promises.readFile(filePath, 'utf8')).toStrictEqual(
+        expect(await fs.promises.readFile(filePath, 'utf8')).toBe(
           'some content 😄',
         );
       });

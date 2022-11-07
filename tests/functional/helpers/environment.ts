@@ -12,11 +12,11 @@ import Repo from './repo';
  * @property directory - The path relative to the repo's root directory that
  * holds this package.
  */
-export interface PackageSpecification {
+export type PackageSpecification = {
   name: string;
   version?: string;
   directoryPath: string;
-}
+};
 
 /**
  * A set of configuration options for an {@link Environment}.
@@ -28,10 +28,10 @@ export interface PackageSpecification {
  * this option to disable that if you need to create your own commits for
  * clarity.
  */
-export interface EnvironmentOptions {
+export type EnvironmentOptions = {
   directoryPath: string;
   createInitialCommit?: boolean;
-}
+};
 
 /**
  * This class sets up each test and acts as a facade to all of the actions that

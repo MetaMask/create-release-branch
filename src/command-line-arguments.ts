@@ -1,12 +1,12 @@
 import yargs from 'yargs/yargs';
 import { hideBin } from 'yargs/helpers';
 
-export interface CommandLineArguments {
+export type CommandLineArguments = {
   projectDirectory: string;
   tempDirectory: string | undefined;
   reset: boolean;
   backport: boolean;
-}
+};
 
 /**
  * Parses the arguments provided on the command line using `yargs`.

@@ -484,7 +484,7 @@ describe('package', () => {
           changelogPath,
           'utf8',
         );
-        expect(newChangelogContent).toStrictEqual('new changelog');
+        expect(newChangelogContent).toBe('new changelog');
       });
     });
 
@@ -567,7 +567,7 @@ describe('package', () => {
           changelogPath,
           'utf8',
         );
-        expect(newChangelogContent).toStrictEqual('existing changelog');
+        expect(newChangelogContent).toBe('existing changelog');
       });
     });
 
@@ -604,7 +604,7 @@ describe('package', () => {
           changelogPath,
           'utf8',
         );
-        expect(newChangelogContent).toStrictEqual('existing changelog');
+        expect(newChangelogContent).toBe('existing changelog');
       });
     });
   });

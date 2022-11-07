@@ -18,12 +18,12 @@ import { debug, knownKeysOf } from './utils';
  * root).
  * @property workspaces - The known workspaces within this repo.
  */
-export interface MonorepoEnvironmentOptions<
+export type MonorepoEnvironmentOptions<
   WorkspacePackageNickname extends string,
-> extends EnvironmentOptions {
+> = {
   packages: Record<WorkspacePackageNickname, PackageSpecification>;
   workspaces: Record<string, string[]>;
-}
+} & EnvironmentOptions;
 
 /**
  * The release specification data.
@@ -31,9 +31,9 @@ export interface MonorepoEnvironmentOptions<
  * @property packages - The workspace packages within this repo that will be
  * released.
  */
-interface ReleaseSpecification<WorkspacePackageNickname extends string> {
+type ReleaseSpecification<WorkspacePackageNickname extends string> = {
   packages: Partial<Record<WorkspacePackageNickname, string>>;
-}
+};
 
 /**
  * This class configures the environment such that the "local" repo becomes a
