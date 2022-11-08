@@ -7,13 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ## [1.0.1]
-### Uncategorized
+### Fixed
 - Update changelogs correctly for monorepo packages ([#50](https://github.com/MetaMask/create-release-branch/pull/50))
-- Update GitHub actions to match module template ([#44](https://github.com/MetaMask/create-release-branch/pull/44))
-- Update ESLint config from v9 to v10 ([#48](https://github.com/MetaMask/create-release-branch/pull/48))
-- Update TypeScript to the latest stable version ([#47](https://github.com/MetaMask/create-release-branch/pull/47))
-- Update Jest-related dependencies ([#46](https://github.com/MetaMask/create-release-branch/pull/46))
-- Fix lint error when no build is present ([#45](https://github.com/MetaMask/create-release-branch/pull/45))
+  - The changelog update step was encountering an error when used for a monorepo package release that had already been released at least once. Related to this, the changelog was being updated with the wrong tag links. Both problems should now be resolved.
 
 ## [1.0.0]
 ### Added
