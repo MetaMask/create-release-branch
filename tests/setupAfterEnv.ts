@@ -21,6 +21,8 @@ declare global {
   // defined.
   /* eslint-disable-next-line @typescript-eslint/no-namespace */
   namespace jest {
+    // interface is used here to allow for declaration merging
+    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
     interface Matchers<R> {
       toResolve(): Promise<R>;
       toThrowExecaError(

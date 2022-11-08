@@ -11,9 +11,9 @@ import { debug, sleepFor } from './utils';
  * @property environmentDirectoryPath - The directory that holds the environment
  * that created this repo.
  */
-export interface RepoOptions {
+export type RepoOptions = {
   environmentDirectoryPath: string;
-}
+};
 
 /**
  * The minimum amount of time that the tests will ensure exists between commits.

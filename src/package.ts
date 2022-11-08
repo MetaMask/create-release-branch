@@ -27,14 +27,14 @@ const CHANGELOG_FILE_NAME = 'CHANGELOG.md';
  * @property changelogPath - The path to the changelog file (which may or may
  * not exist).
  */
-export interface Package {
+export type Package = {
   directoryPath: string;
   manifestPath: string;
   unvalidatedManifest: UnvalidatedPackageManifest;
   validatedManifest: ValidatedPackageManifest;
   changelogPath: string;
   hasChangesSinceLatestRelease: boolean;
-}
+};
 
 /**
  * Generates the possible Git tag name for the root package of a monorepo. The

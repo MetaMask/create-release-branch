@@ -13,10 +13,10 @@ import { buildChangelog } from './utils';
  * use this option to disable that if you need to create your own commits for
  * clarity.
  */
-export interface LocalRepoOptions extends RepoOptions {
+export type LocalRepoOptions = {
   remoteRepoDirectoryPath: string;
   createInitialCommit: boolean;
-}
+} & RepoOptions;
 
 /**
  * A facade for the "local" repo, which is the repo with which the tool

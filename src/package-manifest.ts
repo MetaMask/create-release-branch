@@ -24,12 +24,12 @@ export type UnvalidatedPackageManifest = Readonly<Record<string, any>>;
  * @property bundledDependencies - The set of packages that are expected to be
  * bundled when publishing the package.
  */
-export interface ValidatedPackageManifest {
+export type ValidatedPackageManifest = {
   readonly [PackageManifestFieldNames.Name]: string;
   readonly [PackageManifestFieldNames.Version]: SemVer;
   readonly [PackageManifestFieldNames.Private]: boolean;
   readonly [PackageManifestFieldNames.Workspaces]: string[];
-}
+};
 
 /**
  * Constructs a validation error message for a field within the manifest.

@@ -16,9 +16,9 @@ const promisifiedRimraf = util.promisify(rimraf);
  * Information about the sandbox provided to tests that need access to the
  * filesystem.
  */
-export interface Sandbox {
+export type Sandbox = {
   directoryPath: string;
-}
+};
 
 /**
  * The temporary directory that acts as a filesystem sandbox for tests.

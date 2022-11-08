@@ -8,10 +8,10 @@ import { debug, resolveExecutable } from './misc-utils';
  * @property args - Command-line arguments to pass to the executable when
  * calling it.
  */
-export interface Editor {
+export type Editor = {
   path: string;
   args: string[];
-}
+};
 
 /**
  * Looks for an executable that represents a code editor on your computer. Tries
