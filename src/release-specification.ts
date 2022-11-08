@@ -35,10 +35,10 @@ type VersionSpecifier = IncrementableVersionParts | SemVer;
  * @property packages - A mapping of package names to version specifiers.
  * @property path - The path to the original release specification file.
  */
-export interface ReleaseSpecification {
+export type ReleaseSpecification = {
   packages: Record<string, VersionSpecifier>;
   path: string;
-}
+};
 
 const SKIP_PACKAGE_DIRECTIVE = null;
 const INTENTIONALLY_SKIP_PACKAGE_DIRECTIVE = 'intentionally-skip';

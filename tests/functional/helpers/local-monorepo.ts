@@ -11,11 +11,10 @@ import { knownKeysOf } from './utils';
  * root).
  * @property workspaces - The known workspaces within this repo.
  */
-export interface LocalMonorepoOptions<WorkspacePackageNickname extends string>
-  extends LocalRepoOptions {
+export type LocalMonorepoOptions<WorkspacePackageNickname extends string> = {
   packages: Record<WorkspacePackageNickname, PackageSpecification>;
   workspaces: Record<string, string[]>;
-}
+} & LocalRepoOptions;
 
 /**
  * Represents the repo that the tool is run against, containing logic specific

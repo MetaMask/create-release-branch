@@ -19,9 +19,9 @@ describe('repo', () => {
         })
         .mockResolvedValue('https://github.com/foo');
 
-      expect(
-        await getRepositoryHttpsUrl(repositoryDirectoryPath),
-      ).toStrictEqual('https://github.com/foo');
+      expect(await getRepositoryHttpsUrl(repositoryDirectoryPath)).toBe(
+        'https://github.com/foo',
+      );
     });
 
     it('converts an SSH GitHub repo URL into an HTTPS URL', async () => {
@@ -32,9 +32,9 @@ describe('repo', () => {
         })
         .mockResolvedValue('git@github.com:Foo/Bar.git');
 
-      expect(
-        await getRepositoryHttpsUrl(repositoryDirectoryPath),
-      ).toStrictEqual('https://github.com/Foo/Bar');
+      expect(await getRepositoryHttpsUrl(repositoryDirectoryPath)).toBe(
+        'https://github.com/Foo/Bar',
+      );
     });
 
     it('throws if the URL of the "origin" remote is in an invalid format', async () => {

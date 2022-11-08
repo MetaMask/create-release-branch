@@ -23,10 +23,10 @@ import { ReleaseSpecification } from './release-specification';
  * itself; for a monorepo package it will consist of the root package and any
  * workspace packages that will be included in the release.
  */
-export interface ReleasePlan {
+export type ReleasePlan = {
   newVersion: string;
   packages: PackageReleasePlan[];
-}
+};
 
 /**
  * Instructions for how to update a package within a project in order to prepare
@@ -40,11 +40,11 @@ export interface ReleasePlan {
  * monorepo, this will be true only for workspace packages (the root package
  * doesn't have a changelog, since it is a virtual package).
  */
-export interface PackageReleasePlan {
+export type PackageReleasePlan = {
   package: Package;
   newVersion: string;
   shouldUpdateChangelog: boolean;
-}
+};
 
 /**
  * Uses the release specification to calculate the final versions of all of the

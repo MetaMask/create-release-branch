@@ -1,6 +1,6 @@
-interface Env {
+type Env = {
   EDITOR: string | undefined;
-}
+};
 
 /**
  * Returns all of the environment variables that this tool uses.

@@ -23,10 +23,10 @@ import { SemVer } from './semver';
  * same ordinary release, starting from 1; it will be 0 if there aren't any
  * backport releases for the ordinary release yet.
  */
-interface ReleaseVersion {
+type ReleaseVersion = {
   ordinaryNumber: number;
   backportNumber: number;
-}
+};
 
 /**
  * Represents the entire codebase on which this tool is operating.
@@ -39,14 +39,14 @@ interface ReleaseVersion {
  * @property workspacePackages - Information about packages that are referenced
  * via workspaces (assuming that the project is a monorepo).
  */
-export interface Project {
+export type Project = {
   directoryPath: string;
   repositoryUrl: string;
   rootPackage: Package;
   workspacePackages: Record<string, Package>;
   isMonorepo: boolean;
   releaseVersion: ReleaseVersion;
-}
+};
 
 /**
  * A promisified version of `glob`.

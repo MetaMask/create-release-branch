@@ -86,7 +86,7 @@ describe('misc-utils', () => {
       const originalError = new Error('oops');
       const newError = wrapError('Some message', originalError);
 
-      expect(newError.message).toStrictEqual('Some message');
+      expect(newError.message).toBe('Some message');
       expect(newError.cause).toBe(originalError);
     });
 
@@ -95,7 +95,7 @@ describe('misc-utils', () => {
       originalError.code = 'CODE';
       const newError: any = wrapError('Some message', originalError);
 
-      expect(newError.code).toStrictEqual('CODE');
+      expect(newError.code).toBe('CODE');
     });
 
     it('returns a new Error which prefixes the given message', () => {
@@ -112,9 +112,7 @@ describe('misc-utils', () => {
         .spyOn(whichModule, 'default')
         .mockResolvedValue('/path/to/executable');
 
-      expect(await resolveExecutable('executable')).toStrictEqual(
-        '/path/to/executable',
-      );
+      expect(await resolveExecutable('executable')).toBe('/path/to/executable');
     });
 
     it('returns null if the given executable cannot be found', async () => {
@@ -170,7 +168,7 @@ describe('misc-utils', () => {
       expect(execaSpy).toHaveBeenCalledWith('some command', ['arg1', 'arg2'], {
         all: true,
       });
-      expect(output).toStrictEqual('some output');
+      expect(output).toBe('some output');
     });
   });
 

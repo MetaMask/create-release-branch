@@ -112,9 +112,7 @@ describe('initial-parameters', () => {
         stderr,
       });
 
-      expect(initialParameters.tempDirectoryPath).toStrictEqual(
-        '/path/to/cwd/tmp',
-      );
+      expect(initialParameters.tempDirectoryPath).toBe('/path/to/cwd/tmp');
     });
 
     it('uses a default temporary directory based on the name of the package if no temporary directory was given', async () => {

@@ -377,7 +377,7 @@ describe('create-release-branch (functional)', () => {
               '--max-count=1',
             ])
           ).stdout;
-          expect(latestCommitSubject).toStrictEqual('Release 2.0.0');
+          expect(latestCommitSubject).toBe('Release 2.0.0');
           expect(latestCommitRevs).toContain('HEAD');
           expect(latestCommitRevs).toContain('release/2.0.0');
           expect(latestBranchCommitId).toStrictEqual(latestCommitId);
