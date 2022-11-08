@@ -271,6 +271,7 @@ async function updatePackageChangelog({
     isReleaseCandidate: true,
     projectRootDirectory: pkg.directoryPath,
     repoUrl: repositoryUrl,
+    tagPrefixes: [`${pkg.validatedManifest.name}@`, 'v'],
   });
 
   if (newChangelogContent) {

@@ -474,6 +474,7 @@ describe('package', () => {
             isReleaseCandidate: true,
             projectRootDirectory: sandbox.directoryPath,
             repoUrl: 'https://repo.url',
+            tagPrefixes: ['package@', 'v'],
           })
           .mockResolvedValue('new changelog');
         await fs.promises.writeFile(changelogPath, 'existing changelog');

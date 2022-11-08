@@ -304,8 +304,8 @@ describe('create-release-branch (functional)', () => {
               - Update "a"
               - Initial commit
 
-              [Unreleased]: https://github.com/example-org/example-repo/compare/v2.0.0...HEAD
-              [2.0.0]: https://github.com/example-org/example-repo/releases/tag/v2.0.0
+              [Unreleased]: https://github.com/example-org/example-repo/compare/@scope/a@2.0.0...HEAD
+              [2.0.0]: https://github.com/example-org/example-repo/releases/tag/@scope/a@2.0.0
             `),
           );
           expect(
@@ -318,8 +318,8 @@ describe('create-release-branch (functional)', () => {
               ### Uncategorized
               - Initial commit
 
-              [Unreleased]: https://github.com/example-org/example-repo/compare/v2.0.0...HEAD
-              [2.0.0]: https://github.com/example-org/example-repo/releases/tag/v2.0.0
+              [Unreleased]: https://github.com/example-org/example-repo/compare/@scope/b@2.0.0...HEAD
+              [2.0.0]: https://github.com/example-org/example-repo/releases/tag/@scope/b@2.0.0
             `),
           );
         },
@@ -652,8 +652,8 @@ The release spec file has been retained for you to edit again and make the neces
               - Update "a"
               - Initial commit
 
-              [Unreleased]: https://github.com/example-org/example-repo/compare/v2.0.0...HEAD
-              [2.0.0]: https://github.com/example-org/example-repo/releases/tag/v2.0.0
+              [Unreleased]: https://github.com/example-org/example-repo/compare/@scope/a@2.0.0...HEAD
+              [2.0.0]: https://github.com/example-org/example-repo/releases/tag/@scope/a@2.0.0
             `),
           );
           expect(
