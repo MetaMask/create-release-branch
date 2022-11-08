@@ -304,8 +304,8 @@ describe('create-release-branch (functional)', () => {
               - Update "a"
               - Initial commit
 
-              [Unreleased]: https://github.com/example-org/example-repo/compare/v2.0.0...HEAD
-              [2.0.0]: https://github.com/example-org/example-repo/releases/tag/v2.0.0
+              [Unreleased]: https://github.com/example-org/example-repo/compare/@scope/a@2.0.0...HEAD
+              [2.0.0]: https://github.com/example-org/example-repo/releases/tag/@scope/a@2.0.0
             `),
           );
           expect(
@@ -318,8 +318,227 @@ describe('create-release-branch (functional)', () => {
               ### Uncategorized
               - Initial commit
 
-              [Unreleased]: https://github.com/example-org/example-repo/compare/v2.0.0...HEAD
-              [2.0.0]: https://github.com/example-org/example-repo/releases/tag/v2.0.0
+              [Unreleased]: https://github.com/example-org/example-repo/compare/@scope/b@2.0.0...HEAD
+              [2.0.0]: https://github.com/example-org/example-repo/releases/tag/@scope/b@2.0.0
+            `),
+          );
+        },
+      );
+    });
+
+    it('updates package changelogs with package changes since the last package release', async () => {
+      await withMonorepoProjectEnvironment(
+        {
+          packages: {
+            $root$: {
+              name: '@scope/monorepo',
+              version: '1.0.0',
+              directoryPath: '.',
+            },
+            a: {
+              name: '@scope/a',
+              version: '1.0.0',
+              directoryPath: 'packages/a',
+            },
+            b: {
+              name: '@scope/b',
+              version: '1.0.0',
+              directoryPath: 'packages/b',
+            },
+          },
+          workspaces: {
+            '.': ['packages/*'],
+          },
+          createInitialCommit: false,
+        },
+        async (environment) => {
+          // Create an initial commit
+          await environment.writeFileWithinPackage(
+            'a',
+            'CHANGELOG.md',
+            buildChangelog(`
+            ## [Unreleased]
+
+            ## [1.0.0]
+            ### Added
+            - Initial release
+
+            [Unreleased]: https://github.com/example-org/example-repo/compare/@scope/a@1.0.0...HEAD
+            [1.0.0]: https://github.com/example-org/example-repo/releases/tag/@scope/a@1.0.0
+            `),
+          );
+          await environment.writeFileWithinPackage(
+            'b',
+            'CHANGELOG.md',
+            buildChangelog(`
+            ## [Unreleased]
+
+            ## [1.0.0]
+            ### Added
+            - Initial release
+
+            [Unreleased]: https://github.com/example-org/example-repo/compare/@scope/b@1.0.0...HEAD
+            [1.0.0]: https://github.com/example-org/example-repo/releases/tag/@scope/b@1.0.0
+            `),
+          );
+          await environment.createCommit('Initial commit');
+          await environment.runCommand('git', ['tag', '@scope/a@1.0.0']);
+          await environment.runCommand('git', ['tag', '@scope/b@1.0.0']);
+          await environment.runCommand('git', ['tag', 'v1.0.0']);
+
+          // Create another commit that only changes "a"
+          await environment.writeFileWithinPackage(
+            'a',
+            'dummy.txt',
+            'Some content',
+          );
+          await environment.createCommit('Update "a"');
+
+          // Run the tool
+          await environment.runTool({
+            releaseSpecification: {
+              packages: {
+                a: 'major',
+              },
+            },
+          });
+
+          // Only "a" should be updated
+          expect(
+            await environment.readFileWithinPackage('a', 'CHANGELOG.md'),
+          ).toStrictEqual(
+            buildChangelog(`
+              ## [Unreleased]
+
+              ## [2.0.0]
+              ### Uncategorized
+              - Update "a"
+
+              ## [1.0.0]
+              ### Added
+              - Initial release
+
+              [Unreleased]: https://github.com/example-org/example-repo/compare/@scope/a@2.0.0...HEAD
+              [2.0.0]: https://github.com/example-org/example-repo/compare/@scope/a@1.0.0...@scope/a@2.0.0
+              [1.0.0]: https://github.com/example-org/example-repo/releases/tag/@scope/a@1.0.0
+            `),
+          );
+          expect(
+            await environment.readFileWithinPackage('b', 'CHANGELOG.md'),
+          ).toStrictEqual(
+            buildChangelog(`
+            ## [Unreleased]
+
+            ## [1.0.0]
+            ### Added
+            - Initial release
+
+            [Unreleased]: https://github.com/example-org/example-repo/compare/@scope/b@1.0.0...HEAD
+            [1.0.0]: https://github.com/example-org/example-repo/releases/tag/@scope/b@1.0.0
+            `),
+          );
+        },
+      );
+    });
+
+    it('updates package changelogs with package changes since the last root release if this is the first package release', async () => {
+      await withMonorepoProjectEnvironment(
+        {
+          packages: {
+            $root$: {
+              name: '@scope/monorepo',
+              version: '1.0.0',
+              directoryPath: '.',
+            },
+            a: {
+              name: '@scope/a',
+              version: '0.0.0',
+              directoryPath: 'packages/a',
+            },
+            b: {
+              name: '@scope/b',
+              version: '1.0.0',
+              directoryPath: 'packages/b',
+            },
+          },
+          workspaces: {
+            '.': ['packages/*'],
+          },
+          createInitialCommit: false,
+        },
+        async (environment) => {
+          // Create an initial commit
+          await environment.writeFileWithinPackage(
+            'a',
+            'CHANGELOG.md',
+            buildChangelog(`
+            ## [Unreleased]
+
+            [Unreleased]: https://github.com/example-org/example-repo
+            `),
+          );
+          await environment.writeFileWithinPackage(
+            'b',
+            'CHANGELOG.md',
+            buildChangelog(`
+            ## [Unreleased]
+
+            ## [1.0.0]
+            ### Added
+            - Initial release
+
+            [Unreleased]: https://github.com/example-org/example-repo/compare/@scope/b@1.0.0...HEAD
+            [1.0.0]: https://github.com/example-org/example-repo/releases/tag/@scope/b@1.0.0
+            `),
+          );
+          await environment.createCommit('Initial commit');
+          await environment.runCommand('git', ['tag', '@scope/b@1.0.0']);
+          await environment.runCommand('git', ['tag', 'v1.0.0']);
+
+          // Create another commit that only changes "a"
+          await environment.writeFileWithinPackage(
+            'a',
+            'dummy.txt',
+            'Some content',
+          );
+          await environment.createCommit('Update "a"');
+
+          // Run the tool
+          await environment.runTool({
+            releaseSpecification: {
+              packages: {
+                a: 'major',
+              },
+            },
+          });
+
+          // Only "a" should be updated
+          expect(
+            await environment.readFileWithinPackage('a', 'CHANGELOG.md'),
+          ).toStrictEqual(
+            buildChangelog(`
+              ## [Unreleased]
+
+              ## [1.0.0]
+              ### Uncategorized
+              - Update "a"
+
+              [Unreleased]: https://github.com/example-org/example-repo/compare/@scope/a@1.0.0...HEAD
+              [1.0.0]: https://github.com/example-org/example-repo/releases/tag/@scope/a@1.0.0
+            `),
+          );
+          expect(
+            await environment.readFileWithinPackage('b', 'CHANGELOG.md'),
+          ).toStrictEqual(
+            buildChangelog(`
+            ## [Unreleased]
+
+            ## [1.0.0]
+            ### Added
+            - Initial release
+
+            [Unreleased]: https://github.com/example-org/example-repo/compare/@scope/b@1.0.0...HEAD
+            [1.0.0]: https://github.com/example-org/example-repo/releases/tag/@scope/b@1.0.0
             `),
           );
         },
@@ -652,8 +871,8 @@ The release spec file has been retained for you to edit again and make the neces
               - Update "a"
               - Initial commit
 
-              [Unreleased]: https://github.com/example-org/example-repo/compare/v2.0.0...HEAD
-              [2.0.0]: https://github.com/example-org/example-repo/releases/tag/v2.0.0
+              [Unreleased]: https://github.com/example-org/example-repo/compare/@scope/a@2.0.0...HEAD
+              [2.0.0]: https://github.com/example-org/example-repo/releases/tag/@scope/a@2.0.0
             `),
           );
           expect(
