@@ -897,7 +897,7 @@ __metadata:
     "@metamask/eslint-config": ^10.0.0
     "@metamask/eslint-config-jest": ^10.0.0
     "@metamask/eslint-config-nodejs": ^10.0.0
-    "@metamask/eslint-config-typescript": ^10.0.0
+    "@metamask/eslint-config-typescript": ^11.0.2
     "@metamask/utils": ^3.0.3
     "@types/debug": ^4.1.7
     "@types/jest": ^29.2.2
@@ -962,16 +962,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/eslint-config-typescript@npm:^10.0.0":
-  version: 10.0.0
-  resolution: "@metamask/eslint-config-typescript@npm:10.0.0"
+"@metamask/eslint-config-typescript@npm:^11.0.2":
+  version: 11.0.2
+  resolution: "@metamask/eslint-config-typescript@npm:11.0.2"
   peerDependencies:
-    "@metamask/eslint-config": ^10.0.0
-    "@typescript-eslint/eslint-plugin": ^5.33.0
-    "@typescript-eslint/parser": ^5.33.0
-    eslint: ^8.21.0
-    typescript: ^4.0.7
-  checksum: a1593d8d11f3d476aba24c0aa5e829724dd9dce6539cb2b33b75d5a1623ae9950370920fb666504d5192aee17f88fcecdcaf76465e66d67ece7dcb3ad90efd9b
+    "@metamask/eslint-config": ^11.0.0
+    "@typescript-eslint/eslint-plugin": ^5.42.1
+    "@typescript-eslint/parser": ^5.42.1
+    eslint: ^8.27.0
+    typescript: ~4.8.4
+  checksum: d0354c56b0119609f931b0c7627a78969b4626c5da45a09bfe2b32ea51677c7c5625c7f55cbb65be6530e36ccc525f131816972dc4c6bcc3a11cf327f45d4ddb
   languageName: node
   linkType: hard
 
