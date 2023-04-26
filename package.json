@@ -31,8 +31,8 @@
     "pony-cause": "^2.1.0",
     "semver": "^7.3.7",
     "which": "^2.0.2",
-    "yaml": "^2.1.1",
-    "yargs": "^17.5.1"
+    "yaml": "^2.2.2",
+    "yargs": "^17.7.1"
   },
   "devDependencies": {
     "@lavamoat/allow-scripts": "^2.0.3",
