@@ -927,7 +927,7 @@ __metadata:
     prettier: ^2.2.1
     prettier-plugin-packagejson: ^2.3.0
     rimraf: ^3.0.2
-    semver: ^7.3.7
+    semver: ^7.5.0
     stdio-mock: ^1.2.0
     ts-jest: ^29.0.3
     ts-node: ^10.7.0
@@ -5527,6 +5527,17 @@ __metadata:
   bin:
     semver: bin/semver.js
   checksum: ba9c7cbbf2b7884696523450a61fee1a09930d888b7a8d7579025ad93d459b2d1949ee5bbfeb188b2be5f4ac163544c5e98491ad6152df34154feebc2cc337c1
+  languageName: node
+  linkType: hard
+
+"semver@npm:^7.5.0":
+  version: 7.5.0
+  resolution: "semver@npm:7.5.0"
+  dependencies:
+    lru-cache: ^6.0.0
+  bin:
+    semver: bin/semver.js
+  checksum: 2d266937756689a76f124ffb4c1ea3e1bbb2b263219f90ada8a11aebebe1280b13bb76cca2ca96bdee3dbc554cbc0b24752eb895b2a51577aa644427e9229f2b
   languageName: node
   linkType: hard
 
