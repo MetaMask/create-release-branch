@@ -26,7 +26,7 @@
     "@metamask/action-utils": "^0.0.2",
     "@metamask/utils": "^3.0.3",
     "debug": "^4.3.4",
-    "execa": "^5.0.0",
+    "execa": "^5.1.1",
     "glob": "^10.2.2",
     "pony-cause": "^2.1.9",
     "semver": "^7.5.0",
