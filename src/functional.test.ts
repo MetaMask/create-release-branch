@@ -654,16 +654,16 @@ Error: Your release spec could not be processed due to the following issues:
 
 * The following packages, which have changed since their latest release, are missing.
 
-  - @scope/b
   - @scope/d
+  - @scope/b
 
   Consider including them in the release spec so that any packages that rely on them won't break in production.
 
   If you are ABSOLUTELY SURE that this won't occur, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:
 
     packages:
-      "@scope/b": intentionally-skip
       "@scope/d": intentionally-skip
+      "@scope/b": intentionally-skip
 
 The release spec file has been retained for you to edit again and make the necessary fixes. Once you've done this, re-run this tool.
 

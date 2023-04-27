@@ -1,16 +1,10 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import util from 'util';
 import { nanoid } from 'nanoid';
-import rimraf from 'rimraf';
+import { rimraf } from 'rimraf';
 import type { ExecaError } from 'execa';
 import { hasProperty, isObject } from '@metamask/utils';
-
-/**
- * A promisified version of `rimraf`.
- */
-const promisifiedRimraf = util.promisify(rimraf);
 
 /**
  * Information about the sandbox provided to tests that need access to the
@@ -66,7 +60,7 @@ export async function withSandbox(fn: (sandbox: Sandbox) => any) {
   try {
     await fn({ directoryPath });
   } finally {
-    await promisifiedRimraf(directoryPath);
+    await rimraf(directoryPath);
   }
 }
 

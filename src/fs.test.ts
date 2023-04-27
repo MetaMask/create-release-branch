@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import util from 'util';
-import rimraf from 'rimraf';
+import { rimraf } from 'rimraf';
 import { when } from 'jest-when';
 import * as actionUtils from '@metamask/action-utils';
 import { withSandbox } from '../tests/helpers';
@@ -16,8 +15,6 @@ import {
 } from './fs';
 
 jest.mock('@metamask/action-utils');
-
-const promisifiedRimraf = util.promisify(rimraf);
 
 describe('fs', () => {
   describe('readFile', () => {
@@ -62,7 +59,7 @@ describe('fs', () => {
 
     it('re-throws any error that occurs as a new error that points to the original', async () => {
       await withSandbox(async (sandbox) => {
-        await promisifiedRimraf(sandbox.directoryPath);
+        await rimraf(sandbox.directoryPath);
         const filePath = path.join(sandbox.directoryPath, 'test');
 
         await expect(writeFile(filePath, 'some content 😄')).rejects.toThrow(

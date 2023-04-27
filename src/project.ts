@@ -1,5 +1,4 @@
-import util from 'util';
-import glob from 'glob';
+import { glob } from 'glob';
 import { WriteStreamLike } from './fs';
 import {
   Package,
@@ -49,11 +48,6 @@ export type Project = {
 };
 
 /**
- * A promisified version of `glob`.
- */
-const promisifiedGlob = util.promisify(glob);
-
-/**
  * Given a SemVer version object, interprets the "major" part of the version
  * as the ordinary release number and the "minor" part as the backport release
  * number in the context of the ordinary release.
@@ -100,7 +94,7 @@ export async function readProject(
     await Promise.all(
       rootPackage.validatedManifest[PackageManifestFieldNames.Workspaces].map(
         async (workspacePattern) => {
-          return await promisifiedGlob(workspacePattern, {
+          return await glob(workspacePattern, {
             cwd: projectDirectoryPath,
             absolute: true,
           });
