@@ -7,9 +7,11 @@ import { buildMockPackage, createNoopWriteStream } from '../tests/unit/helpers';
 import { readProject } from './project';
 import * as packageModule from './package';
 import * as repoModule from './repo';
+import * as miscUtilsModule from './misc-utils';
 
 jest.mock('./package');
 jest.mock('./repo');
+jest.mock('./misc-utils');
 
 describe('project', () => {
   describe('readProject', () => {
@@ -57,6 +59,18 @@ describe('project', () => {
             projectTagNames,
           })
           .mockResolvedValue(rootPackage);
+        when(jest.spyOn(miscUtilsModule, 'getLinesFromCommand'))
+          .calledWith(
+            'yarn',
+            ['workspaces', 'list', '--no-private', '--json'],
+            {
+              cwd: projectDirectoryPath,
+            },
+          )
+          .mockResolvedValue([
+            '{"location":"packages/a","name":"a","workspaceDependencies":[],"mismatchedWorkspaceDependencies":[],"workspaceDependents":[]}',
+            '{"location":"packages/subpackages/b","name":"b","workspaceDependencies":[],"mismatchedWorkspaceDependencies":[],"workspaceDependents":[]}',
+          ]);
         when(jest.spyOn(packageModule, 'readMonorepoWorkspacePackage'))
           .calledWith({
             packageDirectoryPath: path.join(

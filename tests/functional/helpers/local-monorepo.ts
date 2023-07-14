@@ -50,6 +50,12 @@ export default class LocalMonorepo<
     this.#workspaces = workspaces;
   }
 
+  async create() {
+    await super.create();
+    await this.runCommand('yarn', ['set', 'version', 'stable']);
+    await this.runCommand('yarn');
+  }
+
   /**
    * Reads a file within a workspace package within the project.
    *

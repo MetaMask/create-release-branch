@@ -1,13 +1,13 @@
-import { glob } from 'glob';
+import { resolve } from 'path';
 import { WriteStreamLike } from './fs';
 import {
   Package,
   readMonorepoRootPackage,
   readMonorepoWorkspacePackage,
 } from './package';
-import { PackageManifestFieldNames } from './package-manifest';
 import { getRepositoryHttpsUrl, getTagNames } from './repo';
 import { SemVer } from './semver';
+import { getLinesFromCommand } from './misc-utils';
 
 /**
  * The release version of the root package of a monorepo extracted from its
@@ -25,6 +25,11 @@ import { SemVer } from './semver';
 type ReleaseVersion = {
   ordinaryNumber: number;
   backportNumber: number;
+};
+
+export type YarnWorkspace = {
+  location: string;
+  name: string;
 };
 
 /**
@@ -64,6 +69,24 @@ function examineReleaseVersion(packageVersion: SemVer): ReleaseVersion {
 }
 
 /**
+ * List the workspaces in a monorepo using Yarn.
+ *
+ * @param projectDirectoryPath - The path to the project.
+ * @returns An array of objects that represent the workspaces.
+ */
+export async function listWorkspaces(projectDirectoryPath: string) {
+  const stdout = await getLinesFromCommand(
+    'yarn',
+    ['workspaces', 'list', '--no-private', '--json'],
+    {
+      cwd: projectDirectoryPath,
+    },
+  );
+
+  return stdout.map((line) => JSON.parse(line) as YarnWorkspace);
+}
+
+/**
  * Collects information about a monorepo — its root package as well as any
  * packages within workspaces specified via the root `package.json`.
  *
@@ -90,24 +113,13 @@ export async function readProject(
     rootPackage.validatedManifest.version,
   );
 
-  const workspaceDirectories = (
-    await Promise.all(
-      rootPackage.validatedManifest[PackageManifestFieldNames.Workspaces].map(
-        async (workspacePattern) => {
-          return await glob(workspacePattern, {
-            cwd: projectDirectoryPath,
-            absolute: true,
-          });
-        },
-      ),
-    )
-  ).flat();
+  const workspaceDirectories = await listWorkspaces(projectDirectoryPath);
 
   const workspacePackages = (
     await Promise.all(
-      workspaceDirectories.map(async (directory) => {
+      workspaceDirectories.map(async ({ location }) => {
         return await readMonorepoWorkspacePackage({
-          packageDirectoryPath: directory,
+          packageDirectoryPath: resolve(projectDirectoryPath, location),
           rootPackageName: rootPackage.validatedManifest.name,
           rootPackageVersion: rootPackage.validatedManifest.version,
           projectDirectoryPath,
