@@ -77,13 +77,15 @@ function examineReleaseVersion(packageVersion: SemVer): ReleaseVersion {
 export async function listWorkspaces(projectDirectoryPath: string) {
   const stdout = await getLinesFromCommand(
     'yarn',
-    ['workspaces', 'list', '--no-private', '--json'],
+    ['workspaces', 'list', '--json'],
     {
       cwd: projectDirectoryPath,
     },
   );
 
-  return stdout.map((line) => JSON.parse(line) as YarnWorkspace);
+  return stdout
+    .map((line) => JSON.parse(line) as YarnWorkspace)
+    .filter(({ location }) => location !== '.');
 }
 
 /**

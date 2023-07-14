@@ -60,13 +60,9 @@ describe('project', () => {
           })
           .mockResolvedValue(rootPackage);
         when(jest.spyOn(miscUtilsModule, 'getLinesFromCommand'))
-          .calledWith(
-            'yarn',
-            ['workspaces', 'list', '--no-private', '--json'],
-            {
-              cwd: projectDirectoryPath,
-            },
-          )
+          .calledWith('yarn', ['workspaces', 'list', '--json'], {
+            cwd: projectDirectoryPath,
+          })
           .mockResolvedValue([
             '{"location":"packages/a","name":"a","workspaceDependencies":[],"mismatchedWorkspaceDependencies":[],"workspaceDependents":[]}',
             '{"location":"packages/subpackages/b","name":"b","workspaceDependencies":[],"mismatchedWorkspaceDependencies":[],"workspaceDependents":[]}',
