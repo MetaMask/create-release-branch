@@ -64,7 +64,10 @@ export async function followMonorepoWorkflow({
   stdout: Pick<WriteStream, 'write'>;
   stderr: Pick<WriteStream, 'write'>;
 }) {
-  const releaseSpecificationPath = path.join(tempDirectoryPath, 'RELEASE_SPEC');
+  const releaseSpecificationPath = path.join(
+    tempDirectoryPath,
+    'RELEASE_SPEC.yml',
+  );
 
   if (
     !firstRemovingExistingReleaseSpecification &&

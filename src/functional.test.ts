@@ -673,7 +673,7 @@ The release spec file has been retained for you to edit again and make the neces
             {
               replacements: [
                 {
-                  from: `${environment.tempDirectoryPath}/RELEASE_SPEC`,
+                  from: `${environment.tempDirectoryPath}/RELEASE_SPEC.yml`,
                   to: '<<release-spec-file-path>>',
                 },
               ],
