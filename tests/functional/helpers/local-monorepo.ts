@@ -53,7 +53,6 @@ export default class LocalMonorepo<
   async create() {
     await super.create();
     await this.runCommand('yarn', ['set', 'version', 'stable']);
-    await this.runCommand('yarn');
   }
 
   /**
