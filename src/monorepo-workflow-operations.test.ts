@@ -185,7 +185,7 @@ async function setupFollowMonorepoWorkflow({
   const editor = buildMockEditor();
   const releaseSpecificationPath = path.join(
     sandbox.directoryPath,
-    'RELEASE_SPEC',
+    'RELEASE_SPEC.yml',
   );
   const releaseSpecification = buildMockReleaseSpecification({
     path: releaseSpecificationPath,
