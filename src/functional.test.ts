@@ -1,7 +1,7 @@
 import { withMonorepoProjectEnvironment } from '../tests/functional/helpers/with';
 import { buildChangelog } from '../tests/functional/helpers/utils';
 
-jest.setTimeout(60_000);
+jest.setTimeout(10_000);
 
 describe('create-release-branch (functional)', () => {
   describe('against a monorepo with independent versions', () => {
