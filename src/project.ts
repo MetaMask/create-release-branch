@@ -28,11 +28,6 @@ type ReleaseVersion = {
   backportNumber: number;
 };
 
-export type YarnWorkspace = {
-  location: string;
-  name: string;
-};
-
 /**
  * Represents the entire codebase on which this tool is operating.
  *
