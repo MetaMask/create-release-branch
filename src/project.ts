@@ -8,7 +8,6 @@ import {
 } from './package';
 import { getRepositoryHttpsUrl, getTagNames } from './repo';
 import { SemVer } from './semver';
-import { getLinesFromCommand } from './misc-utils';
 import { PackageManifestFieldNames } from './package-manifest';
 
 /**
