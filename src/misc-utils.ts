@@ -155,7 +155,7 @@ export async function getStdoutFromCommand(
 }
 
 /**
- * Runs a Git command, splitting up the immediate output into lines.
+ * Run a command, splitting up the immediate output into lines.
  *
  * @param command - The command to execute.
  * @param args - The positional arguments to the command.

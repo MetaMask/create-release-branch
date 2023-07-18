@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { when } from 'jest-when';
 import { SemVer } from 'semver';
+import * as actionUtils from '@metamask/action-utils';
 import { withSandbox } from '../tests/helpers';
 import { buildMockPackage, createNoopWriteStream } from '../tests/unit/helpers';
 import { readProject } from './project';
@@ -10,6 +11,10 @@ import * as repoModule from './repo';
 
 jest.mock('./package');
 jest.mock('./repo');
+jest.mock('@metamask/action-utils', () => ({
+  ...jest.requireActual('@metamask/action-utils'),
+  getWorkspaceLocations: jest.fn(),
+}));
 
 describe('project', () => {
   describe('readProject', () => {
@@ -57,6 +62,9 @@ describe('project', () => {
             projectTagNames,
           })
           .mockResolvedValue(rootPackage);
+        when(
+          jest.spyOn(actionUtils, 'getWorkspaceLocations'),
+        ).mockResolvedValue(['packages/a', 'packages/subpackages/b']);
         when(jest.spyOn(packageModule, 'readMonorepoWorkspacePackage'))
           .calledWith({
             packageDirectoryPath: path.join(

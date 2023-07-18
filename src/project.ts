@@ -1,13 +1,14 @@
-import { glob } from 'glob';
+import { resolve } from 'path';
+import { getWorkspaceLocations } from '@metamask/action-utils';
 import { WriteStreamLike } from './fs';
 import {
   Package,
   readMonorepoRootPackage,
   readMonorepoWorkspacePackage,
 } from './package';
-import { PackageManifestFieldNames } from './package-manifest';
 import { getRepositoryHttpsUrl, getTagNames } from './repo';
 import { SemVer } from './semver';
+import { PackageManifestFieldNames } from './package-manifest';
 
 /**
  * The release version of the root package of a monorepo extracted from its
@@ -90,24 +91,17 @@ export async function readProject(
     rootPackage.validatedManifest.version,
   );
 
-  const workspaceDirectories = (
-    await Promise.all(
-      rootPackage.validatedManifest[PackageManifestFieldNames.Workspaces].map(
-        async (workspacePattern) => {
-          return await glob(workspacePattern, {
-            cwd: projectDirectoryPath,
-            absolute: true,
-          });
-        },
-      ),
-    )
-  ).flat();
+  const workspaceDirectories = await getWorkspaceLocations(
+    rootPackage.validatedManifest[PackageManifestFieldNames.Workspaces],
+    projectDirectoryPath,
+    true,
+  );
 
   const workspacePackages = (
     await Promise.all(
       workspaceDirectories.map(async (directory) => {
         return await readMonorepoWorkspacePackage({
-          packageDirectoryPath: directory,
+          packageDirectoryPath: resolve(projectDirectoryPath, directory),
           rootPackageName: rootPackage.validatedManifest.name,
           rootPackageVersion: rootPackage.validatedManifest.version,
           projectDirectoryPath,

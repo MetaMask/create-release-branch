@@ -1,6 +1,8 @@
 import { withMonorepoProjectEnvironment } from '../tests/functional/helpers/with';
 import { buildChangelog } from '../tests/functional/helpers/utils';
 
+jest.setTimeout(10_000);
+
 describe('create-release-branch (functional)', () => {
   describe('against a monorepo with independent versions', () => {
     it('bumps the ordinary part of the root package and updates the versions of the specified packages according to the release spec', async () => {
@@ -654,16 +656,16 @@ Error: Your release spec could not be processed due to the following issues:
 
 * The following packages, which have changed since their latest release, are missing.
 
-  - @scope/d
   - @scope/b
+  - @scope/d
 
   Consider including them in the release spec so that any packages that rely on them won't break in production.
 
   If you are ABSOLUTELY SURE that this won't occur, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:
 
     packages:
-      "@scope/d": intentionally-skip
       "@scope/b": intentionally-skip
+      "@scope/d": intentionally-skip
 
 The release spec file has been retained for you to edit again and make the necessary fixes. Once you've done this, re-run this tool.
 
