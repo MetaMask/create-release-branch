@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0]
+### Added
+- Add support for nested workspaces ([#84](https://github.com/MetaMask/create-release-branch/pull/84))
+
+### Changed
+- Add `.yml` extension to `RELEASE_SPEC` file ([#83](https://github.com/MetaMask/create-release-branch/pull/83))
+
 ## [1.0.1]
 ### Fixed
 - Update changelogs correctly for monorepo packages ([#50](https://github.com/MetaMask/create-release-branch/pull/50))
@@ -17,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - In this first release, this tool only supports monorepos with an independent versioning scheme. We will add support for other kinds of projects in future releases.
   - You can learn more on how to use this tool by reading the [documentation](docs/).
 
-[Unreleased]: https://github.com/MetaMask/create-release-branch/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/MetaMask/create-release-branch/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/MetaMask/create-release-branch/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/MetaMask/create-release-branch/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/MetaMask/create-release-branch/releases/tag/v1.0.0
