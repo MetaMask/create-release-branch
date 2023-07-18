@@ -23,7 +23,7 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
-    "@metamask/action-utils": "^0.0.2",
+    "@metamask/action-utils": "^1.0.0",
     "@metamask/utils": "^5.0.2",
     "debug": "^4.3.4",
     "execa": "^5.1.1",

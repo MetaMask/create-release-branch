@@ -1,4 +1,5 @@
 import { resolve } from 'path';
+import { getWorkspaceLocations } from '@metamask/action-utils';
 import { WriteStreamLike } from './fs';
 import {
   Package,
@@ -8,6 +9,7 @@ import {
 import { getRepositoryHttpsUrl, getTagNames } from './repo';
 import { SemVer } from './semver';
 import { getLinesFromCommand } from './misc-utils';
+import { PackageManifestFieldNames } from './package-manifest';
 
 /**
  * The release version of the root package of a monorepo extracted from its
@@ -69,26 +71,6 @@ function examineReleaseVersion(packageVersion: SemVer): ReleaseVersion {
 }
 
 /**
- * List the workspaces in a monorepo using Yarn.
- *
- * @param projectDirectoryPath - The path to the project.
- * @returns An array of objects that represent the workspaces.
- */
-export async function listWorkspaces(projectDirectoryPath: string) {
-  const stdout = await getLinesFromCommand(
-    'yarn',
-    ['workspaces', 'list', '--json'],
-    {
-      cwd: projectDirectoryPath,
-    },
-  );
-
-  return stdout
-    .map((line) => JSON.parse(line) as YarnWorkspace)
-    .filter(({ location }) => location !== '.');
-}
-
-/**
  * Collects information about a monorepo — its root package as well as any
  * packages within workspaces specified via the root `package.json`.
  *
@@ -115,13 +97,17 @@ export async function readProject(
     rootPackage.validatedManifest.version,
   );
 
-  const workspaceDirectories = await listWorkspaces(projectDirectoryPath);
+  const workspaceDirectories = await getWorkspaceLocations(
+    rootPackage.validatedManifest[PackageManifestFieldNames.Workspaces],
+    projectDirectoryPath,
+    true,
+  );
 
   const workspacePackages = (
     await Promise.all(
-      workspaceDirectories.map(async ({ location }) => {
+      workspaceDirectories.map(async (directory) => {
         return await readMonorepoWorkspacePackage({
-          packageDirectoryPath: resolve(projectDirectoryPath, location),
+          packageDirectoryPath: resolve(projectDirectoryPath, directory),
           rootPackageName: rootPackage.validatedManifest.name,
           rootPackageVersion: rootPackage.validatedManifest.version,
           projectDirectoryPath,
