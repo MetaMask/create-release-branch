@@ -33,17 +33,15 @@ Combined with the changes above, this might look like:
 
 ### Monorepos with independent versions
 
-For a monorepo with independent versions, you will want to:
+For a monorepo with independent versions, you will want to add a `release.config.json` with a `versioningStrategy` of `"independent"`.
 
-1. Add a `release.config.json` with a `versioningStrategy` of `"independent"`.
-2. Change the format of the `version` within the root `package.json` from `<major>.<minor>.<patch>` to `<yyyymmdd>.1.0` (where `yyyymmdd` is a date in ISO format without the dashes, and `1` is the build number, which will be incremented with successive releases).
 
 Combined with the changes above, this might look like:
 
 ```
 # package.json
 {
-  "version": "20220607.1.0",
+  "version": "1.0.0",
   "workspaces": ["packages/*"],
 }
 
