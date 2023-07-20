@@ -35,7 +35,6 @@ Combined with the changes above, this might look like:
 
 For a monorepo with independent versions, you will want to add a `release.config.json` with a `versioningStrategy` of `"independent"`.
 
-
 Combined with the changes above, this might look like:
 
 ```
