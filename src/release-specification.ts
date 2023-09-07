@@ -310,7 +310,9 @@ export async function validateReleaseSpecification(
               `${JSON.stringify(
                 versionSpecifierOrDirective,
               )} is not a valid version specifier for package "${packageName}"`,
-              `("${packageName}" is at a greater version "${project.workspacePackages[packageName].validatedManifest.version}")`,
+              `("${packageName}" is at a greater version "${project.workspacePackages[
+                packageName
+              ].validatedManifest.version.toString()}")`,
             ],
             lineNumber,
           });
