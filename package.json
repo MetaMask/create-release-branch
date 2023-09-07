@@ -1,6 +1,6 @@
 {
   "name": "@metamask/create-release-branch",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "An interactive command-line tool to prepare a release branch by automatically bumping versions and updating changelogs for desired packages. Works for both polyrepos and monorepos.",
   "repository": {
     "type": "git",
