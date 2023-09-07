@@ -1,9 +1,10 @@
 import fs from 'fs';
 import { SemVer } from 'semver';
-import { buildMockProject, buildMockPackage } from '../tests/unit/helpers';
+
+import * as packageUtils from './package';
 import { planRelease, executeReleasePlan } from './release-plan';
 import { IncrementableVersionParts } from './release-specification';
-import * as packageUtils from './package';
+import { buildMockProject, buildMockPackage } from '../tests/unit/helpers';
 
 jest.mock('./package');
 

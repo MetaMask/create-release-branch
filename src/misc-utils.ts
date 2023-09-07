@@ -1,8 +1,8 @@
-import which from 'which';
-import execa from 'execa';
-import createDebug from 'debug';
-import { ErrorWithCause } from 'pony-cause';
 import { isObject } from '@metamask/utils';
+import createDebug from 'debug';
+import execa from 'execa';
+import { ErrorWithCause } from 'pony-cause';
+import which from 'which';
 
 export { isTruthyString } from '@metamask/action-utils';
 export { hasProperty, isNullOrUndefined } from '@metamask/utils';
@@ -91,6 +91,7 @@ export function wrapError(message: string, originalError: unknown) {
     return error;
   }
 
+  // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
   return new Error(`${message}: ${originalError}`);
 }
 
@@ -130,7 +131,7 @@ export async function resolveExecutable(
 export async function runCommand(
   command: string,
   args?: readonly string[] | undefined,
-  options?: execa.Options<string> | undefined,
+  options?: execa.Options | undefined,
 ): Promise<void> {
   await execa(command, args, options);
 }
@@ -149,7 +150,7 @@ export async function runCommand(
 export async function getStdoutFromCommand(
   command: string,
   args?: readonly string[] | undefined,
-  options?: execa.Options<string> | undefined,
+  options?: execa.Options | undefined,
 ): Promise<string> {
   return (await execa(command, args, options)).stdout.trim();
 }
@@ -167,7 +168,7 @@ export async function getStdoutFromCommand(
 export async function getLinesFromCommand(
   command: string,
   args?: readonly string[] | undefined,
-  options?: execa.Options<string> | undefined,
+  options?: execa.Options | undefined,
 ): Promise<string[]> {
   const { stdout } = await execa(command, args, options);
   return stdout.split('\n').filter((value) => value !== '');

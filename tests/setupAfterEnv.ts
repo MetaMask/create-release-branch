@@ -1,4 +1,5 @@
 import type { ExecaReturnValue } from 'execa';
+
 import { isExecaError } from './helpers';
 
 /**
@@ -56,7 +57,9 @@ const END = '▲▲▲ END ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲�
  * this function.
  * @returns A promise that resolves to a symbol.
  */
-const treatUnresolvedAfter = (duration: number): Promise<typeof UNRESOLVED> => {
+const treatUnresolvedAfter = async (
+  duration: number,
+): Promise<typeof UNRESOLVED> => {
   return new Promise((resolve) => {
     originalSetTimeout(resolve, duration, UNRESOLVED);
   });
@@ -109,7 +112,7 @@ expect.extend({
   },
 
   async toThrowExecaError(
-    promise: Promise<ExecaReturnValue<string>>,
+    promise: Promise<ExecaReturnValue>,
     message: string,
     { replacements }: { replacements: { from: string | RegExp; to: string }[] },
   ) {
@@ -149,6 +152,7 @@ expect.extend({
 
       return {
         message: () =>
+          /* eslint-disable-next-line @typescript-eslint/restrict-template-expressions */
           `Expected running the tool to fail with an error from \`execa\`, but it failed with:\n\n${error}`,
         pass: false,
       };

@@ -1,12 +1,11 @@
+import type { ExecaReturnValue } from 'execa';
 import fs from 'fs';
 import path from 'path';
-import { ExecaReturnValue } from 'execa';
 import YAML from 'yaml';
+
 import { TOOL_EXECUTABLE_PATH, TS_NODE_PATH } from './constants';
-import Environment, {
-  EnvironmentOptions,
-  PackageSpecification,
-} from './environment';
+import type { EnvironmentOptions, PackageSpecification } from './environment';
+import Environment from './environment';
 import LocalMonorepo from './local-monorepo';
 import { debug, knownKeysOf } from './utils';
 
@@ -86,7 +85,7 @@ export default class MonorepoEnvironment<
   }: {
     args?: string[];
     releaseSpecification: ReleaseSpecification<WorkspacePackageNickname>;
-  }): Promise<ExecaReturnValue<string>> {
+  }): Promise<ExecaReturnValue> {
     const releaseSpecificationPath = path.join(
       this.directoryPath,
       'release-spec',

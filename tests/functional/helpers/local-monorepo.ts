@@ -1,6 +1,8 @@
 import path from 'path';
-import { PackageSpecification } from './environment';
-import LocalRepo, { LocalRepoOptions } from './local-repo';
+
+import type { PackageSpecification } from './environment';
+import type { LocalRepoOptions } from './local-repo';
+import LocalRepo from './local-repo';
 import { knownKeysOf } from './utils';
 
 /**
@@ -164,7 +166,7 @@ export default class LocalMonorepo<
     // Update manifests for root and workspace packages with `name`, `version`,
     // and (optionally) `workspaces`
     await Promise.all(
-      knownKeysOf(this.#packages).map((packageName) => {
+      knownKeysOf(this.#packages).map(async (packageName) => {
         const pkg = this.#packages[packageName];
         const content = {
           name: pkg.name,

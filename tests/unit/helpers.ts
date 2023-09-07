@@ -1,7 +1,8 @@
+import { isPlainObject } from '@metamask/utils';
 import fs from 'fs';
 import path from 'path';
 import { SemVer } from 'semver';
-import { isPlainObject } from '@metamask/utils';
+
 import type { Package } from '../../src/package';
 import {
   PackageManifestDependenciesFieldNames,

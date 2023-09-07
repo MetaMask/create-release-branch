@@ -1,7 +1,8 @@
 import path from 'path';
-import LocalRepo from './local-repo';
+
+import type LocalRepo from './local-repo';
 import RemoteRepo from './remote-repo';
-import Repo from './repo';
+import type Repo from './repo';
 
 /**
  * Describes the package that is used to initialize a polyrepo, or one of the

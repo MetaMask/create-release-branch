@@ -1,18 +1,21 @@
-import fs, { WriteStream } from 'fs';
+import { updateChangelog } from '@metamask/auto-changelog';
+import type { WriteStream } from 'fs';
+import fs from 'fs';
 import path from 'path';
 import { format } from 'util';
-import { updateChangelog } from '@metamask/auto-changelog';
-import { WriteStreamLike, readFile, writeFile, writeJsonFile } from './fs';
+
+import type { WriteStreamLike } from './fs';
+import { readFile, writeFile, writeJsonFile } from './fs';
 import { isErrorWithCode } from './misc-utils';
-import {
-  readPackageManifest,
+import type {
   UnvalidatedPackageManifest,
   ValidatedPackageManifest,
 } from './package-manifest';
-import { Project } from './project';
-import { PackageReleasePlan } from './release-plan';
+import { readPackageManifest } from './package-manifest';
+import type { Project } from './project';
+import type { PackageReleasePlan } from './release-plan';
 import { hasChangesInDirectorySinceGitTag } from './repo';
-import { SemVer } from './semver';
+import type { SemVer } from './semver';
 
 const MANIFEST_FILE_NAME = 'package.json';
 const CHANGELOG_FILE_NAME = 'CHANGELOG.md';

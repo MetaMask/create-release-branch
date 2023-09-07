@@ -1,5 +1,7 @@
 import path from 'path';
-import Repo, { RepoOptions } from './repo';
+
+import type { RepoOptions } from './repo';
+import Repo from './repo';
 import { buildChangelog } from './utils';
 
 /**

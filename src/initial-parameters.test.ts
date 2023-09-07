@@ -1,15 +1,16 @@
+import { when } from 'jest-when';
 import os from 'os';
 import path from 'path';
-import { when } from 'jest-when';
+
+import * as commandLineArgumentsModule from './command-line-arguments';
+import * as envModule from './env';
+import { determineInitialParameters } from './initial-parameters';
+import * as projectModule from './project';
 import {
   buildMockProject,
   buildMockPackage,
   createNoopWriteStream,
 } from '../tests/unit/helpers';
-import { determineInitialParameters } from './initial-parameters';
-import * as commandLineArgumentsModule from './command-line-arguments';
-import * as envModule from './env';
-import * as projectModule from './project';
 
 jest.mock('./command-line-arguments');
 jest.mock('./env');

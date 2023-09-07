@@ -1,6 +1,8 @@
-import fs, { WriteStream } from 'fs';
+import type { WriteStream } from 'fs';
+import fs from 'fs';
 import YAML from 'yaml';
-import { Editor } from './editor';
+
+import type { Editor } from './editor';
 import { readFile } from './fs';
 import {
   debug,
@@ -9,7 +11,7 @@ import {
   isObject,
   runCommand,
 } from './misc-utils';
-import { Project } from './project';
+import type { Project } from './project';
 import { isValidSemver, semver, SemVer } from './semver';
 
 /**
@@ -397,41 +399,40 @@ export async function validateReleaseSpecification(
     throw new Error(message);
   }
 
-  const packages = Object.keys(unvalidatedReleaseSpecification.packages).reduce(
-    (obj, packageName) => {
-      const versionSpecifierOrDirective =
-        unvalidatedReleaseSpecification.packages[packageName];
+  const packages = Object.keys(unvalidatedReleaseSpecification.packages).reduce<
+    ReleaseSpecification['packages']
+  >((obj, packageName) => {
+    const versionSpecifierOrDirective =
+      unvalidatedReleaseSpecification.packages[packageName];
 
+    if (
+      versionSpecifierOrDirective !== SKIP_PACKAGE_DIRECTIVE &&
+      versionSpecifierOrDirective !== INTENTIONALLY_SKIP_PACKAGE_DIRECTIVE
+    ) {
       if (
-        versionSpecifierOrDirective !== SKIP_PACKAGE_DIRECTIVE &&
-        versionSpecifierOrDirective !== INTENTIONALLY_SKIP_PACKAGE_DIRECTIVE
+        Object.values(IncrementableVersionParts).includes(
+          // Typecast: It doesn't matter what type versionSpecifierOrDirective
+          // is as we are checking for inclusion.
+          versionSpecifierOrDirective as any,
+        )
       ) {
-        if (
-          Object.values(IncrementableVersionParts).includes(
-            // Typecast: It doesn't matter what type versionSpecifierOrDirective
-            // is as we are checking for inclusion.
-            versionSpecifierOrDirective as any,
-          )
-        ) {
-          return {
-            ...obj,
-            // Typecast: We know what this is as we've checked it above.
-            [packageName]:
-              versionSpecifierOrDirective as IncrementableVersionParts,
-          };
-        }
-
         return {
           ...obj,
-          // Typecast: We know that this will safely parse.
-          [packageName]: semver.parse(versionSpecifierOrDirective) as SemVer,
+          // Typecast: We know what this is as we've checked it above.
+          [packageName]:
+            versionSpecifierOrDirective as IncrementableVersionParts,
         };
       }
 
-      return obj;
-    },
-    {} as ReleaseSpecification['packages'],
-  );
+      return {
+        ...obj,
+        // Typecast: We know that this will safely parse.
+        [packageName]: semver.parse(versionSpecifierOrDirective) as SemVer,
+      };
+    }
+
+    return obj;
+  }, {});
 
   return { packages, path: releaseSpecificationPath };
 }

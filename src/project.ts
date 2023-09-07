@@ -1,14 +1,15 @@
-import { resolve } from 'path';
 import { getWorkspaceLocations } from '@metamask/action-utils';
-import { WriteStreamLike } from './fs';
+import { resolve } from 'path';
+
+import type { WriteStreamLike } from './fs';
+import type { Package } from './package';
 import {
-  Package,
   readMonorepoRootPackage,
   readMonorepoWorkspacePackage,
 } from './package';
-import { getRepositoryHttpsUrl, getTagNames } from './repo';
-import { SemVer } from './semver';
 import { PackageManifestFieldNames } from './package-manifest';
+import { getRepositoryHttpsUrl, getTagNames } from './repo';
+import type { SemVer } from './semver';
 
 /**
  * The release version of the root package of a monorepo extracted from its
@@ -110,9 +111,9 @@ export async function readProject(
         });
       }),
     )
-  ).reduce((obj, pkg) => {
+  ).reduce<Record<string, Package>>((obj, pkg) => {
     return { ...obj, [pkg.validatedManifest.name]: pkg };
-  }, {} as Record<string, Package>);
+  }, {});
 
   const isMonorepo = Object.keys(workspacePackages).length > 0;
 

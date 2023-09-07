@@ -31,6 +31,7 @@ export async function determineEditor(): Promise<Editor | null> {
       executablePath = await resolveExecutable(EDITOR);
     } catch (error) {
       debug(
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         `Could not resolve executable ${EDITOR} (${error}), falling back to VSCode`,
       );
     }
@@ -43,6 +44,7 @@ export async function determineEditor(): Promise<Editor | null> {
       executableArgs.push('--wait');
     } catch (error) {
       debug(
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         `Could not resolve path to VSCode: ${error}, continuing regardless`,
       );
     }
