@@ -9,7 +9,12 @@ type Env = {
  * this tool needs to access, whether their values are defined or not.
  */
 export function getEnvironmentVariables(): Env {
-  return ['EDITOR'].reduce((object, key) => {
-    return { ...object, [key]: process.env[key] };
-  }, {} as Env);
+  return ['EDITOR'].reduce(
+    (object, key) => {
+      return { ...object, [key]: process.env[key] };
+    },
+    {
+      EDITOR: undefined,
+    },
+  );
 }
