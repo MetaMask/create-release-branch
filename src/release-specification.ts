@@ -77,7 +77,7 @@ export async function generateReleaseSpecificationTemplateForMonorepo({
 # - "minor" (if you want to bump the minor part of the package's version)
 # - "patch" (if you want to bump the patch part of the package's version)
 # - an exact version with major, minor, and patch parts (e.g. "1.2.3")
-# - null (to skip the package entirely)
+# - intentionally-skip (to skip the package entirely)
 #
 ${afterEditingInstructions}
   `.trim();
