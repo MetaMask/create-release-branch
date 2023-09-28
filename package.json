@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@metamask/action-utils": "^1.0.0",
-    "@metamask/utils": "^5.0.2",
+    "@metamask/utils": "^8.1.0",
     "debug": "^4.3.4",
     "execa": "^5.1.1",
     "pony-cause": "^2.1.9",
