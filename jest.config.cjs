@@ -6,13 +6,13 @@
 /**
  * Dependencies that are ESM-only, and need to be transpiled by Babel.
  * This list is used in the `transformIgnorePatterns` option below.
- * 
+ *
  * You probably need to add a dependency to this list if the tests fail with something like:
  * - `SyntaxError: Cannot use import statement outside a module`
  * - `SyntaxError: Unexpected token 'export'`
  * If so, identify the dependency that's causing the error via the stack trace, and add it
  * to this list.
- * 
+ *
  * No, we do not live in the best of all possible worlds. Why do you ask?
  *
  * For details on Jest's currently experimental ESM support see: https://github.com/jestjs/jest/issues/9430

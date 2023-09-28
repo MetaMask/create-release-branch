@@ -12,6 +12,7 @@ import {
   createNoopWriteStream,
 } from '../tests/unit/helpers.js';
 import {
+  formatChangelog,
   readMonorepoRootPackage,
   readMonorepoWorkspacePackage,
   updatePackage,
@@ -494,11 +495,15 @@ describe('package', () => {
             ## [Unreleased]
 
             ## [2.0.0]
+
             ### Uncategorized
+
             - Add isNewFunction ([#2](https://repo.url/compare/package/pull/2))
 
             ## [1.0.0] - 2020-01-01
+
             ### Changed
+
             - Something else
 
             [Unreleased]: https://repo.url/compare/package@2.0.0...HEAD
@@ -572,6 +577,7 @@ describe('package', () => {
             projectRootDirectory: sandbox.directoryPath,
             repoUrl: 'https://repo.url',
             tagPrefixes: ['package@', 'v'],
+            formatter: formatChangelog,
           })
           .mockResolvedValue('new changelog');
         await fs.promises.writeFile(changelogPath, 'existing changelog');
@@ -610,6 +616,7 @@ describe('package', () => {
             projectRootDirectory: sandbox.directoryPath,
             repoUrl: 'https://repo.url',
             tagPrefixes: ['package@', 'v'],
+            formatter: formatChangelog,
           })
           .mockResolvedValue(undefined);
         await fs.promises.writeFile(changelogPath, 'existing changelog');
@@ -671,6 +678,32 @@ describe('package', () => {
           updatePackageChangelog({ project, package: pkg, stderr }),
         ).rejects.toThrow('oops');
       });
+    });
+  });
+
+  describe('formatChangelog', () => {
+    it('formats a changelog', () => {
+      const unformattedChangelog = `#  Changelog
+##     1.0.0
+
+ - Some change
+## 0.0.1
+
+- Some other change
+`;
+
+      expect(formatChangelog(unformattedChangelog)).toMatchInlineSnapshot(`
+        "# Changelog
+
+        ## 1.0.0
+
+        - Some change
+
+        ## 0.0.1
+
+        - Some other change
+        "
+      `);
     });
   });
 });

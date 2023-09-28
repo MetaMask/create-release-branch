@@ -3,12 +3,12 @@ import path from 'path';
 import { when } from 'jest-when';
 import { SemVer } from 'semver';
 import * as actionUtils from '@metamask/action-utils';
-import { withSandbox } from '../tests/helpers';
+import { withSandbox } from '../tests/helpers.js';
 import {
   buildMockPackage,
   buildMockProject,
   createNoopWriteStream,
-} from '../tests/unit/helpers';
+} from '../tests/unit/helpers.js';
 import {
   readProject,
   restoreChangelogsForSkippedPackages,
