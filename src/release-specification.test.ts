@@ -53,7 +53,7 @@ describe('release-specification', () => {
 # - "minor" (if you want to bump the minor part of the package's version)
 # - "patch" (if you want to bump the patch part of the package's version)
 # - an exact version with major, minor, and patch parts (e.g. "1.2.3")
-# - null (to skip the package entirely)
+# - intentionally-skip (to skip the package entirely)
 #
 # When you're finished making your selections, save this file and
 # create-release-branch will continue automatically.
@@ -116,7 +116,7 @@ packages:
 # - "minor" (if you want to bump the minor part of the package's version)
 # - "patch" (if you want to bump the patch part of the package's version)
 # - an exact version with major, minor, and patch parts (e.g. "1.2.3")
-# - null (to skip the package entirely)
+# - intentionally-skip (to skip the package entirely)
 #
 # When you're finished making your selections, save this file and then re-run
 # create-release-branch.
