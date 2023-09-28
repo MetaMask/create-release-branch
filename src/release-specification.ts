@@ -242,10 +242,8 @@ export async function validateReleaseSpecification(
     });
   }
 
-  Object.keys(unvalidatedReleaseSpecification.packages).forEach(
-    (packageName, index) => {
-      const versionSpecifierOrDirective =
-        unvalidatedReleaseSpecification.packages[packageName];
+  Object.entries(unvalidatedReleaseSpecification.packages).forEach(
+    ([packageName, versionSpecifierOrDirective], index) => {
       const lineNumber = indexOfFirstUsableLine + index + 2;
       const pkg = project.workspacePackages[packageName];
 
@@ -302,15 +300,8 @@ export async function validateReleaseSpecification(
           });
         }
       }
-    },
-  );
 
-  Object.keys(unvalidatedReleaseSpecification.packages).forEach(
-    (packageName) => {
-      const versionSpecifierOrDirective =
-        unvalidatedReleaseSpecification.packages[packageName];
-      const pkg = project.workspacePackages[packageName];
-
+      // Check to compel users to release packages with breaking changes alongside their dependents
       if (
         versionSpecifierOrDirective === 'major' ||
         (isValidSemver(versionSpecifierOrDirective) &&
