@@ -242,7 +242,13 @@ packages:
       await withSandbox(async (sandbox) => {
         const project = buildMockProject({
           workspacePackages: {
-            a: buildMockPackage('a'),
+            a: buildMockPackage('a', {
+              unvalidatedManifest: {
+                dependencies: {
+                  b: '1.0.0',
+                },
+              },
+            }),
             b: buildMockPackage('b'),
             c: buildMockPackage('c'),
             d: buildMockPackage('d'),
@@ -675,6 +681,116 @@ Your release spec could not be processed due to the following issues:
     packages:
       b: intentionally-skip
       c: intentionally-skip
+
+The release spec file has been retained for you to edit again and make the necessary fixes. Once you've done this, re-run this tool.
+
+${releaseSpecificationPath}
+`.trim(),
+        );
+      });
+    });
+
+    it('throws if there are any packages listed in the release but their dependent via "dependencies" is not listed', async () => {
+      await withSandbox(async (sandbox) => {
+        const project = buildMockProject({
+          workspacePackages: {
+            a: buildMockPackage('a', {
+              hasChangesSinceLatestRelease: true,
+            }),
+            b: buildMockPackage('b', {
+              hasChangesSinceLatestRelease: false,
+              unvalidatedManifest: {
+                dependencies: {
+                  a: '1.0.0',
+                },
+              },
+            }),
+          },
+        });
+        const releaseSpecificationPath = path.join(
+          sandbox.directoryPath,
+          'release-spec',
+        );
+        await fs.promises.writeFile(
+          releaseSpecificationPath,
+          YAML.stringify({
+            packages: {
+              a: 'major',
+            },
+          }),
+        );
+
+        await expect(
+          validateReleaseSpecification(project, releaseSpecificationPath),
+        ).rejects.toThrow(
+          `
+Your release spec could not be processed due to the following issues:
+
+* The following packages, which depends on released package a, are missing.
+
+  - b
+
+ Consider including them in the release spec so that they won't break in production.
+
+  If you are ABSOLUTELY SURE that this won't occur, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:
+
+    packages:
+      b: intentionally-skip
+
+The release spec file has been retained for you to edit again and make the necessary fixes. Once you've done this, re-run this tool.
+
+${releaseSpecificationPath}
+`.trim(),
+        );
+      });
+    });
+
+    it('throws if there are any packages listed in the release but their dependent via "peerDependencies" is not listed', async () => {
+      await withSandbox(async (sandbox) => {
+        const project = buildMockProject({
+          workspacePackages: {
+            a: buildMockPackage('a', {
+              hasChangesSinceLatestRelease: true,
+            }),
+            b: buildMockPackage('b', {
+              hasChangesSinceLatestRelease: false,
+              unvalidatedManifest: {
+                peerDependencies: {
+                  a: '1.0.0',
+                },
+              },
+            }),
+          },
+        });
+        const releaseSpecificationPath = path.join(
+          sandbox.directoryPath,
+          'release-spec',
+        );
+        await fs.promises.writeFile(
+          releaseSpecificationPath,
+          YAML.stringify({
+            packages: {
+              a: 'major',
+            },
+          }),
+        );
+
+        await expect(
+          validateReleaseSpecification(project, releaseSpecificationPath),
+        ).rejects.toThrow(
+          `
+Your release spec could not be processed due to the following issues:
+
+* The following packages, which depends on released package a, are missing.
+
+  - b
+
+ Consider including them in the release spec so that they won't break in production.
+
+  If you are ABSOLUTELY SURE that this won't occur, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:
+
+    packages:
+      b: intentionally-skip
 
 The release spec file has been retained for you to edit again and make the necessary fixes. Once you've done this, re-run this tool.
 

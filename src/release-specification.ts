@@ -1,5 +1,6 @@
 import fs, { WriteStream } from 'fs';
 import YAML from 'yaml';
+import { diff } from 'semver';
 import { Editor } from './editor';
 import { readFile } from './fs';
 import {
@@ -298,6 +299,79 @@ export async function validateReleaseSpecification(
               `("${packageName}" is at a greater version "${project.workspacePackages[packageName].validatedManifest.version}")`,
             ],
             lineNumber,
+          });
+        }
+      }
+    },
+  );
+
+  Object.keys(unvalidatedReleaseSpecification.packages).forEach(
+    (packageName) => {
+      const versionSpecifierOrDirective =
+        unvalidatedReleaseSpecification.packages[packageName];
+      const pkg = project.workspacePackages[packageName];
+
+      if (
+        versionSpecifierOrDirective === 'major' ||
+        (isValidSemver(versionSpecifierOrDirective) &&
+          diff(
+            pkg.validatedManifest.version,
+            versionSpecifierOrDirective as string,
+          ) === 'major')
+      ) {
+        const missingDependents = Object.values(
+          project.workspacePackages,
+        ).filter((dependent) => {
+          const { dependencies, peerDependencies } =
+            dependent.unvalidatedManifest;
+          const isDependent =
+            (dependencies && hasProperty(dependencies, packageName)) ||
+            (peerDependencies && hasProperty(peerDependencies, packageName));
+
+          if (!isDependent) {
+            return false;
+          }
+
+          const dependentVersionSpecifierOrDirective =
+            unvalidatedReleaseSpecification.packages[
+              dependent.validatedManifest.name
+            ];
+
+          return (
+            dependentVersionSpecifierOrDirective !== SKIP_PACKAGE_DIRECTIVE &&
+            dependentVersionSpecifierOrDirective !==
+              INTENTIONALLY_SKIP_PACKAGE_DIRECTIVE &&
+            !hasProperty(
+              IncrementableVersionParts,
+              dependentVersionSpecifierOrDirective,
+            ) &&
+            !isValidSemver(dependentVersionSpecifierOrDirective)
+          );
+        });
+
+        if (missingDependents.length > 0) {
+          errors.push({
+            message: [
+              `The following packages, which depends on released package ${packageName}, are missing.`,
+              missingDependents
+                .map((dependent) => `  - ${dependent.validatedManifest.name}`)
+                .join('\n'),
+              " Consider including them in the release spec so that they won't break in production.",
+              `  If you are ABSOLUTELY SURE that this won't occur, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:`,
+              YAML.stringify({
+                packages: missingDependents.reduce((object, dependent) => {
+                  return {
+                    ...object,
+                    [dependent.validatedManifest.name]:
+                      INTENTIONALLY_SKIP_PACKAGE_DIRECTIVE,
+                  };
+                }, {}),
+              })
+                .trim()
+                .split('\n')
+                .map((line) => `    ${line}`)
+                .join('\n'),
+            ].join('\n\n'),
           });
         }
       }
