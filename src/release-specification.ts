@@ -241,10 +241,8 @@ export async function validateReleaseSpecification(
     });
   }
 
-  Object.keys(unvalidatedReleaseSpecification.packages).forEach(
-    (packageName, index) => {
-      const versionSpecifierOrDirective =
-        unvalidatedReleaseSpecification.packages[packageName];
+  Object.entries(unvalidatedReleaseSpecification.packages).forEach(
+    ([packageName, versionSpecifierOrDirective], index) => {
       const lineNumber = indexOfFirstUsableLine + index + 2;
       const pkg = project.workspacePackages[packageName];
 
@@ -298,6 +296,58 @@ export async function validateReleaseSpecification(
               `("${packageName}" is at a greater version "${project.workspacePackages[packageName].validatedManifest.version}")`,
             ],
             lineNumber,
+          });
+        }
+      }
+
+      // Check to compel users to release new versions of dependencies alongside their dependents
+      if (
+        pkg &&
+        versionSpecifierOrDirective &&
+        (hasProperty(IncrementableVersionParts, versionSpecifierOrDirective) ||
+          isValidSemver(versionSpecifierOrDirective))
+      ) {
+        const missingDependencies = Object.keys({
+          ...(pkg.unvalidatedManifest.dependencies || {}),
+          ...(pkg.unvalidatedManifest.peerDependencies || {}),
+        }).filter((dependency) => {
+          const dependencyVersionSpecifierOrDirective =
+            unvalidatedReleaseSpecification.packages[dependency];
+
+          return (
+            dependencyVersionSpecifierOrDirective !== SKIP_PACKAGE_DIRECTIVE &&
+            dependencyVersionSpecifierOrDirective !==
+              INTENTIONALLY_SKIP_PACKAGE_DIRECTIVE &&
+            !hasProperty(
+              IncrementableVersionParts,
+              dependencyVersionSpecifierOrDirective,
+            ) &&
+            !isValidSemver(dependencyVersionSpecifierOrDirective)
+          );
+        });
+
+        if (missingDependencies.length > 0) {
+          errors.push({
+            message: [
+              `The following packages, which uses a released package ${packageName}, are missing.`,
+              missingDependencies
+                .map((dependency) => `  - ${dependency}`)
+                .join('\n'),
+              " Consider including them in the release spec so that they won't break in production.",
+              `  If you are ABSOLUTELY SURE that this won't occur, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:`,
+              YAML.stringify({
+                packages: missingDependencies.reduce((object, dependency) => {
+                  return {
+                    ...object,
+                    [dependency]: INTENTIONALLY_SKIP_PACKAGE_DIRECTIVE,
+                  };
+                }, {}),
+              })
+                .trim()
+                .split('\n')
+                .map((line) => `    ${line}`)
+                .join('\n'),
+            ].join('\n\n'),
           });
         }
       }

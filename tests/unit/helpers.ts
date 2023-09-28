@@ -4,7 +4,10 @@ import { SemVer } from 'semver';
 import { isPlainObject } from '@metamask/utils';
 import type { Package } from '../../src/package';
 import { PackageManifestFieldNames } from '../../src/package-manifest';
-import type { ValidatedPackageManifest } from '../../src/package-manifest';
+import type {
+  UnvalidatedPackageManifest,
+  ValidatedPackageManifest,
+} from '../../src/package-manifest';
 import type { Project } from '../../src/project';
 
 /**
@@ -35,6 +38,7 @@ type MockPackageOverrides = Omit<
     Partial<ValidatedPackageManifest>,
     PackageManifestFieldNames.Name | PackageManifestFieldNames.Version
   >;
+  unvalidatedManifest?: UnvalidatedPackageManifest;
 };
 
 /**
@@ -102,6 +106,7 @@ export function buildMockPackage(
 
   const {
     validatedManifest = {},
+    unvalidatedManifest = {},
     directoryPath = `/path/to/packages/${name}`,
     manifestPath = path.join(directoryPath, 'package.json'),
     changelogPath = path.join(directoryPath, 'CHANGELOG.md'),
@@ -110,7 +115,7 @@ export function buildMockPackage(
 
   return {
     directoryPath,
-    unvalidatedManifest: {},
+    unvalidatedManifest,
     validatedManifest: buildMockManifest({
       ...validatedManifest,
       [PackageManifestFieldNames.Name]: name,
