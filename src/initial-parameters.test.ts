@@ -34,7 +34,6 @@ describe('initial-parameters', () => {
           projectDirectory: '/path/to/project',
           tempDirectory: '/path/to/temp',
           reset: true,
-          backport: false,
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
@@ -53,7 +52,6 @@ describe('initial-parameters', () => {
         project,
         tempDirectoryPath: '/path/to/temp',
         reset: true,
-        releaseType: 'ordinary',
       });
     });
 
@@ -68,7 +66,6 @@ describe('initial-parameters', () => {
           projectDirectory: 'project',
           tempDirectory: undefined,
           reset: true,
-          backport: false,
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
@@ -97,7 +94,6 @@ describe('initial-parameters', () => {
           projectDirectory: '/path/to/project',
           tempDirectory: 'tmp',
           reset: true,
-          backport: false,
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
@@ -126,7 +122,6 @@ describe('initial-parameters', () => {
           projectDirectory: '/path/to/project',
           tempDirectory: undefined,
           reset: true,
-          backport: false,
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
@@ -155,7 +150,6 @@ describe('initial-parameters', () => {
           projectDirectory: '/path/to/project',
           tempDirectory: '/path/to/temp',
           reset: true,
-          backport: false,
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
@@ -182,7 +176,6 @@ describe('initial-parameters', () => {
           projectDirectory: '/path/to/project',
           tempDirectory: '/path/to/temp',
           reset: false,
-          backport: false,
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
@@ -198,60 +191,6 @@ describe('initial-parameters', () => {
       });
 
       expect(initialParameters.reset).toBe(false);
-    });
-
-    it('returns initial parameters including a releaseType of "backport", derived from a command-line argument of "--backport true"', async () => {
-      const project = buildMockProject();
-      const stderr = createNoopWriteStream();
-      when(jest.spyOn(commandLineArgumentsModule, 'readCommandLineArguments'))
-        .calledWith(['arg1', 'arg2'])
-        .mockResolvedValue({
-          projectDirectory: '/path/to/project',
-          tempDirectory: '/path/to/temp',
-          reset: false,
-          backport: true,
-        });
-      jest
-        .spyOn(envModule, 'getEnvironmentVariables')
-        .mockReturnValue({ EDITOR: undefined });
-      when(jest.spyOn(projectModule, 'readProject'))
-        .calledWith('/path/to/project', { stderr })
-        .mockResolvedValue(project);
-
-      const initialParameters = await determineInitialParameters({
-        argv: ['arg1', 'arg2'],
-        cwd: '/path/to/somewhere',
-        stderr,
-      });
-
-      expect(initialParameters.releaseType).toBe('backport');
-    });
-
-    it('returns initial parameters including a releaseType of "ordinary", derived from a command-line argument of "--backport false"', async () => {
-      const project = buildMockProject();
-      const stderr = createNoopWriteStream();
-      when(jest.spyOn(commandLineArgumentsModule, 'readCommandLineArguments'))
-        .calledWith(['arg1', 'arg2'])
-        .mockResolvedValue({
-          projectDirectory: '/path/to/project',
-          tempDirectory: '/path/to/temp',
-          reset: false,
-          backport: false,
-        });
-      jest
-        .spyOn(envModule, 'getEnvironmentVariables')
-        .mockReturnValue({ EDITOR: undefined });
-      when(jest.spyOn(projectModule, 'readProject'))
-        .calledWith('/path/to/project', { stderr })
-        .mockResolvedValue(project);
-
-      const initialParameters = await determineInitialParameters({
-        argv: ['arg1', 'arg2'],
-        cwd: '/path/to/somewhere',
-        stderr,
-      });
-
-      expect(initialParameters.releaseType).toBe('ordinary');
     });
   });
 });

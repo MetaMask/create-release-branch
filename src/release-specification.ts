@@ -26,7 +26,7 @@ export enum IncrementableVersionParts {
  * Describes how to update the version for a package, either by bumping a part
  * of the version or by setting that version exactly.
  */
-type VersionSpecifier = IncrementableVersionParts | SemVer;
+export type VersionSpecifier = IncrementableVersionParts | SemVer;
 
 /**
  * User-provided instructions for how to update this project in order to prepare

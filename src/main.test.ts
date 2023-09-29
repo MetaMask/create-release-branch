@@ -18,7 +18,6 @@ describe('main', () => {
         project,
         tempDirectoryPath: '/path/to/temp/directory',
         reset: true,
-        releaseType: 'backport',
       });
     const followMonorepoWorkflowSpy = jest
       .spyOn(monorepoWorkflowOperations, 'followMonorepoWorkflow')
@@ -35,7 +34,6 @@ describe('main', () => {
       project,
       tempDirectoryPath: '/path/to/temp/directory',
       firstRemovingExistingReleaseSpecification: true,
-      releaseType: 'backport',
       stdout,
       stderr,
     });
@@ -51,7 +49,6 @@ describe('main', () => {
         project,
         tempDirectoryPath: '/path/to/temp/directory',
         reset: false,
-        releaseType: 'backport',
       });
     const followMonorepoWorkflowSpy = jest
       .spyOn(monorepoWorkflowOperations, 'followMonorepoWorkflow')

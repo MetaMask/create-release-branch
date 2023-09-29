@@ -51,10 +51,7 @@ export function buildMockProject(overrides: Partial<Project> = {}): Project {
     rootPackage: buildMockPackage('root'),
     workspacePackages: {},
     isMonorepo: false,
-    releaseVersion: {
-      ordinaryNumber: 1,
-      backportNumber: 0,
-    },
+    releaseVersion: new SemVer('1.0.0'),
     ...overrides,
   };
 }

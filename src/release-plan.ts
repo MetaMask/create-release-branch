@@ -1,10 +1,15 @@
 import type { WriteStream } from 'fs';
 import { SemVer } from 'semver';
-import { ReleaseType } from './initial-parameters';
+import { assert } from '@metamask/utils';
 import { debug } from './misc-utils';
 import { Package, updatePackage } from './package';
 import { Project } from './project';
-import { ReleaseSpecification } from './release-specification';
+import {
+  IncrementableVersionParts,
+  ReleaseSpecification,
+  VersionSpecifier,
+} from './release-specification';
+import { semver } from './semver';
 
 /**
  * Instructions for how to update the project in order to prepare it for a new
@@ -47,6 +52,93 @@ export type PackageReleasePlan = {
 };
 
 /**
+ * Get the new version for a package, based on the release specification.
+ *
+ * @param currentVersion - The current version of the package.
+ * @param versionSpecifier - The version specifier from the release
+ * specification.
+ * @returns The new version for the package.
+ */
+export function getNewPackageVersion(
+  currentVersion: SemVer,
+  versionSpecifier: VersionSpecifier,
+) {
+  return versionSpecifier instanceof SemVer
+    ? versionSpecifier
+    : new SemVer(currentVersion.toString()).inc(versionSpecifier);
+}
+
+/**
+ * Get the new release version for a monorepo, based on the release
+ * specification.
+ *
+ * @param args - The arguments.
+ * @param args.project - Information about the whole project (e.g., names of
+ * packages and where they can found).
+ * @param args.releaseSpecification - A parsed version of the release spec
+ * entered by the user.
+ * @returns The new release version.
+ */
+export function getNewReleaseVersion({
+  project,
+  releaseSpecification,
+}: {
+  project: Project;
+  releaseSpecification: ReleaseSpecification;
+}): string {
+  const versionIncrement = Object.entries(
+    releaseSpecification.packages,
+  ).reduce<IncrementableVersionParts>(
+    (currentIncrementableVersion, [packageName, versionSpecifier]) => {
+      // If the current incrementable version is "major", we can stop
+      // immediately, since we can't increment the version any further.
+      if (currentIncrementableVersion === IncrementableVersionParts.major) {
+        return currentIncrementableVersion;
+      }
+
+      const currentVersion =
+        project.workspacePackages[packageName].validatedManifest.version;
+      const newVersion = getNewPackageVersion(currentVersion, versionSpecifier);
+
+      // `diff` returns null if the versions are the same, or a string
+      // representing the type of change otherwise (e.g., "major", "minor",
+      // "patch"). We then convert that string to the enum value.
+      const diff = semver.diff(
+        currentVersion,
+        newVersion,
+      ) as IncrementableVersionParts;
+
+      if (
+        diff === null ||
+        !Object.values(IncrementableVersionParts).includes(diff)
+      ) {
+        return currentIncrementableVersion;
+      }
+
+      // Assuming that the `IncrementableVersionParts` enum is ordered from
+      // most to least significant, we can compare the weights of the two
+      // versions to determine which one is more significant. For example, if
+      // the current incrementable version is "patch" and the diff is "minor",
+      // we check the weight of "minor" and "patch" and find that "minor" is
+      // more significant, so we return "minor" as the new incrementable
+      // version.
+      const weight = Object.values(IncrementableVersionParts).indexOf(diff);
+      const currentWeight = Object.values(IncrementableVersionParts).indexOf(
+        currentIncrementableVersion,
+      );
+
+      return weight < currentWeight ? diff : currentIncrementableVersion;
+    },
+    IncrementableVersionParts.patch,
+  );
+
+  const newVersion = semver.inc(project.releaseVersion, versionIncrement);
+  assert(newVersion !== null, 'Invalid new version.');
+
+  return newVersion;
+}
+
+/**
  * Uses the release specification to calculate the final versions of all of the
  * packages that we want to update, as well as a new release name.
  *
@@ -55,25 +147,19 @@ export type PackageReleasePlan = {
  * packages and where they can found).
  * @param args.releaseSpecification - A parsed version of the release spec
  * entered by the user.
- * @param args.releaseType - The type of release ("ordinary" or "backport"),
- * which affects how the version is bumped.
  * @returns A promise for information about the new release.
  */
 export async function planRelease({
   project,
   releaseSpecification,
-  releaseType,
 }: {
   project: Project;
   releaseSpecification: ReleaseSpecification;
-  releaseType: ReleaseType;
 }): Promise<ReleasePlan> {
-  const newReleaseVersion =
-    releaseType === 'backport'
-      ? `${project.releaseVersion.ordinaryNumber}.${
-          project.releaseVersion.backportNumber + 1
-        }.0`
-      : `${project.releaseVersion.ordinaryNumber + 1}.0.0`;
+  const newReleaseVersion = getNewReleaseVersion({
+    project,
+    releaseSpecification,
+  });
 
   const rootReleasePlan: PackageReleasePlan = {
     package: project.rootPackage,
@@ -87,10 +173,7 @@ export async function planRelease({
     const pkg = project.workspacePackages[packageName];
     const versionSpecifier = releaseSpecification.packages[packageName];
     const currentVersion = pkg.validatedManifest.version;
-    const newVersion =
-      versionSpecifier instanceof SemVer
-        ? versionSpecifier
-        : new SemVer(currentVersion.toString()).inc(versionSpecifier);
+    const newVersion = getNewPackageVersion(currentVersion, versionSpecifier);
 
     return {
       package: pkg,

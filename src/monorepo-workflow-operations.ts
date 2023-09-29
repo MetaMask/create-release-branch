@@ -7,7 +7,6 @@ import {
   writeFile,
 } from './fs';
 import { determineEditor } from './editor';
-import { ReleaseType } from './initial-parameters';
 import { Project } from './project';
 import { planRelease, executeReleasePlan } from './release-plan';
 import { captureChangesInReleaseBranch } from './repo';
@@ -44,8 +43,6 @@ import {
  * possible for a release specification that was created in a previous run to
  * stick around (due to an error). This will ensure that the file is removed
  * first.
- * @param args.releaseType - The type of release ("ordinary" or "backport"),
- * which affects how the version is bumped.
  * @param args.stdout - A stream that can be used to write to standard out.
  * @param args.stderr - A stream that can be used to write to standard error.
  */
@@ -53,14 +50,12 @@ export async function followMonorepoWorkflow({
   project,
   tempDirectoryPath,
   firstRemovingExistingReleaseSpecification,
-  releaseType,
   stdout,
   stderr,
 }: {
   project: Project;
   tempDirectoryPath: string;
   firstRemovingExistingReleaseSpecification: boolean;
-  releaseType: ReleaseType;
   stdout: Pick<WriteStream, 'write'>;
   stderr: Pick<WriteStream, 'write'>;
 }) {
@@ -115,7 +110,6 @@ export async function followMonorepoWorkflow({
   const releasePlan = await planRelease({
     project,
     releaseSpecification,
-    releaseType,
   });
   await executeReleasePlan(project, releasePlan, stderr);
   await removeFile(releaseSpecificationPath);
