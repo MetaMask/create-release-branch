@@ -684,7 +684,7 @@ ${releaseSpecificationPath}
       });
     });
 
-    it('throws if there are any packages listed in the release but another package that uses them is not listed', async () => {
+    it('throws if there are any packages not listed in the release which have changed, and are being used by other packages which are listed', async () => {
       await withSandbox(async (sandbox) => {
         const project = buildMockProject({
           workspacePackages: {
@@ -730,13 +730,13 @@ Your release spec could not be processed due to the following issues:
 
     packages:
       b: intentionally-skip
-* The following packages, which uses a released package a, are missing.
+* The following packages, which are dependencies of the package 'a' being released, are missing from the release spec.
 
   - b
 
- Consider including them in the release spec so that they won't break in production.
+  These packages may have changes that 'a' relies upon. Consider including them in the release spec.
 
-  If you are ABSOLUTELY SURE that this won't occur, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:
+  If you are ABSOLUTELY SURE these packages are safe to omit, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:
 
     packages:
       b: intentionally-skip

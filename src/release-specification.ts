@@ -330,12 +330,12 @@ export async function validateReleaseSpecification(
         if (missingDependencies.length > 0) {
           errors.push({
             message: [
-              `The following packages, which uses a released package ${packageName}, are missing.`,
+              `The following packages, which are dependencies of the package '${packageName}' being released, are missing from the release spec.`,
               missingDependencies
                 .map((dependency) => `  - ${dependency}`)
                 .join('\n'),
-              " Consider including them in the release spec so that they won't break in production.",
-              `  If you are ABSOLUTELY SURE that this won't occur, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:`,
+              `  These packages may have changes that '${packageName}' relies upon. Consider including them in the release spec.`,
+              `  If you are ABSOLUTELY SURE these packages are safe to omit, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:`,
               YAML.stringify({
                 packages: missingDependencies.reduce((object, dependency) => {
                   return {
