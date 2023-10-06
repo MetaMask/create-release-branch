@@ -311,18 +311,19 @@ export async function validateReleaseSpecification(
           ...(pkg.unvalidatedManifest.dependencies || {}),
           ...(pkg.unvalidatedManifest.peerDependencies || {}),
         }).filter((dependency) => {
+          if (
+            !project.workspacePackages[dependency]?.hasChangesSinceLatestRelease
+          ) {
+            return false;
+          }
+
           const dependencyVersionSpecifierOrDirective =
             unvalidatedReleaseSpecification.packages[dependency];
 
           return (
-            dependencyVersionSpecifierOrDirective !== SKIP_PACKAGE_DIRECTIVE &&
-            dependencyVersionSpecifierOrDirective !==
-              INTENTIONALLY_SKIP_PACKAGE_DIRECTIVE &&
-            !hasProperty(
-              IncrementableVersionParts,
-              dependencyVersionSpecifierOrDirective,
-            ) &&
-            !isValidSemver(dependencyVersionSpecifierOrDirective)
+            dependencyVersionSpecifierOrDirective === undefined ||
+            dependencyVersionSpecifierOrDirective ===
+              INTENTIONALLY_SKIP_PACKAGE_DIRECTIVE
           );
         });
 
