@@ -684,7 +684,7 @@ ${releaseSpecificationPath}
       });
     });
 
-    it('throws if there are any packages not listed in the release which have changed, and are being used by other packages which are listed', async () => {
+    it("throws if there are any packages not listed in the release which have changed, and are being defined as 'dependencies' by other packages which are listed", async () => {
       await withSandbox(async (sandbox) => {
         const project = buildMockProject({
           workspacePackages: {
@@ -746,6 +746,116 @@ The release spec file has been retained for you to edit again and make the neces
 ${releaseSpecificationPath}
 `.trim(),
         );
+      });
+    });
+
+    it("throws if there are any packages not listed in the release which have changed, and are being defined as 'peerDependencies' by other packages which are listed", async () => {
+      await withSandbox(async (sandbox) => {
+        const project = buildMockProject({
+          workspacePackages: {
+            a: buildMockPackage('a', {
+              hasChangesSinceLatestRelease: true,
+              unvalidatedManifest: {
+                peerDependencies: {
+                  b: '1.0.0',
+                },
+              },
+            }),
+            b: buildMockPackage('b', {
+              hasChangesSinceLatestRelease: true,
+            }),
+          },
+        });
+        const releaseSpecificationPath = path.join(
+          sandbox.directoryPath,
+          'release-spec',
+        );
+        await fs.promises.writeFile(
+          releaseSpecificationPath,
+          YAML.stringify({
+            packages: {
+              a: 'minor',
+            },
+          }),
+        );
+
+        await expect(
+          validateReleaseSpecification(project, releaseSpecificationPath),
+        ).rejects.toThrow(
+          `
+Your release spec could not be processed due to the following issues:
+
+* The following packages, which have changed since their latest release, are missing.
+
+  - b
+
+  Consider including them in the release spec so that any packages that rely on them won't break in production.
+
+  If you are ABSOLUTELY SURE that this won't occur, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:
+
+    packages:
+      b: intentionally-skip
+* The following packages, which are dependencies of the package 'a' being released, are missing from the release spec.
+
+  - b
+
+  These packages may have changes that 'a' relies upon. Consider including them in the release spec.
+
+  If you are ABSOLUTELY SURE these packages are safe to omit, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:
+
+    packages:
+      b: intentionally-skip
+
+The release spec file has been retained for you to edit again and make the necessary fixes. Once you've done this, re-run this tool.
+
+${releaseSpecificationPath}
+`.trim(),
+        );
+      });
+    });
+
+    it("does not throw when a package defined as 'dependencies' by a listed package in the release has not changed", async () => {
+      await withSandbox(async (sandbox) => {
+        const project = buildMockProject({
+          workspacePackages: {
+            a: buildMockPackage('a', {
+              hasChangesSinceLatestRelease: true,
+              unvalidatedManifest: {
+                dependencies: {
+                  b: '1.0.0',
+                  c: '2.0.0',
+                },
+              },
+            }),
+            b: buildMockPackage('b', {
+              hasChangesSinceLatestRelease: false,
+            }),
+          },
+        });
+        const releaseSpecificationPath = path.join(
+          sandbox.directoryPath,
+          'release-spec',
+        );
+        await fs.promises.writeFile(
+          releaseSpecificationPath,
+          YAML.stringify({
+            packages: {
+              a: 'minor',
+            },
+          }),
+        );
+
+        const releaseSpecification = await validateReleaseSpecification(
+          project,
+          releaseSpecificationPath,
+        );
+
+        expect(releaseSpecification).toStrictEqual({
+          packages: {
+            a: 'minor',
+          },
+          path: releaseSpecificationPath,
+        });
       });
     });
   });

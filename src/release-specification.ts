@@ -320,11 +320,7 @@ export async function validateReleaseSpecification(
           const dependencyVersionSpecifierOrDirective =
             unvalidatedReleaseSpecification.packages[dependency];
 
-          return (
-            dependencyVersionSpecifierOrDirective === undefined ||
-            dependencyVersionSpecifierOrDirective ===
-              INTENTIONALLY_SKIP_PACKAGE_DIRECTIVE
-          );
+          return !dependencyVersionSpecifierOrDirective;
         });
 
         if (missingDependencies.length > 0) {
