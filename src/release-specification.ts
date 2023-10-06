@@ -211,9 +211,23 @@ export async function validateReleaseSpecification(
       project.workspacePackages[packageName].hasChangesSinceLatestRelease,
   );
   const missingChangedPackageNames = changedPackageNames.filter(
-    (packageName) =>
-      !hasProperty(unvalidatedReleaseSpecification.packages, packageName) ||
-      unvalidatedReleaseSpecification.packages[packageName] === null,
+    (packageName) => {
+      const isADependency = Object.values(project.workspacePackages).some(
+        (p) => {
+          const { dependencies, peerDependencies } = p.unvalidatedManifest;
+          return (
+            (dependencies && hasProperty(dependencies, packageName)) ||
+            (peerDependencies && hasProperty(peerDependencies, packageName))
+          );
+        },
+      );
+
+      return (
+        (!hasProperty(unvalidatedReleaseSpecification.packages, packageName) ||
+          unvalidatedReleaseSpecification.packages[packageName] === null) &&
+        !isADependency
+      );
+    },
   );
 
   if (missingChangedPackageNames.length > 0) {

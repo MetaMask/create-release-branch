@@ -720,16 +720,6 @@ ${releaseSpecificationPath}
           `
 Your release spec could not be processed due to the following issues:
 
-* The following packages, which have changed since their latest release, are missing.
-
-  - b
-
-  Consider including them in the release spec so that any packages that rely on them won't break in production.
-
-  If you are ABSOLUTELY SURE that this won't occur, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:
-
-    packages:
-      b: intentionally-skip
 * The following packages, which are dependencies of the package 'a' being released, are missing from the release spec.
 
   - b
@@ -785,16 +775,6 @@ ${releaseSpecificationPath}
           `
 Your release spec could not be processed due to the following issues:
 
-* The following packages, which have changed since their latest release, are missing.
-
-  - b
-
-  Consider including them in the release spec so that any packages that rely on them won't break in production.
-
-  If you are ABSOLUTELY SURE that this won't occur, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:
-
-    packages:
-      b: intentionally-skip
 * The following packages, which are dependencies of the package 'a' being released, are missing from the release spec.
 
   - b
