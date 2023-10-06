@@ -329,25 +329,25 @@ export async function validateReleaseSpecification(
             ];
 
           return (
-            dependentVersionSpecifierOrDirective !== SKIP_PACKAGE_DIRECTIVE &&
-            dependentVersionSpecifierOrDirective !==
+            dependentVersionSpecifierOrDirective === SKIP_PACKAGE_DIRECTIVE ||
+            (dependentVersionSpecifierOrDirective !==
               INTENTIONALLY_SKIP_PACKAGE_DIRECTIVE &&
-            !hasProperty(
-              IncrementableVersionParts,
-              dependentVersionSpecifierOrDirective,
-            ) &&
-            !isValidSemver(dependentVersionSpecifierOrDirective)
+              !hasProperty(
+                IncrementableVersionParts,
+                dependentVersionSpecifierOrDirective,
+              ) &&
+              !isValidSemver(dependentVersionSpecifierOrDirective))
           );
         });
 
         if (missingDependents.length > 0) {
           errors.push({
             message: [
-              `The following packages, which depends on released package ${packageName}, are missing.`,
+              `The following packages, which depend on released package ${packageName}, are missing.`,
               missingDependents
                 .map((dependent) => `  - ${dependent.validatedManifest.name}`)
                 .join('\n'),
-              " Consider including them in the release spec so that they won't break in production.",
+              ` Consider including them in the release spec so that they are compatible with the new '${packageName}' version.`,
               `  If you are ABSOLUTELY SURE that this won't occur, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:`,
               YAML.stringify({
                 packages: missingDependents.reduce((object, dependent) => {
