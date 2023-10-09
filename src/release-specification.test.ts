@@ -242,13 +242,7 @@ packages:
       await withSandbox(async (sandbox) => {
         const project = buildMockProject({
           workspacePackages: {
-            a: buildMockPackage('a', {
-              unvalidatedManifest: {
-                dependencies: {
-                  b: '1.0.0',
-                },
-              },
-            }),
+            a: buildMockPackage('a'),
             b: buildMockPackage('b'),
             c: buildMockPackage('c'),
             d: buildMockPackage('d'),
