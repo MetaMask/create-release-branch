@@ -215,7 +215,7 @@ export async function validateReleaseSpecification(
       const isInternalDependency = Object.values(
         project.workspacePackages,
       ).some((pkg) => {
-        const { dependencies, peerDependencies } = pkg.unvalidatedManifest;
+        const { dependencies, peerDependencies } = pkg.validatedManifest;
         return (
           (dependencies && hasProperty(dependencies, packageName)) ||
           (peerDependencies && hasProperty(peerDependencies, packageName))
@@ -325,8 +325,8 @@ export async function validateReleaseSpecification(
           isValidSemver(versionSpecifierOrDirective))
       ) {
         const missingDependencies = Object.keys({
-          ...(pkg.unvalidatedManifest.dependencies || {}),
-          ...(pkg.unvalidatedManifest.peerDependencies || {}),
+          ...pkg.validatedManifest.dependencies,
+          ...pkg.validatedManifest.peerDependencies,
         }).filter((dependency) => {
           return (
             project.workspacePackages[dependency]

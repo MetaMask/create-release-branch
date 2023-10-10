@@ -690,7 +690,7 @@ ${releaseSpecificationPath}
           workspacePackages: {
             a: buildMockPackage('a', {
               hasChangesSinceLatestRelease: true,
-              unvalidatedManifest: {
+              validatedManifest: {
                 dependencies: {
                   b: '1.0.0',
                 },
@@ -745,7 +745,7 @@ ${releaseSpecificationPath}
           workspacePackages: {
             a: buildMockPackage('a', {
               hasChangesSinceLatestRelease: true,
-              unvalidatedManifest: {
+              validatedManifest: {
                 peerDependencies: {
                   b: '1.0.0',
                 },
@@ -800,7 +800,7 @@ ${releaseSpecificationPath}
           workspacePackages: {
             a: buildMockPackage('a', {
               hasChangesSinceLatestRelease: true,
-              unvalidatedManifest: {
+              validatedManifest: {
                 dependencies: {
                   b: '1.0.0',
                   c: '2.0.0',
@@ -845,7 +845,7 @@ ${releaseSpecificationPath}
           workspacePackages: {
             a: buildMockPackage('a', {
               hasChangesSinceLatestRelease: true,
-              unvalidatedManifest: {
+              validatedManifest: {
                 peerDependencies: {
                   b: '1.0.0',
                   c: '2.0.0',

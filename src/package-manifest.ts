@@ -29,6 +29,8 @@ export type ValidatedPackageManifest = {
   readonly [PackageManifestFieldNames.Version]: SemVer;
   readonly [PackageManifestFieldNames.Private]: boolean;
   readonly [PackageManifestFieldNames.Workspaces]: string[];
+  readonly [PackageManifestFieldNames.Dependencies]: Record<string, string>;
+  readonly [PackageManifestFieldNames.PeerDependencies]: Record<string, string>;
 };
 
 /**
@@ -82,6 +84,14 @@ const schemata = {
   [PackageManifestFieldNames.Private]: {
     validate: isValidPackageManifestPrivateField,
     errorMessage: 'must be true or false (if present)',
+  },
+  [PackageManifestFieldNames.Dependencies]: {
+    validate: isValidPackageManifestDependenciesField,
+    errorMessage: 'must be a valid dependencies field',
+  },
+  [PackageManifestFieldNames.PeerDependencies]: {
+    validate: isValidPackageManifestDependenciesField,
+    errorMessage: 'must be a valid peerDependencies field',
   },
 };
 
@@ -257,6 +267,63 @@ export function readPackageManifestPrivateField(
 }
 
 /**
+ * Type guard to ensure that the value of the "dependencies" or "peerDependencies" field of a manifest is
+ * valid.
+ *
+ * @param depsValue - The value to check.
+ * @returns Whether the value is has valid values.
+ */
+function isValidPackageManifestDependenciesField(
+  depsValue: Record<string, string>,
+): depsValue is Record<string, string> {
+  for (const [pkgName, version] of Object.entries(depsValue)) {
+    if (!isTruthyString(pkgName)) {
+      return false;
+    }
+
+    if (isValidPackageManifestVersionField(version)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/**
+ * Retrieves and validates the "dependencies" or "peerDependencies" fields within the package manifest
+ * object.
+ *
+ * @param manifest - The manifest object.
+ * @param parentDirectory - The directory in which the manifest lives.
+ * @param fieldName - The field name "dependencies" or "peerDependencies".
+ * @returns The value of the "dependencies" or "peerDependencies" field.
+ * @throws If the value of the field is not valid.
+ */
+export function readPackageManifestDependenciesField(
+  manifest: UnvalidatedPackageManifest,
+  parentDirectory: string,
+  fieldName:
+    | PackageManifestFieldNames.Dependencies
+    | PackageManifestFieldNames.PeerDependencies,
+): Record<string, string> {
+  const value = manifest[fieldName];
+  const schema = schemata[fieldName];
+
+  if (!schema.validate(value)) {
+    throw new Error(
+      buildPackageManifestFieldValidationErrorMessage({
+        manifest,
+        parentDirectory,
+        fieldName,
+        verbPhrase: schema.errorMessage,
+      }),
+    );
+  }
+
+  return value || {};
+}
+
+/**
  * Reads the package manifest at the given path, verifying key data within the
  * manifest.
  *
@@ -281,12 +348,24 @@ export async function readPackageManifest(manifestPath: string): Promise<{
     unvalidated,
     parentDirectory,
   );
+  const dependencies = readPackageManifestDependenciesField(
+    unvalidated,
+    parentDirectory,
+    PackageManifestFieldNames.Dependencies,
+  );
+  const peerDependencies = readPackageManifestDependenciesField(
+    unvalidated,
+    parentDirectory,
+    PackageManifestFieldNames.PeerDependencies,
+  );
 
   const validated = {
     [PackageManifestFieldNames.Name]: name,
     [PackageManifestFieldNames.Version]: version,
     [PackageManifestFieldNames.Workspaces]: workspaces,
     [PackageManifestFieldNames.Private]: privateValue,
+    [PackageManifestFieldNames.Dependencies]: dependencies,
+    [PackageManifestFieldNames.PeerDependencies]: peerDependencies,
   };
 
   return { unvalidated, validated };
