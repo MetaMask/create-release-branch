@@ -3,6 +3,7 @@ import {
   ManifestFieldNames as PackageManifestFieldNames,
   ManifestDependencyFieldNames as PackageManifestDependenciesFieldNames,
 } from '@metamask/action-utils';
+import { isPlainObject } from '@metamask/utils';
 import { readJsonObjectFile } from './fs';
 import { isTruthyString } from './misc-utils';
 import { isValidSemver, SemVer } from './semver';
@@ -277,13 +278,17 @@ export function readPackageManifestPrivateField(
  * @returns Whether the value is has valid values.
  */
 function isValidPackageManifestDependenciesField(
-  depsValue: Record<string, string> = {},
+  depsValue: unknown,
 ): depsValue is Record<string, string> {
-  return Object.entries(depsValue).every(([pkgName, version]) => {
-    return (
-      isTruthyString(pkgName) && isValidPackageManifestVersionField(version)
-    );
-  });
+  return (
+    depsValue === undefined ||
+    (isPlainObject(depsValue) &&
+      Object.entries(depsValue).every(([pkgName, version]) => {
+        return (
+          isTruthyString(pkgName) && isValidPackageManifestVersionField(version)
+        );
+      }))
+  );
 }
 
 /**
