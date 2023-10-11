@@ -305,10 +305,8 @@ export async function validateReleaseSpecification(
       if (
         versionSpecifierOrDirective === 'major' ||
         (isValidSemver(versionSpecifierOrDirective) &&
-          diff(
-            pkg.validatedManifest.version,
-            versionSpecifierOrDirective as string,
-          ) === 'major')
+          diff(pkg.validatedManifest.version, versionSpecifierOrDirective) ===
+            'major')
       ) {
         const missingDependents = Object.values(
           project.workspacePackages,
@@ -343,12 +341,12 @@ export async function validateReleaseSpecification(
         if (missingDependents.length > 0) {
           errors.push({
             message: [
-              `The following packages, which depend on released package ${packageName}, are missing.`,
+              `The following packages, which depend on released package '${packageName}', are missing from the release spec.`,
               missingDependents
                 .map((dependent) => `  - ${dependent.validatedManifest.name}`)
                 .join('\n'),
               ` Consider including them in the release spec so that they are compatible with the new '${packageName}' version.`,
-              `  If you are ABSOLUTELY SURE that this won't occur, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:`,
+              `  If you are ABSOLUTELY SURE these packages are safe to omit, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:`,
               YAML.stringify({
                 packages: missingDependents.reduce((object, dependent) => {
                   return {
