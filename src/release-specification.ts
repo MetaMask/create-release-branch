@@ -217,8 +217,8 @@ export async function validateReleaseSpecification(
       ).some((pkg) => {
         const { dependencies, peerDependencies } = pkg.validatedManifest;
         return (
-          (dependencies && hasProperty(dependencies, packageName)) ||
-          (peerDependencies && hasProperty(peerDependencies, packageName))
+          hasProperty(dependencies, packageName) ||
+          hasProperty(peerDependencies, packageName)
         );
       });
 
