@@ -18,6 +18,8 @@ describe('package-manifest', () => {
           version: new SemVer('1.2.3'),
           workspaces: [],
           private: false,
+          dependencies: {},
+          peerDependencies: {},
         };
         await fs.promises.writeFile(manifestPath, JSON.stringify(unvalidated));
 
@@ -41,6 +43,68 @@ describe('package-manifest', () => {
           version: new SemVer('1.2.3'),
           workspaces: [],
           private: true,
+          dependencies: {},
+          peerDependencies: {},
+        };
+        await fs.promises.writeFile(manifestPath, JSON.stringify(unvalidated));
+
+        expect(await readPackageManifest(manifestPath)).toStrictEqual({
+          unvalidated,
+          validated,
+        });
+      });
+    });
+
+    it('reads a package manifest where "dependencies" has valid values', async () => {
+      await withSandbox(async (sandbox) => {
+        const manifestPath = path.join(sandbox.directoryPath, 'package.json');
+        const unvalidated = {
+          name: 'foo',
+          version: '1.2.3',
+          private: true,
+          dependencies: {
+            a: '1.0.0',
+          },
+        };
+        const validated = {
+          name: 'foo',
+          version: new SemVer('1.2.3'),
+          workspaces: [],
+          private: true,
+          dependencies: {
+            a: '1.0.0',
+          },
+          peerDependencies: {},
+        };
+        await fs.promises.writeFile(manifestPath, JSON.stringify(unvalidated));
+
+        expect(await readPackageManifest(manifestPath)).toStrictEqual({
+          unvalidated,
+          validated,
+        });
+      });
+    });
+
+    it('reads a package manifest where "peerDependencies" has valid values', async () => {
+      await withSandbox(async (sandbox) => {
+        const manifestPath = path.join(sandbox.directoryPath, 'package.json');
+        const unvalidated = {
+          name: 'foo',
+          version: '1.2.3',
+          private: true,
+          peerDependencies: {
+            a: '1.0.0',
+          },
+        };
+        const validated = {
+          name: 'foo',
+          version: new SemVer('1.2.3'),
+          workspaces: [],
+          private: true,
+          dependencies: {},
+          peerDependencies: {
+            a: '1.0.0',
+          },
         };
         await fs.promises.writeFile(manifestPath, JSON.stringify(unvalidated));
 
@@ -64,6 +128,8 @@ describe('package-manifest', () => {
           version: new SemVer('1.2.3'),
           workspaces: [],
           private: false,
+          dependencies: {},
+          peerDependencies: {},
         };
         await fs.promises.writeFile(manifestPath, JSON.stringify(unvalidated));
 
@@ -88,6 +154,8 @@ describe('package-manifest', () => {
           version: new SemVer('1.2.3'),
           workspaces: ['packages/*'],
           private: true,
+          dependencies: {},
+          peerDependencies: {},
         };
         await fs.promises.writeFile(manifestPath, JSON.stringify(unvalidated));
 
@@ -111,6 +179,8 @@ describe('package-manifest', () => {
           version: new SemVer('1.2.3'),
           workspaces: [],
           private: false,
+          dependencies: {},
+          peerDependencies: {},
         };
         await fs.promises.writeFile(manifestPath, JSON.stringify(unvalidated));
 
@@ -200,6 +270,46 @@ describe('package-manifest', () => {
 
         await expect(readPackageManifest(manifestPath)).rejects.toThrow(
           'The value of "version" in the manifest for "foo" must be a valid SemVer version string',
+        );
+      });
+    });
+
+    it('throws if any of the "dependencies" has a non SemVer-compatible version string', async () => {
+      await withSandbox(async (sandbox) => {
+        const manifestPath = path.join(sandbox.directoryPath, 'package.json');
+        await fs.promises.writeFile(
+          manifestPath,
+          JSON.stringify({
+            name: 'foo',
+            version: '1.0.0',
+            dependencies: {
+              a: 12345,
+            },
+          }),
+        );
+
+        await expect(readPackageManifest(manifestPath)).rejects.toThrow(
+          'The value of "dependencies" in the manifest for "foo" must be a valid dependencies field',
+        );
+      });
+    });
+
+    it('throws if any of the "peerDependencies" has a non SemVer-compatible version string', async () => {
+      await withSandbox(async (sandbox) => {
+        const manifestPath = path.join(sandbox.directoryPath, 'package.json');
+        await fs.promises.writeFile(
+          manifestPath,
+          JSON.stringify({
+            name: 'foo',
+            version: '1.0.0',
+            peerDependencies: {
+              a: 12345,
+            },
+          }),
+        );
+
+        await expect(readPackageManifest(manifestPath)).rejects.toThrow(
+          'The value of "peerDependencies" in the manifest for "foo" must be a valid peerDependencies field',
         );
       });
     });

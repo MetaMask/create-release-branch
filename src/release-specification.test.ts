@@ -693,7 +693,7 @@ ${releaseSpecificationPath}
             }),
             b: buildMockPackage('b', {
               hasChangesSinceLatestRelease: false,
-              unvalidatedManifest: {
+              validatedManifest: {
                 dependencies: {
                   a: '1.0.0',
                 },
@@ -748,7 +748,7 @@ ${releaseSpecificationPath}
             }),
             b: buildMockPackage('b', {
               hasChangesSinceLatestRelease: false,
-              unvalidatedManifest: {
+              validatedManifest: {
                 dependencies: {
                   a: '2.1.4',
                 },
@@ -803,7 +803,7 @@ ${releaseSpecificationPath}
             }),
             b: buildMockPackage('b', {
               hasChangesSinceLatestRelease: false,
-              unvalidatedManifest: {
+              validatedManifest: {
                 peerDependencies: {
                   a: '1.0.0',
                 },
@@ -858,7 +858,7 @@ ${releaseSpecificationPath}
             }),
             b: buildMockPackage('b', {
               hasChangesSinceLatestRelease: false,
-              unvalidatedManifest: {
+              validatedManifest: {
                 peerDependencies: {
                   a: '2.1.4',
                 },
@@ -913,7 +913,7 @@ ${releaseSpecificationPath}
             }),
             b: buildMockPackage('b', {
               hasChangesSinceLatestRelease: false,
-              unvalidatedManifest: {
+              validatedManifest: {
                 dependencies: {
                   a: '1.0.0',
                 },
@@ -969,7 +969,7 @@ ${releaseSpecificationPath}
             }),
             b: buildMockPackage('b', {
               hasChangesSinceLatestRelease: false,
-              unvalidatedManifest: {
+              validatedManifest: {
                 dependencies: {
                   a: '2.1.4',
                 },
@@ -1025,7 +1025,7 @@ ${releaseSpecificationPath}
             }),
             b: buildMockPackage('b', {
               hasChangesSinceLatestRelease: false,
-              unvalidatedManifest: {
+              validatedManifest: {
                 peerDependencies: {
                   a: '1.0.0',
                 },
@@ -1081,7 +1081,7 @@ ${releaseSpecificationPath}
             }),
             b: buildMockPackage('b', {
               hasChangesSinceLatestRelease: false,
-              unvalidatedManifest: {
+              validatedManifest: {
                 peerDependencies: {
                   a: '2.1.4',
                 },
@@ -1137,7 +1137,7 @@ ${releaseSpecificationPath}
             }),
             b: buildMockPackage('b', {
               hasChangesSinceLatestRelease: false,
-              unvalidatedManifest: {
+              validatedManifest: {
                 dependencies: {
                   a: '1.0.0',
                 },
@@ -1182,7 +1182,7 @@ ${releaseSpecificationPath}
             }),
             b: buildMockPackage('b', {
               hasChangesSinceLatestRelease: false,
-              unvalidatedManifest: {
+              validatedManifest: {
                 dependencies: {
                   a: '2.1.4',
                 },
@@ -1227,7 +1227,7 @@ ${releaseSpecificationPath}
             }),
             b: buildMockPackage('b', {
               hasChangesSinceLatestRelease: false,
-              unvalidatedManifest: {
+              validatedManifest: {
                 peerDependencies: {
                   a: '1.0.0',
                 },
@@ -1272,7 +1272,7 @@ ${releaseSpecificationPath}
             }),
             b: buildMockPackage('b', {
               hasChangesSinceLatestRelease: false,
-              unvalidatedManifest: {
+              validatedManifest: {
                 peerDependencies: {
                   a: '2.1.4',
                 },
@@ -1317,7 +1317,7 @@ ${releaseSpecificationPath}
             }),
             b: buildMockPackage('b', {
               hasChangesSinceLatestRelease: false,
-              unvalidatedManifest: {
+              validatedManifest: {
                 dependencies: {
                   a: '1.0.0',
                 },
@@ -1374,6 +1374,408 @@ ${releaseSpecificationPath}
             a: 'patch',
           },
           path: releaseSpecificationPath2,
+        });
+      });
+    });
+
+    it("throws if there are any packages not listed in the release which have changed and are being defined as 'dependencies' by other packages which are listed", async () => {
+      await withSandbox(async (sandbox) => {
+        const project = buildMockProject({
+          workspacePackages: {
+            a: buildMockPackage('a', {
+              hasChangesSinceLatestRelease: true,
+              validatedManifest: {
+                dependencies: {
+                  b: '1.0.0',
+                },
+              },
+            }),
+            b: buildMockPackage('b', {
+              hasChangesSinceLatestRelease: true,
+            }),
+          },
+        });
+        const releaseSpecificationPath = path.join(
+          sandbox.directoryPath,
+          'release-spec',
+        );
+        await fs.promises.writeFile(
+          releaseSpecificationPath,
+          YAML.stringify({
+            packages: {
+              a: 'minor',
+            },
+          }),
+        );
+
+        await expect(
+          validateReleaseSpecification(project, releaseSpecificationPath),
+        ).rejects.toThrow(
+          `
+Your release spec could not be processed due to the following issues:
+
+* The following packages, which are dependencies or peer dependencies of the package 'a' being released, are missing from the release spec.
+
+  - b
+
+  These packages may have changes that 'a' relies upon. Consider including them in the release spec.
+
+  If you are ABSOLUTELY SURE these packages are safe to omit, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:
+
+    packages:
+      b: intentionally-skip
+
+The release spec file has been retained for you to edit again and make the necessary fixes. Once you've done this, re-run this tool.
+
+${releaseSpecificationPath}
+`.trim(),
+        );
+      });
+    });
+
+    it("throws if there are any packages not listed in the release which have changed and are being defined as 'peerDependencies' by other packages which are listed", async () => {
+      await withSandbox(async (sandbox) => {
+        const project = buildMockProject({
+          workspacePackages: {
+            a: buildMockPackage('a', {
+              hasChangesSinceLatestRelease: true,
+              validatedManifest: {
+                peerDependencies: {
+                  b: '1.0.0',
+                },
+              },
+            }),
+            b: buildMockPackage('b', {
+              hasChangesSinceLatestRelease: true,
+            }),
+          },
+        });
+        const releaseSpecificationPath = path.join(
+          sandbox.directoryPath,
+          'release-spec',
+        );
+        await fs.promises.writeFile(
+          releaseSpecificationPath,
+          YAML.stringify({
+            packages: {
+              a: 'minor',
+            },
+          }),
+        );
+
+        await expect(
+          validateReleaseSpecification(project, releaseSpecificationPath),
+        ).rejects.toThrow(
+          `
+Your release spec could not be processed due to the following issues:
+
+* The following packages, which are dependencies or peer dependencies of the package 'a' being released, are missing from the release spec.
+
+  - b
+
+  These packages may have changes that 'a' relies upon. Consider including them in the release spec.
+
+  If you are ABSOLUTELY SURE these packages are safe to omit, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:
+
+    packages:
+      b: intentionally-skip
+
+The release spec file has been retained for you to edit again and make the necessary fixes. Once you've done this, re-run this tool.
+
+${releaseSpecificationPath}
+`.trim(),
+        );
+      });
+    });
+
+    it("throws if there are any packages unintentionally skipped from the release which have changed and are being defined as 'dependencies' by other packages which are listed", async () => {
+      await withSandbox(async (sandbox) => {
+        const project = buildMockProject({
+          workspacePackages: {
+            a: buildMockPackage('a', {
+              hasChangesSinceLatestRelease: true,
+              validatedManifest: {
+                dependencies: {
+                  b: '1.0.0',
+                },
+              },
+            }),
+            b: buildMockPackage('b', {
+              hasChangesSinceLatestRelease: true,
+            }),
+          },
+        });
+        const releaseSpecificationPath = path.join(
+          sandbox.directoryPath,
+          'release-spec',
+        );
+        await fs.promises.writeFile(
+          releaseSpecificationPath,
+          YAML.stringify({
+            packages: {
+              a: 'minor',
+              b: null,
+            },
+          }),
+        );
+
+        await expect(
+          validateReleaseSpecification(project, releaseSpecificationPath),
+        ).rejects.toThrow(
+          `
+Your release spec could not be processed due to the following issues:
+
+* The following packages, which are dependencies or peer dependencies of the package 'a' being released, are missing from the release spec.
+
+  - b
+
+  These packages may have changes that 'a' relies upon. Consider including them in the release spec.
+
+  If you are ABSOLUTELY SURE these packages are safe to omit, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:
+
+    packages:
+      b: intentionally-skip
+
+The release spec file has been retained for you to edit again and make the necessary fixes. Once you've done this, re-run this tool.
+
+${releaseSpecificationPath}
+`.trim(),
+        );
+      });
+    });
+
+    it("throws if there are any packages unintentionally skipped from the release which have changed and are being defined as 'peerDependencies' by other packages which are listed", async () => {
+      await withSandbox(async (sandbox) => {
+        const project = buildMockProject({
+          workspacePackages: {
+            a: buildMockPackage('a', {
+              hasChangesSinceLatestRelease: true,
+              validatedManifest: {
+                peerDependencies: {
+                  b: '1.0.0',
+                },
+              },
+            }),
+            b: buildMockPackage('b', {
+              hasChangesSinceLatestRelease: true,
+            }),
+          },
+        });
+        const releaseSpecificationPath = path.join(
+          sandbox.directoryPath,
+          'release-spec',
+        );
+        await fs.promises.writeFile(
+          releaseSpecificationPath,
+          YAML.stringify({
+            packages: {
+              a: 'minor',
+              b: null,
+            },
+          }),
+        );
+
+        await expect(
+          validateReleaseSpecification(project, releaseSpecificationPath),
+        ).rejects.toThrow(
+          `
+Your release spec could not be processed due to the following issues:
+
+* The following packages, which are dependencies or peer dependencies of the package 'a' being released, are missing from the release spec.
+
+  - b
+
+  These packages may have changes that 'a' relies upon. Consider including them in the release spec.
+
+  If you are ABSOLUTELY SURE these packages are safe to omit, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:
+
+    packages:
+      b: intentionally-skip
+
+The release spec file has been retained for you to edit again and make the necessary fixes. Once you've done this, re-run this tool.
+
+${releaseSpecificationPath}
+`.trim(),
+        );
+      });
+    });
+
+    it("does not throw if there are any packages intentionally skipped from the release which have changed and are being defined as 'dependencies' by other packages which are listed", async () => {
+      await withSandbox(async (sandbox) => {
+        const project = buildMockProject({
+          workspacePackages: {
+            a: buildMockPackage('a', {
+              hasChangesSinceLatestRelease: true,
+              validatedManifest: {
+                dependencies: {
+                  b: '1.0.0',
+                },
+              },
+            }),
+            b: buildMockPackage('b', {
+              hasChangesSinceLatestRelease: true,
+            }),
+          },
+        });
+        const releaseSpecificationPath = path.join(
+          sandbox.directoryPath,
+          'release-spec',
+        );
+        await fs.promises.writeFile(
+          releaseSpecificationPath,
+          YAML.stringify({
+            packages: {
+              a: 'minor',
+              b: 'intentionally-skip',
+            },
+          }),
+        );
+
+        const releaseSpecification = await validateReleaseSpecification(
+          project,
+          releaseSpecificationPath,
+        );
+
+        expect(releaseSpecification).toStrictEqual({
+          packages: {
+            a: 'minor',
+          },
+          path: releaseSpecificationPath,
+        });
+      });
+    });
+
+    it("does not throw if there are any packages intentionally skipped from the release which have changed and are being defined as 'peerDependencies' by other packages which are listed", async () => {
+      await withSandbox(async (sandbox) => {
+        const project = buildMockProject({
+          workspacePackages: {
+            a: buildMockPackage('a', {
+              hasChangesSinceLatestRelease: true,
+              validatedManifest: {
+                peerDependencies: {
+                  b: '1.0.0',
+                },
+              },
+            }),
+            b: buildMockPackage('b', {
+              hasChangesSinceLatestRelease: true,
+            }),
+          },
+        });
+        const releaseSpecificationPath = path.join(
+          sandbox.directoryPath,
+          'release-spec',
+        );
+        await fs.promises.writeFile(
+          releaseSpecificationPath,
+          YAML.stringify({
+            packages: {
+              a: 'minor',
+              b: 'intentionally-skip',
+            },
+          }),
+        );
+
+        const releaseSpecification = await validateReleaseSpecification(
+          project,
+          releaseSpecificationPath,
+        );
+
+        expect(releaseSpecification).toStrictEqual({
+          packages: {
+            a: 'minor',
+          },
+          path: releaseSpecificationPath,
+        });
+      });
+    });
+
+    it("does not throw when any packages defined as 'dependencies' by a listed package in the release are not listed but have not changed", async () => {
+      await withSandbox(async (sandbox) => {
+        const project = buildMockProject({
+          workspacePackages: {
+            a: buildMockPackage('a', {
+              hasChangesSinceLatestRelease: true,
+              validatedManifest: {
+                dependencies: {
+                  b: '1.0.0',
+                  c: '2.0.0',
+                },
+              },
+            }),
+            b: buildMockPackage('b', {
+              hasChangesSinceLatestRelease: false,
+            }),
+          },
+        });
+        const releaseSpecificationPath = path.join(
+          sandbox.directoryPath,
+          'release-spec',
+        );
+        await fs.promises.writeFile(
+          releaseSpecificationPath,
+          YAML.stringify({
+            packages: {
+              a: 'minor',
+            },
+          }),
+        );
+
+        const releaseSpecification = await validateReleaseSpecification(
+          project,
+          releaseSpecificationPath,
+        );
+
+        expect(releaseSpecification).toStrictEqual({
+          packages: {
+            a: 'minor',
+          },
+          path: releaseSpecificationPath,
+        });
+      });
+    });
+
+    it("does not throw when any packages defined as 'peerDependencies' by a listed package in the release are not listed but have not changed", async () => {
+      await withSandbox(async (sandbox) => {
+        const project = buildMockProject({
+          workspacePackages: {
+            a: buildMockPackage('a', {
+              hasChangesSinceLatestRelease: true,
+              validatedManifest: {
+                peerDependencies: {
+                  b: '1.0.0',
+                  c: '2.0.0',
+                },
+              },
+            }),
+            b: buildMockPackage('b', {
+              hasChangesSinceLatestRelease: false,
+            }),
+          },
+        });
+        const releaseSpecificationPath = path.join(
+          sandbox.directoryPath,
+          'release-spec',
+        );
+        await fs.promises.writeFile(
+          releaseSpecificationPath,
+          YAML.stringify({
+            packages: {
+              a: 'minor',
+            },
+          }),
+        );
+
+        const releaseSpecification = await validateReleaseSpecification(
+          project,
+          releaseSpecificationPath,
+        );
+
+        expect(releaseSpecification).toStrictEqual({
+          packages: {
+            a: 'minor',
+          },
+          path: releaseSpecificationPath,
         });
       });
     });

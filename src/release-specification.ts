@@ -211,28 +211,45 @@ export async function validateReleaseSpecification(
     (packageName) =>
       project.workspacePackages[packageName].hasChangesSinceLatestRelease,
   );
-  const missingChangedPackageNames = changedPackageNames.filter(
-    (packageName) =>
-      !hasProperty(unvalidatedReleaseSpecification.packages, packageName) ||
-      unvalidatedReleaseSpecification.packages[packageName] === null,
+  const packageNamesToReportMissing = changedPackageNames.filter(
+    (packageName) => {
+      const isInternalDependency = Object.values(
+        project.workspacePackages,
+      ).some((pkg) => {
+        const { dependencies, peerDependencies } = pkg.validatedManifest;
+        return (
+          hasProperty(dependencies, packageName) ||
+          hasProperty(peerDependencies, packageName)
+        );
+      });
+
+      return (
+        (!hasProperty(unvalidatedReleaseSpecification.packages, packageName) ||
+          unvalidatedReleaseSpecification.packages[packageName] === null) &&
+        !isInternalDependency
+      );
+    },
   );
 
-  if (missingChangedPackageNames.length > 0) {
+  if (packageNamesToReportMissing.length > 0) {
     errors.push({
       message: [
         'The following packages, which have changed since their latest release, are missing.',
-        missingChangedPackageNames
+        packageNamesToReportMissing
           .map((packageName) => `  - ${packageName}`)
           .join('\n'),
         "  Consider including them in the release spec so that any packages that rely on them won't break in production.",
         `  If you are ABSOLUTELY SURE that this won't occur, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:`,
         YAML.stringify({
-          packages: missingChangedPackageNames.reduce((object, packageName) => {
-            return {
-              ...object,
-              [packageName]: INTENTIONALLY_SKIP_PACKAGE_DIRECTIVE,
-            };
-          }, {}),
+          packages: packageNamesToReportMissing.reduce(
+            (object, packageName) => {
+              return {
+                ...object,
+                [packageName]: INTENTIONALLY_SKIP_PACKAGE_DIRECTIVE,
+              };
+            },
+            {},
+          ),
         })
           .trim()
           .split('\n')
@@ -313,10 +330,10 @@ export async function validateReleaseSpecification(
             const possibleDependent =
               project.workspacePackages[possibleDependentName];
             const { dependencies, peerDependencies } =
-              possibleDependent.unvalidatedManifest;
+              possibleDependent.validatedManifest;
             return (
-              (dependencies && hasProperty(dependencies, packageName)) ||
-              (peerDependencies && hasProperty(peerDependencies, packageName))
+              hasProperty(dependencies, packageName) ||
+              hasProperty(peerDependencies, packageName)
             );
           },
         );
@@ -338,6 +355,50 @@ export async function validateReleaseSpecification(
                   return {
                     ...object,
                     [dependent]: INTENTIONALLY_SKIP_PACKAGE_DIRECTIVE,
+                  };
+                }, {}),
+              })
+                .trim()
+                .split('\n')
+                .map((line) => `    ${line}`)
+                .join('\n'),
+            ].join('\n\n'),
+          });
+        }
+      }
+
+      // Check to compel users to release new versions of dependencies alongside their dependents
+      if (
+        pkg &&
+        versionSpecifierOrDirective &&
+        (hasProperty(IncrementableVersionParts, versionSpecifierOrDirective) ||
+          isValidSemver(versionSpecifierOrDirective))
+      ) {
+        const missingDependencies = Object.keys({
+          ...pkg.validatedManifest.dependencies,
+          ...pkg.validatedManifest.peerDependencies,
+        }).filter((dependency) => {
+          return (
+            project.workspacePackages[dependency]
+              ?.hasChangesSinceLatestRelease &&
+            !unvalidatedReleaseSpecification.packages[dependency]
+          );
+        });
+
+        if (missingDependencies.length > 0) {
+          errors.push({
+            message: [
+              `The following packages, which are dependencies or peer dependencies of the package '${packageName}' being released, are missing from the release spec.`,
+              missingDependencies
+                .map((dependency) => `  - ${dependency}`)
+                .join('\n'),
+              `  These packages may have changes that '${packageName}' relies upon. Consider including them in the release spec.`,
+              `  If you are ABSOLUTELY SURE these packages are safe to omit, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:`,
+              YAML.stringify({
+                packages: missingDependencies.reduce((object, dependency) => {
+                  return {
+                    ...object,
+                    [dependency]: INTENTIONALLY_SKIP_PACKAGE_DIRECTIVE,
                   };
                 }, {}),
               })

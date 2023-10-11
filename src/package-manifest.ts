@@ -3,6 +3,7 @@ import {
   ManifestFieldNames as PackageManifestFieldNames,
   ManifestDependencyFieldNames as PackageManifestDependenciesFieldNames,
 } from '@metamask/action-utils';
+import { isPlainObject } from '@metamask/utils';
 import { readJsonObjectFile } from './fs';
 import { isTruthyString } from './misc-utils';
 import { isValidSemver, SemVer } from './semver';
@@ -29,6 +30,11 @@ export type ValidatedPackageManifest = {
   readonly [PackageManifestFieldNames.Version]: SemVer;
   readonly [PackageManifestFieldNames.Private]: boolean;
   readonly [PackageManifestFieldNames.Workspaces]: string[];
+  readonly [PackageManifestDependenciesFieldNames.Production]: Record<
+    string,
+    string
+  >;
+  readonly [PackageManifestDependenciesFieldNames.Peer]: Record<string, string>;
 };
 
 /**
@@ -82,6 +88,14 @@ const schemata = {
   [PackageManifestFieldNames.Private]: {
     validate: isValidPackageManifestPrivateField,
     errorMessage: 'must be true or false (if present)',
+  },
+  [PackageManifestDependenciesFieldNames.Production]: {
+    validate: isValidPackageManifestDependenciesField,
+    errorMessage: 'must be a valid dependencies field',
+  },
+  [PackageManifestDependenciesFieldNames.Peer]: {
+    validate: isValidPackageManifestDependenciesField,
+    errorMessage: 'must be a valid peerDependencies field',
   },
 };
 
@@ -257,6 +271,61 @@ export function readPackageManifestPrivateField(
 }
 
 /**
+ * Type guard to ensure that the value of the "dependencies" or "peerDependencies" field of a manifest is
+ * valid.
+ *
+ * @param depsValue - The value to check.
+ * @returns Whether the value is has valid values.
+ */
+function isValidPackageManifestDependenciesField(
+  depsValue: unknown,
+): depsValue is Record<string, string> {
+  return (
+    depsValue === undefined ||
+    (isPlainObject(depsValue) &&
+      Object.entries(depsValue).every(([pkgName, version]) => {
+        return (
+          isTruthyString(pkgName) && isValidPackageManifestVersionField(version)
+        );
+      }))
+  );
+}
+
+/**
+ * Retrieves and validates the "dependencies" or "peerDependencies" fields within the package manifest
+ * object.
+ *
+ * @param manifest - The manifest object.
+ * @param parentDirectory - The directory in which the manifest lives.
+ * @param fieldName - The field name "dependencies" or "peerDependencies".
+ * @returns The value of the "dependencies" or "peerDependencies" field.
+ * @throws If the value of the field is not valid.
+ */
+export function readPackageManifestDependenciesField(
+  manifest: UnvalidatedPackageManifest,
+  parentDirectory: string,
+  fieldName:
+    | PackageManifestDependenciesFieldNames.Production
+    | PackageManifestDependenciesFieldNames.Peer,
+): Record<string, string> {
+  const value = manifest[fieldName];
+  const schema = schemata[fieldName];
+
+  if (!schema.validate(value)) {
+    throw new Error(
+      buildPackageManifestFieldValidationErrorMessage({
+        manifest,
+        parentDirectory,
+        fieldName,
+        verbPhrase: schema.errorMessage,
+      }),
+    );
+  }
+
+  return value || {};
+}
+
+/**
  * Reads the package manifest at the given path, verifying key data within the
  * manifest.
  *
@@ -281,12 +350,24 @@ export async function readPackageManifest(manifestPath: string): Promise<{
     unvalidated,
     parentDirectory,
   );
+  const dependencies = readPackageManifestDependenciesField(
+    unvalidated,
+    parentDirectory,
+    PackageManifestDependenciesFieldNames.Production,
+  );
+  const peerDependencies = readPackageManifestDependenciesField(
+    unvalidated,
+    parentDirectory,
+    PackageManifestDependenciesFieldNames.Peer,
+  );
 
   const validated = {
     [PackageManifestFieldNames.Name]: name,
     [PackageManifestFieldNames.Version]: version,
     [PackageManifestFieldNames.Workspaces]: workspaces,
     [PackageManifestFieldNames.Private]: privateValue,
+    [PackageManifestDependenciesFieldNames.Production]: dependencies,
+    [PackageManifestDependenciesFieldNames.Peer]: peerDependencies,
   };
 
   return { unvalidated, validated };
