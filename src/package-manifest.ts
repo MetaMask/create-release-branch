@@ -29,8 +29,11 @@ export type ValidatedPackageManifest = {
   readonly [PackageManifestFieldNames.Version]: SemVer;
   readonly [PackageManifestFieldNames.Private]: boolean;
   readonly [PackageManifestFieldNames.Workspaces]: string[];
-  readonly [PackageManifestFieldNames.Dependencies]: Record<string, string>;
-  readonly [PackageManifestFieldNames.PeerDependencies]: Record<string, string>;
+  readonly [PackageManifestDependenciesFieldNames.Production]: Record<
+    string,
+    string
+  >;
+  readonly [PackageManifestDependenciesFieldNames.Peer]: Record<string, string>;
 };
 
 /**
@@ -85,11 +88,11 @@ const schemata = {
     validate: isValidPackageManifestPrivateField,
     errorMessage: 'must be true or false (if present)',
   },
-  [PackageManifestFieldNames.Dependencies]: {
+  [PackageManifestDependenciesFieldNames.Production]: {
     validate: isValidPackageManifestDependenciesField,
     errorMessage: 'must be a valid dependencies field',
   },
-  [PackageManifestFieldNames.PeerDependencies]: {
+  [PackageManifestDependenciesFieldNames.Peer]: {
     validate: isValidPackageManifestDependenciesField,
     errorMessage: 'must be a valid peerDependencies field',
   },
@@ -276,17 +279,11 @@ export function readPackageManifestPrivateField(
 function isValidPackageManifestDependenciesField(
   depsValue: Record<string, string>,
 ): depsValue is Record<string, string> {
-  for (const [pkgName, version] of Object.entries(depsValue)) {
-    if (!isTruthyString(pkgName)) {
-      return false;
-    }
-
-    if (isValidPackageManifestVersionField(version)) {
-      return false;
-    }
-  }
-
-  return true;
+  return Object.entries(depsValue).every(([pkgName, version]) => {
+    return (
+      isTruthyString(pkgName) && isValidPackageManifestVersionField(version)
+    );
+  });
 }
 
 /**
@@ -303,8 +300,8 @@ export function readPackageManifestDependenciesField(
   manifest: UnvalidatedPackageManifest,
   parentDirectory: string,
   fieldName:
-    | PackageManifestFieldNames.Dependencies
-    | PackageManifestFieldNames.PeerDependencies,
+    | PackageManifestDependenciesFieldNames.Production
+    | PackageManifestDependenciesFieldNames.Peer,
 ): Record<string, string> {
   const value = manifest[fieldName];
   const schema = schemata[fieldName];
@@ -351,12 +348,12 @@ export async function readPackageManifest(manifestPath: string): Promise<{
   const dependencies = readPackageManifestDependenciesField(
     unvalidated,
     parentDirectory,
-    PackageManifestFieldNames.Dependencies,
+    PackageManifestDependenciesFieldNames.Production,
   );
   const peerDependencies = readPackageManifestDependenciesField(
     unvalidated,
     parentDirectory,
-    PackageManifestFieldNames.PeerDependencies,
+    PackageManifestDependenciesFieldNames.Peer,
   );
 
   const validated = {
@@ -364,8 +361,8 @@ export async function readPackageManifest(manifestPath: string): Promise<{
     [PackageManifestFieldNames.Version]: version,
     [PackageManifestFieldNames.Workspaces]: workspaces,
     [PackageManifestFieldNames.Private]: privateValue,
-    [PackageManifestFieldNames.Dependencies]: dependencies,
-    [PackageManifestFieldNames.PeerDependencies]: peerDependencies,
+    [PackageManifestDependenciesFieldNames.Production]: dependencies,
+    [PackageManifestDependenciesFieldNames.Peer]: peerDependencies,
   };
 
   return { unvalidated, validated };
