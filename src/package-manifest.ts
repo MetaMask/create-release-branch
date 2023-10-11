@@ -277,7 +277,7 @@ export function readPackageManifestPrivateField(
  * @returns Whether the value is has valid values.
  */
 function isValidPackageManifestDependenciesField(
-  depsValue: Record<string, string>,
+  depsValue: Record<string, string> = {},
 ): depsValue is Record<string, string> {
   return Object.entries(depsValue).every(([pkgName, version]) => {
     return (
