@@ -3,7 +3,10 @@ import path from 'path';
 import { SemVer } from 'semver';
 import { isPlainObject } from '@metamask/utils';
 import type { Package } from '../../src/package';
-import { PackageManifestFieldNames } from '../../src/package-manifest';
+import {
+  PackageManifestDependenciesFieldNames,
+  PackageManifestFieldNames,
+} from '../../src/package-manifest';
 import type { ValidatedPackageManifest } from '../../src/package-manifest';
 import type { Project } from '../../src/project';
 
@@ -138,6 +141,8 @@ export function buildMockManifest(
     [PackageManifestFieldNames.Version]: new SemVer('1.2.3'),
     [PackageManifestFieldNames.Private]: false,
     [PackageManifestFieldNames.Workspaces]: [],
+    [PackageManifestDependenciesFieldNames.Production]: {},
+    [PackageManifestDependenciesFieldNames.Peer]: {},
     ...overrides,
   };
 }
