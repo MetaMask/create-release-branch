@@ -308,51 +308,36 @@ export async function validateReleaseSpecification(
           diff(pkg.validatedManifest.version, versionSpecifierOrDirective) ===
             'major')
       ) {
-        const missingDependents = Object.values(
-          project.workspacePackages,
-        ).filter((dependent) => {
-          const { dependencies, peerDependencies } =
-            dependent.unvalidatedManifest;
-          const isDependent =
-            (dependencies && hasProperty(dependencies, packageName)) ||
-            (peerDependencies && hasProperty(peerDependencies, packageName));
-
-          if (!isDependent) {
-            return false;
-          }
-
-          const dependentVersionSpecifierOrDirective =
-            unvalidatedReleaseSpecification.packages[
-              dependent.validatedManifest.name
-            ];
-
-          return (
-            dependentVersionSpecifierOrDirective === SKIP_PACKAGE_DIRECTIVE ||
-            (dependentVersionSpecifierOrDirective !==
-              INTENTIONALLY_SKIP_PACKAGE_DIRECTIVE &&
-              !hasProperty(
-                IncrementableVersionParts,
-                dependentVersionSpecifierOrDirective,
-              ) &&
-              !isValidSemver(dependentVersionSpecifierOrDirective))
-          );
+        const dependentNames = Object.keys(project.workspacePackages).filter(
+          (possibleDependentName) => {
+            const possibleDependent =
+              project.workspacePackages[possibleDependentName];
+            const { dependencies, peerDependencies } =
+              possibleDependent.unvalidatedManifest;
+            return (
+              (dependencies && hasProperty(dependencies, packageName)) ||
+              (peerDependencies && hasProperty(peerDependencies, packageName))
+            );
+          },
+        );
+        const missingDependentNames = dependentNames.filter((dependentName) => {
+          return !unvalidatedReleaseSpecification.packages[dependentName];
         });
 
-        if (missingDependents.length > 0) {
+        if (missingDependentNames.length > 0) {
           errors.push({
             message: [
               `The following packages, which depend on released package '${packageName}', are missing from the release spec.`,
-              missingDependents
-                .map((dependent) => `  - ${dependent.validatedManifest.name}`)
+              missingDependentNames
+                .map((dependent) => `  - ${dependent}`)
                 .join('\n'),
               ` Consider including them in the release spec so that they are compatible with the new '${packageName}' version.`,
               `  If you are ABSOLUTELY SURE these packages are safe to omit, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:`,
               YAML.stringify({
-                packages: missingDependents.reduce((object, dependent) => {
+                packages: missingDependentNames.reduce((object, dependent) => {
                   return {
                     ...object,
-                    [dependent.validatedManifest.name]:
-                      INTENTIONALLY_SKIP_PACKAGE_DIRECTIVE,
+                    [dependent]: INTENTIONALLY_SKIP_PACKAGE_DIRECTIVE,
                   };
                 }, {}),
               })
