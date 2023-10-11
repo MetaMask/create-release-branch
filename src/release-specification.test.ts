@@ -720,7 +720,7 @@ ${releaseSpecificationPath}
           `
 Your release spec could not be processed due to the following issues:
 
-* The following packages, which depend on released package 'a', are missing from the release spec.
+* The following dependents of package 'a', which is being released with a major version bump, are missing from the release spec.
 
   - b
 
@@ -775,7 +775,7 @@ ${releaseSpecificationPath}
           `
 Your release spec could not be processed due to the following issues:
 
-* The following packages, which depend on released package 'a', are missing from the release spec.
+* The following dependents of package 'a', which is being released with a major version bump, are missing from the release spec.
 
   - b
 
@@ -830,7 +830,7 @@ ${releaseSpecificationPath}
           `
 Your release spec could not be processed due to the following issues:
 
-* The following packages, which depend on released package 'a', are missing from the release spec.
+* The following dependents of package 'a', which is being released with a major version bump, are missing from the release spec.
 
   - b
 
@@ -885,7 +885,7 @@ ${releaseSpecificationPath}
           `
 Your release spec could not be processed due to the following issues:
 
-* The following packages, which depend on released package 'a', are missing from the release spec.
+* The following dependents of package 'a', which is being released with a major version bump, are missing from the release spec.
 
   - b
 
@@ -941,7 +941,7 @@ ${releaseSpecificationPath}
           `
 Your release spec could not be processed due to the following issues:
 
-* The following packages, which depend on released package 'a', are missing from the release spec.
+* The following dependents of package 'a', which is being released with a major version bump, are missing from the release spec.
 
   - b
 
@@ -997,7 +997,7 @@ ${releaseSpecificationPath}
           `
 Your release spec could not be processed due to the following issues:
 
-* The following packages, which depend on released package 'a', are missing from the release spec.
+* The following dependents of package 'a', which is being released with a major version bump, are missing from the release spec.
 
   - b
 
@@ -1053,7 +1053,7 @@ ${releaseSpecificationPath}
           `
 Your release spec could not be processed due to the following issues:
 
-* The following packages, which depend on released package 'a', are missing from the release spec.
+* The following dependents of package 'a', which is being released with a major version bump, are missing from the release spec.
 
   - b
 
@@ -1109,7 +1109,7 @@ ${releaseSpecificationPath}
           `
 Your release spec could not be processed due to the following issues:
 
-* The following packages, which depend on released package 'a', are missing from the release spec.
+* The following dependents of package 'a', which is being released with a major version bump, are missing from the release spec.
 
   - b
 

@@ -344,7 +344,7 @@ export async function validateReleaseSpecification(
         if (missingDependentNames.length > 0) {
           errors.push({
             message: [
-              `The following packages, which depend on released package '${packageName}', are missing from the release spec.`,
+              `The following dependents of package '${packageName}', which is being released with a major version bump, are missing from the release spec.`,
               missingDependentNames
                 .map((dependent) => `  - ${dependent}`)
                 .join('\n'),
