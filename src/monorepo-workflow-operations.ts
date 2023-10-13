@@ -1,21 +1,22 @@
 import type { WriteStream } from 'fs';
 import path from 'path';
+
+import { determineEditor } from './editor';
 import {
   ensureDirectoryPathExists,
   fileExists,
   removeFile,
   writeFile,
 } from './fs';
-import { determineEditor } from './editor';
-import { ReleaseType } from './initial-parameters';
-import { Project } from './project';
+import type { ReleaseType } from './initial-parameters';
+import type { Project } from './project';
 import { planRelease, executeReleasePlan } from './release-plan';
-import { captureChangesInReleaseBranch } from './repo';
 import {
   generateReleaseSpecificationTemplateForMonorepo,
   waitForUserToEditReleaseSpecification,
   validateReleaseSpecification,
 } from './release-specification';
+import { captureChangesInReleaseBranch } from './repo';
 
 /**
  * For a monorepo, the process works like this:

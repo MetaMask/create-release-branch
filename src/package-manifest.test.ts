@@ -1,8 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import { SemVer } from 'semver';
-import { withSandbox } from '../tests/helpers';
+
 import { readPackageManifest } from './package-manifest';
+import { withSandbox } from '../tests/helpers';
 
 describe('package-manifest', () => {
   describe('readPackageManifest', () => {

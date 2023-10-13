@@ -1,9 +1,9 @@
+import * as actionUtils from '@metamask/action-utils';
 import fs from 'fs';
+import { when } from 'jest-when';
 import path from 'path';
 import { rimraf } from 'rimraf';
-import { when } from 'jest-when';
-import * as actionUtils from '@metamask/action-utils';
-import { withSandbox } from '../tests/helpers';
+
 import {
   readFile,
   writeFile,
@@ -13,6 +13,7 @@ import {
   ensureDirectoryPathExists,
   removeFile,
 } from './fs';
+import { withSandbox } from '../tests/helpers';
 
 jest.mock('@metamask/action-utils');
 

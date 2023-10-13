@@ -1,9 +1,11 @@
+import deepmerge from 'deepmerge';
+import type { ExecaChildProcess, Options as ExecaOptions } from 'execa';
+import execa from 'execa';
 import fs from 'fs';
 import path from 'path';
-import execa, { ExecaChildProcess, Options as ExecaOptions } from 'execa';
-import deepmerge from 'deepmerge';
-import { isErrorWithCode } from '../../helpers';
+
 import { debug, sleepFor } from './utils';
+import { isErrorWithCode } from '../../helpers';
 
 /**
  * A set of configuration options for a {@link Repo}.
@@ -144,7 +146,7 @@ export default abstract class Repo {
    * @param message - The commit message.
    * @returns The result of the command.
    */
-  async createCommit(message: string): Promise<ExecaChildProcess<string>> {
+  async createCommit(message: string): Promise<ExecaChildProcess> {
     // When we are creating commits in tests, the dates of those commits may be
     // so close together that it ends up confusing commands like `git rev-list`
     // (which sorts commits in chronological order). Sleeping for a bit seems to
@@ -178,8 +180,8 @@ export default abstract class Repo {
   async runCommand(
     executableName: string,
     args?: readonly string[] | undefined,
-    options?: ExecaOptions<string> | undefined,
-  ): Promise<ExecaChildProcess<string>> {
+    options?: ExecaOptions | undefined,
+  ): Promise<ExecaChildProcess> {
     const { env, ...remainingOptions } =
       options === undefined ? { env: {} } : options;
 

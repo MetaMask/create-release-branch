@@ -1,9 +1,18 @@
-import fs from 'fs';
-import path from 'path';
-import { when } from 'jest-when';
 import * as autoChangelog from '@metamask/auto-changelog';
+import fs from 'fs';
+import { when } from 'jest-when';
+import path from 'path';
 import { SemVer } from 'semver';
 import { MockWritable } from 'stdio-mock';
+
+import * as fsModule from './fs';
+import {
+  readMonorepoRootPackage,
+  readMonorepoWorkspacePackage,
+  updatePackage,
+} from './package';
+import * as packageManifestModule from './package-manifest';
+import * as repoModule from './repo';
 import { withSandbox } from '../tests/helpers';
 import {
   buildMockPackage,
@@ -11,14 +20,6 @@ import {
   buildMockManifest,
   createNoopWriteStream,
 } from '../tests/unit/helpers';
-import {
-  readMonorepoRootPackage,
-  readMonorepoWorkspacePackage,
-  updatePackage,
-} from './package';
-import * as fsModule from './fs';
-import * as packageManifestModule from './package-manifest';
-import * as repoModule from './repo';
 
 jest.mock('@metamask/auto-changelog');
 jest.mock('./package-manifest');

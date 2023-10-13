@@ -37,6 +37,11 @@ module.exports = {
     {
       files: ['*.ts'],
       extends: ['@metamask/eslint-config-typescript'],
+      rules: {
+        '@typescript-eslint/naming-convention': 'off',
+        'n/no-process-env': 'off',
+        'id-length': 'off',
+      },
     },
 
     {

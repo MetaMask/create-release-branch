@@ -1,11 +1,12 @@
 import { when } from 'jest-when';
+
+import * as miscUtils from './misc-utils';
 import {
   getRepositoryHttpsUrl,
   captureChangesInReleaseBranch,
   getTagNames,
   hasChangesInDirectorySinceGitTag,
 } from './repo';
-import * as miscUtils from './misc-utils';
 
 jest.mock('./misc-utils');
 

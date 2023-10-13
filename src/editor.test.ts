@@ -1,4 +1,5 @@
 import { when } from 'jest-when';
+
 import { determineEditor } from './editor';
 import * as envModule from './env';
 import * as miscUtils from './misc-utils';

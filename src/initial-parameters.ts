@@ -1,8 +1,10 @@
 import os from 'os';
 import path from 'path';
+
 import { readCommandLineArguments } from './command-line-arguments';
-import { WriteStreamLike } from './fs';
-import { readProject, Project } from './project';
+import type { WriteStreamLike } from './fs';
+import type { Project } from './project';
+import { readProject } from './project';
 
 /**
  * The type of release being created as determined by the parent release.
