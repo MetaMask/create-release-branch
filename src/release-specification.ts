@@ -211,23 +211,48 @@ export async function validateReleaseSpecification(
     (packageName) =>
       project.workspacePackages[packageName].hasChangesSinceLatestRelease,
   );
-  const packageNamesToReportMissing = changedPackageNames.filter(
+
+  const missingDependents = changedPackageNames.filter(
+    (packageName) =>
+      !hasProperty(unvalidatedReleaseSpecification.packages, packageName) ||
+      unvalidatedReleaseSpecification.packages[packageName] === null,
+  );
+
+  const packageNamesToReportMissing = missingDependents.filter(
     (packageName) => {
+      const pkg = project.workspacePackages[packageName];
+
       const isInternalDependency = Object.values(
         project.workspacePackages,
-      ).some((pkg) => {
-        const { dependencies, peerDependencies } = pkg.validatedManifest;
+      ).some((workspacePackage) => {
+        const { dependencies, peerDependencies } =
+          workspacePackage.validatedManifest;
         return (
           hasProperty(dependencies, packageName) ||
           hasProperty(peerDependencies, packageName)
         );
       });
 
-      return (
-        (!hasProperty(unvalidatedReleaseSpecification.packages, packageName) ||
-          unvalidatedReleaseSpecification.packages[packageName] === null) &&
-        !isInternalDependency
-      );
+      const hasInternalDependencyWithBreakingChanges = Object.keys({
+        ...pkg.validatedManifest.dependencies,
+        ...pkg.validatedManifest.peerDependencies,
+      })
+        .filter((dependency) => project.workspacePackages[dependency])
+        .some((dependency) => {
+          const internalDependencyVersionSpecifierOrDirective =
+            unvalidatedReleaseSpecification.packages[dependency];
+          return (
+            internalDependencyVersionSpecifierOrDirective &&
+            (internalDependencyVersionSpecifierOrDirective === 'major' ||
+              (isValidSemver(internalDependencyVersionSpecifierOrDirective) &&
+                diff(
+                  pkg.validatedManifest.version,
+                  internalDependencyVersionSpecifierOrDirective,
+                ) === 'major'))
+          );
+        });
+
+      return !isInternalDependency && !hasInternalDependencyWithBreakingChanges;
     },
   );
 
@@ -337,9 +362,17 @@ export async function validateReleaseSpecification(
             );
           },
         );
-        const missingDependentNames = dependentNames.filter((dependentName) => {
-          return !unvalidatedReleaseSpecification.packages[dependentName];
-        });
+        const changedDependentNames = dependentNames.filter(
+          (possibleDependentName) => {
+            return project.workspacePackages[possibleDependentName]
+              .hasChangesSinceLatestRelease;
+          },
+        );
+        const missingDependentNames = changedDependentNames.filter(
+          (dependentName) => {
+            return !unvalidatedReleaseSpecification.packages[dependentName];
+          },
+        );
 
         if (missingDependentNames.length > 0) {
           errors.push({

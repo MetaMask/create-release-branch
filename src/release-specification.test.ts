@@ -692,7 +692,7 @@ ${releaseSpecificationPath}
               hasChangesSinceLatestRelease: true,
             }),
             b: buildMockPackage('b', {
-              hasChangesSinceLatestRelease: false,
+              hasChangesSinceLatestRelease: true,
               validatedManifest: {
                 dependencies: {
                   a: '1.0.0',
@@ -747,7 +747,7 @@ ${releaseSpecificationPath}
               hasChangesSinceLatestRelease: true,
             }),
             b: buildMockPackage('b', {
-              hasChangesSinceLatestRelease: false,
+              hasChangesSinceLatestRelease: true,
               validatedManifest: {
                 dependencies: {
                   a: '2.1.4',
@@ -802,7 +802,7 @@ ${releaseSpecificationPath}
               hasChangesSinceLatestRelease: true,
             }),
             b: buildMockPackage('b', {
-              hasChangesSinceLatestRelease: false,
+              hasChangesSinceLatestRelease: true,
               validatedManifest: {
                 peerDependencies: {
                   a: '1.0.0',
@@ -857,7 +857,7 @@ ${releaseSpecificationPath}
               hasChangesSinceLatestRelease: true,
             }),
             b: buildMockPackage('b', {
-              hasChangesSinceLatestRelease: false,
+              hasChangesSinceLatestRelease: true,
               validatedManifest: {
                 peerDependencies: {
                   a: '2.1.4',
@@ -912,7 +912,7 @@ ${releaseSpecificationPath}
               hasChangesSinceLatestRelease: true,
             }),
             b: buildMockPackage('b', {
-              hasChangesSinceLatestRelease: false,
+              hasChangesSinceLatestRelease: true,
               validatedManifest: {
                 dependencies: {
                   a: '1.0.0',
@@ -968,7 +968,7 @@ ${releaseSpecificationPath}
               hasChangesSinceLatestRelease: true,
             }),
             b: buildMockPackage('b', {
-              hasChangesSinceLatestRelease: false,
+              hasChangesSinceLatestRelease: true,
               validatedManifest: {
                 dependencies: {
                   a: '2.1.4',
@@ -1024,7 +1024,7 @@ ${releaseSpecificationPath}
               hasChangesSinceLatestRelease: true,
             }),
             b: buildMockPackage('b', {
-              hasChangesSinceLatestRelease: false,
+              hasChangesSinceLatestRelease: true,
               validatedManifest: {
                 peerDependencies: {
                   a: '1.0.0',
@@ -1080,7 +1080,7 @@ ${releaseSpecificationPath}
               hasChangesSinceLatestRelease: true,
             }),
             b: buildMockPackage('b', {
-              hasChangesSinceLatestRelease: false,
+              hasChangesSinceLatestRelease: true,
               validatedManifest: {
                 peerDependencies: {
                   a: '2.1.4',
@@ -1136,7 +1136,7 @@ ${releaseSpecificationPath}
               hasChangesSinceLatestRelease: true,
             }),
             b: buildMockPackage('b', {
-              hasChangesSinceLatestRelease: false,
+              hasChangesSinceLatestRelease: true,
               validatedManifest: {
                 dependencies: {
                   a: '1.0.0',
@@ -1181,7 +1181,7 @@ ${releaseSpecificationPath}
               hasChangesSinceLatestRelease: true,
             }),
             b: buildMockPackage('b', {
-              hasChangesSinceLatestRelease: false,
+              hasChangesSinceLatestRelease: true,
               validatedManifest: {
                 dependencies: {
                   a: '2.1.4',
@@ -1226,7 +1226,7 @@ ${releaseSpecificationPath}
               hasChangesSinceLatestRelease: true,
             }),
             b: buildMockPackage('b', {
-              hasChangesSinceLatestRelease: false,
+              hasChangesSinceLatestRelease: true,
               validatedManifest: {
                 peerDependencies: {
                   a: '1.0.0',
@@ -1271,7 +1271,7 @@ ${releaseSpecificationPath}
               hasChangesSinceLatestRelease: true,
             }),
             b: buildMockPackage('b', {
-              hasChangesSinceLatestRelease: false,
+              hasChangesSinceLatestRelease: true,
               validatedManifest: {
                 peerDependencies: {
                   a: '2.1.4',
@@ -1304,76 +1304,6 @@ ${releaseSpecificationPath}
             a: new SemVer('3.0.0'),
           },
           path: releaseSpecificationPath,
-        });
-      });
-    });
-
-    it('does not throw an error for packages in the release with a minor or patch version bump, regardless of their dependents', async () => {
-      await withSandbox(async (sandbox) => {
-        const project = buildMockProject({
-          workspacePackages: {
-            a: buildMockPackage('a', {
-              hasChangesSinceLatestRelease: true,
-            }),
-            b: buildMockPackage('b', {
-              hasChangesSinceLatestRelease: false,
-              validatedManifest: {
-                dependencies: {
-                  a: '1.0.0',
-                },
-              },
-            }),
-          },
-        });
-
-        const releaseSpecificationPath1 = path.join(
-          sandbox.directoryPath,
-          'release-spec',
-        );
-        await fs.promises.writeFile(
-          releaseSpecificationPath1,
-          YAML.stringify({
-            packages: {
-              a: 'minor',
-            },
-          }),
-        );
-
-        const releaseSpecification1 = await validateReleaseSpecification(
-          project,
-          releaseSpecificationPath1,
-        );
-
-        expect(releaseSpecification1).toStrictEqual({
-          packages: {
-            a: 'minor',
-          },
-          path: releaseSpecificationPath1,
-        });
-
-        const releaseSpecificationPath2 = path.join(
-          sandbox.directoryPath,
-          'release-spec',
-        );
-        await fs.promises.writeFile(
-          releaseSpecificationPath2,
-          YAML.stringify({
-            packages: {
-              a: 'patch',
-            },
-          }),
-        );
-
-        const releaseSpecification2 = await validateReleaseSpecification(
-          project,
-          releaseSpecificationPath2,
-        );
-
-        expect(releaseSpecification2).toStrictEqual({
-          packages: {
-            a: 'patch',
-          },
-          path: releaseSpecificationPath2,
         });
       });
     });
