@@ -212,15 +212,16 @@ export async function validateReleaseSpecification(
       project.workspacePackages[packageName].hasChangesSinceLatestRelease,
   );
 
-  const missingDependents = changedPackageNames.filter(
+  const missingChangedPackageNames = changedPackageNames.filter(
     (packageName) =>
       !hasProperty(unvalidatedReleaseSpecification.packages, packageName) ||
       unvalidatedReleaseSpecification.packages[packageName] === null,
   );
 
-  const packageNamesToReportMissing = missingDependents.filter(
-    (packageName) => {
-      const pkg = project.workspacePackages[packageName];
+  const packageNamesToReportMissing = missingChangedPackageNames.filter(
+    (missingChangedPackageName) => {
+      const missingChangedPackage =
+        project.workspacePackages[missingChangedPackageName];
 
       const isInternalDependency = Object.values(
         project.workspacePackages,
@@ -228,14 +229,14 @@ export async function validateReleaseSpecification(
         const { dependencies, peerDependencies } =
           workspacePackage.validatedManifest;
         return (
-          hasProperty(dependencies, packageName) ||
-          hasProperty(peerDependencies, packageName)
+          hasProperty(dependencies, missingChangedPackageName) ||
+          hasProperty(peerDependencies, missingChangedPackageName)
         );
       });
 
       const hasInternalDependencyWithBreakingChanges = Object.keys({
-        ...pkg.validatedManifest.dependencies,
-        ...pkg.validatedManifest.peerDependencies,
+        ...missingChangedPackage.validatedManifest.dependencies,
+        ...missingChangedPackage.validatedManifest.peerDependencies,
       })
         .filter((dependency) => project.workspacePackages[dependency])
         .some((dependency) => {
@@ -246,7 +247,7 @@ export async function validateReleaseSpecification(
             (internalDependencyVersionSpecifierOrDirective === 'major' ||
               (isValidSemver(internalDependencyVersionSpecifierOrDirective) &&
                 diff(
-                  pkg.validatedManifest.version,
+                  missingChangedPackage.validatedManifest.version,
                   internalDependencyVersionSpecifierOrDirective,
                 ) === 'major'))
           );
@@ -285,14 +286,14 @@ export async function validateReleaseSpecification(
   }
 
   Object.entries(unvalidatedReleaseSpecification.packages).forEach(
-    ([packageName, versionSpecifierOrDirective], index) => {
+    ([changedPackageName, versionSpecifierOrDirective], index) => {
       const lineNumber = indexOfFirstUsableLine + index + 2;
-      const pkg = project.workspacePackages[packageName];
+      const changedPackage = project.workspacePackages[changedPackageName];
 
-      if (pkg === undefined) {
+      if (changedPackage === undefined) {
         errors.push({
           message: `${JSON.stringify(
-            packageName,
+            changedPackageName,
           )} is not a package in the project`,
           lineNumber,
         });
@@ -308,7 +309,7 @@ export async function validateReleaseSpecification(
           message: [
             `${JSON.stringify(
               versionSpecifierOrDirective,
-            )} is not a valid version specifier for package "${packageName}"`,
+            )} is not a valid version specifier for package "${changedPackageName}"`,
             `(must be "major", "minor", or "patch"; or a version string with major, minor, and patch parts, such as "1.2.3")`,
           ],
           lineNumber,
@@ -317,7 +318,7 @@ export async function validateReleaseSpecification(
 
       if (isValidSemver(versionSpecifierOrDirective)) {
         const comparison = new SemVer(versionSpecifierOrDirective).compare(
-          project.workspacePackages[packageName].validatedManifest.version,
+          changedPackage.validatedManifest.version,
         );
 
         if (comparison === 0) {
@@ -325,8 +326,8 @@ export async function validateReleaseSpecification(
             message: [
               `${JSON.stringify(
                 versionSpecifierOrDirective,
-              )} is not a valid version specifier for package "${packageName}"`,
-              `("${packageName}" is already at version "${versionSpecifierOrDirective}")`,
+              )} is not a valid version specifier for package "${changedPackageName}"`,
+              `("${changedPackageName}" is already at version "${versionSpecifierOrDirective}")`,
             ],
             lineNumber,
           });
@@ -335,8 +336,8 @@ export async function validateReleaseSpecification(
             message: [
               `${JSON.stringify(
                 versionSpecifierOrDirective,
-              )} is not a valid version specifier for package "${packageName}"`,
-              `("${packageName}" is at a greater version "${project.workspacePackages[packageName].validatedManifest.version}")`,
+              )} is not a valid version specifier for package "${changedPackageName}"`,
+              `("${changedPackageName}" is at a greater version "${project.workspacePackages[changedPackageName].validatedManifest.version}")`,
             ],
             lineNumber,
           });
@@ -347,8 +348,10 @@ export async function validateReleaseSpecification(
       if (
         versionSpecifierOrDirective === 'major' ||
         (isValidSemver(versionSpecifierOrDirective) &&
-          diff(pkg.validatedManifest.version, versionSpecifierOrDirective) ===
-            'major')
+          diff(
+            changedPackage.validatedManifest.version,
+            versionSpecifierOrDirective,
+          ) === 'major')
       ) {
         const dependentNames = Object.keys(project.workspacePackages).filter(
           (possibleDependentName) => {
@@ -357,8 +360,8 @@ export async function validateReleaseSpecification(
             const { dependencies, peerDependencies } =
               possibleDependent.validatedManifest;
             return (
-              hasProperty(dependencies, packageName) ||
-              hasProperty(peerDependencies, packageName)
+              hasProperty(dependencies, changedPackageName) ||
+              hasProperty(peerDependencies, changedPackageName)
             );
           },
         );
@@ -377,11 +380,11 @@ export async function validateReleaseSpecification(
         if (missingDependentNames.length > 0) {
           errors.push({
             message: [
-              `The following dependents of package '${packageName}', which is being released with a major version bump, are missing from the release spec.`,
+              `The following dependents of package '${changedPackageName}', which is being released with a major version bump, are missing from the release spec.`,
               missingDependentNames
                 .map((dependent) => `  - ${dependent}`)
                 .join('\n'),
-              ` Consider including them in the release spec so that they are compatible with the new '${packageName}' version.`,
+              ` Consider including them in the release spec so that they are compatible with the new '${changedPackageName}' version.`,
               `  If you are ABSOLUTELY SURE these packages are safe to omit, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:`,
               YAML.stringify({
                 packages: missingDependentNames.reduce((object, dependent) => {
@@ -402,14 +405,14 @@ export async function validateReleaseSpecification(
 
       // Check to compel users to release new versions of dependencies alongside their dependents
       if (
-        pkg &&
+        changedPackage &&
         versionSpecifierOrDirective &&
         (hasProperty(IncrementableVersionParts, versionSpecifierOrDirective) ||
           isValidSemver(versionSpecifierOrDirective))
       ) {
         const missingDependencies = Object.keys({
-          ...pkg.validatedManifest.dependencies,
-          ...pkg.validatedManifest.peerDependencies,
+          ...changedPackage.validatedManifest.dependencies,
+          ...changedPackage.validatedManifest.peerDependencies,
         }).filter((dependency) => {
           return (
             project.workspacePackages[dependency]
@@ -421,11 +424,11 @@ export async function validateReleaseSpecification(
         if (missingDependencies.length > 0) {
           errors.push({
             message: [
-              `The following packages, which are dependencies or peer dependencies of the package '${packageName}' being released, are missing from the release spec.`,
+              `The following packages, which are dependencies or peer dependencies of the package '${changedPackageName}' being released, are missing from the release spec.`,
               missingDependencies
                 .map((dependency) => `  - ${dependency}`)
                 .join('\n'),
-              `  These packages may have changes that '${packageName}' relies upon. Consider including them in the release spec.`,
+              `  These packages may have changes that '${changedPackageName}' relies upon. Consider including them in the release spec.`,
               `  If you are ABSOLUTELY SURE these packages are safe to omit, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:`,
               YAML.stringify({
                 packages: missingDependencies.reduce((object, dependency) => {
