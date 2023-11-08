@@ -64,6 +64,8 @@ describe('package-manifest', () => {
           private: true,
           dependencies: {
             a: '1.0.0',
+            b: '^2.0.0',
+            c: '~4.3.0',
           },
         };
         const validated = {
@@ -73,6 +75,8 @@ describe('package-manifest', () => {
           private: true,
           dependencies: {
             a: '1.0.0',
+            b: '^2.0.0',
+            c: '~4.3.0',
           },
           peerDependencies: {},
         };
@@ -94,6 +98,8 @@ describe('package-manifest', () => {
           private: true,
           peerDependencies: {
             a: '1.0.0',
+            b: '^2.0.0',
+            c: '~4.3.0',
           },
         };
         const validated = {
@@ -104,6 +110,8 @@ describe('package-manifest', () => {
           dependencies: {},
           peerDependencies: {
             a: '1.0.0',
+            b: '^2.0.0',
+            c: '~4.3.0',
           },
         };
         await fs.promises.writeFile(manifestPath, JSON.stringify(unvalidated));
