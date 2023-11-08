@@ -6,7 +6,7 @@ import {
 import { isPlainObject } from '@metamask/utils';
 import { readJsonObjectFile } from './fs';
 import { isTruthyString } from './misc-utils';
-import { isValidSemver, SemVer } from './semver';
+import { semver, SemVer } from './semver';
 
 export { PackageManifestFieldNames, PackageManifestDependenciesFieldNames };
 
@@ -139,7 +139,7 @@ export function readPackageManifestNameField(
 function isValidPackageManifestVersionField(
   version: unknown,
 ): version is string {
-  return isTruthyString(version) && isValidSemver(version);
+  return isTruthyString(version) && semver.validRange(version) !== null;
 }
 
 /**
