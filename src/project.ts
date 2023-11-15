@@ -13,20 +13,8 @@ import { PackageManifestFieldNames } from './package-manifest';
 /**
  * The release version of the root package of a monorepo extracted from its
  * version string.
- *
- * @property ordinaryNumber - The number assigned to the release if it
- * introduces new changes that haven't appeared in any previous release; it will
- * be 0 if there haven't been any releases yet.
- * @property backportNumber - A backport release is a change ported from one
- * ordinary release to a previous ordinary release. This, then, is the number
- * which identifies this release relative to other backport releases under the
- * same ordinary release, starting from 1; it will be 0 if there aren't any
- * backport releases for the ordinary release yet.
  */
-type ReleaseVersion = {
-  ordinaryNumber: number;
-  backportNumber: number;
-};
+export type ReleaseVersion = SemVer;
 
 /**
  * Represents the entire codebase on which this tool is operating.
@@ -47,22 +35,6 @@ export type Project = {
   isMonorepo: boolean;
   releaseVersion: ReleaseVersion;
 };
-
-/**
- * Given a SemVer version object, interprets the "major" part of the version
- * as the ordinary release number and the "minor" part as the backport release
- * number in the context of the ordinary release.
- *
- * @param packageVersion - The version of the package.
- * @returns An object containing the ordinary and backport numbers in the
- * version.
- */
-function examineReleaseVersion(packageVersion: SemVer): ReleaseVersion {
-  return {
-    ordinaryNumber: packageVersion.major,
-    backportNumber: packageVersion.minor,
-  };
-}
 
 /**
  * Collects information about a monorepo — its root package as well as any
@@ -87,9 +59,7 @@ export async function readProject(
     projectDirectoryPath,
     projectTagNames: tagNames,
   });
-  const releaseVersion = examineReleaseVersion(
-    rootPackage.validatedManifest.version,
-  );
+  const releaseVersion = rootPackage.validatedManifest.version;
 
   const workspaceDirectories = await getWorkspaceLocations(
     rootPackage.validatedManifest[PackageManifestFieldNames.Workspaces],

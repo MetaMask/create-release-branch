@@ -112,10 +112,7 @@ describe('project', () => {
           rootPackage,
           workspacePackages,
           isMonorepo: true,
-          releaseVersion: {
-            ordinaryNumber: 4,
-            backportNumber: 38,
-          },
+          releaseVersion: rootPackageVersion,
         });
       });
     });
