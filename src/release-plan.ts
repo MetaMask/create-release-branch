@@ -1,6 +1,5 @@
 import type { WriteStream } from 'fs';
 import { SemVer } from 'semver';
-import { ReleaseType } from './initial-parameters';
 import { debug } from './misc-utils';
 import { Package, updatePackage } from './package';
 import { Project } from './project';
@@ -48,33 +47,25 @@ export type PackageReleasePlan = {
 
 /**
  * Uses the release specification to calculate the final versions of all of the
- * packages that we want to update, as well as a new release name.
+ * packages that we want to update.
  *
  * @param args - The arguments.
  * @param args.project - Information about the whole project (e.g., names of
  * packages and where they can found).
  * @param args.releaseSpecification - A parsed version of the release spec
  * entered by the user.
- * @param args.releaseType - The type of release ("ordinary" or "backport"),
- * which affects how the version is bumped.
+ * @param args.newReleaseVersion - The new release version.
  * @returns A promise for information about the new release.
  */
 export async function planRelease({
   project,
   releaseSpecification,
-  releaseType,
+  newReleaseVersion,
 }: {
   project: Project;
   releaseSpecification: ReleaseSpecification;
-  releaseType: ReleaseType;
+  newReleaseVersion: string;
 }): Promise<ReleasePlan> {
-  const newReleaseVersion =
-    releaseType === 'backport'
-      ? `${project.releaseVersion.ordinaryNumber}.${
-          project.releaseVersion.backportNumber + 1
-        }.0`
-      : `${project.releaseVersion.ordinaryNumber + 1}.0.0`;
-
   const rootReleasePlan: PackageReleasePlan = {
     package: project.rootPackage,
     newVersion: newReleaseVersion,

@@ -1,9 +1,12 @@
 import path from 'path';
 import {
+  debug,
   runCommand,
   getStdoutFromCommand,
   getLinesFromCommand,
 } from './misc-utils';
+import { ReleaseType } from './initial-parameters';
+import { Project } from './project';
 
 const CHANGED_FILE_PATHS_BY_TAG_NAME: Record<string, string[]> = {};
 
@@ -170,13 +173,8 @@ export async function getRepositoryHttpsUrl(
 }
 
 /**
- * This function does three things:
- *
- * 1. Stages all of the changes which have been made to the repo thus far and
+ * This function stages all of the changes which have been made to the repo thus far and
  * creates a new Git commit which carries the name of the new release.
- * 2. Creates a new branch pointed to that commit (which also carries the name
- * of the new release).
- * 3. Switches to that branch.
  *
  * @param repositoryDirectoryPath - The path to the repository directory.
  * @param args - The arguments.
@@ -186,15 +184,83 @@ export async function captureChangesInReleaseBranch(
   repositoryDirectoryPath: string,
   { releaseVersion }: { releaseVersion: string },
 ) {
-  await getStdoutFromGitCommandWithin(repositoryDirectoryPath, 'checkout', [
-    '-b',
-    `release/${releaseVersion}`,
-  ]);
   await getStdoutFromGitCommandWithin(repositoryDirectoryPath, 'add', ['-A']);
   await getStdoutFromGitCommandWithin(repositoryDirectoryPath, 'commit', [
     '-m',
     `Release ${releaseVersion}`,
   ]);
+}
+
+/**
+ * This function does create the release branch.
+ *
+ * @param args - The arguments.
+ * @param args.project - Information about the whole project (e.g., names of
+ * packages and where they can found).
+ * @param args.releaseType - The type of release ("ordinary" or "backport"),
+ * which affects how the version is bumped.
+ * @returns A promise for the newReleaseVersion.
+ */
+export async function createReleaseBranch({
+  project,
+  releaseType,
+}: {
+  project: Project;
+  releaseType: ReleaseType;
+}): Promise<{
+  version: string;
+  firstRun: boolean;
+}> {
+  const newReleaseVersion =
+    releaseType === 'backport'
+      ? `${project.releaseVersion.ordinaryNumber}.${
+          project.releaseVersion.backportNumber + 1
+        }.0`
+      : `${project.releaseVersion.ordinaryNumber + 1}.0.0`;
+
+  const releaseBranchName = `release/${newReleaseVersion}`;
+
+  const currentBranchName = await getStdoutFromGitCommandWithin(
+    project.directoryPath,
+    'rev-parse',
+    ['--abbrev-ref', 'HEAD'],
+  );
+
+  if (currentBranchName === releaseBranchName) {
+    debug(`Already on ${releaseBranchName} branch.`);
+    return {
+      version: newReleaseVersion,
+      firstRun: false,
+    };
+  }
+
+  if (
+    await getStdoutFromGitCommandWithin(project.directoryPath, 'branch', [
+      '--list',
+      releaseBranchName,
+    ])
+  ) {
+    debug(
+      `Current release branch already exists. Checking out the existing branch.`,
+    );
+    await getStdoutFromGitCommandWithin(project.directoryPath, 'checkout', [
+      releaseBranchName,
+    ]);
+    return {
+      version: newReleaseVersion,
+      firstRun: false,
+    };
+  }
+
+  await getStdoutFromGitCommandWithin(project.directoryPath, 'checkout', [
+    '-b',
+    releaseBranchName,
+  ]);
+
+  return {
+    version: newReleaseVersion,
+    firstRun: true,
+  };
 }
 
 /**

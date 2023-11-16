@@ -236,6 +236,66 @@ export async function readMonorepoWorkspacePackage({
  *
  * @param args - The arguments.
  * @param args.project - The project.
+ * @param args.stderr - A stream that can be used to write to standard error.
+ * @returns The result of writing to the changelog.
+ */
+export async function updateChangedPackagesChangelog({
+  project: { repositoryUrl, workspacePackages },
+  stderr,
+}: {
+  project: Pick<
+    Project,
+    'directoryPath' | 'repositoryUrl' | 'workspacePackages'
+  >;
+  stderr: Pick<WriteStream, 'write'>;
+}): Promise<void> {
+  await Promise.all(
+    Object.values(workspacePackages)
+      .filter(
+        ({ hasChangesSinceLatestRelease }) => hasChangesSinceLatestRelease,
+      )
+      .map(async (pkg) => {
+        let changelogContent;
+
+        try {
+          changelogContent = await readFile(pkg.changelogPath);
+        } catch (error) {
+          if (isErrorWithCode(error) && error.code === 'ENOENT') {
+            stderr.write(
+              `${pkg.validatedManifest.name} does not seem to have a changelog. Skipping.\n`,
+            );
+            return;
+          }
+
+          throw error;
+        }
+
+        const newChangelogContent = await updateChangelog({
+          changelogContent,
+          isReleaseCandidate: false,
+          projectRootDirectory: pkg.directoryPath,
+          repoUrl: repositoryUrl,
+          tagPrefixes: [`${pkg.validatedManifest.name}@`, 'v'],
+        });
+
+        if (newChangelogContent) {
+          await writeFile(pkg.changelogPath, newChangelogContent);
+        } else {
+          stderr.write(
+            `Changelog for ${pkg.validatedManifest.name} was not updated as there were no updates to make.`,
+          );
+        }
+      }),
+  );
+}
+
+/**
+ * Updates the changelog file of the given package using
+ * `@metamask/auto-changelog`. Assumes that the changelog file is located at the
+ * package root directory and named "CHANGELOG.md".
+ *
+ * @param args - The arguments.
+ * @param args.project - The project.
  * @param args.packageReleasePlan - The release plan for a particular package in
  * the project.
  * @param args.stderr - A stream that can be used to write to standard error.

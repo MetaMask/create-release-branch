@@ -10,12 +10,13 @@ import { determineEditor } from './editor';
 import { ReleaseType } from './initial-parameters';
 import { Project } from './project';
 import { planRelease, executeReleasePlan } from './release-plan';
-import { captureChangesInReleaseBranch } from './repo';
+import { createReleaseBranch, captureChangesInReleaseBranch } from './repo';
 import {
   generateReleaseSpecificationTemplateForMonorepo,
   waitForUserToEditReleaseSpecification,
   validateReleaseSpecification,
 } from './release-specification';
+import { updateChangedPackagesChangelog } from './package';
 
 /**
  * For a monorepo, the process works like this:
@@ -64,6 +65,15 @@ export async function followMonorepoWorkflow({
   stdout: Pick<WriteStream, 'write'>;
   stderr: Pick<WriteStream, 'write'>;
 }) {
+  const { version: newReleaseVersion, firstRun } = await createReleaseBranch({
+    project,
+    releaseType,
+  });
+
+  if (firstRun) {
+    await updateChangedPackagesChangelog({ project, stderr });
+  }
+
   const releaseSpecificationPath = path.join(
     tempDirectoryPath,
     'RELEASE_SPEC.yml',
@@ -115,11 +125,11 @@ export async function followMonorepoWorkflow({
   const releasePlan = await planRelease({
     project,
     releaseSpecification,
-    releaseType,
+    newReleaseVersion,
   });
   await executeReleasePlan(project, releasePlan, stderr);
   await removeFile(releaseSpecificationPath);
   await captureChangesInReleaseBranch(project.directoryPath, {
-    releaseVersion: releasePlan.newVersion,
+    releaseVersion: newReleaseVersion,
   });
 }
