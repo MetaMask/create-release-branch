@@ -11,7 +11,6 @@ import {
 import { getRepositoryHttpsUrl, getTagNames, restoreFiles } from './repo';
 import { SemVer } from './semver';
 import { PackageManifestFieldNames } from './package-manifest';
-import { debug } from './misc-utils';
 import { ReleaseSpecification } from './release-specification';
 
 /**

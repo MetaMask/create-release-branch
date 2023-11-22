@@ -3,7 +3,7 @@ import path from 'path';
 import { format } from 'util';
 import { parseChangelog, updateChangelog } from '@metamask/auto-changelog';
 import { WriteStreamLike, readFile, writeFile, writeJsonFile } from './fs';
-import { debug, isErrorWithCode } from './misc-utils';
+import { isErrorWithCode } from './misc-utils';
 import {
   readPackageManifest,
   UnvalidatedPackageManifest,

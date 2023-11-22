@@ -1,9 +1,9 @@
+import { WriteStream } from 'fs';
 import { SemVer } from 'semver';
 import { debug } from './misc-utils';
-import { Package, updatePackage, updatePackageChangelog } from './package';
+import { Package, updatePackage } from './package';
 import { Project } from './project';
 import { ReleaseSpecification } from './release-specification';
-import { WriteStream } from 'fs';
 
 /**
  * Instructions for how to update the project in order to prepare it for a new
