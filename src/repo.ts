@@ -19,7 +19,7 @@ const CHANGED_FILE_PATHS_BY_TAG_NAME: Record<string, string[]> = {};
  * @returns The standard output of the command.
  * @throws An execa error object if the command fails in some way.
  */
-async function runGitCommandWithin(
+export async function runGitCommandWithin(
   repositoryDirectoryPath: string,
   commandName: string,
   commandArgs: readonly string[],
@@ -173,36 +173,91 @@ export async function getRepositoryHttpsUrl(
 }
 
 /**
- * This function stages all of the changes which have been made to the repo thus far and
- * creates a new Git commit which carries the name of the new release.
+ * Commits all changes in a git repository with a specified commit message.
  *
- * @param repositoryDirectoryPath - The path to the repository directory.
- * @param args - The arguments.
- * @param args.releaseVersion - The release version.
+ * @param repositoryDirectoryPath - The file system path to the git repository where changes are to be committed.
+ * @param commitMessage - The message to be used for the git commit.
+ * @throws If any git command fails to execute.
  */
-export async function captureChangesInReleaseBranch(
+export async function commitAllChanges(
   repositoryDirectoryPath: string,
-  { releaseVersion }: { releaseVersion: string },
+  commitMessage: string,
 ) {
   await getStdoutFromGitCommandWithin(repositoryDirectoryPath, 'add', ['-A']);
   await getStdoutFromGitCommandWithin(repositoryDirectoryPath, 'commit', [
     '-m',
-    `Release ${releaseVersion}`,
+    commitMessage,
   ]);
 }
 
 /**
- * This function does create the release branch.
+ * Retrieves the current branch name of a git repository.
+ *
+ * @param repositoryDirectoryPath - The file system path to the git repository.
+ * @returns The name of the current branch in the specified repository.
+ */
+export function getCurrentBranchName(repositoryDirectoryPath: string) {
+  return getStdoutFromGitCommandWithin(repositoryDirectoryPath, 'rev-parse', [
+    '--abbrev-ref',
+    'HEAD',
+  ]);
+}
+
+/**
+ * Restores a file to its last committed state in a git repository.
+ *
+ * @param repositoryDirectoryPath - The file system path to the git repository.
+ * @param filePaths - The paths of the files to be restored.
+ */
+export async function restoreFiles(
+  repositoryDirectoryPath: string,
+  filePaths: string[],
+) {
+  const ancestorCommitSha = await getStdoutFromGitCommandWithin(
+    repositoryDirectoryPath,
+    'merge-base',
+    ['main', 'HEAD'],
+  );
+  await runGitCommandWithin(repositoryDirectoryPath, 'restore', [
+    '--source',
+    ancestorCommitSha,
+    '--',
+    ...filePaths,
+  ]);
+}
+
+/**
+ * Checks if a specific branch exists in the given git repository.
+ *
+ * @param repositoryDirectoryPath - The file system path to the git repository.
+ * @param branchName - The name of the branch to check for existence.
+ * @returns A promise that resolves to `true` if the branch exists, `false` otherwise.
+ */
+export async function branchExists(
+  repositoryDirectoryPath: string,
+  branchName: string,
+) {
+  const branchNames = await getLinesFromGitCommandWithin(
+    repositoryDirectoryPath,
+    'branch',
+    ['--list', branchName],
+  );
+  return branchNames.length > 0;
+}
+
+/**
+ * Creates a new release branch in the given project repository based on the specified release type.
  *
  * @param args - The arguments.
  * @param args.project - Information about the whole project (e.g., names of
  * packages and where they can found).
  * @param args.releaseType - The type of release ("ordinary" or "backport"),
  * which affects how the version is bumped.
- * @returns A promise for the newReleaseVersion.
+ * @returns A promise that resolves to an object with the new
+ * release version and a boolean indicating whether it's the first run.
  */
 export async function createReleaseBranch({
-  project,
+  project: { releaseVersion, directoryPath },
   releaseType,
 }: {
   project: Project;
@@ -213,18 +268,14 @@ export async function createReleaseBranch({
 }> {
   const newReleaseVersion =
     releaseType === 'backport'
-      ? `${project.releaseVersion.ordinaryNumber}.${
-          project.releaseVersion.backportNumber + 1
+      ? `${releaseVersion.ordinaryNumber}.${
+          releaseVersion.backportNumber + 1
         }.0`
-      : `${project.releaseVersion.ordinaryNumber + 1}.0.0`;
+      : `${releaseVersion.ordinaryNumber + 1}.0.0`;
 
   const releaseBranchName = `release/${newReleaseVersion}`;
 
-  const currentBranchName = await getStdoutFromGitCommandWithin(
-    project.directoryPath,
-    'rev-parse',
-    ['--abbrev-ref', 'HEAD'],
-  );
+  const currentBranchName = await getCurrentBranchName(directoryPath);
 
   if (currentBranchName === releaseBranchName) {
     debug(`Already on ${releaseBranchName} branch.`);
@@ -234,25 +285,18 @@ export async function createReleaseBranch({
     };
   }
 
-  if (
-    await getStdoutFromGitCommandWithin(project.directoryPath, 'branch', [
-      '--list',
-      releaseBranchName,
-    ])
-  ) {
+  if (await branchExists(directoryPath, releaseBranchName)) {
     debug(
       `Current release branch already exists. Checking out the existing branch.`,
     );
-    await getStdoutFromGitCommandWithin(project.directoryPath, 'checkout', [
-      releaseBranchName,
-    ]);
+    await runGitCommandWithin(directoryPath, 'checkout', [releaseBranchName]);
     return {
       version: newReleaseVersion,
       firstRun: false,
     };
   }
 
-  await getStdoutFromGitCommandWithin(project.directoryPath, 'checkout', [
+  await runGitCommandWithin(directoryPath, 'checkout', [
     '-b',
     releaseBranchName,
   ]);

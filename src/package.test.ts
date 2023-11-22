@@ -437,7 +437,6 @@ describe('package', () => {
             changelogPath: path.join(sandbox.directoryPath, 'CHANGELOG.md'),
           }),
           newVersion: '2.0.0',
-          shouldUpdateChangelog: false,
         };
 
         await updatePackage({ project, packageReleasePlan });
@@ -465,16 +464,11 @@ describe('package', () => {
             changelogPath,
           }),
           newVersion: '2.0.0',
-          shouldUpdateChangelog: true,
         };
-        when(jest.spyOn(autoChangelog, 'updateChangelog'))
+        when(jest.spyOn(autoChangelog, 'parseChangelog'))
           .calledWith({
             changelogContent: 'existing changelog',
-            currentVersion: '2.0.0',
-            isReleaseCandidate: true,
-            projectRootDirectory: sandbox.directoryPath,
             repoUrl: 'https://repo.url',
-            tagPrefixes: ['package@', 'v'],
           })
           .mockResolvedValue('new changelog');
         await fs.promises.writeFile(changelogPath, 'existing changelog');
@@ -501,7 +495,6 @@ describe('package', () => {
             changelogPath,
           }),
           newVersion: '2.0.0',
-          shouldUpdateChangelog: true,
         };
         jest.spyOn(fsModule, 'readFile').mockRejectedValue(new Error('oops'));
 
@@ -523,7 +516,6 @@ describe('package', () => {
             changelogPath,
           }),
           newVersion: '2.0.0',
-          shouldUpdateChangelog: true,
         };
         jest
           .spyOn(autoChangelog, 'updateChangelog')
@@ -549,7 +541,6 @@ describe('package', () => {
             changelogPath,
           }),
           newVersion: '2.0.0',
-          shouldUpdateChangelog: true,
         };
         when(jest.spyOn(autoChangelog, 'updateChangelog'))
           .calledWith({
@@ -586,7 +577,6 @@ describe('package', () => {
             changelogPath,
           }),
           newVersion: '2.0.0',
-          shouldUpdateChangelog: false,
         };
         when(jest.spyOn(autoChangelog, 'updateChangelog'))
           .calledWith({

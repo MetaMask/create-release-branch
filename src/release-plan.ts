@@ -1,9 +1,9 @@
-import type { WriteStream } from 'fs';
 import { SemVer } from 'semver';
 import { debug } from './misc-utils';
-import { Package, updatePackage } from './package';
+import { Package, updatePackage, updatePackageChangelog } from './package';
 import { Project } from './project';
 import { ReleaseSpecification } from './release-specification';
+import { WriteStream } from 'fs';
 
 /**
  * Instructions for how to update the project in order to prepare it for a new
@@ -34,15 +34,10 @@ export type ReleasePlan = {
  * @property package - Information about the package.
  * @property newVersion - The new version for the package, as a
  * SemVer-compatible string.
- * @property shouldUpdateChangelog - Whether or not the changelog for the
- * package should get updated. For a polyrepo, this will always be true; for a
- * monorepo, this will be true only for workspace packages (the root package
- * doesn't have a changelog, since it is a virtual package).
  */
 export type PackageReleasePlan = {
   package: Package;
   newVersion: string;
-  shouldUpdateChangelog: boolean;
 };
 
 /**
@@ -69,7 +64,6 @@ export async function planRelease({
   const rootReleasePlan: PackageReleasePlan = {
     package: project.rootPackage,
     newVersion: newReleaseVersion,
-    shouldUpdateChangelog: false,
   };
 
   const workspaceReleasePlans: PackageReleasePlan[] = Object.keys(
@@ -86,7 +80,6 @@ export async function planRelease({
     return {
       package: pkg,
       newVersion: newVersion.toString(),
-      shouldUpdateChangelog: true,
     };
   });
 
@@ -97,8 +90,7 @@ export async function planRelease({
 }
 
 /**
- * Bumps versions and updates changelogs of packages within the monorepo
- * according to the release plan.
+ * Bumps versions of packages within the monorepo according to the release plan.
  *
  * @param project - Information about the whole project (e.g., names of packages
  * and where they can found).

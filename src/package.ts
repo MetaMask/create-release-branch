@@ -1,9 +1,9 @@
 import fs, { WriteStream } from 'fs';
 import path from 'path';
 import { format } from 'util';
-import { updateChangelog } from '@metamask/auto-changelog';
+import { parseChangelog, updateChangelog } from '@metamask/auto-changelog';
 import { WriteStreamLike, readFile, writeFile, writeJsonFile } from './fs';
-import { isErrorWithCode } from './misc-utils';
+import { debug, isErrorWithCode } from './misc-utils';
 import {
   readPackageManifest,
   UnvalidatedPackageManifest,
@@ -230,63 +230,60 @@ export async function readMonorepoWorkspacePackage({
 }
 
 /**
- * Updates the changelog file of the given package using
- * `@metamask/auto-changelog`. Assumes that the changelog file is located at the
- * package root directory and named "CHANGELOG.md".
+ * Migrate all unreleased changes to a release section.
+ *
+ * Changes are migrated in their existing categories, and placed above any
+ * pre-existing changes in that category.
  *
  * @param args - The arguments.
  * @param args.project - The project.
+ * @param args.package - The release plan for a particular package in
+ * the project.
+ * @param args.version - The release version to migrate unreleased changes to.
  * @param args.stderr - A stream that can be used to write to standard error.
  * @returns The result of writing to the changelog.
  */
-export async function updateChangedPackagesChangelog({
-  project: { repositoryUrl, workspacePackages },
+export async function migrateChangelogUnreleasedChangesToRelease({
+  project: { repositoryUrl },
+  package: pkg,
+  version,
   stderr,
 }: {
-  project: Pick<
-    Project,
-    'directoryPath' | 'repositoryUrl' | 'workspacePackages'
-  >;
+  project: Pick<Project, 'directoryPath' | 'repositoryUrl'>;
+  package: Package;
+  version: string;
   stderr: Pick<WriteStream, 'write'>;
 }): Promise<void> {
-  await Promise.all(
-    Object.values(workspacePackages)
-      .filter(
-        ({ hasChangesSinceLatestRelease }) => hasChangesSinceLatestRelease,
-      )
-      .map(async (pkg) => {
-        let changelogContent;
+  let changelogContent;
 
-        try {
-          changelogContent = await readFile(pkg.changelogPath);
-        } catch (error) {
-          if (isErrorWithCode(error) && error.code === 'ENOENT') {
-            stderr.write(
-              `${pkg.validatedManifest.name} does not seem to have a changelog. Skipping.\n`,
-            );
-            return;
-          }
+  try {
+    changelogContent = await readFile(pkg.changelogPath);
+  } catch (error) {
+    if (isErrorWithCode(error) && error.code === 'ENOENT') {
+      stderr.write(
+        `${pkg.validatedManifest.name} does not seem to have a changelog. Skipping.\n`,
+      );
+      return;
+    }
 
-          throw error;
-        }
+    throw error;
+  }
 
-        const newChangelogContent = await updateChangelog({
-          changelogContent,
-          isReleaseCandidate: false,
-          projectRootDirectory: pkg.directoryPath,
-          repoUrl: repositoryUrl,
-          tagPrefixes: [`${pkg.validatedManifest.name}@`, 'v'],
-        });
+  const changelog = await parseChangelog({
+    changelogContent,
+    repoUrl: repositoryUrl,
+    tagPrefix: `${pkg.validatedManifest.name}@`,
+  });
 
-        if (newChangelogContent) {
-          await writeFile(pkg.changelogPath, newChangelogContent);
-        } else {
-          stderr.write(
-            `Changelog for ${pkg.validatedManifest.name} was not updated as there were no updates to make.`,
-          );
-        }
-      }),
-  );
+  if (changelog) {
+    changelog.addRelease({ version });
+    changelog.migrateUnreleasedChangesToRelease(version);
+    await writeFile(pkg.changelogPath, changelog.toString());
+  } else {
+    stderr.write(
+      `Changelog for ${pkg.validatedManifest.name} was not updated as there were no updates to make.`,
+    );
+  }
 }
 
 /**
@@ -296,18 +293,18 @@ export async function updateChangedPackagesChangelog({
  *
  * @param args - The arguments.
  * @param args.project - The project.
- * @param args.packageReleasePlan - The release plan for a particular package in
+ * @param args.package - The release plan for a particular package in
  * the project.
  * @param args.stderr - A stream that can be used to write to standard error.
  * @returns The result of writing to the changelog.
  */
-async function updatePackageChangelog({
+export async function updatePackageChangelog({
   project: { repositoryUrl },
-  packageReleasePlan: { package: pkg, newVersion },
+  package: pkg,
   stderr,
 }: {
   project: Pick<Project, 'directoryPath' | 'repositoryUrl'>;
-  packageReleasePlan: PackageReleasePlan;
+  package: Package;
   stderr: Pick<WriteStream, 'write'>;
 }): Promise<void> {
   let changelogContent;
@@ -327,8 +324,7 @@ async function updatePackageChangelog({
 
   const newChangelogContent = await updateChangelog({
     changelogContent,
-    currentVersion: newVersion,
-    isReleaseCandidate: true,
+    isReleaseCandidate: false,
     projectRootDirectory: pkg.directoryPath,
     repoUrl: repositoryUrl,
     tagPrefixes: [`${pkg.validatedManifest.name}@`, 'v'],
@@ -364,18 +360,17 @@ export async function updatePackage({
   packageReleasePlan: PackageReleasePlan;
   stderr?: Pick<WriteStream, 'write'>;
 }): Promise<void> {
-  const {
-    package: pkg,
-    newVersion,
-    shouldUpdateChangelog,
-  } = packageReleasePlan;
+  const { package: pkg, newVersion } = packageReleasePlan;
 
   await writeJsonFile(pkg.manifestPath, {
     ...pkg.unvalidatedManifest,
     version: newVersion,
   });
 
-  if (shouldUpdateChangelog) {
-    await updatePackageChangelog({ project, packageReleasePlan, stderr });
-  }
+  await migrateChangelogUnreleasedChangesToRelease({
+    project,
+    package: pkg,
+    stderr,
+    version: newVersion,
+  });
 }

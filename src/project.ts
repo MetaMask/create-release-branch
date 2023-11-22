@@ -1,3 +1,4 @@
+import { WriteStream } from 'fs';
 import { resolve } from 'path';
 import { getWorkspaceLocations } from '@metamask/action-utils';
 import { WriteStreamLike } from './fs';
@@ -5,10 +6,13 @@ import {
   Package,
   readMonorepoRootPackage,
   readMonorepoWorkspacePackage,
+  updatePackageChangelog,
 } from './package';
-import { getRepositoryHttpsUrl, getTagNames } from './repo';
+import { getRepositoryHttpsUrl, getTagNames, restoreFiles } from './repo';
 import { SemVer } from './semver';
 import { PackageManifestFieldNames } from './package-manifest';
+import { debug } from './misc-utils';
+import { ReleaseSpecification } from './release-specification';
 
 /**
  * The release version of the root package of a monorepo extracted from its
@@ -124,4 +128,74 @@ export async function readProject(
     isMonorepo,
     releaseVersion,
   };
+}
+
+/**
+ * Updates the changelog files of all the packages that has changes since latest release.
+ *
+ * @param args - The arguments.
+ * @param args.project - The project.
+ * @param args.stderr - A stream that can be used to write to standard error.
+ * @returns The result of writing to the changelog.
+ */
+export async function updateChangedPackagesChangelog({
+  project,
+  stderr,
+}: {
+  project: Pick<
+    Project,
+    'directoryPath' | 'repositoryUrl' | 'workspacePackages'
+  >;
+  stderr: Pick<WriteStream, 'write'>;
+}): Promise<void> {
+  await Promise.all(
+    Object.values(project.workspacePackages)
+      .filter(
+        ({ hasChangesSinceLatestRelease }) => hasChangesSinceLatestRelease,
+      )
+      .map((pkg) =>
+        updatePackageChangelog({
+          project,
+          package: pkg,
+          stderr,
+        }),
+      ),
+  );
+}
+
+/**
+ * Restores the changelogs of unreleased packages which has changes since latest release.
+ *
+ * @param args - The arguments.
+ * @param args.project - The project.
+ * @param args.releaseSpecification - A parsed version of the release spec
+ * entered by the user.
+ * @returns The result of writing to the changelog.
+ */
+export async function restoreUnreleasedPackagesChangelog({
+  project: { directoryPath, workspacePackages },
+  releaseSpecification,
+}: {
+  project: Pick<
+    Project,
+    'directoryPath' | 'repositoryUrl' | 'workspacePackages'
+  >;
+  releaseSpecification: ReleaseSpecification;
+}): Promise<void> {
+  const unreleasedPackagesChangelogPaths = Object.values(
+    workspacePackages,
+  ).reduce((changelogPaths: string[], pkg: Package) => {
+    if (
+      pkg.hasChangesSinceLatestRelease &&
+      !releaseSpecification.packages[pkg.validatedManifest.name]
+    ) {
+      return [
+        ...changelogPaths,
+        pkg.changelogPath.replace(`${directoryPath}/`, ''),
+      ];
+    }
+
+    return changelogPaths;
+  }, []);
+  await restoreFiles(directoryPath, unreleasedPackagesChangelogPaths);
 }

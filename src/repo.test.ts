@@ -1,9 +1,14 @@
 import { when } from 'jest-when';
+import { buildMockProject } from '../tests/unit/helpers';
 import {
   getRepositoryHttpsUrl,
-  captureChangesInReleaseBranch,
+  commitAllChanges,
   getTagNames,
   hasChangesInDirectorySinceGitTag,
+  getCurrentBranchName,
+  branchExists,
+  createReleaseBranch,
+  restoreFiles,
 } from './repo';
 import * as miscUtils from './misc-utils';
 
@@ -75,22 +80,15 @@ describe('repo', () => {
     });
   });
 
-  describe('captureChangesInReleaseBranch', () => {
-    it('checks out a new branch, stages all files, and creates a new commit', async () => {
+  describe('commitAllChanges', () => {
+    it('stages all files, and creates a new commit', async () => {
       const getStdoutFromCommandSpy = jest.spyOn(
         miscUtils,
         'getStdoutFromCommand',
       );
+      const commitMessage = 'Release 1.0.0';
+      await commitAllChanges('/path/to/project', commitMessage);
 
-      await captureChangesInReleaseBranch('/path/to/project', {
-        releaseVersion: '1.0.0',
-      });
-
-      expect(getStdoutFromCommandSpy).toHaveBeenCalledWith(
-        'git',
-        ['checkout', '-b', 'release/1.0.0'],
-        { cwd: '/path/to/project' },
-      );
       expect(getStdoutFromCommandSpy).toHaveBeenCalledWith(
         'git',
         ['add', '-A'],
@@ -98,7 +96,7 @@ describe('repo', () => {
       );
       expect(getStdoutFromCommandSpy).toHaveBeenCalledWith(
         'git',
-        ['commit', '-m', 'Release 1.0.0'],
+        ['commit', '-m', commitMessage],
         { cwd: '/path/to/project' },
       );
     });
@@ -219,6 +217,228 @@ describe('repo', () => {
       );
 
       expect(getLinesFromCommandSpy).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('getCurrentBranchName', () => {
+    it('gets the current branch name', async () => {
+      const getStdoutFromCommandSpy = jest.spyOn(
+        miscUtils,
+        'getStdoutFromCommand',
+      );
+
+      when(getStdoutFromCommandSpy)
+        .calledWith('git', ['rev-parse', '--abbrev-ref', 'HEAD'], {
+          cwd: '/path/to/project',
+        })
+        .mockResolvedValue('release/1.1.1');
+
+      const branchName = await getCurrentBranchName('/path/to/project');
+
+      expect(getStdoutFromCommandSpy).toHaveBeenCalledWith(
+        'git',
+        ['rev-parse', '--abbrev-ref', 'HEAD'],
+        { cwd: '/path/to/project' },
+      );
+
+      expect(branchName).toBe('release/1.1.1');
+    });
+  });
+
+  describe('branchExists', () => {
+    it('returns true when specified branch name exists', async () => {
+      const releaseBranchName = 'release/1.0.0';
+      when(jest.spyOn(miscUtils, 'getLinesFromCommand'))
+        .calledWith('git', ['branch', '--list', releaseBranchName], {
+          cwd: '/path/to/repo',
+        })
+        .mockResolvedValue([releaseBranchName]);
+
+      expect(await branchExists('/path/to/repo', releaseBranchName)).toBe(true);
+    });
+
+    it("returns false when specified branch name doesn't exist", async () => {
+      const releaseBranchName = 'release/1.0.0';
+      when(jest.spyOn(miscUtils, 'getLinesFromCommand'))
+        .calledWith('git', ['branch', '--list', releaseBranchName], {
+          cwd: '/path/to/repo',
+        })
+        .mockResolvedValue([]);
+
+      expect(await branchExists('/path/to/repo', releaseBranchName)).toBe(
+        false,
+      );
+    });
+  });
+
+  describe('restoreFiles', () => {
+    it('should call runCommand with the correct arguments', async () => {
+      const getStdoutFromCommandSpy = jest.spyOn(
+        miscUtils,
+        'getStdoutFromCommand',
+      );
+      when(getStdoutFromCommandSpy).mockResolvedValue('COMMIT_SH');
+      const runCommandSpy = jest.spyOn(miscUtils, 'runCommand');
+      await restoreFiles('/path/to', ['packages/filename.ts']);
+      expect(getStdoutFromCommandSpy).toHaveBeenCalledWith(
+        'git',
+        ['merge-base', 'main', 'HEAD'],
+        {
+          cwd: '/path/to',
+        },
+      );
+      expect(runCommandSpy).toHaveBeenCalledWith(
+        'git',
+        ['merge-base', 'main', 'HEAD'],
+        {
+          cwd: '/path/to',
+        },
+      );
+    });
+  });
+
+  describe('createReleaseBranch', () => {
+    it('should create a ordinary release branch if it does not exist', async () => {
+      const project = buildMockProject();
+
+      // getCurrentBranchName mock
+      when(jest.spyOn(miscUtils, 'getStdoutFromCommand'))
+        .calledWith('git', ['rev-parse', '--abbrev-ref', 'HEAD'], {
+          cwd: project.directoryPath,
+        })
+        .mockResolvedValue('main');
+
+      const newReleaseVersion = `${
+        project.releaseVersion.ordinaryNumber + 1
+      }.0.0`;
+      const newReleaseBranchName = `release/${newReleaseVersion}`;
+
+      // branchExists mock
+      when(jest.spyOn(miscUtils, 'getLinesFromCommand'))
+        .calledWith('git', ['branch', '--list', newReleaseBranchName], {
+          cwd: project.directoryPath,
+        })
+        .mockResolvedValue([]);
+
+      // checkout new branch mock
+      const runCommandSpy = jest.spyOn(miscUtils, 'runCommand');
+
+      const result = await createReleaseBranch({
+        project,
+        releaseType: 'ordinary',
+      });
+
+      expect(result).toStrictEqual({
+        version: newReleaseVersion,
+        firstRun: true,
+      });
+
+      expect(runCommandSpy).toHaveBeenCalledWith(
+        'git',
+        ['checkout', '-b', newReleaseBranchName],
+        { cwd: project.directoryPath },
+      );
+    });
+
+    it('should create a backport release branch if it does not exist', async () => {
+      const project = buildMockProject();
+
+      // getCurrentBranchName mock
+      when(jest.spyOn(miscUtils, 'getStdoutFromCommand'))
+        .calledWith('git', ['rev-parse', '--abbrev-ref', 'HEAD'], {
+          cwd: project.directoryPath,
+        })
+        .mockResolvedValue('main');
+
+      const newReleaseVersion = `${project.releaseVersion.ordinaryNumber}.${
+        project.releaseVersion.backportNumber + 1
+      }.0`;
+      const newReleaseBranchName = `release/${newReleaseVersion}`;
+
+      // branchExists mock
+      when(jest.spyOn(miscUtils, 'getLinesFromCommand'))
+        .calledWith('git', ['branch', '--list', newReleaseBranchName], {
+          cwd: project.directoryPath,
+        })
+        .mockResolvedValue([]);
+
+      // checkout new branch mock
+      const runCommandSpy = jest.spyOn(miscUtils, 'runCommand');
+
+      const result = await createReleaseBranch({
+        project,
+        releaseType: 'backport',
+      });
+
+      expect(result).toStrictEqual({
+        version: newReleaseVersion,
+        firstRun: true,
+      });
+
+      expect(runCommandSpy).toHaveBeenCalledWith(
+        'git',
+        ['checkout', '-b', newReleaseBranchName],
+        { cwd: project.directoryPath },
+      );
+    });
+
+    it('should return existing release branch info if already checked out', async () => {
+      const project = buildMockProject();
+
+      const newReleaseVersion = `${
+        project.releaseVersion.ordinaryNumber + 1
+      }.0.0`;
+      const newReleaseBranchName = `release/${newReleaseVersion}`;
+
+      // getCurrentBranchName mock
+      when(jest.spyOn(miscUtils, 'getStdoutFromCommand'))
+        .calledWith('git', ['rev-parse', '--abbrev-ref', 'HEAD'], {
+          cwd: project.directoryPath,
+        })
+        .mockResolvedValue(newReleaseBranchName);
+
+      const result = await createReleaseBranch({
+        project,
+        releaseType: 'ordinary',
+      });
+
+      expect(result).toStrictEqual({
+        version: newReleaseVersion,
+        firstRun: false,
+      });
+    });
+
+    it('should checkout existing release branch if it already exists', async () => {
+      const project = buildMockProject();
+
+      const newReleaseVersion = `${
+        project.releaseVersion.ordinaryNumber + 1
+      }.0.0`;
+      const newReleaseBranchName = `release/${newReleaseVersion}`;
+
+      // getCurrentBranchName mock
+      when(jest.spyOn(miscUtils, 'getStdoutFromCommand'))
+        .calledWith('git', ['rev-parse', '--abbrev-ref', 'HEAD'], {
+          cwd: project.directoryPath,
+        })
+        .mockResolvedValue('main');
+
+      // branchExists mock
+      when(jest.spyOn(miscUtils, 'getLinesFromCommand'))
+        .calledWith('git', ['branch', '--list', newReleaseBranchName], {
+          cwd: project.directoryPath,
+        })
+        .mockResolvedValue([newReleaseBranchName]);
+
+      const result = await createReleaseBranch({
+        project,
+        releaseType: 'ordinary',
+      });
+
+      expect(result).toStrictEqual({
+        version: newReleaseVersion,
+        firstRun: false,
+      });
     });
   });
 });

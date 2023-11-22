@@ -4,13 +4,20 @@ import { when } from 'jest-when';
 import { SemVer } from 'semver';
 import * as actionUtils from '@metamask/action-utils';
 import { withSandbox } from '../tests/helpers';
-import { buildMockPackage, createNoopWriteStream } from '../tests/unit/helpers';
-import { readProject } from './project';
+import {
+  buildMockPackage,
+  buildMockProject,
+  createNoopWriteStream,
+} from '../tests/unit/helpers';
+import { readProject, restoreUnreleasedPackagesChangelog } from './project';
 import * as packageModule from './package';
 import * as repoModule from './repo';
+import * as miscUtils from './misc-utils';
+import { IncrementableVersionParts } from './release-specification';
 
 jest.mock('./package');
 jest.mock('./repo');
+jest.mock('./misc-utils');
 jest.mock('@metamask/action-utils', () => ({
   ...jest.requireActual('@metamask/action-utils'),
   getWorkspaceLocations: jest.fn(),
@@ -118,6 +125,120 @@ describe('project', () => {
           },
         });
       });
+    });
+  });
+  describe('resetUnreleasedPackagesChangelog', () => {
+    it('should reset changelog for packages with changes not included in release', async () => {
+      const project = buildMockProject({
+        rootPackage: buildMockPackage('monorepo'),
+        workspacePackages: {
+          a: buildMockPackage('a', {
+            hasChangesSinceLatestRelease: true,
+          }),
+          b: buildMockPackage('b', {
+            hasChangesSinceLatestRelease: false,
+          }),
+          c: buildMockPackage('c', {
+            hasChangesSinceLatestRelease: true,
+          }),
+        },
+      });
+
+      const runGitCommandWithinSpy = jest.spyOn(
+        repoModule,
+        'runGitCommandWithin',
+      );
+
+      await restoreUnreleasedPackagesChangelog({
+        project,
+        releaseSpecification: {
+          packages: {
+            a: IncrementableVersionParts.minor,
+          },
+          path: '/path/to/release/specs',
+        },
+      });
+
+      expect(runGitCommandWithinSpy).toHaveBeenCalledWith(
+        '/path/to/packages/c',
+        'checkout',
+        ['--', 'CHANGELOG.md'],
+      );
+    });
+
+    it('should not reset changelog for packages without changes since last release', async () => {
+      const project = buildMockProject({
+        rootPackage: buildMockPackage('monorepo'),
+        workspacePackages: {
+          a: buildMockPackage('a', {
+            hasChangesSinceLatestRelease: true,
+          }),
+          b: buildMockPackage('b', {
+            hasChangesSinceLatestRelease: false,
+          }),
+          c: buildMockPackage('c', {
+            hasChangesSinceLatestRelease: true,
+          }),
+        },
+      });
+
+      const runGitCommandWithinSpy = jest.spyOn(
+        repoModule,
+        'runGitCommandWithin',
+      );
+
+      await restoreUnreleasedPackagesChangelog({
+        project,
+        releaseSpecification: {
+          packages: {
+            a: IncrementableVersionParts.minor,
+          },
+          path: '/path/to/release/specs',
+        },
+      });
+
+      expect(runGitCommandWithinSpy).not.toHaveBeenCalledWith(
+        '/path/to/packages/b',
+        'checkout',
+        ['--', 'CHANGELOG.md'],
+      );
+    });
+
+    it('should handle errors when resetting changelogs', async () => {
+      const project = buildMockProject({
+        rootPackage: buildMockPackage('monorepo'),
+        workspacePackages: {
+          a: buildMockPackage('a', {
+            hasChangesSinceLatestRelease: true,
+          }),
+          b: buildMockPackage('b', {
+            hasChangesSinceLatestRelease: false,
+          }),
+          c: buildMockPackage('c', {
+            hasChangesSinceLatestRelease: true,
+          }),
+        },
+      });
+
+      when(jest.spyOn(repoModule, 'runGitCommandWithin')).mockRejectedValue(
+        new Error('git error'),
+      );
+
+      await restoreUnreleasedPackagesChangelog({
+        project,
+        releaseSpecification: {
+          packages: {
+            a: IncrementableVersionParts.minor,
+          },
+          path: '/path/to/release/specs',
+        },
+      });
+
+      const debugSpy = jest.spyOn(miscUtils, 'debug');
+
+      expect(debugSpy).toHaveBeenCalledWith(
+        'Failed to reset changelog for package c.',
+      );
     });
   });
 });

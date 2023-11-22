@@ -6,17 +6,26 @@ import {
   removeFile,
   writeFile,
 } from './fs';
+import { debug } from './misc-utils';
 import { determineEditor } from './editor';
 import { ReleaseType } from './initial-parameters';
-import { Project } from './project';
+import {
+  Project,
+  updateChangedPackagesChangelog,
+  restoreUnreleasedPackagesChangelog,
+} from './project';
 import { planRelease, executeReleasePlan } from './release-plan';
-import { createReleaseBranch, captureChangesInReleaseBranch } from './repo';
+import {
+  branchExists,
+  commitAllChanges,
+  getCurrentBranchName,
+  runGitCommandWithin,
+} from './repo';
 import {
   generateReleaseSpecificationTemplateForMonorepo,
   waitForUserToEditReleaseSpecification,
   validateReleaseSpecification,
 } from './release-specification';
-import { updateChangedPackagesChangelog } from './package';
 
 /**
  * For a monorepo, the process works like this:
@@ -72,6 +81,10 @@ export async function followMonorepoWorkflow({
 
   if (firstRun) {
     await updateChangedPackagesChangelog({ project, stderr });
+    await commitAllChanges(
+      project.directoryPath,
+      `Initialize Release ${newReleaseVersion}`,
+    );
   }
 
   const releaseSpecificationPath = path.join(
@@ -122,6 +135,9 @@ export async function followMonorepoWorkflow({
     project,
     releaseSpecificationPath,
   );
+
+  await restoreUnreleasedPackagesChangelog({ project, releaseSpecification });
+
   const releasePlan = await planRelease({
     project,
     releaseSpecification,
@@ -129,7 +145,72 @@ export async function followMonorepoWorkflow({
   });
   await executeReleasePlan(project, releasePlan, stderr);
   await removeFile(releaseSpecificationPath);
-  await captureChangesInReleaseBranch(project.directoryPath, {
-    releaseVersion: newReleaseVersion,
-  });
+  await commitAllChanges(
+    project.directoryPath,
+    `Update Release ${newReleaseVersion}`,
+  );
+}
+
+/**
+ * Creates a new release branch in the given project repository based on the specified release type.
+ *
+ * @param args - The arguments.
+ * @param args.project - Information about the whole project (e.g., names of
+ * packages and where they can found).
+ * @param args.releaseType - The type of release ("ordinary" or "backport"),
+ * which affects how the version is bumped.
+ * @returns A promise that resolves to an object with the new
+ * release version and a boolean indicating whether it's the first run.
+ */
+export async function createReleaseBranch({
+  project,
+  releaseType,
+}: {
+  project: Project;
+  releaseType: ReleaseType;
+}): Promise<{
+  version: string;
+  firstRun: boolean;
+}> {
+  const newReleaseVersion =
+    releaseType === 'backport'
+      ? `${project.releaseVersion.ordinaryNumber}.${
+          project.releaseVersion.backportNumber + 1
+        }.0`
+      : `${project.releaseVersion.ordinaryNumber + 1}.0.0`;
+
+  const releaseBranchName = `release/${newReleaseVersion}`;
+
+  const currentBranchName = await getCurrentBranchName(project.directoryPath);
+
+  if (currentBranchName === releaseBranchName) {
+    debug(`Already on ${releaseBranchName} branch.`);
+    return {
+      version: newReleaseVersion,
+      firstRun: false,
+    };
+  }
+
+  if (await branchExists(project.directoryPath, releaseBranchName)) {
+    debug(
+      `Current release branch already exists. Checking out the existing branch.`,
+    );
+    await runGitCommandWithin(project.directoryPath, 'checkout', [
+      releaseBranchName,
+    ]);
+    return {
+      version: newReleaseVersion,
+      firstRun: false,
+    };
+  }
+
+  await runGitCommandWithin(project.directoryPath, 'checkout', [
+    '-b',
+    releaseBranchName,
+  ]);
+
+  return {
+    version: newReleaseVersion,
+    firstRun: true,
+  };
 }
