@@ -242,9 +242,7 @@ async function setupFollowMonorepoWorkflow({
   }
 
   when(commitAllChangesSpy)
-    .calledWith(projectDirectoryPath, {
-      releaseVersion,
-    })
+    .calledWith(projectDirectoryPath, '')
     .mockResolvedValue();
 
   if (doesReleaseSpecFileExist) {
@@ -293,6 +291,7 @@ describe('monorepo-workflow-operations', () => {
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: false,
             releaseType: 'ordinary',
+            defaultBranch: 'main',
             stdout,
             stderr,
           });
@@ -324,6 +323,7 @@ describe('monorepo-workflow-operations', () => {
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: false,
             releaseType: 'backport',
+            defaultBranch: 'main',
             stdout,
             stderr,
           });
@@ -355,6 +355,7 @@ describe('monorepo-workflow-operations', () => {
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: false,
             releaseType: 'ordinary',
+            defaultBranch: 'main',
             stdout,
             stderr,
           });
@@ -387,6 +388,7 @@ describe('monorepo-workflow-operations', () => {
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: false,
             releaseType: 'ordinary',
+            defaultBranch: 'main',
             stdout,
             stderr,
           });
@@ -412,6 +414,7 @@ describe('monorepo-workflow-operations', () => {
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: false,
             releaseType: 'ordinary',
+            defaultBranch: 'main',
             stdout,
             stderr,
           });
@@ -436,6 +439,7 @@ describe('monorepo-workflow-operations', () => {
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: false,
               releaseType: 'ordinary',
+              defaultBranch: 'main',
               stdout,
               stderr,
             }),
@@ -461,6 +465,7 @@ describe('monorepo-workflow-operations', () => {
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: false,
               releaseType: 'ordinary',
+              defaultBranch: 'main',
               stdout,
               stderr,
             }),
@@ -486,6 +491,7 @@ describe('monorepo-workflow-operations', () => {
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: false,
               releaseType: 'ordinary',
+              defaultBranch: 'main',
               stdout,
               stderr,
             }),
@@ -512,6 +518,7 @@ describe('monorepo-workflow-operations', () => {
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: false,
               releaseType: 'ordinary',
+              defaultBranch: 'main',
               stdout,
               stderr,
             }),
@@ -536,6 +543,7 @@ describe('monorepo-workflow-operations', () => {
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: false,
               releaseType: 'ordinary',
+              defaultBranch: 'main',
               stdout,
               stderr,
             }),
@@ -562,6 +570,7 @@ describe('monorepo-workflow-operations', () => {
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: false,
               releaseType: 'ordinary',
+              defaultBranch: 'main',
               stdout,
               stderr,
             }),
@@ -588,6 +597,7 @@ describe('monorepo-workflow-operations', () => {
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: false,
               releaseType: 'ordinary',
+              defaultBranch: 'main',
               stdout,
               stderr,
             }),
@@ -613,6 +623,7 @@ describe('monorepo-workflow-operations', () => {
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: false,
             releaseType: 'ordinary',
+            defaultBranch: 'main',
             stdout,
             stderr,
           });
@@ -635,6 +646,7 @@ describe('monorepo-workflow-operations', () => {
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: false,
             releaseType: 'ordinary',
+            defaultBranch: 'main',
             stdout,
             stderr,
           });
@@ -658,6 +670,7 @@ describe('monorepo-workflow-operations', () => {
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: false,
             releaseType: 'ordinary',
+            defaultBranch: 'main',
             stdout,
             stderr,
           });
@@ -682,6 +695,7 @@ describe('monorepo-workflow-operations', () => {
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: false,
             releaseType: 'ordinary',
+            defaultBranch: 'main',
             stdout,
             stderr,
           });
@@ -709,6 +723,7 @@ describe('monorepo-workflow-operations', () => {
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: false,
             releaseType: 'ordinary',
+            defaultBranch: 'main',
             stdout,
             stderr,
           });
@@ -737,6 +752,7 @@ describe('monorepo-workflow-operations', () => {
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: false,
             releaseType: 'ordinary',
+            defaultBranch: 'main',
             stdout,
             stderr,
           });
@@ -767,6 +783,7 @@ describe('monorepo-workflow-operations', () => {
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: false,
             releaseType: 'backport',
+            defaultBranch: 'main',
             stdout,
             stderr,
           });
@@ -797,6 +814,7 @@ describe('monorepo-workflow-operations', () => {
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: false,
             releaseType: 'ordinary',
+            defaultBranch: 'main',
             stdout,
             stderr,
           });
@@ -828,6 +846,7 @@ describe('monorepo-workflow-operations', () => {
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: false,
             releaseType: 'ordinary',
+            defaultBranch: 'main',
             stdout,
             stderr,
           });
@@ -852,6 +871,7 @@ describe('monorepo-workflow-operations', () => {
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: false,
             releaseType: 'ordinary',
+            defaultBranch: 'main',
             stdout,
             stderr,
           });
@@ -876,6 +896,7 @@ describe('monorepo-workflow-operations', () => {
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: false,
               releaseType: 'ordinary',
+              defaultBranch: 'main',
               stdout,
               stderr,
             }),
@@ -901,6 +922,7 @@ describe('monorepo-workflow-operations', () => {
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: false,
               releaseType: 'ordinary',
+              defaultBranch: 'main',
               stdout,
               stderr,
             }),
@@ -926,6 +948,7 @@ describe('monorepo-workflow-operations', () => {
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: false,
               releaseType: 'ordinary',
+              defaultBranch: 'main',
               stdout,
               stderr,
             }),
@@ -956,6 +979,7 @@ describe('monorepo-workflow-operations', () => {
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: true,
             releaseType: 'ordinary',
+            defaultBranch: 'main',
             stdout,
             stderr,
           });
@@ -987,6 +1011,7 @@ describe('monorepo-workflow-operations', () => {
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: true,
             releaseType: 'backport',
+            defaultBranch: 'main',
             stdout,
             stderr,
           });
@@ -1018,6 +1043,7 @@ describe('monorepo-workflow-operations', () => {
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: true,
             releaseType: 'ordinary',
+            defaultBranch: 'main',
             stdout,
             stderr,
           });
@@ -1050,6 +1076,7 @@ describe('monorepo-workflow-operations', () => {
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: true,
             releaseType: 'ordinary',
+            defaultBranch: 'main',
             stdout,
             stderr,
           });
@@ -1075,6 +1102,7 @@ describe('monorepo-workflow-operations', () => {
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: true,
             releaseType: 'ordinary',
+            defaultBranch: 'main',
             stdout,
             stderr,
           });
@@ -1099,6 +1127,7 @@ describe('monorepo-workflow-operations', () => {
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: true,
               releaseType: 'ordinary',
+              defaultBranch: 'main',
               stdout,
               stderr,
             }),
@@ -1124,6 +1153,7 @@ describe('monorepo-workflow-operations', () => {
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: true,
               releaseType: 'ordinary',
+              defaultBranch: 'main',
               stdout,
               stderr,
             }),
@@ -1149,6 +1179,7 @@ describe('monorepo-workflow-operations', () => {
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: true,
               releaseType: 'ordinary',
+              defaultBranch: 'main',
               stdout,
               stderr,
             }),
@@ -1175,6 +1206,7 @@ describe('monorepo-workflow-operations', () => {
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: true,
               releaseType: 'ordinary',
+              defaultBranch: 'main',
               stdout,
               stderr,
             }),
@@ -1199,6 +1231,7 @@ describe('monorepo-workflow-operations', () => {
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: true,
               releaseType: 'ordinary',
+              defaultBranch: 'main',
               stdout,
               stderr,
             }),
@@ -1225,6 +1258,7 @@ describe('monorepo-workflow-operations', () => {
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: true,
               releaseType: 'ordinary',
+              defaultBranch: 'main',
               stdout,
               stderr,
             }),
@@ -1251,6 +1285,7 @@ describe('monorepo-workflow-operations', () => {
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: true,
               releaseType: 'ordinary',
+              defaultBranch: 'main',
               stdout,
               stderr,
             }),
@@ -1276,6 +1311,7 @@ describe('monorepo-workflow-operations', () => {
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: true,
             releaseType: 'ordinary',
+            defaultBranch: 'main',
             stdout,
             stderr,
           });
@@ -1298,6 +1334,7 @@ describe('monorepo-workflow-operations', () => {
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: true,
             releaseType: 'ordinary',
+            defaultBranch: 'main',
             stdout,
             stderr,
           });
@@ -1321,6 +1358,7 @@ describe('monorepo-workflow-operations', () => {
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: true,
             releaseType: 'ordinary',
+            defaultBranch: 'main',
             stdout,
             stderr,
           });
@@ -1345,6 +1383,7 @@ describe('monorepo-workflow-operations', () => {
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: true,
             releaseType: 'ordinary',
+            defaultBranch: 'main',
             stdout,
             stderr,
           });
@@ -1373,6 +1412,7 @@ describe('monorepo-workflow-operations', () => {
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: true,
             releaseType: 'ordinary',
+            defaultBranch: 'main',
             stdout,
             stderr,
           });
@@ -1405,6 +1445,7 @@ describe('monorepo-workflow-operations', () => {
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: true,
             releaseType: 'ordinary',
+            defaultBranch: 'main',
             stdout,
             stderr,
           });
@@ -1436,6 +1477,7 @@ describe('monorepo-workflow-operations', () => {
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: true,
             releaseType: 'backport',
+            defaultBranch: 'main',
             stdout,
             stderr,
           });
@@ -1467,6 +1509,7 @@ describe('monorepo-workflow-operations', () => {
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: true,
             releaseType: 'ordinary',
+            defaultBranch: 'main',
             stdout,
             stderr,
           });
@@ -1499,6 +1542,7 @@ describe('monorepo-workflow-operations', () => {
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: true,
             releaseType: 'ordinary',
+            defaultBranch: 'main',
             stdout,
             stderr,
           });
@@ -1524,6 +1568,7 @@ describe('monorepo-workflow-operations', () => {
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: true,
             releaseType: 'ordinary',
+            defaultBranch: 'main',
             stdout,
             stderr,
           });
@@ -1548,6 +1593,7 @@ describe('monorepo-workflow-operations', () => {
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: true,
               releaseType: 'ordinary',
+              defaultBranch: 'main',
               stdout,
               stderr,
             }),
@@ -1573,6 +1619,7 @@ describe('monorepo-workflow-operations', () => {
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: true,
               releaseType: 'ordinary',
+              defaultBranch: 'main',
               stdout,
               stderr,
             }),
@@ -1598,6 +1645,7 @@ describe('monorepo-workflow-operations', () => {
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: true,
               releaseType: 'ordinary',
+              defaultBranch: 'main',
               stdout,
               stderr,
             }),
@@ -1624,6 +1672,7 @@ describe('monorepo-workflow-operations', () => {
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: true,
               releaseType: 'ordinary',
+              defaultBranch: 'main',
               stdout,
               stderr,
             }),
@@ -1648,6 +1697,7 @@ describe('monorepo-workflow-operations', () => {
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: true,
               releaseType: 'ordinary',
+              defaultBranch: 'main',
               stdout,
               stderr,
             }),
@@ -1674,6 +1724,7 @@ describe('monorepo-workflow-operations', () => {
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: true,
               releaseType: 'ordinary',
+              defaultBranch: 'main',
               stdout,
               stderr,
             }),
@@ -1700,6 +1751,7 @@ describe('monorepo-workflow-operations', () => {
               tempDirectoryPath: sandbox.directoryPath,
               firstRemovingExistingReleaseSpecification: true,
               releaseType: 'ordinary',
+              defaultBranch: 'main',
               stdout,
               stderr,
             }),
@@ -1729,6 +1781,7 @@ describe('monorepo-workflow-operations', () => {
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: true,
             releaseType: 'ordinary',
+            defaultBranch: 'main',
             stdout,
             stderr,
           });
@@ -1756,6 +1809,7 @@ describe('monorepo-workflow-operations', () => {
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: true,
             releaseType: 'ordinary',
+            defaultBranch: 'main',
             stdout,
             stderr,
           });
@@ -1778,6 +1832,7 @@ describe('monorepo-workflow-operations', () => {
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: true,
             releaseType: 'ordinary',
+            defaultBranch: 'main',
             stdout,
             stderr,
           });
@@ -1801,6 +1856,7 @@ describe('monorepo-workflow-operations', () => {
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: true,
             releaseType: 'ordinary',
+            defaultBranch: 'main',
             stdout,
             stderr,
           });
@@ -1825,6 +1881,7 @@ describe('monorepo-workflow-operations', () => {
             tempDirectoryPath: sandbox.directoryPath,
             firstRemovingExistingReleaseSpecification: true,
             releaseType: 'ordinary',
+            defaultBranch: 'main',
             stdout,
             stderr,
           });

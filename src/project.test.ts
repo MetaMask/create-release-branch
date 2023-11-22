@@ -12,7 +12,6 @@ import {
 import { readProject, restoreUnreleasedPackagesChangelog } from './project';
 import * as packageModule from './package';
 import * as repoModule from './repo';
-import * as miscUtils from './misc-utils';
 import { IncrementableVersionParts } from './release-specification';
 
 jest.mock('./package');
@@ -144,13 +143,11 @@ describe('project', () => {
         },
       });
 
-      const runGitCommandWithinSpy = jest.spyOn(
-        repoModule,
-        'runGitCommandWithin',
-      );
+      const restoreFilesSpy = jest.spyOn(repoModule, 'restoreFiles');
 
       await restoreUnreleasedPackagesChangelog({
         project,
+        defaultBranch: 'main',
         releaseSpecification: {
           packages: {
             a: IncrementableVersionParts.minor,
@@ -159,10 +156,10 @@ describe('project', () => {
         },
       });
 
-      expect(runGitCommandWithinSpy).toHaveBeenCalledWith(
-        '/path/to/packages/c',
-        'checkout',
-        ['--', 'CHANGELOG.md'],
+      expect(restoreFilesSpy).toHaveBeenCalledWith(
+        project.directoryPath,
+        'main',
+        ['/path/to/packages/c/CHANGELOG.md'],
       );
     });
 
@@ -182,13 +179,11 @@ describe('project', () => {
         },
       });
 
-      const runGitCommandWithinSpy = jest.spyOn(
-        repoModule,
-        'runGitCommandWithin',
-      );
+      const restoreFilesSpy = jest.spyOn(repoModule, 'restoreFiles');
 
       await restoreUnreleasedPackagesChangelog({
         project,
+        defaultBranch: 'main',
         releaseSpecification: {
           packages: {
             a: IncrementableVersionParts.minor,
@@ -197,47 +192,10 @@ describe('project', () => {
         },
       });
 
-      expect(runGitCommandWithinSpy).not.toHaveBeenCalledWith(
+      expect(restoreFilesSpy).not.toHaveBeenCalledWith(
         '/path/to/packages/b',
         'checkout',
         ['--', 'CHANGELOG.md'],
-      );
-    });
-
-    it('should handle errors when resetting changelogs', async () => {
-      const project = buildMockProject({
-        rootPackage: buildMockPackage('monorepo'),
-        workspacePackages: {
-          a: buildMockPackage('a', {
-            hasChangesSinceLatestRelease: true,
-          }),
-          b: buildMockPackage('b', {
-            hasChangesSinceLatestRelease: false,
-          }),
-          c: buildMockPackage('c', {
-            hasChangesSinceLatestRelease: true,
-          }),
-        },
-      });
-
-      when(jest.spyOn(repoModule, 'runGitCommandWithin')).mockRejectedValue(
-        new Error('git error'),
-      );
-
-      await restoreUnreleasedPackagesChangelog({
-        project,
-        releaseSpecification: {
-          packages: {
-            a: IncrementableVersionParts.minor,
-          },
-          path: '/path/to/release/specs',
-        },
-      });
-
-      const debugSpy = jest.spyOn(miscUtils, 'debug');
-
-      expect(debugSpy).toHaveBeenCalledWith(
-        'Failed to reset changelog for package c.',
       );
     });
   });

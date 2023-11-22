@@ -169,17 +169,20 @@ export async function updateChangedPackagesChangelog({
  * @param args.project - The project.
  * @param args.releaseSpecification - A parsed version of the release spec
  * entered by the user.
+ * @param args.defaultBranch - The name of the default branch in the repository.
  * @returns The result of writing to the changelog.
  */
 export async function restoreUnreleasedPackagesChangelog({
   project: { directoryPath, workspacePackages },
   releaseSpecification,
+  defaultBranch,
 }: {
   project: Pick<
     Project,
     'directoryPath' | 'repositoryUrl' | 'workspacePackages'
   >;
   releaseSpecification: ReleaseSpecification;
+  defaultBranch: string;
 }): Promise<void> {
   const unreleasedPackagesChangelogPaths = Object.values(
     workspacePackages,
@@ -196,5 +199,9 @@ export async function restoreUnreleasedPackagesChangelog({
 
     return changelogPaths;
   }, []);
-  await restoreFiles(directoryPath, unreleasedPackagesChangelogPaths);
+  await restoreFiles(
+    directoryPath,
+    defaultBranch,
+    unreleasedPackagesChangelogPaths,
+  );
 }

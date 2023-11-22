@@ -277,19 +277,20 @@ describe('repo', () => {
         miscUtils,
         'getStdoutFromCommand',
       );
+      const defaultBranch = 'main';
       when(getStdoutFromCommandSpy).mockResolvedValue('COMMIT_SH');
       const runCommandSpy = jest.spyOn(miscUtils, 'runCommand');
-      await restoreFiles('/path/to', ['packages/filename.ts']);
+      await restoreFiles('/path/to', defaultBranch, ['packages/filename.ts']);
       expect(getStdoutFromCommandSpy).toHaveBeenCalledWith(
         'git',
-        ['merge-base', 'main', 'HEAD'],
+        ['merge-base', defaultBranch, 'HEAD'],
         {
           cwd: '/path/to',
         },
       );
       expect(runCommandSpy).toHaveBeenCalledWith(
         'git',
-        ['merge-base', 'main', 'HEAD'],
+        ['restore', '--source', 'COMMIT_SH', '--', 'packages/filename.ts'],
         {
           cwd: '/path/to',
         },

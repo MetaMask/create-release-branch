@@ -204,19 +204,27 @@ export function getCurrentBranchName(repositoryDirectoryPath: string) {
 }
 
 /**
- * Restores a file to its last committed state in a git repository.
+ * Restores specific files in a git repository to their state at the common ancestor commit
+ * of the current HEAD and the repository's default branch.
+ *
+ * This asynchronous function calculates the common ancestor (merge base) of the current HEAD
+ * and the specified default branch. Then, it uses the `git restore` command to revert the
+ * specified files back to their state at that ancestor commit. This is useful for undoing
+ * changes in specific files that have occurred since the branch diverged from the default branch.
  *
  * @param repositoryDirectoryPath - The file system path to the git repository.
- * @param filePaths - The paths of the files to be restored.
+ * @param repositoryDefaultBranch - The name of the default branch in the repository.
+ * @param filePaths - An array of file paths (relative to the repository root) to restore.
  */
 export async function restoreFiles(
   repositoryDirectoryPath: string,
+  repositoryDefaultBranch: string,
   filePaths: string[],
 ) {
   const ancestorCommitSha = await getStdoutFromGitCommandWithin(
     repositoryDirectoryPath,
     'merge-base',
-    ['main', 'HEAD'],
+    [repositoryDefaultBranch, 'HEAD'],
   );
   await runGitCommandWithin(repositoryDirectoryPath, 'restore', [
     '--source',

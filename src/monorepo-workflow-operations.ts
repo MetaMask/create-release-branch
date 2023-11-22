@@ -56,6 +56,7 @@ import {
  * first.
  * @param args.releaseType - The type of release ("ordinary" or "backport"),
  * which affects how the version is bumped.
+ * @param args.defaultBranch - The name of the default branch in the repository.
  * @param args.stdout - A stream that can be used to write to standard out.
  * @param args.stderr - A stream that can be used to write to standard error.
  */
@@ -64,6 +65,7 @@ export async function followMonorepoWorkflow({
   tempDirectoryPath,
   firstRemovingExistingReleaseSpecification,
   releaseType,
+  defaultBranch,
   stdout,
   stderr,
 }: {
@@ -71,6 +73,7 @@ export async function followMonorepoWorkflow({
   tempDirectoryPath: string;
   firstRemovingExistingReleaseSpecification: boolean;
   releaseType: ReleaseType;
+  defaultBranch: string;
   stdout: Pick<WriteStream, 'write'>;
   stderr: Pick<WriteStream, 'write'>;
 }) {
@@ -136,7 +139,11 @@ export async function followMonorepoWorkflow({
     releaseSpecificationPath,
   );
 
-  await restoreUnreleasedPackagesChangelog({ project, releaseSpecification });
+  await restoreUnreleasedPackagesChangelog({
+    project,
+    releaseSpecification,
+    defaultBranch,
+  });
 
   const releasePlan = await planRelease({
     project,

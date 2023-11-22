@@ -35,6 +35,7 @@ describe('initial-parameters', () => {
           tempDirectory: '/path/to/temp',
           reset: true,
           backport: false,
+          defaultBranch: 'main',
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
@@ -54,6 +55,7 @@ describe('initial-parameters', () => {
         tempDirectoryPath: '/path/to/temp',
         reset: true,
         releaseType: 'ordinary',
+        defaultBranch: 'main',
       });
     });
 
@@ -69,6 +71,7 @@ describe('initial-parameters', () => {
           tempDirectory: undefined,
           reset: true,
           backport: false,
+          defaultBranch: 'main',
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
@@ -98,6 +101,7 @@ describe('initial-parameters', () => {
           tempDirectory: 'tmp',
           reset: true,
           backport: false,
+          defaultBranch: 'main',
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
@@ -127,6 +131,7 @@ describe('initial-parameters', () => {
           tempDirectory: undefined,
           reset: true,
           backport: false,
+          defaultBranch: 'main',
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
@@ -156,6 +161,7 @@ describe('initial-parameters', () => {
           tempDirectory: '/path/to/temp',
           reset: true,
           backport: false,
+          defaultBranch: 'main',
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
@@ -183,6 +189,7 @@ describe('initial-parameters', () => {
           tempDirectory: '/path/to/temp',
           reset: false,
           backport: false,
+          defaultBranch: 'main',
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
@@ -210,6 +217,7 @@ describe('initial-parameters', () => {
           tempDirectory: '/path/to/temp',
           reset: false,
           backport: true,
+          defaultBranch: 'main',
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
@@ -237,6 +245,7 @@ describe('initial-parameters', () => {
           tempDirectory: '/path/to/temp',
           reset: false,
           backport: false,
+          defaultBranch: 'main',
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
