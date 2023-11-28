@@ -576,7 +576,7 @@ describe('create-release-branch (functional)', () => {
           });
 
           // Tests four things:
-          // * The latest commit should be called "Release 1.0.0"
+          // * The latest commit should be called "Update Release 1.0.0"
           // * The latest commit should be the current commit (HEAD)
           // * The latest branch should be called "release/1.0.0"
           // * The latest branch should point to the latest commit
@@ -598,7 +598,7 @@ describe('create-release-branch (functional)', () => {
               '--max-count=1',
             ])
           ).stdout;
-          expect(latestCommitSubject).toBe('Release 2.0.0');
+          expect(latestCommitSubject).toBe('Update Release 2.0.0');
           expect(latestCommitRevs).toContain('HEAD');
           expect(latestCommitRevs).toContain('release/2.0.0');
           expect(latestBranchCommitId).toStrictEqual(latestCommitId);

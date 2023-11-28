@@ -199,9 +199,12 @@ export async function restoreUnreleasedPackagesChangelog({
 
     return changelogPaths;
   }, []);
-  await restoreFiles(
-    directoryPath,
-    defaultBranch,
-    unreleasedPackagesChangelogPaths,
-  );
+
+  if (unreleasedPackagesChangelogPaths.length > 0) {
+    await restoreFiles(
+      directoryPath,
+      defaultBranch,
+      unreleasedPackagesChangelogPaths,
+    );
+  }
 }
