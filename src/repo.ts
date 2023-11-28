@@ -1,12 +1,9 @@
 import path from 'path';
 import {
-  debug,
   runCommand,
   getStdoutFromCommand,
   getLinesFromCommand,
 } from './misc-utils';
-import { ReleaseType } from './initial-parameters';
-import { Project } from './project';
 
 const CHANGED_FILE_PATHS_BY_TAG_NAME: Record<string, string[]> = {};
 
