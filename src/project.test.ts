@@ -9,7 +9,11 @@ import {
   buildMockProject,
   createNoopWriteStream,
 } from '../tests/unit/helpers';
-import { readProject, restoreUnreleasedPackagesChangelog } from './project';
+import {
+  readProject,
+  restoreUnreleasedPackagesChangelog,
+  updateChangedPackagesChangelog,
+} from './project';
 import * as packageModule from './package';
 import * as repoModule from './repo';
 import { IncrementableVersionParts } from './release-specification';
@@ -197,6 +201,76 @@ describe('project', () => {
         'checkout',
         ['--', 'CHANGELOG.md'],
       );
+    });
+  });
+
+  describe('updateChangedPackagesChangelog', () => {
+    it('should update changelog files of all the packages that has changes since latest release', async () => {
+      const stderr = createNoopWriteStream();
+      const packageA = buildMockPackage('a', {
+        hasChangesSinceLatestRelease: true,
+      });
+      const packageB = buildMockPackage('b', {
+        hasChangesSinceLatestRelease: true,
+      });
+      const project = buildMockProject({
+        rootPackage: buildMockPackage('monorepo'),
+        workspacePackages: {
+          a: packageA,
+          b: packageB,
+        },
+      });
+
+      const updatePackageChangelogSpy = jest.spyOn(
+        packageModule,
+        'updatePackageChangelog',
+      );
+
+      await updateChangedPackagesChangelog({
+        project,
+        stderr,
+      });
+
+      expect(updatePackageChangelogSpy).toHaveBeenCalledWith({
+        project,
+        package: packageA,
+        stderr,
+      });
+
+      expect(updatePackageChangelogSpy).toHaveBeenCalledWith({
+        project,
+        package: packageB,
+        stderr,
+      });
+    });
+
+    it('should not update changelog files of all the packages that has not changed since latest release', async () => {
+      const stderr = createNoopWriteStream();
+      const packageA = buildMockPackage('a', {
+        hasChangesSinceLatestRelease: false,
+      });
+      const project = buildMockProject({
+        rootPackage: buildMockPackage('monorepo'),
+        workspacePackages: {
+          a: packageA,
+        },
+      });
+
+      const updatePackageChangelogSpy = jest.spyOn(
+        packageModule,
+        'updatePackageChangelog',
+      );
+
+      await updateChangedPackagesChangelog({
+        project,
+        stderr,
+      });
+
+      expect(updatePackageChangelogSpy).not.toHaveBeenCalledWith({
+        project,
+        package: packageA,
+        stderr,
+      });
     });
   });
 });
