@@ -4,6 +4,7 @@ import { when } from 'jest-when';
 import * as autoChangelog from '@metamask/auto-changelog';
 import { SemVer } from 'semver';
 import { MockWritable } from 'stdio-mock';
+import _outdent from 'outdent';
 import { withSandbox } from '../tests/helpers';
 import {
   buildMockPackage,
@@ -15,12 +16,14 @@ import {
   readMonorepoRootPackage,
   readMonorepoWorkspacePackage,
   updatePackage,
+  updatePackageChangelog,
 } from './package';
 import * as fsModule from './fs';
 import * as packageManifestModule from './package-manifest';
 import * as repoModule from './repo';
 
-jest.mock('@metamask/auto-changelog');
+const outdent = _outdent({ trimTrailingNewline: false });
+
 jest.mock('./package-manifest');
 jest.mock('./repo');
 
@@ -450,7 +453,7 @@ describe('package', () => {
       });
     });
 
-    it('updates the changelog of the package if requested to do so and if the package has one', async () => {
+    it('should migrate all unreleased changes to a release section.', async () => {
       await withSandbox(async (sandbox) => {
         const project = buildMockProject({
           repositoryUrl: 'https://repo.url',
@@ -465,13 +468,28 @@ describe('package', () => {
           }),
           newVersion: '2.0.0',
         };
-        when(jest.spyOn(autoChangelog, 'parseChangelog'))
-          .calledWith({
-            changelogContent: 'existing changelog',
-            repoUrl: 'https://repo.url',
-          })
-          .mockResolvedValue('new changelog');
-        await fs.promises.writeFile(changelogPath, 'existing changelog');
+
+        await fs.promises.writeFile(
+          changelogPath,
+          outdent`
+          # Changelog
+          All notable changes to this project will be documented in this file.
+
+          The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+          and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+          ## [Unreleased]
+          ### Uncategorized
+          - Add \`isNewFunction\` ([#2](https://repo.url/compare/package/pull/2))
+
+          ## [1.0.0] - 2020-01-01
+          ### Changed
+          - Something else
+
+          [Unreleased]: https://repo.url/compare/package@2.0.0...HEAD
+          [1.0.0]: https://repo.url/releases/tag/package@1.0.0
+        `,
+        );
 
         await updatePackage({ project, packageReleasePlan });
 
@@ -479,7 +497,28 @@ describe('package', () => {
           changelogPath,
           'utf8',
         );
-        expect(newChangelogContent).toBe('new changelog');
+
+        expect(newChangelogContent).toBe(outdent`
+        # Changelog
+        All notable changes to this project will be documented in this file.
+
+        The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+        and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+        ## [Unreleased]
+
+        ## [2.0.0]
+        ### Uncategorized
+        - Add \`isNewFunction\` ([#2](https://repo.url/compare/package/pull/2))
+
+        ## [1.0.0] - 2020-01-01
+        ### Changed
+        - Something else
+
+        [Unreleased]: https://repo.url/compare/package@2.0.0...HEAD
+        [2.0.0]: https://repo.url/compare/package@1.0.0...package@2.0.0
+        [1.0.0]: https://repo.url/releases/tag/package@1.0.0
+      `);
       });
     });
 
@@ -517,43 +556,82 @@ describe('package', () => {
           }),
           newVersion: '2.0.0',
         };
-        jest
-          .spyOn(autoChangelog, 'updateChangelog')
-          .mockResolvedValue('new changelog');
 
         const result = await updatePackage({ project, packageReleasePlan });
 
         expect(result).toBeUndefined();
       });
     });
+  });
 
-    it('does not update the changelog if updateChangelog returns nothing', async () => {
+  describe('updatePackageChangelog', () => {
+    it('updates the changelog of the package if requested to do so and if the package has one', async () => {
       await withSandbox(async (sandbox) => {
+        const stderr = createNoopWriteStream();
         const project = buildMockProject({
           repositoryUrl: 'https://repo.url',
         });
         const changelogPath = path.join(sandbox.directoryPath, 'CHANGELOG.md');
-        const packageReleasePlan = {
-          package: buildMockPackage({
-            directoryPath: sandbox.directoryPath,
-            manifestPath: path.join(sandbox.directoryPath, 'package.json'),
-            validatedManifest: buildMockManifest(),
-            changelogPath,
-          }),
-          newVersion: '2.0.0',
-        };
+        const pkg = buildMockPackage({
+          directoryPath: sandbox.directoryPath,
+          manifestPath: path.join(sandbox.directoryPath, 'package.json'),
+          validatedManifest: buildMockManifest(),
+          changelogPath,
+        });
         when(jest.spyOn(autoChangelog, 'updateChangelog'))
           .calledWith({
             changelogContent: 'existing changelog',
-            currentVersion: '2.0.0',
-            isReleaseCandidate: true,
+            isReleaseCandidate: false,
             projectRootDirectory: sandbox.directoryPath,
             repoUrl: 'https://repo.url',
+            tagPrefixes: ['package@', 'v'],
+          })
+          .mockResolvedValue('new changelog');
+        await fs.promises.writeFile(changelogPath, 'existing changelog');
+
+        await updatePackageChangelog({
+          project,
+          package: pkg,
+          stderr,
+        });
+
+        const newChangelogContent = await fs.promises.readFile(
+          changelogPath,
+          'utf8',
+        );
+        expect(newChangelogContent).toBe('new changelog');
+      });
+    });
+
+    it('does not update the changelog if updateChangelog returns nothing', async () => {
+      await withSandbox(async (sandbox) => {
+        const stderr = createNoopWriteStream();
+        const project = buildMockProject({
+          repositoryUrl: 'https://repo.url',
+        });
+        const changelogPath = path.join(sandbox.directoryPath, 'CHANGELOG.md');
+        const pkg = buildMockPackage({
+          directoryPath: sandbox.directoryPath,
+          manifestPath: path.join(sandbox.directoryPath, 'package.json'),
+          validatedManifest: buildMockManifest(),
+          changelogPath,
+        });
+        when(jest.spyOn(autoChangelog, 'updateChangelog'))
+          .calledWith({
+            changelogContent: 'existing changelog',
+            isReleaseCandidate: false,
+            projectRootDirectory: sandbox.directoryPath,
+            repoUrl: 'https://repo.url',
+            tagPrefixes: ['package@', 'v'],
           })
           .mockResolvedValue(undefined);
         await fs.promises.writeFile(changelogPath, 'existing changelog');
 
-        await updatePackage({ project, packageReleasePlan });
+        await updatePackageChangelog({
+          project,
+          package: pkg,
+          stderr,
+        });
 
         const newChangelogContent = await fs.promises.readFile(
           changelogPath,
@@ -563,39 +641,48 @@ describe('package', () => {
       });
     });
 
-    it('does not update the changelog if not requested to do so', async () => {
+    it('does not throw but merely prints a warning if the package does not have a changelog', async () => {
       await withSandbox(async (sandbox) => {
+        const stderr = createNoopWriteStream();
         const project = buildMockProject({
           repositoryUrl: 'https://repo.url',
         });
         const changelogPath = path.join(sandbox.directoryPath, 'CHANGELOG.md');
-        const packageReleasePlan = {
-          package: buildMockPackage({
-            directoryPath: sandbox.directoryPath,
-            manifestPath: path.join(sandbox.directoryPath, 'package.json'),
-            validatedManifest: buildMockManifest(),
-            changelogPath,
-          }),
-          newVersion: '2.0.0',
-        };
-        when(jest.spyOn(autoChangelog, 'updateChangelog'))
-          .calledWith({
-            changelogContent: 'existing changelog',
-            currentVersion: '2.0.0',
-            isReleaseCandidate: true,
-            projectRootDirectory: sandbox.directoryPath,
-            repoUrl: 'https://repo.url',
-          })
-          .mockResolvedValue('new changelog');
-        await fs.promises.writeFile(changelogPath, 'existing changelog');
-
-        await updatePackage({ project, packageReleasePlan });
-
-        const newChangelogContent = await fs.promises.readFile(
+        const pkg = buildMockPackage({
+          directoryPath: sandbox.directoryPath,
+          manifestPath: path.join(sandbox.directoryPath, 'package.json'),
+          validatedManifest: buildMockManifest(),
           changelogPath,
-          'utf8',
-        );
-        expect(newChangelogContent).toBe('existing changelog');
+        });
+
+        const result = await updatePackageChangelog({
+          project,
+          package: pkg,
+          stderr,
+        });
+
+        expect(result).toBeUndefined();
+      });
+    });
+
+    it("throws if reading the package's changelog fails in an unexpected way", async () => {
+      await withSandbox(async (sandbox) => {
+        const stderr = createNoopWriteStream();
+        const project = buildMockProject({
+          repositoryUrl: 'https://repo.url',
+        });
+        const changelogPath = path.join(sandbox.directoryPath, 'CHANGELOG.md');
+        const pkg = buildMockPackage({
+          directoryPath: sandbox.directoryPath,
+          manifestPath: path.join(sandbox.directoryPath, 'package.json'),
+          validatedManifest: buildMockManifest(),
+          changelogPath,
+        });
+        jest.spyOn(fsModule, 'readFile').mockRejectedValue(new Error('oops'));
+
+        await expect(
+          updatePackageChangelog({ project, package: pkg, stderr }),
+        ).rejects.toThrow('oops');
       });
     });
   });

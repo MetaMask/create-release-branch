@@ -269,21 +269,15 @@ export async function migrateChangelogUnreleasedChangesToRelease({
     throw error;
   }
 
-  const changelog = await parseChangelog({
+  const changelog = parseChangelog({
     changelogContent,
     repoUrl: repositoryUrl,
     tagPrefix: `${pkg.validatedManifest.name}@`,
   });
 
-  if (changelog) {
-    changelog.addRelease({ version });
-    changelog.migrateUnreleasedChangesToRelease(version);
-    await writeFile(pkg.changelogPath, changelog.toString());
-  } else {
-    stderr.write(
-      `Changelog for ${pkg.validatedManifest.name} was not updated as there were no updates to make.`,
-    );
-  }
+  changelog.addRelease({ version });
+  changelog.migrateUnreleasedChangesToRelease(version);
+  await writeFile(pkg.changelogPath, changelog.toString());
 }
 
 /**
