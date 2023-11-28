@@ -641,6 +641,25 @@ describe('create-release-branch (functional)', () => {
           },
         },
         async (environment) => {
+          await environment.writeFileWithinPackage(
+            'b',
+            'CHANGELOG.md',
+            buildChangelog(`
+              ## [Unreleased]
+
+              [Unreleased]: https://github.com/example-org/example-repo
+            `),
+          );
+          await environment.writeFileWithinPackage(
+            'd',
+            'CHANGELOG.md',
+            buildChangelog(`
+              ## [Unreleased]
+
+              [Unreleased]: https://github.com/example-org/example-repo
+            `),
+          );
+
           await environment.runTool({
             releaseSpecification: {
               packages: {
