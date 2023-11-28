@@ -254,68 +254,6 @@ export async function branchExists(
 }
 
 /**
- * Creates a new release branch in the given project repository based on the specified release type.
- *
- * @param args - The arguments.
- * @param args.project - Information about the whole project (e.g., names of
- * packages and where they can found).
- * @param args.releaseType - The type of release ("ordinary" or "backport"),
- * which affects how the version is bumped.
- * @returns A promise that resolves to an object with the new
- * release version and a boolean indicating whether it's the first run.
- */
-export async function createReleaseBranch({
-  project: { releaseVersion, directoryPath },
-  releaseType,
-}: {
-  project: Project;
-  releaseType: ReleaseType;
-}): Promise<{
-  version: string;
-  firstRun: boolean;
-}> {
-  const newReleaseVersion =
-    releaseType === 'backport'
-      ? `${releaseVersion.ordinaryNumber}.${
-          releaseVersion.backportNumber + 1
-        }.0`
-      : `${releaseVersion.ordinaryNumber + 1}.0.0`;
-
-  const releaseBranchName = `release/${newReleaseVersion}`;
-
-  const currentBranchName = await getCurrentBranchName(directoryPath);
-
-  if (currentBranchName === releaseBranchName) {
-    debug(`Already on ${releaseBranchName} branch.`);
-    return {
-      version: newReleaseVersion,
-      firstRun: false,
-    };
-  }
-
-  if (await branchExists(directoryPath, releaseBranchName)) {
-    debug(
-      `Current release branch already exists. Checking out the existing branch.`,
-    );
-    await runGitCommandWithin(directoryPath, 'checkout', [releaseBranchName]);
-    return {
-      version: newReleaseVersion,
-      firstRun: false,
-    };
-  }
-
-  await runGitCommandWithin(directoryPath, 'checkout', [
-    '-b',
-    releaseBranchName,
-  ]);
-
-  return {
-    version: newReleaseVersion,
-    firstRun: true,
-  };
-}
-
-/**
  * Retrieves the names of the tags in the given repo, sorted by ascending
  * semantic version order. As this fetches tags from the remote first, you are
  * advised to only run this once.
