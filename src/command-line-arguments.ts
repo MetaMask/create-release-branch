@@ -46,7 +46,7 @@ export async function readCommandLineArguments(
       default: false,
     })
     .option('default-branch', {
-      alias: '-b',
+      alias: 'b',
       describe: 'The name of the default branch in the repository.',
       default: 'main',
       type: 'string',

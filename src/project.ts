@@ -1,7 +1,7 @@
 import { WriteStream } from 'fs';
 import { resolve } from 'path';
 import { getWorkspaceLocations } from '@metamask/action-utils';
-import { WriteStreamLike } from './fs';
+import { WriteStreamLike, fileExists } from './fs';
 import {
   Package,
   readMonorepoRootPackage,
@@ -172,7 +172,7 @@ export async function updateChangedPackagesChangelog({
  * @param args.defaultBranch - The name of the default branch in the repository.
  * @returns The result of writing to the changelog.
  */
-export async function restoreUnreleasedPackagesChangelog({
+export async function restoreChangelogsForSkippedPackages({
   project: { directoryPath, workspacePackages },
   releaseSpecification,
   defaultBranch,
@@ -184,27 +184,29 @@ export async function restoreUnreleasedPackagesChangelog({
   releaseSpecification: ReleaseSpecification;
   defaultBranch: string;
 }): Promise<void> {
-  const unreleasedPackagesChangelogPaths = Object.values(
-    workspacePackages,
-  ).reduce((changelogPaths: string[], pkg: Package) => {
-    if (
-      pkg.hasChangesSinceLatestRelease &&
-      !releaseSpecification.packages[pkg.validatedManifest.name]
-    ) {
-      return [
-        ...changelogPaths,
-        pkg.changelogPath.replace(`${directoryPath}/`, ''),
-      ];
-    }
+  const existingSkippedPackageChangelogPaths = (
+    await Promise.all(
+      Object.entries(workspacePackages).map(async ([name, pkg]) => {
+        const changelogPath = pkg.changelogPath.replace(
+          `${directoryPath}/`,
+          '',
+        );
+        const shouldInclude =
+          pkg.hasChangesSinceLatestRelease &&
+          !releaseSpecification.packages[name] &&
+          (await fileExists(pkg.changelogPath));
+        return [changelogPath, shouldInclude] as const;
+      }),
+    )
+  )
+    .filter(([_, shouldInclude]) => shouldInclude)
+    .map(([changelogPath]) => changelogPath);
 
-    return changelogPaths;
-  }, []);
-
-  if (unreleasedPackagesChangelogPaths.length > 0) {
+  if (existingSkippedPackageChangelogPaths.length > 0) {
     await restoreFiles(
       directoryPath,
       defaultBranch,
-      unreleasedPackagesChangelogPaths,
+      existingSkippedPackageChangelogPaths,
     );
   }
 }

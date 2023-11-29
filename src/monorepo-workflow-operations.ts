@@ -12,7 +12,7 @@ import { ReleaseType } from './initial-parameters';
 import {
   Project,
   updateChangedPackagesChangelog,
-  restoreUnreleasedPackagesChangelog,
+  restoreChangelogsForSkippedPackages,
 } from './project';
 import { planRelease, executeReleasePlan } from './release-plan';
 import {
@@ -139,7 +139,7 @@ export async function followMonorepoWorkflow({
     releaseSpecificationPath,
   );
 
-  await restoreUnreleasedPackagesChangelog({
+  await restoreChangelogsForSkippedPackages({
     project,
     releaseSpecification,
     defaultBranch,

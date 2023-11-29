@@ -1,4 +1,4 @@
-import fs from 'fs';
+import { mkdir } from 'fs/promises';
 import path from 'path';
 import { when } from 'jest-when';
 import { SemVer } from 'semver';
@@ -11,16 +11,16 @@ import {
 } from '../tests/unit/helpers';
 import {
   readProject,
-  restoreUnreleasedPackagesChangelog,
+  restoreChangelogsForSkippedPackages,
   updateChangedPackagesChangelog,
 } from './project';
 import * as packageModule from './package';
 import * as repoModule from './repo';
+import * as fs from './fs';
 import { IncrementableVersionParts } from './release-specification';
 
 jest.mock('./package');
 jest.mock('./repo');
-jest.mock('./misc-utils');
 jest.mock('@metamask/action-utils', () => ({
   ...jest.requireActual('@metamask/action-utils'),
   getWorkspaceLocations: jest.fn(),
@@ -103,14 +103,10 @@ describe('project', () => {
             stderr,
           })
           .mockResolvedValue(workspacePackages.b);
-        await fs.promises.mkdir(path.join(projectDirectoryPath, 'packages'));
-        await fs.promises.mkdir(
-          path.join(projectDirectoryPath, 'packages', 'a'),
-        );
-        await fs.promises.mkdir(
-          path.join(projectDirectoryPath, 'packages', 'subpackages'),
-        );
-        await fs.promises.mkdir(
+        await mkdir(path.join(projectDirectoryPath, 'packages'));
+        await mkdir(path.join(projectDirectoryPath, 'packages', 'a'));
+        await mkdir(path.join(projectDirectoryPath, 'packages', 'subpackages'));
+        await mkdir(
           path.join(projectDirectoryPath, 'packages', 'subpackages', 'b'),
         );
 
@@ -130,7 +126,7 @@ describe('project', () => {
       });
     });
   });
-  describe('resetUnreleasedPackagesChangelog', () => {
+  describe('restoreChangelogsForSkippedPackages', () => {
     it('should reset changelog for packages with changes not included in release', async () => {
       const project = buildMockProject({
         rootPackage: buildMockPackage('monorepo'),
@@ -139,7 +135,7 @@ describe('project', () => {
             hasChangesSinceLatestRelease: true,
           }),
           b: buildMockPackage('b', {
-            hasChangesSinceLatestRelease: false,
+            hasChangesSinceLatestRelease: true,
           }),
           c: buildMockPackage('c', {
             hasChangesSinceLatestRelease: true,
@@ -149,7 +145,15 @@ describe('project', () => {
 
       const restoreFilesSpy = jest.spyOn(repoModule, 'restoreFiles');
 
-      await restoreUnreleasedPackagesChangelog({
+      when(jest.spyOn(fs, 'fileExists'))
+        .calledWith(project.workspacePackages.b.changelogPath)
+        .mockResolvedValue(true);
+
+      when(jest.spyOn(fs, 'fileExists'))
+        .calledWith(project.workspacePackages.c.changelogPath)
+        .mockResolvedValue(true);
+
+      await restoreChangelogsForSkippedPackages({
         project,
         defaultBranch: 'main',
         releaseSpecification: {
@@ -163,7 +167,10 @@ describe('project', () => {
       expect(restoreFilesSpy).toHaveBeenCalledWith(
         project.directoryPath,
         'main',
-        ['/path/to/packages/c/CHANGELOG.md'],
+        [
+          '/path/to/packages/b/CHANGELOG.md',
+          '/path/to/packages/c/CHANGELOG.md',
+        ],
       );
     });
 
@@ -179,13 +186,14 @@ describe('project', () => {
           }),
           c: buildMockPackage('c', {
             hasChangesSinceLatestRelease: true,
+            changelogPath: '/changelog/path/not/exist',
           }),
         },
       });
 
       const restoreFilesSpy = jest.spyOn(repoModule, 'restoreFiles');
 
-      await restoreUnreleasedPackagesChangelog({
+      await restoreChangelogsForSkippedPackages({
         project,
         defaultBranch: 'main',
         releaseSpecification: {
@@ -197,9 +205,9 @@ describe('project', () => {
       });
 
       expect(restoreFilesSpy).not.toHaveBeenCalledWith(
-        '/path/to/packages/b',
-        'checkout',
-        ['--', 'CHANGELOG.md'],
+        project.directoryPath,
+        'main',
+        ['/path/to/packages/b/CHANGELOG.md', '/changelog/path/not/exist'],
       );
     });
   });
