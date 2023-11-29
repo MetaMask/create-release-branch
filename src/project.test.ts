@@ -12,7 +12,7 @@ import {
 import {
   readProject,
   restoreChangelogsForSkippedPackages,
-  updateChangedPackagesChangelog,
+  updateChangelogsForChangedPackages,
 } from './project';
 import * as packageModule from './package';
 import * as repoModule from './repo';
@@ -184,10 +184,6 @@ describe('project', () => {
           b: buildMockPackage('b', {
             hasChangesSinceLatestRelease: false,
           }),
-          c: buildMockPackage('c', {
-            hasChangesSinceLatestRelease: true,
-            changelogPath: '/changelog/path/not/exist',
-          }),
         },
       });
 
@@ -207,25 +203,60 @@ describe('project', () => {
       expect(restoreFilesSpy).not.toHaveBeenCalledWith(
         project.directoryPath,
         'main',
-        ['/path/to/packages/b/CHANGELOG.md', '/changelog/path/not/exist'],
+        ['/path/to/packages/b/CHANGELOG.md'],
+      );
+    });
+
+    it('should not reset non-existent changelogs', async () => {
+      const project = buildMockProject({
+        rootPackage: buildMockPackage('monorepo'),
+        workspacePackages: {
+          a: buildMockPackage('a', {
+            hasChangesSinceLatestRelease: true,
+          }),
+          b: buildMockPackage('b', {
+            hasChangesSinceLatestRelease: true,
+          }),
+        },
+      });
+
+      when(jest.spyOn(fs, 'fileExists'))
+        .calledWith(project.workspacePackages.a.changelogPath)
+        .mockResolvedValue(false);
+
+      const restoreFilesSpy = jest.spyOn(repoModule, 'restoreFiles');
+
+      await restoreChangelogsForSkippedPackages({
+        project,
+        defaultBranch: 'main',
+        releaseSpecification: {
+          packages: {
+            a: IncrementableVersionParts.minor,
+          },
+          path: '/path/to/release/specs',
+        },
+      });
+
+      expect(restoreFilesSpy).not.toHaveBeenCalledWith(
+        project.directoryPath,
+        'main',
+        [project.workspacePackages.b.changelogPath],
       );
     });
   });
 
-  describe('updateChangedPackagesChangelog', () => {
+  describe('updateChangelogsForChangedPackages', () => {
     it('should update changelog files of all the packages that has changes since latest release', async () => {
       const stderr = createNoopWriteStream();
-      const packageA = buildMockPackage('a', {
-        hasChangesSinceLatestRelease: true,
-      });
-      const packageB = buildMockPackage('b', {
-        hasChangesSinceLatestRelease: true,
-      });
       const project = buildMockProject({
         rootPackage: buildMockPackage('monorepo'),
         workspacePackages: {
-          a: packageA,
-          b: packageB,
+          a: buildMockPackage('a', {
+            hasChangesSinceLatestRelease: true,
+          }),
+          b: buildMockPackage('b', {
+            hasChangesSinceLatestRelease: true,
+          }),
         },
       });
 
@@ -234,33 +265,32 @@ describe('project', () => {
         'updatePackageChangelog',
       );
 
-      await updateChangedPackagesChangelog({
+      await updateChangelogsForChangedPackages({
         project,
         stderr,
       });
 
       expect(updatePackageChangelogSpy).toHaveBeenCalledWith({
         project,
-        package: packageA,
+        package: project.workspacePackages.a,
         stderr,
       });
 
       expect(updatePackageChangelogSpy).toHaveBeenCalledWith({
         project,
-        package: packageB,
+        package: project.workspacePackages.b,
         stderr,
       });
     });
 
     it('should not update changelog files of all the packages that has not changed since latest release', async () => {
       const stderr = createNoopWriteStream();
-      const packageA = buildMockPackage('a', {
-        hasChangesSinceLatestRelease: false,
-      });
       const project = buildMockProject({
         rootPackage: buildMockPackage('monorepo'),
         workspacePackages: {
-          a: packageA,
+          a: buildMockPackage('a', {
+            hasChangesSinceLatestRelease: false,
+          }),
         },
       });
 
@@ -269,14 +299,14 @@ describe('project', () => {
         'updatePackageChangelog',
       );
 
-      await updateChangedPackagesChangelog({
+      await updateChangelogsForChangedPackages({
         project,
         stderr,
       });
 
       expect(updatePackageChangelogSpy).not.toHaveBeenCalledWith({
         project,
-        package: packageA,
+        package: project.workspacePackages.a,
         stderr,
       });
     });

@@ -453,7 +453,7 @@ describe('package', () => {
       });
     });
 
-    it('should migrate all unreleased changes to a release section.', async () => {
+    it('migrates all unreleased changes to a release section', async () => {
       await withSandbox(async (sandbox) => {
         const project = buildMockProject({
           repositoryUrl: 'https://repo.url',
@@ -474,18 +474,14 @@ describe('package', () => {
           outdent`
           # Changelog
           All notable changes to this project will be documented in this file.
-
           The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
           and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
           ## [Unreleased]
           ### Uncategorized
           - Add \`isNewFunction\` ([#2](https://repo.url/compare/package/pull/2))
-
           ## [1.0.0] - 2020-01-01
           ### Changed
           - Something else
-
           [Unreleased]: https://repo.url/compare/package@2.0.0...HEAD
           [1.0.0]: https://repo.url/releases/tag/package@1.0.0
         `,

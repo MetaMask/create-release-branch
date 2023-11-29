@@ -237,13 +237,12 @@ export async function readMonorepoWorkspacePackage({
  *
  * @param args - The arguments.
  * @param args.project - The project.
- * @param args.package - The release plan for a particular package in
- * the project.
+ * @param args.package - A particular package in the project.
  * @param args.version - The release version to migrate unreleased changes to.
  * @param args.stderr - A stream that can be used to write to standard error.
  * @returns The result of writing to the changelog.
  */
-export async function migrateChangelogUnreleasedChangesToRelease({
+export async function migrateUnreleasedChangelogChangesToRelease({
   project: { repositoryUrl },
   package: pkg,
   version,
@@ -287,8 +286,7 @@ export async function migrateChangelogUnreleasedChangesToRelease({
  *
  * @param args - The arguments.
  * @param args.project - The project.
- * @param args.package - The release plan for a particular package in
- * the project.
+ * @param args.package - A particular package in the project.
  * @param args.stderr - A stream that can be used to write to standard error.
  * @returns The result of writing to the changelog.
  */
@@ -318,6 +316,9 @@ export async function updatePackageChangelog({
 
   const newChangelogContent = await updateChangelog({
     changelogContent,
+    // Setting `isReleaseCandidate` to false because `updateChangelog` requires a
+    // specific version number when this flag is true, and the package release version
+    // is not determined at this stage of the process.
     isReleaseCandidate: false,
     projectRootDirectory: pkg.directoryPath,
     repoUrl: repositoryUrl,
@@ -334,9 +335,10 @@ export async function updatePackageChangelog({
 }
 
 /**
- * Updates the package as per the instructions in the given release plan by
- * replacing the `version` field in the manifest and adding a new section to the
- * changelog for the new version of the package.
+ * Updates the package by replacing the `version` field in the manifest
+ * according to the one in the given release plan. Also updates the
+ * changelog by migrating changes in the Unreleased section to the section
+ * representing the new version.
  *
  * @param args - The project.
  * @param args.project - The project.
@@ -361,7 +363,7 @@ export async function updatePackage({
     version: newVersion,
   });
 
-  await migrateChangelogUnreleasedChangesToRelease({
+  await migrateUnreleasedChangelogChangesToRelease({
     project,
     package: pkg,
     stderr,

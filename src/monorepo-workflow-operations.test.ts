@@ -12,6 +12,7 @@ import type { ReleaseSpecification } from './release-specification';
 import * as releasePlanModule from './release-plan';
 import type { ReleasePlan } from './release-plan';
 import * as repoModule from './repo';
+import * as workflowOperations from './workflow-operations';
 
 jest.mock('./editor');
 jest.mock('./release-plan');
@@ -45,6 +46,10 @@ async function fileExists(entryPath: string): Promise<boolean> {
 function getDependencySpies() {
   return {
     determineEditorSpy: jest.spyOn(editorModule, 'determineEditor'),
+    createReleaseBranchSpy: jest.spyOn(
+      workflowOperations,
+      'createReleaseBranch',
+    ),
     generateReleaseSpecificationTemplateForMonorepoSpy: jest.spyOn(
       releaseSpecificationModule,
       'generateReleaseSpecificationTemplateForMonorepo',
@@ -168,6 +173,7 @@ async function setupFollowMonorepoWorkflow({
 }) {
   const {
     determineEditorSpy,
+    createReleaseBranchSpy,
     generateReleaseSpecificationTemplateForMonorepoSpy,
     waitForUserToEditReleaseSpecificationSpy,
     validateReleaseSpecificationSpy,
@@ -263,6 +269,7 @@ async function setupFollowMonorepoWorkflow({
     planReleaseSpy,
     executeReleasePlanSpy,
     commitAllChangesSpy,
+    createReleaseBranchSpy,
     releasePlan,
     releaseVersion,
     releaseSpecificationPath,
@@ -272,6 +279,58 @@ async function setupFollowMonorepoWorkflow({
 describe('monorepo-workflow-operations', () => {
   describe('followMonorepoWorkflow', () => {
     describe('when firstRemovingExistingReleaseSpecification is false, the release spec file does not already exist, and an editor is available', () => {
+      it('should call createReleaseBranch with the correct arguments if given releaseType: "ordinary"', async () => {
+        await withSandbox(async (sandbox) => {
+          const { project, stdout, stderr, createReleaseBranchSpy } =
+            await setupFollowMonorepoWorkflow({
+              sandbox,
+              doesReleaseSpecFileExist: false,
+              isEditorAvailable: true,
+            });
+
+          await followMonorepoWorkflow({
+            project,
+            tempDirectoryPath: sandbox.directoryPath,
+            firstRemovingExistingReleaseSpecification: false,
+            releaseType: 'ordinary',
+            defaultBranch: 'main',
+            stdout,
+            stderr,
+          });
+
+          expect(createReleaseBranchSpy).toHaveBeenCalledWith({
+            project,
+            releaseType: 'ordinary',
+          });
+        });
+      });
+
+      it('should call createReleaseBranch with the correct arguments if given releaseType: "backport"', async () => {
+        await withSandbox(async (sandbox) => {
+          const { project, stdout, stderr, createReleaseBranchSpy } =
+            await setupFollowMonorepoWorkflow({
+              sandbox,
+              doesReleaseSpecFileExist: false,
+              isEditorAvailable: true,
+            });
+
+          await followMonorepoWorkflow({
+            project,
+            tempDirectoryPath: sandbox.directoryPath,
+            firstRemovingExistingReleaseSpecification: false,
+            releaseType: 'backport',
+            defaultBranch: 'main',
+            stdout,
+            stderr,
+          });
+
+          expect(createReleaseBranchSpy).toHaveBeenCalledWith({
+            project,
+            releaseType: 'backport',
+          });
+        });
+      });
+
       it('plans an ordinary release if given releaseType: "ordinary"', async () => {
         await withSandbox(async (sandbox) => {
           const {

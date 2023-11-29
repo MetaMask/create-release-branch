@@ -10,7 +10,7 @@ import { determineEditor } from './editor';
 import { ReleaseType } from './initial-parameters';
 import {
   Project,
-  updateChangedPackagesChangelog,
+  updateChangelogsForChangedPackages,
   restoreChangelogsForSkippedPackages,
 } from './project';
 import { planRelease, executeReleasePlan } from './release-plan';
@@ -78,7 +78,7 @@ export async function followMonorepoWorkflow({
   });
 
   if (firstRun) {
-    await updateChangedPackagesChangelog({ project, stderr });
+    await updateChangelogsForChangedPackages({ project, stderr });
     await commitAllChanges(
       project.directoryPath,
       `Initialize Release ${newReleaseVersion}`,

@@ -130,14 +130,14 @@ export async function readProject(
 }
 
 /**
- * Updates the changelog files of all the packages that has changes since latest release.
+ * Updates the changelog files of all packages that have changes since latest release to include those changes.
  *
  * @param args - The arguments.
  * @param args.project - The project.
  * @param args.stderr - A stream that can be used to write to standard error.
  * @returns The result of writing to the changelog.
  */
-export async function updateChangedPackagesChangelog({
+export async function updateChangelogsForChangedPackages({
   project,
   stderr,
 }: {
