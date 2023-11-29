@@ -428,7 +428,7 @@ describe('monorepo-workflow-operations', () => {
         });
       });
 
-      it('should make exactly two commits after the generated release version if editing, validating, and executing the release spec succeeds', async () => {
+      it('should make exactly two commits named after the generated release version if editing, validating, and executing the release spec succeeds', async () => {
         await withSandbox(async (sandbox) => {
           const {
             project,
@@ -915,7 +915,7 @@ describe('monorepo-workflow-operations', () => {
         });
       });
 
-      it('should make exactly two commits after the generated release version if validating and executing the release spec succeeds', async () => {
+      it('should make exactly two commits named after the generated release version if validating and executing the release spec succeeds', async () => {
         await withSandbox(async (sandbox) => {
           const {
             project,
@@ -1152,7 +1152,7 @@ describe('monorepo-workflow-operations', () => {
         });
       });
 
-      it('should make exactly two commits after the generated release version if editing, validating, and executing the release spec succeeds', async () => {
+      it('should make exactly two commits named after the generated release version if editing, validating, and executing the release spec succeeds', async () => {
         await withSandbox(async (sandbox) => {
           const {
             project,
@@ -1642,7 +1642,7 @@ describe('monorepo-workflow-operations', () => {
         });
       });
 
-      it('should make exactly two commits after the generated release version if editing, validating, and executing the release spec succeeds', async () => {
+      it('should make exactly two commits named after the generated release version if editing, validating, and executing the release spec succeeds', async () => {
         await withSandbox(async (sandbox) => {
           const {
             project,

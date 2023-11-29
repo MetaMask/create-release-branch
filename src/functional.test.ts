@@ -653,30 +653,8 @@ describe('create-release-branch (functional)', () => {
           workspaces: {
             '.': ['packages/*'],
           },
-          createInitialCommit: false,
         },
         async (environment) => {
-          // Create an initial commit
-          await environment.writeFileWithinPackage(
-            'b',
-            'CHANGELOG.md',
-            buildChangelog(`
-              ## [Unreleased]
-
-              [Unreleased]: https://github.com/example-org/example-repo
-            `),
-          );
-          await environment.writeFileWithinPackage(
-            'd',
-            'CHANGELOG.md',
-            buildChangelog(`
-              ## [Unreleased]
-
-              [Unreleased]: https://github.com/example-org/example-repo
-            `),
-          );
-          await environment.createCommit('Initial commit');
-
           await environment.runTool({
             releaseSpecification: {
               packages: {
