@@ -14,7 +14,7 @@ export default class RemoteRepo extends Repo {
     await fs.promises.mkdir(this.getWorkingDirectoryPath(), {
       recursive: true,
     });
-    await this.runCommand('git', ['init', '--bare']);
+    await this.runCommand('git', ['init', '-b', 'main', '--bare']);
   }
 
   /**
