@@ -123,7 +123,7 @@ export async function waitForUserToEditReleaseSpecification(
   );
 
   const promiseForEditorCommand = runCommand(
-    editor.path,
+    `"${editor.path}"`,
     [...editor.args, releaseSpecificationPath],
     {
       stdio: 'inherit',
