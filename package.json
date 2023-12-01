@@ -6,6 +6,8 @@
     "type": "git",
     "url": "https://github.com/MetaMask/create-release-branch.git"
   },
+  "type": "module",
+  "exports": null,
   "bin": "bin/create-release-branch.js",
   "files": [
     "bin/",
@@ -71,7 +73,7 @@
   },
   "packageManager": "yarn@3.2.1",
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=16.0.0"
   },
   "publishConfig": {
     "access": "public",
