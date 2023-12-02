@@ -1,8 +1,8 @@
 import os from 'os';
 import path from 'path';
-import { readCommandLineArguments } from './command-line-arguments';
-import { WriteStreamLike } from './fs';
-import { readProject, Project } from './project';
+import { readCommandLineArguments } from './command-line-arguments.js';
+import { WriteStreamLike } from './fs.js';
+import { readProject, Project } from './project.js';
 
 /**
  * The type of release being created as determined by the parent release.

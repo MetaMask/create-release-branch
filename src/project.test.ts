@@ -3,11 +3,14 @@ import path from 'path';
 import { when } from 'jest-when';
 import { SemVer } from 'semver';
 import * as actionUtils from '@metamask/action-utils';
-import { withSandbox } from '../tests/helpers';
-import { buildMockPackage, createNoopWriteStream } from '../tests/unit/helpers';
-import { readProject } from './project';
-import * as packageModule from './package';
-import * as repoModule from './repo';
+import { withSandbox } from '../tests/helpers.js';
+import {
+  buildMockPackage,
+  createNoopWriteStream,
+} from '../tests/unit/helpers.js';
+import { readProject } from './project.js';
+import * as packageModule from './package.js';
+import * as repoModule from './repo.js';
 
 jest.mock('./package');
 jest.mock('./repo');

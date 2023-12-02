@@ -5,17 +5,17 @@ import {
   fileExists,
   removeFile,
   writeFile,
-} from './fs';
-import { determineEditor } from './editor';
-import { ReleaseType } from './initial-parameters';
-import { Project } from './project';
-import { planRelease, executeReleasePlan } from './release-plan';
-import { captureChangesInReleaseBranch } from './repo';
+} from './fs.js';
+import { determineEditor } from './editor.js';
+import { ReleaseType } from './initial-parameters.js';
+import { Project } from './project.js';
+import { planRelease, executeReleasePlan } from './release-plan.js';
+import { captureChangesInReleaseBranch } from './repo.js';
 import {
   generateReleaseSpecificationTemplateForMonorepo,
   waitForUserToEditReleaseSpecification,
   validateReleaseSpecification,
-} from './release-specification';
+} from './release-specification.js';
 
 /**
  * For a monorepo, the process works like this:

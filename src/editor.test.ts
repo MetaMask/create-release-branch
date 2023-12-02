@@ -1,7 +1,7 @@
 import { when } from 'jest-when';
-import { determineEditor } from './editor';
-import * as envModule from './env';
-import * as miscUtils from './misc-utils';
+import { determineEditor } from './editor.js';
+import * as envModule from './env.js';
+import * as miscUtils from './misc-utils.js';
 
 jest.mock('./env');
 jest.mock('./misc-utils');

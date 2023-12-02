@@ -3,7 +3,7 @@ import path from 'path';
 import { rimraf } from 'rimraf';
 import { when } from 'jest-when';
 import * as actionUtils from '@metamask/action-utils';
-import { withSandbox } from '../tests/helpers';
+import { withSandbox } from '../tests/helpers.js';
 import {
   readFile,
   writeFile,
@@ -12,7 +12,7 @@ import {
   fileExists,
   ensureDirectoryPathExists,
   removeFile,
-} from './fs';
+} from './fs.js';
 
 jest.mock('@metamask/action-utils');
 

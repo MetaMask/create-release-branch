@@ -3,7 +3,7 @@ import {
   runCommand,
   getStdoutFromCommand,
   getLinesFromCommand,
-} from './misc-utils';
+} from './misc-utils.js';
 
 const CHANGED_FILE_PATHS_BY_TAG_NAME: Record<string, string[]> = {};
 

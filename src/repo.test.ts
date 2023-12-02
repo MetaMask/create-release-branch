@@ -4,8 +4,8 @@ import {
   captureChangesInReleaseBranch,
   getTagNames,
   hasChangesInDirectorySinceGitTag,
-} from './repo';
-import * as miscUtils from './misc-utils';
+} from './repo.js';
+import * as miscUtils from './misc-utils.js';
 
 jest.mock('./misc-utils');
 

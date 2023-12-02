@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import Repo from './repo';
+import Repo from './repo.js';
 
 /**
  * A facade for the "remote" repo, which only exists so that the tool can run

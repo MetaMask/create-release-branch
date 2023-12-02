@@ -3,7 +3,7 @@ import {
   readJsonObjectFile as underlyingReadJsonObjectFile,
   writeJsonFile as underlyingWriteJsonFile,
 } from '@metamask/action-utils';
-import { wrapError, isErrorWithCode } from './misc-utils';
+import { wrapError, isErrorWithCode } from './misc-utils.js';
 
 /**
  * Represents a writeable stream, such as that represented by `process.stdout`

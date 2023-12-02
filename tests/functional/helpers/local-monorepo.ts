@@ -1,7 +1,7 @@
 import path from 'path';
-import { PackageSpecification } from './environment';
-import LocalRepo, { LocalRepoOptions } from './local-repo';
-import { knownKeysOf } from './utils';
+import { PackageSpecification } from './environment.js';
+import LocalRepo, { LocalRepoOptions } from './local-repo.js';
+import { knownKeysOf } from './utils.js';
 
 /**
  * A set of configuration options for a {@link LocalMonorepo}. In addition

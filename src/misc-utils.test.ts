@@ -9,7 +9,7 @@ import {
   runCommand,
   getStdoutFromCommand,
   getLinesFromCommand,
-} from './misc-utils';
+} from './misc-utils.js';
 
 jest.mock('which');
 jest.mock('execa');

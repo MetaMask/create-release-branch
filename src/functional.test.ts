@@ -1,5 +1,5 @@
-import { withMonorepoProjectEnvironment } from '../tests/functional/helpers/with';
-import { buildChangelog } from '../tests/functional/helpers/utils';
+import { withMonorepoProjectEnvironment } from '../tests/functional/helpers/with.js';
+import { buildChangelog } from '../tests/functional/helpers/utils.js';
 
 jest.setTimeout(10_000);
 

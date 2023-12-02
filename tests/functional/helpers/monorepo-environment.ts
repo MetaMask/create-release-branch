@@ -2,13 +2,13 @@ import fs from 'fs';
 import path from 'path';
 import { ExecaReturnValue } from 'execa';
 import YAML from 'yaml';
-import { TOOL_EXECUTABLE_PATH, TS_NODE_PATH } from './constants';
+import { TOOL_EXECUTABLE_PATH, TS_NODE_PATH } from './constants.js';
 import Environment, {
   EnvironmentOptions,
   PackageSpecification,
-} from './environment';
-import LocalMonorepo from './local-monorepo';
-import { debug, knownKeysOf } from './utils';
+} from './environment.js';
+import LocalMonorepo from './local-monorepo.js';
+import { debug, knownKeysOf } from './utils.js';
 
 /**
  * A set of configuration options for a {@link MonorepoEnvironment}. In addition

@@ -1,6 +1,6 @@
 import path from 'path';
-import Repo, { RepoOptions } from './repo';
-import { buildChangelog } from './utils';
+import Repo, { RepoOptions } from './repo.js';
+import { buildChangelog } from './utils.js';
 
 /**
  * A set of configuration options for a {@link LocalRepo}. In addition to the

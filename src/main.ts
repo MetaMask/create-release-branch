@@ -1,6 +1,6 @@
 import type { WriteStream } from 'fs';
-import { determineInitialParameters } from './initial-parameters';
-import { followMonorepoWorkflow } from './monorepo-workflow-operations';
+import { determineInitialParameters } from './initial-parameters.js';
+import { followMonorepoWorkflow } from './monorepo-workflow-operations.js';
 
 /**
  * The main function for this tool. Designed to not access `process.argv`,

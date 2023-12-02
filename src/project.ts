@@ -1,14 +1,14 @@
 import { resolve } from 'path';
 import { getWorkspaceLocations } from '@metamask/action-utils';
-import { WriteStreamLike } from './fs';
+import { WriteStreamLike } from './fs.js';
 import {
   Package,
   readMonorepoRootPackage,
   readMonorepoWorkspacePackage,
-} from './package';
-import { getRepositoryHttpsUrl, getTagNames } from './repo';
-import { SemVer } from './semver';
-import { PackageManifestFieldNames } from './package-manifest';
+} from './package.js';
+import { getRepositoryHttpsUrl, getTagNames } from './repo.js';
+import { SemVer } from './semver.js';
+import { PackageManifestFieldNames } from './package-manifest.js';
 
 /**
  * The release version of the root package of a monorepo extracted from its
