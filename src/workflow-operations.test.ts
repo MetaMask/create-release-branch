@@ -10,20 +10,16 @@ describe('workflow-operations', () => {
   describe('createReleaseBranch', () => {
     it('should create a ordinary release branch if it does not exist', async () => {
       const project = buildMockProject();
-
-      when(jest.spyOn(repoModule, 'getCurrentBranchName'))
-        .calledWith(project.directoryPath)
-        .mockResolvedValue('main');
-
       const newReleaseVersion = `${
         project.releaseVersion.ordinaryNumber + 1
       }.0.0`;
       const newReleaseBranchName = `release/${newReleaseVersion}`;
-
+      when(jest.spyOn(repoModule, 'getCurrentBranchName'))
+        .calledWith(project.directoryPath)
+        .mockResolvedValue('main');
       when(jest.spyOn(repoModule, 'branchExists'))
         .calledWith(project.directoryPath, newReleaseBranchName)
         .mockResolvedValue(false);
-
       const runGitCommandWithin = jest.spyOn(repoModule, 'runGitCommandWithin');
 
       const result = await createReleaseBranch({
@@ -35,7 +31,6 @@ describe('workflow-operations', () => {
         version: newReleaseVersion,
         firstRun: true,
       });
-
       expect(runGitCommandWithin).toHaveBeenCalledWith(
         project.directoryPath,
         'checkout',
@@ -45,20 +40,16 @@ describe('workflow-operations', () => {
 
     it('should create a backport release branch if it does not exist', async () => {
       const project = buildMockProject();
-
-      when(jest.spyOn(repoModule, 'getCurrentBranchName'))
-        .calledWith(project.directoryPath)
-        .mockResolvedValue('main');
-
       const newReleaseVersion = `${project.releaseVersion.ordinaryNumber}.${
         project.releaseVersion.backportNumber + 1
       }.0`;
       const newReleaseBranchName = `release/${newReleaseVersion}`;
-
+      when(jest.spyOn(repoModule, 'getCurrentBranchName'))
+        .calledWith(project.directoryPath)
+        .mockResolvedValue('main');
       when(jest.spyOn(repoModule, 'branchExists'))
         .calledWith(project.directoryPath, newReleaseBranchName)
         .mockResolvedValue(false);
-
       const runGitCommandWithin = jest.spyOn(repoModule, 'runGitCommandWithin');
 
       const result = await createReleaseBranch({
@@ -70,7 +61,6 @@ describe('workflow-operations', () => {
         version: newReleaseVersion,
         firstRun: true,
       });
-
       expect(runGitCommandWithin).toHaveBeenCalledWith(
         project.directoryPath,
         'checkout',
@@ -80,12 +70,10 @@ describe('workflow-operations', () => {
 
     it('should return existing ordinary release branch info if already checked out', async () => {
       const project = buildMockProject();
-
       const newReleaseVersion = `${
         project.releaseVersion.ordinaryNumber + 1
       }.0.0`;
       const newReleaseBranchName = `release/${newReleaseVersion}`;
-
       when(jest.spyOn(repoModule, 'getCurrentBranchName'))
         .calledWith(project.directoryPath)
         .mockResolvedValue(newReleaseBranchName);
@@ -103,12 +91,10 @@ describe('workflow-operations', () => {
 
     it('should return existing backport release branch info if already checked out', async () => {
       const project = buildMockProject();
-
       const newReleaseVersion = `${project.releaseVersion.ordinaryNumber}.${
         project.releaseVersion.backportNumber + 1
       }.0`;
       const newReleaseBranchName = `release/${newReleaseVersion}`;
-
       when(jest.spyOn(repoModule, 'getCurrentBranchName'))
         .calledWith(project.directoryPath)
         .mockResolvedValue(newReleaseBranchName);
@@ -126,16 +112,13 @@ describe('workflow-operations', () => {
 
     it('should checkout existing ordinary release branch if it already exists', async () => {
       const project = buildMockProject();
-
       const newReleaseVersion = `${
         project.releaseVersion.ordinaryNumber + 1
       }.0.0`;
       const newReleaseBranchName = `release/${newReleaseVersion}`;
-
       when(jest.spyOn(repoModule, 'getCurrentBranchName'))
         .calledWith(project.directoryPath)
         .mockResolvedValue('main');
-
       when(jest.spyOn(repoModule, 'branchExists'))
         .calledWith(project.directoryPath, newReleaseBranchName)
         .mockResolvedValue(true);
@@ -153,16 +136,13 @@ describe('workflow-operations', () => {
 
     it('should checkout existing backport release branch if it already exists', async () => {
       const project = buildMockProject();
-
       const newReleaseVersion = `${project.releaseVersion.ordinaryNumber}.${
         project.releaseVersion.backportNumber + 1
       }.0`;
       const newReleaseBranchName = `release/${newReleaseVersion}`;
-
       when(jest.spyOn(repoModule, 'getCurrentBranchName'))
         .calledWith(project.directoryPath)
         .mockResolvedValue('main');
-
       when(jest.spyOn(repoModule, 'branchExists'))
         .calledWith(project.directoryPath, newReleaseBranchName)
         .mockResolvedValue(true);
