@@ -224,6 +224,7 @@ export default abstract class Repo {
   protected async afterCreate(): Promise<void> {
     await this.runCommand('git', ['config', 'user.email', 'test@example.com']);
     await this.runCommand('git', ['config', 'user.name', 'Test User']);
+    await this.runCommand('git', ['config', 'commit.gpgsign', 'false']);
   }
 
   /**
