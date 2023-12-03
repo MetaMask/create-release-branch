@@ -3,17 +3,7 @@ module.exports = {
 
   extends: ['@metamask/eslint-config', '@metamask/eslint-config-nodejs'],
 
-  env: {
-    // See parserOptions comment
-    es2022: true,
-  },
-
   parserOptions: {
-    // We've had issues with the corresponding env setting being overriden.
-    // As for the specific choice, at the time of writing most of our codebase
-    // is on Node 16, and ES2022 is the latest version that's mostly compatible
-    // with Node 16 per https://node.green/.
-    ecmaVersion: '2022',
     sourceType: 'module',
   },
 
