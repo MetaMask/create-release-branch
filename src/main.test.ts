@@ -41,6 +41,56 @@ describe('main', () => {
     });
   });
 
+  for (const [description, directoryPath] of [
+    ['directories with spaces', '/path/to/my project'],
+    ['directories with quote', "/path/to/my 'project"],
+    ['directories with quotes', "/path/to/my 'proje'ct"],
+    ['directories with double-quote', '/path/to/my "project'],
+    ['directories with double-quotes', '/path/to/my "proje"ct'],
+    [
+      'directories with special characters',
+      '/path/~to/#my/!y \'\\"\\pr@j/e"ct',
+    ],
+  ]) {
+    const tempDirectoryPath = directoryPath.replace(/^\/path\//u, '/tmp/');
+    const cwd = directoryPath.replace(/^\/path\//u, '/workdir/');
+    it(`executes the monorepo workflow for ${description}`, async () => {
+      const project = buildMockProject({
+        directoryPath,
+        isMonorepo: true,
+      });
+      const stdout = fs.createWriteStream('/dev/null');
+      const stderr = fs.createWriteStream('/dev/null');
+      jest
+        .spyOn(initialParametersModule, 'determineInitialParameters')
+        .mockResolvedValue({
+          project,
+          tempDirectoryPath,
+          reset: true,
+          releaseType: 'backport',
+        });
+      const followMonorepoWorkflowSpy = jest
+        .spyOn(monorepoWorkflowOperations, 'followMonorepoWorkflow')
+        .mockResolvedValue();
+
+      await main({
+        argv: [],
+        cwd,
+        stdout,
+        stderr,
+      });
+
+      expect(followMonorepoWorkflowSpy).toHaveBeenCalledWith({
+        project,
+        tempDirectoryPath,
+        firstRemovingExistingReleaseSpecification: true,
+        releaseType: 'backport',
+        stdout,
+        stderr,
+      });
+    });
+  }
+
   it('executes the polyrepo workflow if the project is within a polyrepo', async () => {
     const project = buildMockProject({ isMonorepo: false });
     const stdout = fs.createWriteStream('/dev/null');
