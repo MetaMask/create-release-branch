@@ -1,7 +1,7 @@
 import fs, { WriteStream } from 'fs';
 import path from 'path';
 import { format } from 'util';
-import { updateChangelog } from '@metamask/auto-changelog';
+import { parseChangelog, updateChangelog } from '@metamask/auto-changelog';
 import { WriteStreamLike, readFile, writeFile, writeJsonFile } from './fs';
 import { isErrorWithCode } from './misc-utils';
 import {
@@ -230,24 +230,73 @@ export async function readMonorepoWorkspacePackage({
 }
 
 /**
+ * Migrate all unreleased changes to a release section.
+ *
+ * Changes are migrated in their existing categories, and placed above any
+ * pre-existing changes in that category.
+ *
+ * @param args - The arguments.
+ * @param args.project - The project.
+ * @param args.package - A particular package in the project.
+ * @param args.version - The release version to migrate unreleased changes to.
+ * @param args.stderr - A stream that can be used to write to standard error.
+ * @returns The result of writing to the changelog.
+ */
+export async function migrateUnreleasedChangelogChangesToRelease({
+  project: { repositoryUrl },
+  package: pkg,
+  version,
+  stderr,
+}: {
+  project: Pick<Project, 'directoryPath' | 'repositoryUrl'>;
+  package: Package;
+  version: string;
+  stderr: Pick<WriteStream, 'write'>;
+}): Promise<void> {
+  let changelogContent;
+
+  try {
+    changelogContent = await readFile(pkg.changelogPath);
+  } catch (error) {
+    if (isErrorWithCode(error) && error.code === 'ENOENT') {
+      stderr.write(
+        `${pkg.validatedManifest.name} does not seem to have a changelog. Skipping.\n`,
+      );
+      return;
+    }
+
+    throw error;
+  }
+
+  const changelog = parseChangelog({
+    changelogContent,
+    repoUrl: repositoryUrl,
+    tagPrefix: `${pkg.validatedManifest.name}@`,
+  });
+
+  changelog.addRelease({ version });
+  changelog.migrateUnreleasedChangesToRelease(version);
+  await writeFile(pkg.changelogPath, changelog.toString());
+}
+
+/**
  * Updates the changelog file of the given package using
  * `@metamask/auto-changelog`. Assumes that the changelog file is located at the
  * package root directory and named "CHANGELOG.md".
  *
  * @param args - The arguments.
  * @param args.project - The project.
- * @param args.packageReleasePlan - The release plan for a particular package in
- * the project.
+ * @param args.package - A particular package in the project.
  * @param args.stderr - A stream that can be used to write to standard error.
  * @returns The result of writing to the changelog.
  */
-async function updatePackageChangelog({
+export async function updatePackageChangelog({
   project: { repositoryUrl },
-  packageReleasePlan: { package: pkg, newVersion },
+  package: pkg,
   stderr,
 }: {
   project: Pick<Project, 'directoryPath' | 'repositoryUrl'>;
-  packageReleasePlan: PackageReleasePlan;
+  package: Package;
   stderr: Pick<WriteStream, 'write'>;
 }): Promise<void> {
   let changelogContent;
@@ -267,8 +316,10 @@ async function updatePackageChangelog({
 
   const newChangelogContent = await updateChangelog({
     changelogContent,
-    currentVersion: newVersion,
-    isReleaseCandidate: true,
+    // Setting `isReleaseCandidate` to false because `updateChangelog` requires a
+    // specific version number when this flag is true, and the package release version
+    // is not determined at this stage of the process.
+    isReleaseCandidate: false,
     projectRootDirectory: pkg.directoryPath,
     repoUrl: repositoryUrl,
     tagPrefixes: [`${pkg.validatedManifest.name}@`, 'v'],
@@ -284,9 +335,10 @@ async function updatePackageChangelog({
 }
 
 /**
- * Updates the package as per the instructions in the given release plan by
- * replacing the `version` field in the manifest and adding a new section to the
- * changelog for the new version of the package.
+ * Updates the package by replacing the `version` field in the manifest
+ * according to the one in the given release plan. Also updates the
+ * changelog by migrating changes in the Unreleased section to the section
+ * representing the new version.
  *
  * @param args - The project.
  * @param args.project - The project.
@@ -304,18 +356,17 @@ export async function updatePackage({
   packageReleasePlan: PackageReleasePlan;
   stderr?: Pick<WriteStream, 'write'>;
 }): Promise<void> {
-  const {
-    package: pkg,
-    newVersion,
-    shouldUpdateChangelog,
-  } = packageReleasePlan;
+  const { package: pkg, newVersion } = packageReleasePlan;
 
   await writeJsonFile(pkg.manifestPath, {
     ...pkg.unvalidatedManifest,
     version: newVersion,
   });
 
-  if (shouldUpdateChangelog) {
-    await updatePackageChangelog({ project, packageReleasePlan, stderr });
-  }
+  await migrateUnreleasedChangelogChangesToRelease({
+    project,
+    package: pkg,
+    stderr,
+    version: newVersion,
+  });
 }

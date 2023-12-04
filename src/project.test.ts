@@ -1,13 +1,23 @@
-import fs from 'fs';
+import { mkdir } from 'fs/promises';
 import path from 'path';
 import { when } from 'jest-when';
 import { SemVer } from 'semver';
 import * as actionUtils from '@metamask/action-utils';
 import { withSandbox } from '../tests/helpers';
-import { buildMockPackage, createNoopWriteStream } from '../tests/unit/helpers';
-import { readProject } from './project';
+import {
+  buildMockPackage,
+  buildMockProject,
+  createNoopWriteStream,
+} from '../tests/unit/helpers';
+import {
+  readProject,
+  restoreChangelogsForSkippedPackages,
+  updateChangelogsForChangedPackages,
+} from './project';
 import * as packageModule from './package';
 import * as repoModule from './repo';
+import * as fs from './fs';
+import { IncrementableVersionParts } from './release-specification';
 
 jest.mock('./package');
 jest.mock('./repo');
@@ -93,14 +103,10 @@ describe('project', () => {
             stderr,
           })
           .mockResolvedValue(workspacePackages.b);
-        await fs.promises.mkdir(path.join(projectDirectoryPath, 'packages'));
-        await fs.promises.mkdir(
-          path.join(projectDirectoryPath, 'packages', 'a'),
-        );
-        await fs.promises.mkdir(
-          path.join(projectDirectoryPath, 'packages', 'subpackages'),
-        );
-        await fs.promises.mkdir(
+        await mkdir(path.join(projectDirectoryPath, 'packages'));
+        await mkdir(path.join(projectDirectoryPath, 'packages', 'a'));
+        await mkdir(path.join(projectDirectoryPath, 'packages', 'subpackages'));
+        await mkdir(
           path.join(projectDirectoryPath, 'packages', 'subpackages', 'b'),
         );
 
@@ -117,6 +123,191 @@ describe('project', () => {
             backportNumber: 38,
           },
         });
+      });
+    });
+  });
+  describe('restoreChangelogsForSkippedPackages', () => {
+    it('should reset changelog for packages with changes not included in release', async () => {
+      const project = buildMockProject({
+        rootPackage: buildMockPackage('monorepo'),
+        workspacePackages: {
+          a: buildMockPackage('a', {
+            hasChangesSinceLatestRelease: true,
+          }),
+          b: buildMockPackage('b', {
+            hasChangesSinceLatestRelease: true,
+          }),
+          c: buildMockPackage('c', {
+            hasChangesSinceLatestRelease: true,
+          }),
+        },
+      });
+
+      const restoreFilesSpy = jest.spyOn(repoModule, 'restoreFiles');
+
+      when(jest.spyOn(fs, 'fileExists'))
+        .calledWith(project.workspacePackages.b.changelogPath)
+        .mockResolvedValue(true);
+
+      when(jest.spyOn(fs, 'fileExists'))
+        .calledWith(project.workspacePackages.c.changelogPath)
+        .mockResolvedValue(true);
+
+      await restoreChangelogsForSkippedPackages({
+        project,
+        defaultBranch: 'main',
+        releaseSpecification: {
+          packages: {
+            a: IncrementableVersionParts.minor,
+          },
+          path: '/path/to/release/specs',
+        },
+      });
+
+      expect(restoreFilesSpy).toHaveBeenCalledWith(
+        project.directoryPath,
+        'main',
+        [
+          '/path/to/packages/b/CHANGELOG.md',
+          '/path/to/packages/c/CHANGELOG.md',
+        ],
+      );
+    });
+
+    it('should not reset changelog for packages without changes since last release', async () => {
+      const project = buildMockProject({
+        rootPackage: buildMockPackage('monorepo'),
+        workspacePackages: {
+          a: buildMockPackage('a', {
+            hasChangesSinceLatestRelease: true,
+          }),
+          b: buildMockPackage('b', {
+            hasChangesSinceLatestRelease: false,
+          }),
+        },
+      });
+
+      const restoreFilesSpy = jest.spyOn(repoModule, 'restoreFiles');
+
+      await restoreChangelogsForSkippedPackages({
+        project,
+        defaultBranch: 'main',
+        releaseSpecification: {
+          packages: {
+            a: IncrementableVersionParts.minor,
+          },
+          path: '/path/to/release/specs',
+        },
+      });
+
+      expect(restoreFilesSpy).not.toHaveBeenCalledWith(
+        project.directoryPath,
+        'main',
+        ['/path/to/packages/b/CHANGELOG.md'],
+      );
+    });
+
+    it('should not reset non-existent changelogs', async () => {
+      const project = buildMockProject({
+        rootPackage: buildMockPackage('monorepo'),
+        workspacePackages: {
+          a: buildMockPackage('a', {
+            hasChangesSinceLatestRelease: true,
+          }),
+          b: buildMockPackage('b', {
+            hasChangesSinceLatestRelease: true,
+          }),
+        },
+      });
+
+      when(jest.spyOn(fs, 'fileExists'))
+        .calledWith(project.workspacePackages.a.changelogPath)
+        .mockResolvedValue(false);
+
+      const restoreFilesSpy = jest.spyOn(repoModule, 'restoreFiles');
+
+      await restoreChangelogsForSkippedPackages({
+        project,
+        defaultBranch: 'main',
+        releaseSpecification: {
+          packages: {
+            a: IncrementableVersionParts.minor,
+          },
+          path: '/path/to/release/specs',
+        },
+      });
+
+      expect(restoreFilesSpy).not.toHaveBeenCalledWith(
+        project.directoryPath,
+        'main',
+        [project.workspacePackages.b.changelogPath],
+      );
+    });
+  });
+
+  describe('updateChangelogsForChangedPackages', () => {
+    it('should update changelog files of all the packages that has changes since latest release', async () => {
+      const stderr = createNoopWriteStream();
+      const project = buildMockProject({
+        rootPackage: buildMockPackage('monorepo'),
+        workspacePackages: {
+          a: buildMockPackage('a', {
+            hasChangesSinceLatestRelease: true,
+          }),
+          b: buildMockPackage('b', {
+            hasChangesSinceLatestRelease: true,
+          }),
+        },
+      });
+
+      const updatePackageChangelogSpy = jest.spyOn(
+        packageModule,
+        'updatePackageChangelog',
+      );
+
+      await updateChangelogsForChangedPackages({
+        project,
+        stderr,
+      });
+
+      expect(updatePackageChangelogSpy).toHaveBeenCalledWith({
+        project,
+        package: project.workspacePackages.a,
+        stderr,
+      });
+
+      expect(updatePackageChangelogSpy).toHaveBeenCalledWith({
+        project,
+        package: project.workspacePackages.b,
+        stderr,
+      });
+    });
+
+    it('should not update changelog files of all the packages that has not changed since latest release', async () => {
+      const stderr = createNoopWriteStream();
+      const project = buildMockProject({
+        rootPackage: buildMockPackage('monorepo'),
+        workspacePackages: {
+          a: buildMockPackage('a', {
+            hasChangesSinceLatestRelease: false,
+          }),
+        },
+      });
+
+      const updatePackageChangelogSpy = jest.spyOn(
+        packageModule,
+        'updatePackageChangelog',
+      );
+
+      await updateChangelogsForChangedPackages({
+        project,
+        stderr,
+      });
+
+      expect(updatePackageChangelogSpy).not.toHaveBeenCalledWith({
+        project,
+        package: project.workspacePackages.a,
+        stderr,
       });
     });
   });
