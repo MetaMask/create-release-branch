@@ -1,5 +1,5 @@
 import { withMonorepoProjectEnvironment } from '../tests/functional/helpers/with';
-import { buildChangelog } from '../tests/functional/helpers/utils';
+import { buildChangelog } from '../tests/helpers';
 
 jest.setTimeout(10_000);
 
@@ -474,23 +474,23 @@ describe('create-release-branch (functional)', () => {
             'a',
             'CHANGELOG.md',
             buildChangelog(`
-            ## [Unreleased]
+              ## [Unreleased]
 
-            [Unreleased]: https://github.com/example-org/example-repo
+              [Unreleased]: https://github.com/example-org/example-repo
             `),
           );
           await environment.writeFileWithinPackage(
             'b',
             'CHANGELOG.md',
             buildChangelog(`
-            ## [Unreleased]
+              ## [Unreleased]
 
-            ## [1.0.0]
-            ### Added
-            - Initial release
+              ## [1.0.0]
+              ### Added
+              - Initial release
 
-            [Unreleased]: https://github.com/example-org/example-repo/compare/@scope/b@1.0.0...HEAD
-            [1.0.0]: https://github.com/example-org/example-repo/releases/tag/@scope/b@1.0.0
+              [Unreleased]: https://github.com/example-org/example-repo/compare/@scope/b@1.0.0...HEAD
+              [1.0.0]: https://github.com/example-org/example-repo/releases/tag/@scope/b@1.0.0
             `),
           );
           await environment.createCommit('Initial commit');
@@ -533,14 +533,14 @@ describe('create-release-branch (functional)', () => {
             await environment.readFileWithinPackage('b', 'CHANGELOG.md'),
           ).toStrictEqual(
             buildChangelog(`
-            ## [Unreleased]
+              ## [Unreleased]
 
-            ## [1.0.0]
-            ### Added
-            - Initial release
+              ## [1.0.0]
+              ### Added
+              - Initial release
 
-            [Unreleased]: https://github.com/example-org/example-repo/compare/@scope/b@1.0.0...HEAD
-            [1.0.0]: https://github.com/example-org/example-repo/releases/tag/@scope/b@1.0.0
+              [Unreleased]: https://github.com/example-org/example-repo/compare/@scope/b@1.0.0...HEAD
+              [1.0.0]: https://github.com/example-org/example-repo/releases/tag/@scope/b@1.0.0
             `),
           );
         },

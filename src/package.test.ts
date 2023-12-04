@@ -4,8 +4,7 @@ import { when } from 'jest-when';
 import * as autoChangelog from '@metamask/auto-changelog';
 import { SemVer } from 'semver';
 import { MockWritable } from 'stdio-mock';
-import _outdent from 'outdent';
-import { withSandbox } from '../tests/helpers';
+import { buildChangelog, withSandbox } from '../tests/helpers';
 import {
   buildMockPackage,
   buildMockProject,
@@ -21,8 +20,6 @@ import {
 import * as fsModule from './fs';
 import * as packageManifestModule from './package-manifest';
 import * as repoModule from './repo';
-
-const outdent = _outdent({ trimTrailingNewline: false });
 
 jest.mock('./package-manifest');
 jest.mock('./repo');
@@ -471,20 +468,18 @@ describe('package', () => {
 
         await fs.promises.writeFile(
           changelogPath,
-          outdent`
-          # Changelog
-          All notable changes to this project will be documented in this file.
-          The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-          and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-          ## [Unreleased]
-          ### Uncategorized
-          - Add \`isNewFunction\` ([#2](https://repo.url/compare/package/pull/2))
-          ## [1.0.0] - 2020-01-01
-          ### Changed
-          - Something else
-          [Unreleased]: https://repo.url/compare/package@2.0.0...HEAD
-          [1.0.0]: https://repo.url/releases/tag/package@1.0.0
-        `,
+          buildChangelog(`
+            ## [Unreleased]
+            ### Uncategorized
+            - Add isNewFunction ([#2](https://repo.url/compare/package/pull/2))
+
+            ## [1.0.0] - 2020-01-01
+            ### Changed
+            - Something else
+
+            [Unreleased]: https://repo.url/compare/package@2.0.0...HEAD
+            [1.0.0]: https://repo.url/releases/tag/package@1.0.0
+          `),
         );
 
         await updatePackage({ project, packageReleasePlan });
@@ -494,27 +489,23 @@ describe('package', () => {
           'utf8',
         );
 
-        expect(newChangelogContent).toBe(outdent`
-        # Changelog
-        All notable changes to this project will be documented in this file.
+        expect(newChangelogContent).toBe(
+          buildChangelog(`
+            ## [Unreleased]
 
-        The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-        and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+            ## [2.0.0]
+            ### Uncategorized
+            - Add isNewFunction ([#2](https://repo.url/compare/package/pull/2))
 
-        ## [Unreleased]
+            ## [1.0.0] - 2020-01-01
+            ### Changed
+            - Something else
 
-        ## [2.0.0]
-        ### Uncategorized
-        - Add \`isNewFunction\` ([#2](https://repo.url/compare/package/pull/2))
-
-        ## [1.0.0] - 2020-01-01
-        ### Changed
-        - Something else
-
-        [Unreleased]: https://repo.url/compare/package@2.0.0...HEAD
-        [2.0.0]: https://repo.url/compare/package@1.0.0...package@2.0.0
-        [1.0.0]: https://repo.url/releases/tag/package@1.0.0
-      `);
+            [Unreleased]: https://repo.url/compare/package@2.0.0...HEAD
+            [2.0.0]: https://repo.url/compare/package@1.0.0...package@2.0.0
+            [1.0.0]: https://repo.url/releases/tag/package@1.0.0
+          `),
+        );
       });
     });
 
