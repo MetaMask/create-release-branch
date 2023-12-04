@@ -8,14 +8,19 @@ import {
 } from './fs';
 import { determineEditor } from './editor';
 import { ReleaseType } from './initial-parameters';
-import { Project } from './project';
+import {
+  Project,
+  updateChangelogsForChangedPackages,
+  restoreChangelogsForSkippedPackages,
+} from './project';
 import { planRelease, executeReleasePlan } from './release-plan';
-import { captureChangesInReleaseBranch } from './repo';
+import { commitAllChanges } from './repo';
 import {
   generateReleaseSpecificationTemplateForMonorepo,
   waitForUserToEditReleaseSpecification,
   validateReleaseSpecification,
 } from './release-specification';
+import { createReleaseBranch } from './workflow-operations';
 
 /**
  * For a monorepo, the process works like this:
@@ -46,6 +51,7 @@ import {
  * first.
  * @param args.releaseType - The type of release ("ordinary" or "backport"),
  * which affects how the version is bumped.
+ * @param args.defaultBranch - The name of the default branch in the repository.
  * @param args.stdout - A stream that can be used to write to standard out.
  * @param args.stderr - A stream that can be used to write to standard error.
  */
@@ -54,6 +60,7 @@ export async function followMonorepoWorkflow({
   tempDirectoryPath,
   firstRemovingExistingReleaseSpecification,
   releaseType,
+  defaultBranch,
   stdout,
   stderr,
 }: {
@@ -61,9 +68,23 @@ export async function followMonorepoWorkflow({
   tempDirectoryPath: string;
   firstRemovingExistingReleaseSpecification: boolean;
   releaseType: ReleaseType;
+  defaultBranch: string;
   stdout: Pick<WriteStream, 'write'>;
   stderr: Pick<WriteStream, 'write'>;
 }) {
+  const { version: newReleaseVersion, firstRun } = await createReleaseBranch({
+    project,
+    releaseType,
+  });
+
+  if (firstRun) {
+    await updateChangelogsForChangedPackages({ project, stderr });
+    await commitAllChanges(
+      project.directoryPath,
+      `Initialize Release ${newReleaseVersion}`,
+    );
+  }
+
   const releaseSpecificationPath = path.join(
     tempDirectoryPath,
     'RELEASE_SPEC.yml',
@@ -112,14 +133,22 @@ export async function followMonorepoWorkflow({
     project,
     releaseSpecificationPath,
   );
+
+  await restoreChangelogsForSkippedPackages({
+    project,
+    releaseSpecification,
+    defaultBranch,
+  });
+
   const releasePlan = await planRelease({
     project,
     releaseSpecification,
-    releaseType,
+    newReleaseVersion,
   });
   await executeReleasePlan(project, releasePlan, stderr);
   await removeFile(releaseSpecificationPath);
-  await captureChangesInReleaseBranch(project.directoryPath, {
-    releaseVersion: releasePlan.newVersion,
-  });
+  await commitAllChanges(
+    project.directoryPath,
+    `Update Release ${newReleaseVersion}`,
+  );
 }

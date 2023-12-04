@@ -16,7 +16,7 @@ const CHANGED_FILE_PATHS_BY_TAG_NAME: Record<string, string[]> = {};
  * @returns The standard output of the command.
  * @throws An execa error object if the command fails in some way.
  */
-async function runGitCommandWithin(
+export async function runGitCommandWithin(
   repositoryDirectoryPath: string,
   commandName: string,
   commandArgs: readonly string[],
@@ -170,31 +170,84 @@ export async function getRepositoryHttpsUrl(
 }
 
 /**
- * This function does three things:
+ * Commits all changes in a git repository with a specified commit message.
  *
- * 1. Stages all of the changes which have been made to the repo thus far and
- * creates a new Git commit which carries the name of the new release.
- * 2. Creates a new branch pointed to that commit (which also carries the name
- * of the new release).
- * 3. Switches to that branch.
- *
- * @param repositoryDirectoryPath - The path to the repository directory.
- * @param args - The arguments.
- * @param args.releaseVersion - The release version.
+ * @param repositoryDirectoryPath - The file system path to the git repository where changes are to be committed.
+ * @param commitMessage - The message to be used for the git commit.
+ * @throws If any git command fails to execute.
  */
-export async function captureChangesInReleaseBranch(
+export async function commitAllChanges(
   repositoryDirectoryPath: string,
-  { releaseVersion }: { releaseVersion: string },
+  commitMessage: string,
 ) {
-  await getStdoutFromGitCommandWithin(repositoryDirectoryPath, 'checkout', [
-    '-b',
-    `release/${releaseVersion}`,
-  ]);
   await getStdoutFromGitCommandWithin(repositoryDirectoryPath, 'add', ['-A']);
   await getStdoutFromGitCommandWithin(repositoryDirectoryPath, 'commit', [
     '-m',
-    `Release ${releaseVersion}`,
+    commitMessage,
   ]);
+}
+
+/**
+ * Retrieves the current branch name of a git repository.
+ *
+ * @param repositoryDirectoryPath - The file system path to the git repository.
+ * @returns The name of the current branch in the specified repository.
+ */
+export function getCurrentBranchName(repositoryDirectoryPath: string) {
+  return getStdoutFromGitCommandWithin(repositoryDirectoryPath, 'rev-parse', [
+    '--abbrev-ref',
+    'HEAD',
+  ]);
+}
+
+/**
+ * Restores specific files in a git repository to their state at the common ancestor commit
+ * of the current HEAD and the repository's default branch.
+ *
+ * This asynchronous function calculates the common ancestor (merge base) of the current HEAD
+ * and the specified default branch. Then, it uses the `git restore` command to revert the
+ * specified files back to their state at that ancestor commit. This is useful for undoing
+ * changes in specific files that have occurred since the branch diverged from the default branch.
+ *
+ * @param repositoryDirectoryPath - The file system path to the git repository.
+ * @param repositoryDefaultBranch - The name of the default branch in the repository.
+ * @param filePaths - An array of file paths (relative to the repository root) to restore.
+ */
+export async function restoreFiles(
+  repositoryDirectoryPath: string,
+  repositoryDefaultBranch: string,
+  filePaths: string[],
+) {
+  const ancestorCommitSha = await getStdoutFromGitCommandWithin(
+    repositoryDirectoryPath,
+    'merge-base',
+    [repositoryDefaultBranch, 'HEAD'],
+  );
+  await runGitCommandWithin(repositoryDirectoryPath, 'restore', [
+    '--source',
+    ancestorCommitSha,
+    '--',
+    ...filePaths,
+  ]);
+}
+
+/**
+ * Checks if a specific branch exists in the given git repository.
+ *
+ * @param repositoryDirectoryPath - The file system path to the git repository.
+ * @param branchName - The name of the branch to check for existence.
+ * @returns A promise that resolves to `true` if the branch exists, `false` otherwise.
+ */
+export async function branchExists(
+  repositoryDirectoryPath: string,
+  branchName: string,
+) {
+  const branchNames = await getLinesFromGitCommandWithin(
+    repositoryDirectoryPath,
+    'branch',
+    ['--list', branchName],
+  );
+  return branchNames.length > 0;
 }
 
 /**

@@ -575,21 +575,26 @@ describe('create-release-branch (functional)', () => {
             },
           });
 
-          // Tests four things:
-          // * The latest commit should be called "Release 1.0.0"
+          // Tests five things:
+          // * The latest commit should be called "Update Release 2.0.0"
+          // * The before latest commit should be called "Initialize Release 2.0.0"
           // * The latest commit should be the current commit (HEAD)
-          // * The latest branch should be called "release/1.0.0"
+          // * The latest branch should be called "release/2.0.0"
           // * The latest branch should point to the latest commit
-          const [latestCommitSubject, latestCommitId, latestCommitRevsMarker] =
-            (
-              await environment.runCommand('git', [
-                'log',
-                '--pretty=%s%x09%H%x09%D',
-                '--date-order',
-                '--max-count=1',
-              ])
-            ).stdout.split('\x09');
-          const latestCommitRevs = latestCommitRevsMarker.split(' -> ');
+          const latestCommitsInReverse = (
+            await environment.runCommand('git', [
+              'log',
+              '--pretty=%s%x09%H%x09%D',
+              '--date-order',
+              '--max-count=2',
+            ])
+          ).stdout
+            .split('\n')
+            .map((line) => {
+              const [subject, commitId, revsMarker] = line.split('\x09');
+              const revs = revsMarker.split(' -> ');
+              return { subject, commitId, revs };
+            });
           const latestBranchCommitId = (
             await environment.runCommand('git', [
               'rev-list',
@@ -598,10 +603,19 @@ describe('create-release-branch (functional)', () => {
               '--max-count=1',
             ])
           ).stdout;
-          expect(latestCommitSubject).toBe('Release 2.0.0');
-          expect(latestCommitRevs).toContain('HEAD');
-          expect(latestCommitRevs).toContain('release/2.0.0');
-          expect(latestBranchCommitId).toStrictEqual(latestCommitId);
+          expect(latestCommitsInReverse[0].subject).toBe(
+            'Update Release 2.0.0',
+          );
+          expect(latestCommitsInReverse[1].subject).toBe(
+            'Initialize Release 2.0.0',
+          );
+
+          expect(latestCommitsInReverse[0].revs).toContain('HEAD');
+          expect(latestCommitsInReverse[0].revs).toContain('release/2.0.0');
+
+          expect(latestBranchCommitId).toStrictEqual(
+            latestCommitsInReverse[0].commitId,
+          );
         },
       );
     });
