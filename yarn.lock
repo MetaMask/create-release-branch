@@ -1119,7 +1119,6 @@ __metadata:
     jest-it-up: ^3.0.0
     jest-when: ^3.5.2
     nanoid: ^3.3.4
-    outdent: ^0.8.0
     pony-cause: ^2.1.9
     prettier: ^2.2.1
     prettier-plugin-packagejson: ^2.3.0
@@ -5015,13 +5014,6 @@ __metadata:
     type-check: ^0.4.0
     word-wrap: ^1.2.3
   checksum: dbc6fa065604b24ea57d734261914e697bd73b69eff7f18e967e8912aa2a40a19a9f599a507fa805be6c13c24c4eae8c71306c239d517d42d4c041c942f508a0
-  languageName: node
-  linkType: hard
-
-"outdent@npm:^0.8.0":
-  version: 0.8.0
-  resolution: "outdent@npm:0.8.0"
-  checksum: 72b7c1a287674317ea477999ec24e73a9eda21de35eb9429218f4a5bab899e964afaee7508265898118fee5cbee1d79397916b66dd8aeee285cd948ea5b1f562
   languageName: node
   linkType: hard
 
