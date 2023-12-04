@@ -149,6 +149,7 @@ function buildMockEditor({
  * @param args.releaseVersion - The new version that the release plan will
  * contain.
  * @param args.releaseType - The type of release.
+ * @param args.editorPath - Mocked path to the editor binary.
  * @returns Mock functions and other data that can be used in tests to make
  * assertions.
  */
@@ -162,6 +163,7 @@ async function setupFollowMonorepoWorkflow({
   errorUponExecutingReleasePlan,
   releaseVersion = '1.0.0',
   releaseType = 'ordinary',
+  editorPath = '/some/editor',
 }: {
   sandbox: Sandbox;
   doesReleaseSpecFileExist: boolean;
@@ -172,6 +174,7 @@ async function setupFollowMonorepoWorkflow({
   errorUponExecutingReleasePlan?: Error;
   releaseVersion?: string;
   releaseType?: ReleaseType;
+  editorPath?: string;
 }) {
   const {
     determineEditorSpy,
@@ -182,7 +185,7 @@ async function setupFollowMonorepoWorkflow({
     executeReleasePlanSpy,
     captureChangesInReleaseBranchSpy,
   } = getDependencySpies();
-  const editor = buildMockEditor();
+  const editor = buildMockEditor({ path: editorPath });
   const releaseSpecificationPath = path.join(
     sandbox.directoryPath,
     'RELEASE_SPEC.yml',
@@ -367,6 +370,50 @@ describe('monorepo-workflow-operations', () => {
           );
         });
       });
+
+      for (const [description, editorPath] of [
+        ['editor path with spaces', '/path/to/my editor'],
+        ['editor path with quote', "/path/to/my 'editor"],
+        ['editor path with quotes', "/path/to/my 'proje'ct"],
+        ['editor path with double-quote', '/path/to/my "editor'],
+        ['editor path with double-quotes', '/path/to/my "edi"tor'],
+        [
+          'editor path with special characters',
+          '/path/~to/#my/!y \'\\"\\e@i/0"r',
+        ],
+      ]) {
+        it(`can edit successfully with ${description}`, async () => {
+          await withSandbox(async (sandbox) => {
+            const {
+              project,
+              stdout,
+              stderr,
+              executeReleasePlanSpy,
+              releasePlan,
+            } = await setupFollowMonorepoWorkflow({
+              sandbox,
+              doesReleaseSpecFileExist: false,
+              isEditorAvailable: true,
+              editorPath,
+            });
+
+            await followMonorepoWorkflow({
+              project,
+              tempDirectoryPath: sandbox.directoryPath,
+              firstRemovingExistingReleaseSpecification: false,
+              releaseType: 'ordinary',
+              stdout,
+              stderr,
+            });
+
+            expect(executeReleasePlanSpy).toHaveBeenCalledWith(
+              project,
+              releasePlan,
+              stderr,
+            );
+          });
+        });
+      }
 
       it('creates a new branch named after the generated release version if editing, validating, and executing the release spec succeeds', async () => {
         await withSandbox(async (sandbox) => {
