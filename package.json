@@ -63,6 +63,7 @@
     "jest-it-up": "^3.0.0",
     "jest-when": "^3.5.2",
     "nanoid": "^3.3.4",
+    "outdent": "^0.8.0",
     "prettier": "^2.2.1",
     "prettier-plugin-packagejson": "^2.3.0",
     "rimraf": "^4.0.5",

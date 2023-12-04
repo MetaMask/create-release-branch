@@ -6,6 +6,7 @@ export type CommandLineArguments = {
   tempDirectory: string | undefined;
   reset: boolean;
   backport: boolean;
+  defaultBranch: string;
 };
 
 /**
@@ -43,6 +44,12 @@ export async function readCommandLineArguments(
         'Instructs the tool to bump the second part of the version rather than the first for a backport release.',
       type: 'boolean',
       default: false,
+    })
+    .option('default-branch', {
+      alias: 'b',
+      describe: 'The name of the default branch in the repository.',
+      default: 'main',
+      type: 'string',
     })
     .help()
     .strict()

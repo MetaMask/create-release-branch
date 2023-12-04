@@ -1,14 +1,17 @@
+import { WriteStream } from 'fs';
 import { resolve } from 'path';
 import { getWorkspaceLocations } from '@metamask/action-utils';
-import { WriteStreamLike } from './fs.js';
+import { WriteStreamLike, fileExists } from './fs.js';
 import {
   Package,
   readMonorepoRootPackage,
   readMonorepoWorkspacePackage,
+  updatePackageChangelog,
 } from './package.js';
-import { getRepositoryHttpsUrl, getTagNames } from './repo.js';
+import { getRepositoryHttpsUrl, getTagNames, restoreFiles } from './repo.js';
 import { SemVer } from './semver.js';
 import { PackageManifestFieldNames } from './package-manifest.js';
+import { ReleaseSpecification } from './release-specification.js';
 
 /**
  * The release version of the root package of a monorepo extracted from its
@@ -124,4 +127,86 @@ export async function readProject(
     isMonorepo,
     releaseVersion,
   };
+}
+
+/**
+ * Updates the changelog files of all packages that have changes since latest release to include those changes.
+ *
+ * @param args - The arguments.
+ * @param args.project - The project.
+ * @param args.stderr - A stream that can be used to write to standard error.
+ * @returns The result of writing to the changelog.
+ */
+export async function updateChangelogsForChangedPackages({
+  project,
+  stderr,
+}: {
+  project: Pick<
+    Project,
+    'directoryPath' | 'repositoryUrl' | 'workspacePackages'
+  >;
+  stderr: Pick<WriteStream, 'write'>;
+}): Promise<void> {
+  await Promise.all(
+    Object.values(project.workspacePackages)
+      .filter(
+        ({ hasChangesSinceLatestRelease }) => hasChangesSinceLatestRelease,
+      )
+      .map((pkg) =>
+        updatePackageChangelog({
+          project,
+          package: pkg,
+          stderr,
+        }),
+      ),
+  );
+}
+
+/**
+ * Restores the changelogs of unreleased packages which has changes since latest release.
+ *
+ * @param args - The arguments.
+ * @param args.project - The project.
+ * @param args.releaseSpecification - A parsed version of the release spec
+ * entered by the user.
+ * @param args.defaultBranch - The name of the default branch in the repository.
+ * @returns The result of writing to the changelog.
+ */
+export async function restoreChangelogsForSkippedPackages({
+  project: { directoryPath, workspacePackages },
+  releaseSpecification,
+  defaultBranch,
+}: {
+  project: Pick<
+    Project,
+    'directoryPath' | 'repositoryUrl' | 'workspacePackages'
+  >;
+  releaseSpecification: ReleaseSpecification;
+  defaultBranch: string;
+}): Promise<void> {
+  const existingSkippedPackageChangelogPaths = (
+    await Promise.all(
+      Object.entries(workspacePackages).map(async ([name, pkg]) => {
+        const changelogPath = pkg.changelogPath.replace(
+          `${directoryPath}/`,
+          '',
+        );
+        const shouldInclude =
+          pkg.hasChangesSinceLatestRelease &&
+          !releaseSpecification.packages[name] &&
+          (await fileExists(pkg.changelogPath));
+        return [changelogPath, shouldInclude] as const;
+      }),
+    )
+  )
+    .filter(([_, shouldInclude]) => shouldInclude)
+    .map(([changelogPath]) => changelogPath);
+
+  if (existingSkippedPackageChangelogPaths.length > 0) {
+    await restoreFiles(
+      directoryPath,
+      defaultBranch,
+      existingSkippedPackageChangelogPaths,
+    );
+  }
 }

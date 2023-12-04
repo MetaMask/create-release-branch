@@ -20,6 +20,7 @@ type InitialParameters = {
   tempDirectoryPath: string;
   reset: boolean;
   releaseType: ReleaseType;
+  defaultBranch: string;
 };
 
 /**
@@ -58,6 +59,7 @@ export async function determineInitialParameters({
     project,
     tempDirectoryPath,
     reset: args.reset,
+    defaultBranch: args.defaultBranch,
     releaseType: args.backport ? 'backport' : 'ordinary',
   };
 }

@@ -25,7 +25,7 @@ export async function main({
   stdout: Pick<WriteStream, 'write'>;
   stderr: Pick<WriteStream, 'write'>;
 }) {
-  const { project, tempDirectoryPath, reset, releaseType } =
+  const { project, tempDirectoryPath, reset, releaseType, defaultBranch } =
     await determineInitialParameters({ argv, cwd, stderr });
 
   if (project.isMonorepo) {
@@ -37,6 +37,7 @@ export async function main({
       tempDirectoryPath,
       firstRemovingExistingReleaseSpecification: reset,
       releaseType,
+      defaultBranch,
       stdout,
       stderr,
     });

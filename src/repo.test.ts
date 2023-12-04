@@ -1,9 +1,12 @@
 import { when } from 'jest-when';
 import {
   getRepositoryHttpsUrl,
-  captureChangesInReleaseBranch,
+  commitAllChanges,
   getTagNames,
   hasChangesInDirectorySinceGitTag,
+  getCurrentBranchName,
+  branchExists,
+  restoreFiles,
 } from './repo.js';
 import * as miscUtils from './misc-utils.js';
 
@@ -75,22 +78,15 @@ describe('repo', () => {
     });
   });
 
-  describe('captureChangesInReleaseBranch', () => {
-    it('checks out a new branch, stages all files, and creates a new commit', async () => {
+  describe('commitAllChanges', () => {
+    it('stages all files, and creates a new commit', async () => {
       const getStdoutFromCommandSpy = jest.spyOn(
         miscUtils,
         'getStdoutFromCommand',
       );
+      const commitMessage = 'Release 1.0.0';
+      await commitAllChanges('/path/to/project', commitMessage);
 
-      await captureChangesInReleaseBranch('/path/to/project', {
-        releaseVersion: '1.0.0',
-      });
-
-      expect(getStdoutFromCommandSpy).toHaveBeenCalledWith(
-        'git',
-        ['checkout', '-b', 'release/1.0.0'],
-        { cwd: '/path/to/project' },
-      );
       expect(getStdoutFromCommandSpy).toHaveBeenCalledWith(
         'git',
         ['add', '-A'],
@@ -98,7 +94,7 @@ describe('repo', () => {
       );
       expect(getStdoutFromCommandSpy).toHaveBeenCalledWith(
         'git',
-        ['commit', '-m', 'Release 1.0.0'],
+        ['commit', '-m', commitMessage],
         { cwd: '/path/to/project' },
       );
     });
@@ -219,6 +215,88 @@ describe('repo', () => {
       );
 
       expect(getLinesFromCommandSpy).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('getCurrentBranchName', () => {
+    it('gets the current branch name', async () => {
+      const getStdoutFromCommandSpy = jest.spyOn(
+        miscUtils,
+        'getStdoutFromCommand',
+      );
+
+      when(getStdoutFromCommandSpy)
+        .calledWith('git', ['rev-parse', '--abbrev-ref', 'HEAD'], {
+          cwd: '/path/to/project',
+        })
+        .mockResolvedValue('release/1.1.1');
+
+      const branchName = await getCurrentBranchName('/path/to/project');
+
+      expect(getStdoutFromCommandSpy).toHaveBeenCalledWith(
+        'git',
+        ['rev-parse', '--abbrev-ref', 'HEAD'],
+        { cwd: '/path/to/project' },
+      );
+
+      expect(branchName).toBe('release/1.1.1');
+    });
+  });
+
+  describe('branchExists', () => {
+    it('returns true when specified branch name exists', async () => {
+      const releaseBranchName = 'release/1.0.0';
+      when(jest.spyOn(miscUtils, 'getLinesFromCommand'))
+        .calledWith('git', ['branch', '--list', releaseBranchName], {
+          cwd: '/path/to/repo',
+        })
+        .mockResolvedValue([releaseBranchName]);
+
+      expect(await branchExists('/path/to/repo', releaseBranchName)).toBe(true);
+    });
+
+    it("returns false when specified branch name doesn't exist", async () => {
+      const releaseBranchName = 'release/1.0.0';
+      when(jest.spyOn(miscUtils, 'getLinesFromCommand'))
+        .calledWith('git', ['branch', '--list', releaseBranchName], {
+          cwd: '/path/to/repo',
+        })
+        .mockResolvedValue([]);
+
+      expect(await branchExists('/path/to/repo', releaseBranchName)).toBe(
+        false,
+      );
+    });
+  });
+
+  describe('restoreFiles', () => {
+    it('should call runCommand with the correct arguments', async () => {
+      const getStdoutFromCommandSpy = jest.spyOn(
+        miscUtils,
+        'getStdoutFromCommand',
+      );
+      const defaultBranch = 'main';
+      when(getStdoutFromCommandSpy)
+        .calledWith('git', ['merge-base', defaultBranch, 'HEAD'], {
+          cwd: '/path/to',
+        })
+        .mockResolvedValue('COMMIT_SH');
+      const runCommandSpy = jest.spyOn(miscUtils, 'runCommand');
+      await restoreFiles('/path/to', defaultBranch, ['packages/filename.ts']);
+      expect(getStdoutFromCommandSpy).toHaveBeenCalledWith(
+        'git',
+        ['merge-base', defaultBranch, 'HEAD'],
+        {
+          cwd: '/path/to',
+        },
+      );
+      expect(runCommandSpy).toHaveBeenCalledWith(
+        'git',
+        ['restore', '--source', 'COMMIT_SH', '--', 'packages/filename.ts'],
+        {
+          cwd: '/path/to',
+        },
+      );
     });
   });
 });

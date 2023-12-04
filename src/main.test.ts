@@ -18,6 +18,7 @@ describe('main', () => {
         project,
         tempDirectoryPath: '/path/to/temp/directory',
         reset: true,
+        defaultBranch: 'main',
         releaseType: 'backport',
       });
     const followMonorepoWorkflowSpy = jest
@@ -36,6 +37,7 @@ describe('main', () => {
       tempDirectoryPath: '/path/to/temp/directory',
       firstRemovingExistingReleaseSpecification: true,
       releaseType: 'backport',
+      defaultBranch: 'main',
       stdout,
       stderr,
     });
@@ -51,6 +53,7 @@ describe('main', () => {
         project,
         tempDirectoryPath: '/path/to/temp/directory',
         reset: false,
+        defaultBranch: 'main',
         releaseType: 'backport',
       });
     const followMonorepoWorkflowSpy = jest

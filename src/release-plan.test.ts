@@ -28,15 +28,15 @@ describe('release-plan-utils', () => {
         },
         path: '/path/to/release/spec',
       };
-
+      const newReleaseVersion = '2.0.0';
       const releasePlan = await planRelease({
         project,
         releaseSpecification,
-        releaseType: 'ordinary',
+        newReleaseVersion,
       });
 
       expect(releasePlan).toMatchObject({
-        newVersion: '2.0.0',
+        newVersion: newReleaseVersion,
         packages: [
           {
             package: project.rootPackage,
@@ -81,15 +81,15 @@ describe('release-plan-utils', () => {
         },
         path: '/path/to/release/spec',
       };
-
+      const newReleaseVersion = '1.1.0';
       const releasePlan = await planRelease({
         project,
         releaseSpecification,
-        releaseType: 'backport',
+        newReleaseVersion,
       });
 
       expect(releasePlan).toMatchObject({
-        newVersion: '1.1.0',
+        newVersion: newReleaseVersion,
         packages: [
           {
             package: project.rootPackage,
@@ -134,34 +134,28 @@ describe('release-plan-utils', () => {
         },
         path: '/path/to/release/spec',
       };
-
       const releasePlan = await planRelease({
         project,
         releaseSpecification,
-        releaseType: 'ordinary',
+        newReleaseVersion: '2.0.0',
       });
 
       expect(releasePlan).toMatchObject({
         packages: [
           {
             package: project.rootPackage,
-            shouldUpdateChangelog: false,
           },
           {
             package: project.workspacePackages.a,
-            shouldUpdateChangelog: true,
           },
           {
             package: project.workspacePackages.b,
-            shouldUpdateChangelog: true,
           },
           {
             package: project.workspacePackages.c,
-            shouldUpdateChangelog: true,
           },
           {
             package: project.workspacePackages.d,
-            shouldUpdateChangelog: true,
           },
         ],
       });
@@ -177,12 +171,10 @@ describe('release-plan-utils', () => {
           {
             package: buildMockPackage(),
             newVersion: '1.2.3',
-            shouldUpdateChangelog: true,
           },
           {
             package: buildMockPackage(),
             newVersion: '1.2.3',
-            shouldUpdateChangelog: true,
           },
         ],
       };

@@ -1,6 +1,5 @@
-import type { WriteStream } from 'fs';
+import { WriteStream } from 'fs';
 import { SemVer } from 'semver';
-import { ReleaseType } from './initial-parameters.js';
 import { debug } from './misc-utils.js';
 import { Package, updatePackage } from './package.js';
 import { Project } from './project.js';
@@ -35,50 +34,36 @@ export type ReleasePlan = {
  * @property package - Information about the package.
  * @property newVersion - The new version for the package, as a
  * SemVer-compatible string.
- * @property shouldUpdateChangelog - Whether or not the changelog for the
- * package should get updated. For a polyrepo, this will always be true; for a
- * monorepo, this will be true only for workspace packages (the root package
- * doesn't have a changelog, since it is a virtual package).
  */
 export type PackageReleasePlan = {
   package: Package;
   newVersion: string;
-  shouldUpdateChangelog: boolean;
 };
 
 /**
  * Uses the release specification to calculate the final versions of all of the
- * packages that we want to update, as well as a new release name.
+ * packages that we want to update.
  *
  * @param args - The arguments.
  * @param args.project - Information about the whole project (e.g., names of
  * packages and where they can found).
  * @param args.releaseSpecification - A parsed version of the release spec
  * entered by the user.
- * @param args.releaseType - The type of release ("ordinary" or "backport"),
- * which affects how the version is bumped.
+ * @param args.newReleaseVersion - The new release version.
  * @returns A promise for information about the new release.
  */
 export async function planRelease({
   project,
   releaseSpecification,
-  releaseType,
+  newReleaseVersion,
 }: {
   project: Project;
   releaseSpecification: ReleaseSpecification;
-  releaseType: ReleaseType;
+  newReleaseVersion: string;
 }): Promise<ReleasePlan> {
-  const newReleaseVersion =
-    releaseType === 'backport'
-      ? `${project.releaseVersion.ordinaryNumber}.${
-          project.releaseVersion.backportNumber + 1
-        }.0`
-      : `${project.releaseVersion.ordinaryNumber + 1}.0.0`;
-
   const rootReleasePlan: PackageReleasePlan = {
     package: project.rootPackage,
     newVersion: newReleaseVersion,
-    shouldUpdateChangelog: false,
   };
 
   const workspaceReleasePlans: PackageReleasePlan[] = Object.keys(
@@ -95,7 +80,6 @@ export async function planRelease({
     return {
       package: pkg,
       newVersion: newVersion.toString(),
-      shouldUpdateChangelog: true,
     };
   });
 
@@ -106,8 +90,7 @@ export async function planRelease({
 }
 
 /**
- * Bumps versions and updates changelogs of packages within the monorepo
- * according to the release plan.
+ * Bumps versions of packages within the monorepo according to the release plan.
  *
  * @param project - Information about the whole project (e.g., names of packages
  * and where they can found).
