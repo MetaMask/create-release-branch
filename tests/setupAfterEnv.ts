@@ -1,5 +1,5 @@
 import type { ExecaReturnValue } from 'execa';
-import { isExecaError } from './helpers';
+import { isExecaError } from './helpers.js';
 
 /**
  * Matches a series of lines that represent a stack trace (by looking for the

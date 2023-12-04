@@ -3,6 +3,7 @@
  * https://jestjs.io/docs/configuration
  */
 
+// This file needs to be .cjs for compatibility with jest-it-up.
 module.exports = {
   // All imported modules in your tests should be mocked automatically
   // automock: false,
@@ -87,7 +88,11 @@ module.exports = {
   // ],
 
   // A map from regular expressions to module names or to arrays of module names that allow to stub out resources with a single module
-  // moduleNameMapper: {},
+  moduleNameMapper: {
+    // Strip the file extension from imports, so that e.g. `import { foo } from './foo.js'`
+    // becomes `import { foo } from './foo'`. This is for compatibility with ESM.
+    '^(\\.\\.?\\/.+)\\.js$': '$1',
+  },
 
   // An array of regexp pattern strings, matched against all module paths before considered 'visible' to the module loader
   // modulePathIgnorePatterns: [],

@@ -4,9 +4,9 @@ import {
   ManifestDependencyFieldNames as PackageManifestDependenciesFieldNames,
 } from '@metamask/action-utils';
 import { isPlainObject } from '@metamask/utils';
-import { readJsonObjectFile } from './fs';
-import { isTruthyString } from './misc-utils';
-import { semver, SemVer } from './semver';
+import { readJsonObjectFile } from './fs.js';
+import { isTruthyString } from './misc-utils.js';
+import { semver, SemVer } from './semver.js';
 
 export { PackageManifestFieldNames, PackageManifestDependenciesFieldNames };
 

@@ -1,8 +1,8 @@
 import fs from 'fs';
-import { buildMockProject } from '../tests/unit/helpers';
-import { main } from './main';
-import * as initialParametersModule from './initial-parameters';
-import * as monorepoWorkflowOperations from './monorepo-workflow-operations';
+import { buildMockProject } from '../tests/unit/helpers.js';
+import { main } from './main.js';
+import * as initialParametersModule from './initial-parameters.js';
+import * as monorepoWorkflowOperations from './monorepo-workflow-operations.js';
 
 jest.mock('./initial-parameters');
 jest.mock('./monorepo-workflow-operations');

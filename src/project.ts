@@ -1,17 +1,17 @@
 import { WriteStream } from 'fs';
 import { resolve } from 'path';
 import { getWorkspaceLocations } from '@metamask/action-utils';
-import { WriteStreamLike, fileExists } from './fs';
+import { WriteStreamLike, fileExists } from './fs.js';
 import {
   Package,
   readMonorepoRootPackage,
   readMonorepoWorkspacePackage,
   updatePackageChangelog,
-} from './package';
-import { getRepositoryHttpsUrl, getTagNames, restoreFiles } from './repo';
-import { SemVer } from './semver';
-import { PackageManifestFieldNames } from './package-manifest';
-import { ReleaseSpecification } from './release-specification';
+} from './package.js';
+import { getRepositoryHttpsUrl, getTagNames, restoreFiles } from './repo.js';
+import { SemVer } from './semver.js';
+import { PackageManifestFieldNames } from './package-manifest.js';
+import { ReleaseSpecification } from './release-specification.js';
 
 /**
  * The release version of the root package of a monorepo extracted from its

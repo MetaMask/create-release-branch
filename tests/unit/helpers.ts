@@ -2,13 +2,13 @@ import fs from 'fs';
 import path from 'path';
 import { SemVer } from 'semver';
 import { isPlainObject } from '@metamask/utils';
-import type { Package } from '../../src/package';
+import type { Package } from '../../src/package.js';
 import {
   PackageManifestDependenciesFieldNames,
   PackageManifestFieldNames,
-} from '../../src/package-manifest';
-import type { ValidatedPackageManifest } from '../../src/package-manifest';
-import type { Project } from '../../src/project';
+} from '../../src/package-manifest.js';
+import type { ValidatedPackageManifest } from '../../src/package-manifest.js';
+import type { Project } from '../../src/project.js';
 
 /**
  * Returns a version of the given record type where optionality is removed from

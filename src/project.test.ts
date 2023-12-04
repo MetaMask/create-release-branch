@@ -13,11 +13,11 @@ import {
   readProject,
   restoreChangelogsForSkippedPackages,
   updateChangelogsForChangedPackages,
-} from './project';
-import * as packageModule from './package';
-import * as repoModule from './repo';
-import * as fs from './fs';
-import { IncrementableVersionParts } from './release-specification';
+} from './project.js';
+import * as packageModule from './package.js';
+import * as repoModule from './repo.js';
+import * as fs from './fs.js';
+import { IncrementableVersionParts } from './release-specification.js';
 
 jest.mock('./package');
 jest.mock('./repo');

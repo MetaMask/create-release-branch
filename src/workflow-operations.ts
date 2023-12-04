@@ -1,11 +1,11 @@
-import { debug } from './misc-utils';
-import { ReleaseType } from './initial-parameters';
-import { Project } from './project';
+import { debug } from './misc-utils.js';
+import { ReleaseType } from './initial-parameters.js';
+import { Project } from './project.js';
 import {
   branchExists,
   getCurrentBranchName,
   runGitCommandWithin,
-} from './repo';
+} from './repo.js';
 
 /**
  * Creates a new release branch in the given project repository based on the specified release type.

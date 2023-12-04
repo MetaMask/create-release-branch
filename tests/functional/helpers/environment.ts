@@ -1,7 +1,7 @@
 import path from 'path';
-import LocalRepo from './local-repo';
-import RemoteRepo from './remote-repo';
-import Repo from './repo';
+import LocalRepo from './local-repo.js';
+import RemoteRepo from './remote-repo.js';
+import Repo from './repo.js';
 
 /**
  * Describes the package that is used to initialize a polyrepo, or one of the

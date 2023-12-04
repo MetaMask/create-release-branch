@@ -3,6 +3,10 @@ module.exports = {
 
   extends: ['@metamask/eslint-config', '@metamask/eslint-config-nodejs'],
 
+  parserOptions: {
+    sourceType: 'module',
+  },
+
   rules: {
     // This makes integration tests easier to read by allowing setup code and
     // assertions to be grouped together better

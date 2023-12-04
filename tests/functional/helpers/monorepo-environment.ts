@@ -2,13 +2,13 @@ import fs from 'fs';
 import path from 'path';
 import { ExecaReturnValue } from 'execa';
 import YAML from 'yaml';
-import { TOOL_EXECUTABLE_PATH, TS_NODE_PATH } from './constants';
+import { TOOL_EXECUTABLE_PATH, TSX_PATH } from './constants.js';
 import Environment, {
   EnvironmentOptions,
   PackageSpecification,
-} from './environment';
-import LocalMonorepo from './local-monorepo';
-import { debug, knownKeysOf } from './utils';
+} from './environment.js';
+import LocalMonorepo from './local-monorepo.js';
+import { debug, knownKeysOf } from './utils.js';
 
 /**
  * A set of configuration options for a {@link MonorepoEnvironment}. In addition
@@ -126,7 +126,6 @@ cat "${releaseSpecificationPath}" > "$1"
     await fs.promises.chmod(releaseSpecificationEditorPath, 0o777);
 
     const args = [
-      '--transpileOnly',
       TOOL_EXECUTABLE_PATH,
       '--project-directory',
       this.localRepo.getWorkingDirectoryPath(),
@@ -137,7 +136,7 @@ cat "${releaseSpecificationPath}" > "$1"
     const env = {
       EDITOR: releaseSpecificationEditorPath,
     };
-    const result = await this.localRepo.runCommand(TS_NODE_PATH, args, { env });
+    const result = await this.localRepo.runCommand(TSX_PATH, args, { env });
 
     debug(
       ['---- START OUTPUT -----', result.all, '---- END OUTPUT -----'].join(

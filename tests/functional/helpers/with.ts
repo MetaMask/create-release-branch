@@ -1,7 +1,7 @@
-import { withSandbox } from '../../helpers';
+import { withSandbox } from '../../helpers.js';
 import MonorepoEnvironment, {
   MonorepoEnvironmentOptions,
-} from './monorepo-environment';
+} from './monorepo-environment.js';
 
 /**
  * Runs the given function and ensures that even if `process.env` is changed

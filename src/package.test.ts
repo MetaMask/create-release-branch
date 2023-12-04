@@ -10,16 +10,16 @@ import {
   buildMockProject,
   buildMockManifest,
   createNoopWriteStream,
-} from '../tests/unit/helpers';
+} from '../tests/unit/helpers.js';
 import {
   readMonorepoRootPackage,
   readMonorepoWorkspacePackage,
   updatePackage,
   updatePackageChangelog,
-} from './package';
-import * as fsModule from './fs';
-import * as packageManifestModule from './package-manifest';
-import * as repoModule from './repo';
+} from './package.js';
+import * as fsModule from './fs.js';
+import * as packageManifestModule from './package-manifest.js';
+import * as repoModule from './repo.js';
 
 jest.mock('./package-manifest');
 jest.mock('./repo');
