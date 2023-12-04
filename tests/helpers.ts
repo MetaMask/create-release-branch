@@ -2,7 +2,6 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { nanoid } from 'nanoid';
-import { rimraf } from 'rimraf';
 import type { ExecaError } from 'execa';
 import { hasProperty, isObject } from '@metamask/utils';
 
