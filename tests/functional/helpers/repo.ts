@@ -218,7 +218,8 @@ export default abstract class Repo {
 
   /**
    * Custom logic with which to further initialize the repo after it is created.
-   * By default, this configures Git to use an email and name for commits.
+   * By default, this configures Git to use an email and name for commits, and
+   * disables GPG signing, which may cause problems in local environments.
    * Can be overridden in subclasses.
    */
   protected async afterCreate(): Promise<void> {
