@@ -8,16 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.0.0]
 ### Changed
-- **BREAKING** bump minimum Node version to 16 ([#114](https://github.com/MetaMask/create-release-branch/pull/114))
+- **BREAKING** Bump minimum Node version to 16 ([#114](https://github.com/MetaMask/create-release-branch/pull/114))
 - Reorder workflow to update changelogs first ([#109](https://github.com/MetaMask/create-release-branch/pull/109))
-  -  when you run this tool you can use the changelogs to decide which versions to include in your release.
-- Allow users to omit packages without the need for `intentionally-skip` ([#98](https://github.com/MetaMask/create-release-branch/pull/98))
-- Compel users to release packages with breaking changes alongside their dependents ([#101](https://github.com/MetaMask/create-release-branch/pull/101))
-- Compel users to release new versions of dependencies alongside their dependents ([#102](https://github.com/MetaMask/create-release-branch/pull/102))
-
-### Fixed
-- fix: replace `null` with `intentionally-skip` in release-spec template comment ([#99](https://github.com/MetaMask/create-release-branch/pull/99))
-- Correct setup instructions for a monorepo w/ independent versions ([#87](https://github.com/MetaMask/create-release-branch/pull/87))
+  - When you run this tool you can use the changelogs to decide which versions to include in your release.
+- Allow for partial releases ([#98](https://github.com/MetaMask/create-release-branch/pull/98))
+  - It is no longer necessary to release every package that has changed. Instead, you may release a subset of packages (as long as it is okay to do so; see next items).
+- Soft-enforce major-bumped packages to be released along with their dependents ([#101](https://github.com/MetaMask/create-release-branch/pull/101))
+  - If a new major version of a package A is being included in the release, and there are is a package B which depends on A but which is not also being released at the same time, then the tool will produce an error. This is to ensure that if a consumer is upgrading package A in a project and they also need to upgrade package B for compatibility reasons, they can.
+- Soft-enforce dependents to be released along with their dependencies ([#102](https://github.com/MetaMask/create-release-branch/pull/102))
+  - If package B depends on package A, and A has changed since its last release, and B is being included in the release but not A, then the tool will produce an error. This is to ensure that if B has been changed to rely on a new feature that was added to A, it doesn't break when it is used in a project (since that feature is present in development but has  not been published).
 
 ## [1.1.0]
 ### Added
