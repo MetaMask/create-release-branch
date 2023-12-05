@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1]
+### Uncategorized
+- Correct setup instructions for a monorepo w/ independent versions ([#87](https://github.com/MetaMask/create-release-branch/pull/87))
+- Bump word-wrap from 1.2.3 to 1.2.4 ([#86](https://github.com/MetaMask/create-release-branch/pull/86))
+
 ## [1.1.0]
 ### Added
 - Add support for nested workspaces ([#84](https://github.com/MetaMask/create-release-branch/pull/84))
@@ -24,7 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - In this first release, this tool only supports monorepos with an independent versioning scheme. We will add support for other kinds of projects in future releases.
   - You can learn more on how to use this tool by reading the [documentation](docs/).
 
-[Unreleased]: https://github.com/MetaMask/create-release-branch/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/MetaMask/create-release-branch/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/MetaMask/create-release-branch/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/MetaMask/create-release-branch/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/MetaMask/create-release-branch/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/MetaMask/create-release-branch/releases/tag/v1.0.0
