@@ -45,23 +45,38 @@ describe('release-specification', () => {
 
       expect(template).toStrictEqual(
         `
-# The following is a list of packages in monorepo.
-# Please indicate the packages for which you want to create a new release
-# by updating "null" to one of the following:
+# This file (called the "release spec") allows you to specify which packages you
+# want to include in this release along with the new versions they should
+# receive.
+#
+# By default, all packages which have changed since their latest release are
+# listed here. You can choose not to publish a package by removing it from this
+# list.
+#
+# For each package you *do* want to release, you will need to specify how that
+# version should be changed depending on the impact of the changes that will go
+# into the release. To help you make this decision, all of the changes have been
+# automatically added to the changelog for the package. This has been done
+# in a new commit, so you can keep this file open, run \`git show\` in the
+# terminal, review the set of changes, then return to this file to specify the
+# version.
+#
+# A version specifier (the value that goes after each package in the list below)
+# can be one of the following:
 #
 # - "major" (if you want to bump the major part of the package's version)
 # - "minor" (if you want to bump the minor part of the package's version)
 # - "patch" (if you want to bump the patch part of the package's version)
 # - an exact version with major, minor, and patch parts (e.g. "1.2.3")
-# - intentionally-skip (to skip the package entirely)
 #
-# When you're finished making your selections, save this file and
-# create-release-branch will continue automatically.
+# When you're finished, save this file and close it. The tool will update the
+# versions of the packages you've listed and will move the changelog entries to
+# a new section.
 
 packages:
   a: null
   c: null
-`.slice(1),
+`.trimStart(),
       );
     });
 
@@ -108,23 +123,38 @@ packages:
 
       expect(template).toStrictEqual(
         `
-# The following is a list of packages in monorepo.
-# Please indicate the packages for which you want to create a new release
-# by updating "null" to one of the following:
+# This file (called the "release spec") allows you to specify which packages you
+# want to include in this release along with the new versions they should
+# receive.
+#
+# By default, all packages which have changed since their latest release are
+# listed here. You can choose not to publish a package by removing it from this
+# list.
+#
+# For each package you *do* want to release, you will need to specify how that
+# version should be changed depending on the impact of the changes that will go
+# into the release. To help you make this decision, all of the changes have been
+# automatically added to the changelog for the package. This has been done
+# in a new commit, so you can keep this file open, run \`git show\` in the
+# terminal, review the set of changes, then return to this file to specify the
+# version.
+#
+# A version specifier (the value that goes after each package in the list below)
+# can be one of the following:
 #
 # - "major" (if you want to bump the major part of the package's version)
 # - "minor" (if you want to bump the minor part of the package's version)
 # - "patch" (if you want to bump the patch part of the package's version)
 # - an exact version with major, minor, and patch parts (e.g. "1.2.3")
-# - intentionally-skip (to skip the package entirely)
 #
-# When you're finished making your selections, save this file and then re-run
-# create-release-branch.
+# When you're finished, save this file and then run create-release-branch again.
+# The tool will update the versions of the packages you've listed and will move
+# the changelog entries to a new section.
 
 packages:
   a: null
   b: null
-`.slice(1),
+`.trimStart(),
       );
     });
   });
