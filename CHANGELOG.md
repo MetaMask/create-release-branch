@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ## [2.0.0]
-### Uncategorized
+### Changed
 - Convert package to ESM ([#113](https://github.com/MetaMask/create-release-branch/pull/113))
 - Disable git commit GPG signing in tests ([#115](https://github.com/MetaMask/create-release-branch/pull/115))
 - Reorder workflow to update changelogs first ([#109](https://github.com/MetaMask/create-release-branch/pull/109))
@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Allow users to omit packages ([#98](https://github.com/MetaMask/create-release-branch/pull/98))
 - Compel users to release packages with breaking changes alongside their dependents ([#101](https://github.com/MetaMask/create-release-branch/pull/101))
 - Compel users to release new versions of dependencies alongside their dependents ([#102](https://github.com/MetaMask/create-release-branch/pull/102))
+
+### Fixed
 - fix: replace `null` with `intentionally-skip` in release-spec template comment ([#99](https://github.com/MetaMask/create-release-branch/pull/99))
 - Correct setup instructions for a monorepo w/ independent versions ([#87](https://github.com/MetaMask/create-release-branch/pull/87))
 
