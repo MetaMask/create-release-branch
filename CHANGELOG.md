@@ -8,11 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.0.0]
 ### Changed
-- Convert package to ESM ([#113](https://github.com/MetaMask/create-release-branch/pull/113))
-- Disable git commit GPG signing in tests ([#115](https://github.com/MetaMask/create-release-branch/pull/115))
+- **BREAKING** bump minimum Node version to 16 ([#114](https://github.com/MetaMask/create-release-branch/pull/114))
 - Reorder workflow to update changelogs first ([#109](https://github.com/MetaMask/create-release-branch/pull/109))
-- Bump minimum Node version to 16 ([#114](https://github.com/MetaMask/create-release-branch/pull/114))
-- Allow users to omit packages ([#98](https://github.com/MetaMask/create-release-branch/pull/98))
+  -  when you run this tool you can use the changelogs to decide which versions to include in your release.
+- Allow users to omit packages without the need for `intentionally-skip` ([#98](https://github.com/MetaMask/create-release-branch/pull/98))
 - Compel users to release packages with breaking changes alongside their dependents ([#101](https://github.com/MetaMask/create-release-branch/pull/101))
 - Compel users to release new versions of dependencies alongside their dependents ([#102](https://github.com/MetaMask/create-release-branch/pull/102))
 
