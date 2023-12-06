@@ -309,6 +309,7 @@ export async function hasChangesInDirectorySinceGitTag(
       tagName,
     );
 
+    /* istanbul ignore else */
     if (!(tagName in CHANGED_FILE_PATHS_BY_TAG_NAME)) {
       CHANGED_FILE_PATHS_BY_TAG_NAME[tagName] = changedFilePaths;
     }
