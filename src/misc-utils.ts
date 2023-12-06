@@ -1,5 +1,5 @@
 import which from 'which';
-import execa from 'execa';
+import { execa, Options } from 'execa';
 import createDebug from 'debug';
 import { ErrorWithCause } from 'pony-cause';
 import { isObject } from '@metamask/utils';
@@ -130,7 +130,7 @@ export async function resolveExecutable(
 export async function runCommand(
   command: string,
   args?: readonly string[] | undefined,
-  options?: execa.Options<string> | undefined,
+  options?: Options | undefined,
 ): Promise<void> {
   await execa(command, args, options);
 }
@@ -149,7 +149,7 @@ export async function runCommand(
 export async function getStdoutFromCommand(
   command: string,
   args?: readonly string[] | undefined,
-  options?: execa.Options<string> | undefined,
+  options?: Options | undefined,
 ): Promise<string> {
   return (await execa(command, args, options)).stdout.trim();
 }
@@ -167,7 +167,7 @@ export async function getStdoutFromCommand(
 export async function getLinesFromCommand(
   command: string,
   args?: readonly string[] | undefined,
-  options?: execa.Options<string> | undefined,
+  options?: Options | undefined,
 ): Promise<string[]> {
   const { stdout } = await execa(command, args, options);
   return stdout.split('\n').filter((value) => value !== '');

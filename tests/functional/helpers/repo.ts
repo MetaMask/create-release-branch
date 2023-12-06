@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import execa, { ExecaChildProcess, Options as ExecaOptions } from 'execa';
+import { execa, ExecaChildProcess, Options as ExecaOptions } from 'execa';
 import deepmerge from 'deepmerge';
 import { isErrorWithCode } from '../../helpers.js';
 import { debug, sleepFor } from './utils.js';
@@ -178,7 +178,7 @@ export default abstract class Repo {
   async runCommand(
     executableName: string,
     args?: readonly string[] | undefined,
-    options?: ExecaOptions<string> | undefined,
+    options?: ExecaOptions | undefined,
   ): Promise<ExecaChildProcess<string>> {
     const { env, ...remainingOptions } =
       options === undefined ? { env: {} } : options;
