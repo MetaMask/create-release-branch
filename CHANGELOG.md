@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.1]
+### Fixed
+- Move `@metamask/auto-changelog` from `devDependencies` to `dependencies` and pin to ~3.3.0 ([#122](https://github.com/MetaMask/create-release-branch/pull/122))
+
 ## [2.0.0]
 ### Changed
 - **BREAKING** Bump minimum Node version to 16 ([#114](https://github.com/MetaMask/create-release-branch/pull/114))
@@ -36,7 +40,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - In this first release, this tool only supports monorepos with an independent versioning scheme. We will add support for other kinds of projects in future releases.
   - You can learn more on how to use this tool by reading the [documentation](docs/).
 
-[Unreleased]: https://github.com/MetaMask/create-release-branch/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/MetaMask/create-release-branch/compare/v2.0.1...HEAD
+[2.0.1]: https://github.com/MetaMask/create-release-branch/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/MetaMask/create-release-branch/compare/v1.1.0...v2.0.0
 [1.1.0]: https://github.com/MetaMask/create-release-branch/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/MetaMask/create-release-branch/compare/v1.0.0...v1.0.1
