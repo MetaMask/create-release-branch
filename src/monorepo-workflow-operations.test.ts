@@ -398,13 +398,19 @@ describe('monorepo-workflow-operations', () => {
       it('follows the workflow correctly when executed twice', async () => {
         await withSandbox(async (sandbox) => {
           const releaseVersion = '1.1.0';
-          const { project, stdout, stderr, createReleaseBranchSpy, commitAllChangesSpy, projectDirectoryPath } =
-            await setupFollowMonorepoWorkflow({
-              sandbox,
-              releaseVersion,
-              doesReleaseSpecFileExist: false,
-              isEditorAvailable: true,
-            });
+          const {
+            project,
+            stdout,
+            stderr,
+            createReleaseBranchSpy,
+            commitAllChangesSpy,
+            projectDirectoryPath,
+          } = await setupFollowMonorepoWorkflow({
+            sandbox,
+            releaseVersion,
+            doesReleaseSpecFileExist: false,
+            isEditorAvailable: true,
+          });
 
           createReleaseBranchSpy.mockResolvedValueOnce({
             version: releaseVersion,
@@ -428,11 +434,13 @@ describe('monorepo-workflow-operations', () => {
           });
 
           expect(commitAllChangesSpy).toHaveBeenCalledTimes(2);
-          expect(commitAllChangesSpy).toHaveBeenNthCalledWith(1, 
+          expect(commitAllChangesSpy).toHaveBeenNthCalledWith(
+            1,
             projectDirectoryPath,
             `Initialize Release ${releaseVersion}`,
           );
-          expect(commitAllChangesSpy).toHaveBeenNthCalledWith(2, 
+          expect(commitAllChangesSpy).toHaveBeenNthCalledWith(
+            2,
             projectDirectoryPath,
             `Update Release ${releaseVersion}`,
           );
@@ -461,7 +469,8 @@ describe('monorepo-workflow-operations', () => {
           });
 
           expect(commitAllChangesSpy).toHaveBeenCalledTimes(3);
-          expect(commitAllChangesSpy).toHaveBeenNthCalledWith(3, 
+          expect(commitAllChangesSpy).toHaveBeenNthCalledWith(
+            3,
             projectDirectoryPath,
             `Update Release ${releaseVersion}`,
           );
