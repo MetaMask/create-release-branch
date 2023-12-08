@@ -137,7 +137,7 @@ describe('misc-utils', () => {
   describe('runCommand', () => {
     it('runs the command, discarding its output', async () => {
       const execaSpy = jest
-        .spyOn(execaModule, 'default')
+        .spyOn(execaModule, 'execa')
         // Typecast: It's difficult to provide a full return value for execa
         .mockResolvedValue({ stdout: '   some output  ' } as any);
 
@@ -155,7 +155,7 @@ describe('misc-utils', () => {
   describe('getStdoutFromCommand', () => {
     it('executes the given command and returns a version of the standard out from the command with whitespace trimmed', async () => {
       const execaSpy = jest
-        .spyOn(execaModule, 'default')
+        .spyOn(execaModule, 'execa')
         // Typecast: It's difficult to provide a full return value for execa
         .mockResolvedValue({ stdout: '   some output  ' } as any);
 
@@ -175,7 +175,7 @@ describe('misc-utils', () => {
   describe('getLinesFromCommand', () => {
     it('executes the given command and returns the standard out from the command split into lines', async () => {
       const execaSpy = jest
-        .spyOn(execaModule, 'default')
+        .spyOn(execaModule, 'execa')
         // Typecast: It's difficult to provide a full return value for execa
         .mockResolvedValue({ stdout: 'line 1\nline 2\nline 3' } as any);
 
@@ -193,7 +193,7 @@ describe('misc-utils', () => {
 
     it('does not strip leading and trailing whitespace from the output, but does remove empty lines', async () => {
       const execaSpy = jest
-        .spyOn(execaModule, 'default')
+        .spyOn(execaModule, 'execa')
         // Typecast: It's difficult to provide a full return value for execa
         .mockResolvedValue({
           stdout: '  line 1\nline 2\n\n   line 3   \n',

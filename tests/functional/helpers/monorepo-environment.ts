@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { ExecaReturnValue } from 'execa';
+import type { ExecaReturnValue } from 'execa';
 import YAML from 'yaml';
 import { TOOL_EXECUTABLE_PATH, TSX_PATH } from './constants.js';
 import Environment, {

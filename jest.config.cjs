@@ -3,6 +3,32 @@
  * https://jestjs.io/docs/configuration
  */
 
+/**
+ * Dependencies that are ESM-only, and need to be transpiled by Babel.
+ * This list is used in the `transformIgnorePatterns` option below.
+ * 
+ * You probably need to add a dependency to this list if the tests fail with something like:
+ * - `SyntaxError: Cannot use import statement outside a module`
+ * - `SyntaxError: Unexpected token 'export'`
+ * If so, identify the dependency that's causing the error via the stack trace, and add it
+ * to this list.
+ * 
+ * No, we do not live in the best of all possible worlds. Why do you ask?
+ *
+ * For details on Jest's currently experimental ESM support see: https://github.com/jestjs/jest/issues/9430
+ */
+const ESM_DEPENDENCIES = [
+  'execa',
+  'strip-final-newline',
+  'npm-run-path',
+  'path-key',
+  'onetime',
+  'mimic-fn',
+  'human-signals',
+  'is-stream',
+  'get-stream',
+];
+
 // This file needs to be .cjs for compatibility with jest-it-up.
 module.exports = {
   // All imported modules in your tests should be mocked automatically
@@ -103,8 +129,9 @@ module.exports = {
   // An enum that specifies notification mode. Requires { notify: true }
   // notifyMode: "failure-change",
 
-  // A preset that is used as a base for Jest's configuration
-  preset: 'ts-jest',
+  // Disabled in favor of babel-jest, configured via "transform" below.
+  // // A preset that is used as a base for Jest's configuration
+  // preset: 'ts-jest',
 
   // Run tests from one or more projects
   // projects: undefined,
@@ -189,13 +216,12 @@ module.exports = {
   // timers: "real",
 
   // A map from regular expressions to paths to transformers
-  // transform: undefined,
+  transform: {
+    "\\.[jt]sx?$": "babel-jest"
+  },
 
   // An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation
-  // transformIgnorePatterns: [
-  //   "/node_modules/",
-  //   "\\.pnp\\.[^\\/]+$"
-  // ],
+  transformIgnorePatterns: [`node_modules/(?!(${ESM_DEPENDENCIES.join('|')}))`],
 
   // An array of regexp pattern strings that are matched against all modules before the module loader will automatically return a mock for them
   // unmockedModulePathPatterns: undefined,
