@@ -2,6 +2,7 @@ import fs, { WriteStream } from 'fs';
 import path from 'path';
 import { format } from 'util';
 import { parseChangelog, updateChangelog } from '@metamask/auto-changelog';
+import prettier from 'prettier';
 import { WriteStreamLike, readFile, writeFile, writeJsonFile } from './fs.js';
 import { isErrorWithCode } from './misc-utils.js';
 import {
@@ -272,11 +273,23 @@ export async function migrateUnreleasedChangelogChangesToRelease({
     changelogContent,
     repoUrl: repositoryUrl,
     tagPrefix: `${pkg.validatedManifest.name}@`,
+    formatter: formatChangelog,
   });
 
   changelog.addRelease({ version });
   changelog.migrateUnreleasedChangesToRelease(version);
   await writeFile(pkg.changelogPath, changelog.toString());
+}
+
+/**
+ * Format the given changelog using Prettier. This is extracted into a separate
+ * function for coverage purposes.
+ *
+ * @param changelog - The changelog to format.
+ * @returns The formatted changelog.
+ */
+export function formatChangelog(changelog: string) {
+  return prettier.format(changelog, { parser: 'markdown' });
 }
 
 /**
@@ -323,6 +336,7 @@ export async function updatePackageChangelog({
     projectRootDirectory: pkg.directoryPath,
     repoUrl: repositoryUrl,
     tagPrefixes: [`${pkg.validatedManifest.name}@`, 'v'],
+    formatter: formatChangelog,
   });
 
   if (newChangelogContent) {

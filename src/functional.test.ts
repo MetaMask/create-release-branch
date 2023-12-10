@@ -302,7 +302,9 @@ describe('create-release-branch (functional)', () => {
               ## [Unreleased]
 
               ## [2.0.0]
+
               ### Uncategorized
+
               - Update "a"
               - Initial commit
 
@@ -317,7 +319,9 @@ describe('create-release-branch (functional)', () => {
               ## [Unreleased]
 
               ## [2.0.0]
+
               ### Uncategorized
+
               - Initial commit
 
               [Unreleased]: https://github.com/example-org/example-repo/compare/@scope/b@2.0.0...HEAD
@@ -362,7 +366,9 @@ describe('create-release-branch (functional)', () => {
             ## [Unreleased]
 
             ## [1.0.0]
+
             ### Added
+
             - Initial release
 
             [Unreleased]: https://github.com/example-org/example-repo/compare/@scope/a@1.0.0...HEAD
@@ -376,7 +382,9 @@ describe('create-release-branch (functional)', () => {
             ## [Unreleased]
 
             ## [1.0.0]
+
             ### Added
+
             - Initial release
 
             [Unreleased]: https://github.com/example-org/example-repo/compare/@scope/b@1.0.0...HEAD
@@ -413,11 +421,15 @@ describe('create-release-branch (functional)', () => {
               ## [Unreleased]
 
               ## [2.0.0]
+
               ### Uncategorized
+
               - Update "a"
 
               ## [1.0.0]
+
               ### Added
+
               - Initial release
 
               [Unreleased]: https://github.com/example-org/example-repo/compare/@scope/a@2.0.0...HEAD
@@ -432,7 +444,9 @@ describe('create-release-branch (functional)', () => {
             ## [Unreleased]
 
             ## [1.0.0]
+
             ### Added
+
             - Initial release
 
             [Unreleased]: https://github.com/example-org/example-repo/compare/@scope/b@1.0.0...HEAD
@@ -486,7 +500,9 @@ describe('create-release-branch (functional)', () => {
               ## [Unreleased]
 
               ## [1.0.0]
+
               ### Added
+
               - Initial release
 
               [Unreleased]: https://github.com/example-org/example-repo/compare/@scope/b@1.0.0...HEAD
@@ -522,7 +538,9 @@ describe('create-release-branch (functional)', () => {
               ## [Unreleased]
 
               ## [1.0.0]
+
               ### Uncategorized
+
               - Update "a"
 
               [Unreleased]: https://github.com/example-org/example-repo/compare/@scope/a@1.0.0...HEAD
@@ -536,7 +554,9 @@ describe('create-release-branch (functional)', () => {
               ## [Unreleased]
 
               ## [1.0.0]
+
               ### Added
+
               - Initial release
 
               [Unreleased]: https://github.com/example-org/example-repo/compare/@scope/b@1.0.0...HEAD
@@ -773,7 +793,9 @@ describe('create-release-branch (functional)', () => {
               ## [Unreleased]
 
               ## [2.0.0]
+
               ### Uncategorized
+
               - Update "a"
               - Initial commit
 
