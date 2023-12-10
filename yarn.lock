@@ -2106,7 +2106,7 @@ __metadata:
     yaml: ^2.2.2
     yargs: ^17.7.1
   peerDependencies:
-    prettier: ^2.2.1
+    prettier: ^2
   bin:
     create-release-branch: bin/create-release-branch.js
   languageName: unknown
