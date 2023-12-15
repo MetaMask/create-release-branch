@@ -139,9 +139,25 @@ export function readPackageManifestNameField(
 function isValidPackageManifestVersionField(
   version: unknown,
 ): version is string {
+  return isTruthyString(version);
+}
+
+/**
+ * Type guard to ensure that the provided version value is a valid dependency version
+ * specifier for a package manifest. This function validates both semantic versioning
+ * ranges and the special 'workspace:^' notation.
+ *
+ * @param version - The value to check.
+ * @returns `true` if the version is a valid string that either
+ * represents a semantic versioning range or is exactly 'workspace:^'.
+ * Otherwise, it returns `false`.
+ */
+function isValidPackageManifestDependencyValue(
+  version: unknown,
+): version is string {
   return (
-    (isTruthyString(version) && semver.validRange(version) !== null) ||
-    version === 'workspace:^'
+    isValidPackageManifestVersionField(version) &&
+    (semver.validRange(version) !== null || version === 'workspace:^')
   );
 }
 
@@ -288,7 +304,8 @@ function isValidPackageManifestDependenciesField(
     (isPlainObject(depsValue) &&
       Object.entries(depsValue).every(([pkgName, version]) => {
         return (
-          isTruthyString(pkgName) && isValidPackageManifestVersionField(version)
+          isTruthyString(pkgName) &&
+          isValidPackageManifestDependencyValue(version)
         );
       }))
   );
