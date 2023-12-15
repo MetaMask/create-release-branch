@@ -139,7 +139,10 @@ export function readPackageManifestNameField(
 function isValidPackageManifestVersionField(
   version: unknown,
 ): version is string {
-  return isTruthyString(version) && semver.validRange(version) !== null;
+  return (
+    (isTruthyString(version) && semver.validRange(version) !== null) ||
+    version === 'workspace:^'
+  );
 }
 
 /**
