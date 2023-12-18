@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.0]
+### Changed
+- **BREAKING:** Format changelogs using Prettier ([#100](https://github.com/MetaMask/create-release-branch/pull/100))
+  - This is a breaking change since it changes the default formatting of the changelog in new release PRs. If you have a package script that runs `auto-changelog validate`, or you're calling `auto-changelog validate` in CI, you'll now need to pass the `--prettier` flag (see [example](https://github.com/MetaMask/metamask-module-template/pull/219)).
+
+### Fixed
+- Restore support for monorepos that use `workspace:^` references for interdependencies ([#125](https://github.com/MetaMask/create-release-branch/pull/125))
+
 ## [2.0.1]
 ### Fixed
 - Move `@metamask/auto-changelog` from `devDependencies` to `dependencies` and pin to ~3.3.0 ([#122](https://github.com/MetaMask/create-release-branch/pull/122))
@@ -40,7 +48,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - In this first release, this tool only supports monorepos with an independent versioning scheme. We will add support for other kinds of projects in future releases.
   - You can learn more on how to use this tool by reading the [documentation](docs/).
 
-[Unreleased]: https://github.com/MetaMask/create-release-branch/compare/v2.0.1...HEAD
+[Unreleased]: https://github.com/MetaMask/create-release-branch/compare/v3.0.0...HEAD
+[3.0.0]: https://github.com/MetaMask/create-release-branch/compare/v2.0.1...v3.0.0
 [2.0.1]: https://github.com/MetaMask/create-release-branch/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/MetaMask/create-release-branch/compare/v1.1.0...v2.0.0
 [1.1.0]: https://github.com/MetaMask/create-release-branch/compare/v1.0.1...v1.1.0
