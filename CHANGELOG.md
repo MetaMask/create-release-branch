@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.2]
+### Uncategorized
+- Support 'workspace:^' notation in dependency versions ([#125](https://github.com/MetaMask/create-release-branch/pull/125))
+- BREAKING: Format changelog using Prettier ([#100](https://github.com/MetaMask/create-release-branch/pull/100))
+- Update execa ([#121](https://github.com/MetaMask/create-release-branch/pull/121))
+
 ## [2.0.1]
 ### Fixed
 - Move `@metamask/auto-changelog` from `devDependencies` to `dependencies` and pin to ~3.3.0 ([#122](https://github.com/MetaMask/create-release-branch/pull/122))
@@ -40,7 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - In this first release, this tool only supports monorepos with an independent versioning scheme. We will add support for other kinds of projects in future releases.
   - You can learn more on how to use this tool by reading the [documentation](docs/).
 
-[Unreleased]: https://github.com/MetaMask/create-release-branch/compare/v2.0.1...HEAD
+[Unreleased]: https://github.com/MetaMask/create-release-branch/compare/v2.0.2...HEAD
+[2.0.2]: https://github.com/MetaMask/create-release-branch/compare/v2.0.1...v2.0.2
 [2.0.1]: https://github.com/MetaMask/create-release-branch/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/MetaMask/create-release-branch/compare/v1.1.0...v2.0.0
 [1.1.0]: https://github.com/MetaMask/create-release-branch/compare/v1.0.1...v1.1.0
