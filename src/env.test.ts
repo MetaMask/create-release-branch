@@ -16,10 +16,12 @@ describe('env', () => {
 
     it('returns only the environment variables from process.env that we use in this tool', () => {
       process.env.EDITOR = 'editor';
+      process.env.SSH_AUTH_SOCK = 'ssh_auth_sock';
       process.env.EXTRA = 'extra';
 
       expect(getEnvironmentVariables()).toStrictEqual({
         EDITOR: 'editor',
+        SSH_AUTH_SOCK: 'ssh_auth_sock',
       });
     });
   });
