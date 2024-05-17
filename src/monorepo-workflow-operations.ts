@@ -21,6 +21,7 @@ import {
   validateReleaseSpecification,
 } from './release-specification.js';
 import { createReleaseBranch } from './workflow-operations.js';
+import { fixConstraints, installDependencies } from './yarn-commands.js';
 
 /**
  * For a monorepo, the process works like this:
@@ -151,4 +152,6 @@ export async function followMonorepoWorkflow({
     project.directoryPath,
     `Update Release ${newReleaseVersion}`,
   );
+  fixConstraints(project.directoryPath);
+  installDependencies(project.directoryPath);
 }
