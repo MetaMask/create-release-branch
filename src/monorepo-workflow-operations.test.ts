@@ -12,12 +12,14 @@ import type { ReleaseSpecification } from './release-specification.js';
 import * as releasePlanModule from './release-plan.js';
 import type { ReleasePlan } from './release-plan.js';
 import * as repoModule from './repo.js';
+import * as yarnCommands from './yarn-commands.js';
 import * as workflowOperations from './workflow-operations.js';
 
 jest.mock('./editor');
 jest.mock('./release-plan');
 jest.mock('./release-specification');
 jest.mock('./repo');
+jest.mock('./yarn-commands.js');
 
 /**
  * Tests the given path to determine whether it represents a file.
@@ -65,6 +67,8 @@ function getDependencySpies() {
     planReleaseSpy: jest.spyOn(releasePlanModule, 'planRelease'),
     executeReleasePlanSpy: jest.spyOn(releasePlanModule, 'executeReleasePlan'),
     commitAllChangesSpy: jest.spyOn(repoModule, 'commitAllChanges'),
+    fixConstraintsSpy: jest.spyOn(yarnCommands, 'fixConstraints'),
+    installDependenciesSpy: jest.spyOn(yarnCommands, 'installDependencies'),
   };
 }
 
@@ -180,6 +184,8 @@ async function setupFollowMonorepoWorkflow({
     planReleaseSpy,
     executeReleasePlanSpy,
     commitAllChangesSpy,
+    fixConstraintsSpy,
+    installDependenciesSpy,
   } = getDependencySpies();
   const editor = buildMockEditor();
   const releaseSpecificationPath = path.join(
@@ -273,6 +279,8 @@ async function setupFollowMonorepoWorkflow({
     releasePlan,
     releaseVersion,
     releaseSpecificationPath,
+    fixConstraintsSpy,
+    installDependenciesSpy,
   };
 }
 
@@ -405,6 +413,8 @@ describe('monorepo-workflow-operations', () => {
             createReleaseBranchSpy,
             commitAllChangesSpy,
             projectDirectoryPath,
+            fixConstraintsSpy,
+            installDependenciesSpy,
           } = await setupFollowMonorepoWorkflow({
             sandbox,
             releaseVersion,
@@ -443,6 +453,14 @@ describe('monorepo-workflow-operations', () => {
             2,
             projectDirectoryPath,
             `Update Release ${releaseVersion}`,
+          );
+
+          expect(fixConstraintsSpy).toHaveBeenCalledTimes(1);
+          expect(fixConstraintsSpy).toHaveBeenCalledWith(projectDirectoryPath);
+
+          expect(installDependenciesSpy).toHaveBeenCalledTimes(1);
+          expect(installDependenciesSpy).toHaveBeenCalledWith(
+            projectDirectoryPath,
           );
 
           // Second call of followMonorepoWorkflow
