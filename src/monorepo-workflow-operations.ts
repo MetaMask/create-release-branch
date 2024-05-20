@@ -148,10 +148,10 @@ export async function followMonorepoWorkflow({
   });
   await executeReleasePlan(project, releasePlan, stderr);
   await removeFile(releaseSpecificationPath);
+  await fixConstraints(project.directoryPath);
+  await installDependencies(project.directoryPath);
   await commitAllChanges(
     project.directoryPath,
     `Update Release ${newReleaseVersion}`,
   );
-  fixConstraints(project.directoryPath);
-  installDependencies(project.directoryPath);
 }

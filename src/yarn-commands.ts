@@ -1,4 +1,4 @@
-import { runCommand } from './misc-utils.js';
+import { debug, runCommand } from './misc-utils.js';
 
 /**
  * Runs `yarn constraints --fix` to fix any constraint issues.
@@ -10,6 +10,7 @@ import { runCommand } from './misc-utils.js';
 export async function fixConstraints(
   repositoryDirectoryPath: string,
 ): Promise<void> {
+  debug('Fixing constraints...');
   await runCommand('yarn', ['constraints', '--fix'], {
     cwd: repositoryDirectoryPath,
   });
@@ -25,6 +26,7 @@ export async function fixConstraints(
 export async function installDependencies(
   repositoryDirectoryPath: string,
 ): Promise<void> {
+  debug('Installing dependencies...');
   await runCommand('yarn', [], {
     cwd: repositoryDirectoryPath,
   });
