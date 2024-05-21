@@ -193,7 +193,7 @@ __metadata:
         const pkg = this.#packages[packageName];
         return `
 "${pkg.name}@workspace:${pkg.directoryPath}":
-  version: ${pkg.version}
+  version: 0.0.0-use.local
   resolution: "${pkg.name}@workspace:${pkg.directoryPath}"
   languageName: unknown
   linkType: soft`;
