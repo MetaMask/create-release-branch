@@ -3,7 +3,7 @@ import { when } from 'jest-when';
 import {
   fixConstraints,
   getYarnVersion,
-  installDependencies,
+  updateYarnLock,
 } from './yarn-commands.js';
 import * as miscUtils from './misc-utils.js';
 
@@ -52,11 +52,11 @@ describe('yarn-commands', () => {
     });
   });
 
-  describe('installDependencies', () => {
-    it('should run yarn with the correct parameters', async () => {
+  describe('updateYarnLock', () => {
+    it('should run yarn install --no--immutable with the correct parameters', async () => {
       const repositoryDirectoryPath = '/path/to/repo';
 
-      await installDependencies('/path/to/repo');
+      await updateYarnLock('/path/to/repo');
 
       expect(miscUtils.runCommand).toHaveBeenCalledWith(
         'yarn',

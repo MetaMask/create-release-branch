@@ -39,13 +39,13 @@ export async function fixConstraints(
 }
 
 /**
- * Runs `yarn` to install dependencies.
+ * Runs `yarn install --no-immutable` to update yarn lock.
  *
  * @param repositoryDirectoryPath - The path to the repository directory.
  * @returns The standard output of the command.
  * @throws An execa error object if the command fails in some way.
  */
-export async function installDependencies(
+export async function updateYarnLock(
   repositoryDirectoryPath: string,
 ): Promise<void> {
   debug('Installing dependencies...');

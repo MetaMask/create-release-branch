@@ -68,7 +68,7 @@ function getDependencySpies() {
     executeReleasePlanSpy: jest.spyOn(releasePlanModule, 'executeReleasePlan'),
     commitAllChangesSpy: jest.spyOn(repoModule, 'commitAllChanges'),
     fixConstraintsSpy: jest.spyOn(yarnCommands, 'fixConstraints'),
-    installDependenciesSpy: jest.spyOn(yarnCommands, 'installDependencies'),
+    updateYarnLockSpy: jest.spyOn(yarnCommands, 'updateYarnLock'),
   };
 }
 
@@ -185,7 +185,7 @@ async function setupFollowMonorepoWorkflow({
     executeReleasePlanSpy,
     commitAllChangesSpy,
     fixConstraintsSpy,
-    installDependenciesSpy,
+    updateYarnLockSpy,
   } = getDependencySpies();
   const editor = buildMockEditor();
   const releaseSpecificationPath = path.join(
@@ -280,7 +280,7 @@ async function setupFollowMonorepoWorkflow({
     releaseVersion,
     releaseSpecificationPath,
     fixConstraintsSpy,
-    installDependenciesSpy,
+    updateYarnLockSpy,
   };
 }
 
@@ -414,7 +414,7 @@ describe('monorepo-workflow-operations', () => {
             commitAllChangesSpy,
             projectDirectoryPath,
             fixConstraintsSpy,
-            installDependenciesSpy,
+            updateYarnLockSpy,
           } = await setupFollowMonorepoWorkflow({
             sandbox,
             releaseVersion,
@@ -461,10 +461,8 @@ describe('monorepo-workflow-operations', () => {
             stdout,
           );
 
-          expect(installDependenciesSpy).toHaveBeenCalledTimes(1);
-          expect(installDependenciesSpy).toHaveBeenCalledWith(
-            projectDirectoryPath,
-          );
+          expect(updateYarnLockSpy).toHaveBeenCalledTimes(1);
+          expect(updateYarnLockSpy).toHaveBeenCalledWith(projectDirectoryPath);
 
           // Second call of followMonorepoWorkflow
 
