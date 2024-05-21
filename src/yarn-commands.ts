@@ -1,4 +1,14 @@
-import { debug, runCommand } from './misc-utils.js';
+import { debug, runCommand, getStdoutFromCommand } from './misc-utils.js';
+
+/**
+ * Checks the current Yarn version.
+ *
+ * @returns A promise that resolves to the Yarn version string.
+ * @throws An execa error object if the command fails in some way.
+ */
+export async function getYarnVersion(): Promise<string> {
+  return await getStdoutFromCommand('yarn', ['--version']);
+}
 
 /**
  * Runs `yarn constraints --fix` to fix any constraint issues.
@@ -10,10 +20,17 @@ import { debug, runCommand } from './misc-utils.js';
 export async function fixConstraints(
   repositoryDirectoryPath: string,
 ): Promise<void> {
-  debug('Fixing constraints...');
-  await runCommand('yarn', ['constraints', '--fix'], {
-    cwd: repositoryDirectoryPath,
-  });
+  const version = await getYarnVersion();
+  const majorVersion = parseInt(version.split('.')[0], 10);
+
+  if (majorVersion >= 2) {
+    await runCommand('yarn', ['constraints', '--fix'], {
+      cwd: repositoryDirectoryPath,
+    });
+    debug('Yarn constraints fixed successfully.');
+  } else {
+    debug('Skipping constraints fix as Yarn version is less than 2.');
+  }
 }
 
 /**
