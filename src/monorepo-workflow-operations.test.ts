@@ -456,7 +456,10 @@ describe('monorepo-workflow-operations', () => {
           );
 
           expect(fixConstraintsSpy).toHaveBeenCalledTimes(1);
-          expect(fixConstraintsSpy).toHaveBeenCalledWith(projectDirectoryPath);
+          expect(fixConstraintsSpy).toHaveBeenCalledWith(
+            projectDirectoryPath,
+            stdout,
+          );
 
           expect(installDependenciesSpy).toHaveBeenCalledTimes(1);
           expect(installDependenciesSpy).toHaveBeenCalledWith(

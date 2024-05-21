@@ -1,3 +1,4 @@
+import { WriteStream } from 'fs';
 import { debug, runCommand, getStdoutFromCommand } from './misc-utils.js';
 
 /**
@@ -14,11 +15,13 @@ export async function getYarnVersion(): Promise<string> {
  * Runs `yarn constraints --fix` to fix any constraint issues.
  *
  * @param repositoryDirectoryPath - The path to the repository directory.
+ * @param stderr - A stream that can be used to write to standard error.
  * @returns The standard output of the command.
  * @throws An execa error object if the command fails in some way.
  */
 export async function fixConstraints(
   repositoryDirectoryPath: string,
+  stderr: Pick<WriteStream, 'write'>,
 ): Promise<void> {
   const version = await getYarnVersion();
   const majorVersion = parseInt(version.split('.')[0], 10);
@@ -29,7 +32,9 @@ export async function fixConstraints(
     });
     debug('Yarn constraints fixed successfully.');
   } else {
-    debug('Skipping constraints fix as Yarn version is less than 2.');
+    stderr.write(
+      'Skipping constraints fix, current Yarn version does not support this feature.',
+    );
   }
 }
 

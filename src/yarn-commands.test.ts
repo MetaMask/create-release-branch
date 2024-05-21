@@ -1,3 +1,4 @@
+import fs from 'fs';
 import { when } from 'jest-when';
 import {
   fixConstraints,
@@ -25,8 +26,9 @@ describe('yarn-commands', () => {
       when(jest.spyOn(miscUtils, 'getStdoutFromCommand'))
         .calledWith('yarn', ['--version'])
         .mockResolvedValue('2.0.0');
+      const stdout = fs.createWriteStream('/dev/null');
 
-      await fixConstraints(repositoryDirectoryPath);
+      await fixConstraints(repositoryDirectoryPath, stdout);
 
       expect(miscUtils.runCommand).toHaveBeenCalledWith(
         'yarn',
@@ -42,8 +44,9 @@ describe('yarn-commands', () => {
       when(jest.spyOn(miscUtils, 'getStdoutFromCommand'))
         .calledWith('yarn', ['--version'])
         .mockResolvedValue('1.0.0');
+      const stdout = fs.createWriteStream('/dev/null');
 
-      await fixConstraints(repositoryDirectoryPath);
+      await fixConstraints(repositoryDirectoryPath, stdout);
 
       expect(miscUtils.runCommand).toHaveBeenCalledTimes(0);
     });
