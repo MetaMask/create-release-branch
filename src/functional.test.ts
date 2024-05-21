@@ -83,6 +83,7 @@ describe('create-release-branch (functional)', () => {
             private: true,
             workspaces: ['packages/*'],
             scripts: { foo: 'bar' },
+            packageManager: 'yarn@3.2.1',
           });
           expect(
             await environment.readJsonFileWithinPackage('a', 'package.json'),
@@ -195,6 +196,7 @@ describe('create-release-branch (functional)', () => {
             private: true,
             workspaces: ['packages/*'],
             scripts: { foo: 'bar' },
+            packageManager: 'yarn@3.2.1',
           });
           expect(
             await environment.readJsonFileWithinPackage('a', 'package.json'),
@@ -691,6 +693,7 @@ describe('create-release-branch (functional)', () => {
             version: '2.0.0',
             private: true,
             workspaces: ['packages/*'],
+            packageManager: 'yarn@3.2.1',
           });
           expect(
             await environment.readJsonFileWithinPackage('a', 'package.json'),
