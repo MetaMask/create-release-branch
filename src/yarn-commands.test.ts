@@ -58,9 +58,13 @@ describe('yarn-commands', () => {
 
       await installDependencies('/path/to/repo');
 
-      expect(miscUtils.runCommand).toHaveBeenCalledWith('yarn', [], {
-        cwd: repositoryDirectoryPath,
-      });
+      expect(miscUtils.runCommand).toHaveBeenCalledWith(
+        'yarn',
+        ['install', '--no-immutable'],
+        {
+          cwd: repositoryDirectoryPath,
+        },
+      );
     });
   });
 });

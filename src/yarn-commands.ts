@@ -49,7 +49,7 @@ export async function installDependencies(
   repositoryDirectoryPath: string,
 ): Promise<void> {
   debug('Installing dependencies...');
-  await runCommand('yarn', [], {
+  await runCommand('yarn', ['install', '--no-immutable'], {
     cwd: repositoryDirectoryPath,
   });
 }
