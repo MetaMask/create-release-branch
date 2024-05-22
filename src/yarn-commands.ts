@@ -2,17 +2,17 @@ import { WriteStream } from 'fs';
 import { debug, runCommand, getStdoutFromCommand } from './misc-utils.js';
 
 /**
- * Checks the current Yarn version.
+ * Gets the current Yarn version.
  *
  * @returns A promise that resolves to the Yarn version string.
  * @throws An execa error object if the command fails in some way.
  */
-export async function getYarnVersion(): Promise<string> {
-  return await getStdoutFromCommand('yarn', ['--version']);
+function getYarnVersion(): Promise<string> {
+  return getStdoutFromCommand('yarn', ['--version']);
 }
 
 /**
- * Runs `yarn constraints --fix` to fix any constraint issues.
+ * Runs `yarn constraints --fix` to autofix all unmet constraints.
  *
  * @param repositoryDirectoryPath - The path to the repository directory.
  * @param stderr - A stream that can be used to write to standard error.
