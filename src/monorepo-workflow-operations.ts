@@ -21,7 +21,11 @@ import {
   validateReleaseSpecification,
 } from './release-specification.js';
 import { createReleaseBranch } from './workflow-operations.js';
-import { fixConstraints, updateYarnLockfile } from './yarn-commands.js';
+import {
+  deduplicateDependencies,
+  fixConstraints,
+  updateYarnLockfile,
+} from './yarn-commands.js';
 
 /**
  * For a monorepo, the process works like this:
@@ -150,6 +154,7 @@ export async function followMonorepoWorkflow({
   await removeFile(releaseSpecificationPath);
   await fixConstraints(project.directoryPath, stdout);
   await updateYarnLockfile(project.directoryPath);
+  await deduplicateDependencies(project.directoryPath);
   await commitAllChanges(
     project.directoryPath,
     `Update Release ${newReleaseVersion}`,

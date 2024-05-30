@@ -53,3 +53,19 @@ export async function updateYarnLockfile(
     cwd: repositoryDirectoryPath,
   });
 }
+
+/**
+ * Runs `yarn dedupe` to deduplicate dependencies in the project.
+ *
+ * @param repositoryDirectoryPath - The path to the repository directory.
+ * @returns The standard output of the command.
+ * @throws An execa error object if the command fails in some way.
+ */
+export async function deduplicateDependencies(
+  repositoryDirectoryPath: string,
+): Promise<void> {
+  debug('Deduplicating dependencies...');
+  await runCommand('yarn', ['dedupe'], {
+    cwd: repositoryDirectoryPath,
+  });
+}

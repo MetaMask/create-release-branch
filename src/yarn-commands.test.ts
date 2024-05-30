@@ -1,6 +1,10 @@
 import fs from 'fs';
 import { when } from 'jest-when';
-import { fixConstraints, updateYarnLockfile } from './yarn-commands.js';
+import {
+  deduplicateDependencies,
+  fixConstraints,
+  updateYarnLockfile,
+} from './yarn-commands.js';
 import * as miscUtils from './misc-utils.js';
 
 jest.mock('./misc-utils');
@@ -51,6 +55,18 @@ describe('yarn-commands', () => {
           cwd: repositoryDirectoryPath,
         },
       );
+    });
+  });
+
+  describe('deduplicateDependencies', () => {
+    it('runs "yarn dedupe" with the correct parameters', async () => {
+      const repositoryDirectoryPath = '/path/to/repo';
+
+      await deduplicateDependencies('/path/to/repo');
+
+      expect(miscUtils.runCommand).toHaveBeenCalledWith('yarn', ['dedupe'], {
+        cwd: repositoryDirectoryPath,
+      });
     });
   });
 });
