@@ -4,7 +4,6 @@ import { debug, runCommand } from './misc-utils.js';
  * Runs `yarn constraints --fix` to autofix all unmet constraints.
  *
  * @param repositoryDirectoryPath - The path to the repository directory.
- * @param stderr - A stream that can be used to write to standard error.
  * @returns The standard output of the command.
  * @throws An execa error object if the command fails in some way.
  */
