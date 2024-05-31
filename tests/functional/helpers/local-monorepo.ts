@@ -164,23 +164,6 @@ export default class LocalMonorepo<
       packageManager: 'yarn@3.2.1',
     });
 
-    const constraintsProContent = `
-% Ensure that a package has a name defined
-enforce_has_name(Pkg) :-
-    package_json(Pkg, 'name', _).
-
-% Ensure that a package has a version defined
-enforce_has_version(Pkg) :-
-    package_json(Pkg, 'version', _).
-
-% Check all packages in the workspace
-enforce_all :-
-    workspace_package(Pkg),
-    enforce_has_name(Pkg),
-    enforce_has_version(Pkg).
-    `;
-    await this.writeFile('constraints.pro', constraintsProContent);
-
     // Update manifests for root and workspace packages with `name`, `version`,
     // and (optionally) `workspaces`
     await Promise.all(
