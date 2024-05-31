@@ -463,10 +463,7 @@ describe('monorepo-workflow-operations', () => {
           );
 
           expect(fixConstraintsSpy).toHaveBeenCalledTimes(1);
-          expect(fixConstraintsSpy).toHaveBeenCalledWith(
-            projectDirectoryPath,
-            stdout,
-          );
+          expect(fixConstraintsSpy).toHaveBeenCalledWith(projectDirectoryPath);
 
           expect(updateYarnLockfileSpy).toHaveBeenCalledTimes(1);
           expect(updateYarnLockfileSpy).toHaveBeenCalledWith(

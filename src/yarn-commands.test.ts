@@ -1,4 +1,3 @@
-import fs from 'fs';
 import { when } from 'jest-when';
 import {
   deduplicateDependencies,
@@ -11,14 +10,13 @@ jest.mock('./misc-utils');
 
 describe('yarn-commands', () => {
   describe('fixConstraints', () => {
-    it('runs "yarn constraints --fix" when yarn version is compatible with constraints', async () => {
+    it('runs "yarn constraints --fix" with the correct parameters', async () => {
       const repositoryDirectoryPath = '/path/to/repo';
       when(jest.spyOn(miscUtils, 'getStdoutFromCommand'))
         .calledWith('yarn', ['--version'])
         .mockResolvedValue('2.0.0');
-      const stdout = fs.createWriteStream('/dev/null');
 
-      await fixConstraints(repositoryDirectoryPath, stdout);
+      await fixConstraints(repositoryDirectoryPath);
 
       expect(miscUtils.runCommand).toHaveBeenCalledWith(
         'yarn',
@@ -27,18 +25,6 @@ describe('yarn-commands', () => {
           cwd: repositoryDirectoryPath,
         },
       );
-    });
-
-    it('does not run "yarn constraints --fix" when yarn version is not compatible with constraints', async () => {
-      const repositoryDirectoryPath = '/path/to/repo';
-      when(jest.spyOn(miscUtils, 'getStdoutFromCommand'))
-        .calledWith('yarn', ['--version'])
-        .mockResolvedValue('1.0.0');
-      const stdout = fs.createWriteStream('/dev/null');
-
-      await fixConstraints(repositoryDirectoryPath, stdout);
-
-      expect(miscUtils.runCommand).toHaveBeenCalledTimes(0);
     });
   });
 

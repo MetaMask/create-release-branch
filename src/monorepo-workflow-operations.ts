@@ -152,7 +152,7 @@ export async function followMonorepoWorkflow({
   });
   await executeReleasePlan(project, releasePlan, stderr);
   await removeFile(releaseSpecificationPath);
-  await fixConstraints(project.directoryPath, stdout);
+  await fixConstraints(project.directoryPath);
   await updateYarnLockfile(project.directoryPath);
   await deduplicateDependencies(project.directoryPath);
   await commitAllChanges(
