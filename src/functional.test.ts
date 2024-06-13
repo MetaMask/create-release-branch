@@ -642,6 +642,263 @@ describe('create-release-branch (functional)', () => {
       );
     });
 
+    it('updates the dependency version in package "b" when package "a" version is bumped', async () => {
+      await withMonorepoProjectEnvironment(
+        {
+          packages: {
+            $root$: {
+              name: '@scope/monorepo',
+              version: '1.0.0',
+              directoryPath: '.',
+            },
+            a: {
+              name: '@scope/a',
+              version: '1.0.0',
+              directoryPath: 'packages/a',
+            },
+            b: {
+              name: '@scope/b',
+              version: '2.0.0',
+              directoryPath: 'packages/b',
+            },
+          },
+          workspaces: {
+            '.': ['packages/*'],
+          },
+        },
+        async (environment) => {
+          await environment.updateJsonFileWithinPackage('b', 'package.json', {
+            dependencies: {
+              '@scope/a': '1.0.0',
+            },
+          });
+          const constraintsProContent = `
+          % All packages must have a name and version defined.
+          \\+ gen_enforced_field(_, 'name', null).
+          \\+ gen_enforced_field(_, 'version', null).
+
+          % All version ranges used to reference one workspace package in another workspace package's \`dependencies\` or \`devDependencies\` must match the current version of that package.
+          gen_enforced_dependency(Pkg, DependencyIdent, CorrectDependencyRange, DependencyType) :-
+            DependencyType \\= 'peerDependencies',
+            workspace_has_dependency(Pkg, DependencyIdent, _, DependencyType),
+            workspace_ident(DepPkg, DependencyIdent),
+            workspace_version(DepPkg, DependencyVersion),
+            atomic_list_concat(['^', DependencyVersion], CorrectDependencyRange),
+            Pkg \\= DepPkg. % Ensure we do not add self-dependency
+
+          % Entry point to check all constraints.
+          workspace_package(Pkg) :-
+            package_json(Pkg, _, _).
+
+          enforce_all :-
+            workspace_package(Pkg),
+            enforce_has_name(Pkg),
+            enforce_has_version(Pkg),
+            (package_json(Pkg, 'dependencies', Deps) -> enforce_dependencies(Pkg, Deps) ; true).
+
+          enforce_has_name(Pkg) :-
+            package_json(Pkg, 'name', _).
+
+          enforce_has_version(Pkg) :-
+            package_json(Pkg, 'version', _).
+
+          enforce_dependencies(_, []).
+          enforce_dependencies(Pkg, [DepPkg-DepVersion | Rest]) :-
+            workspace_package(DepPkg),
+            package_json(DepPkg, 'version', DepVersion),
+            enforce_dependency_version(Pkg, DepPkg),
+            enforce_dependencies(Pkg, Rest).
+
+          enforce_dependency_version(Pkg, DepPkg) :-
+            package_json(Pkg, 'dependencies', Deps),
+            package_json(DepPkg, 'version', DepVersion),
+            member(DepPkg-DepVersion, Deps).
+
+          update_dependency_version(Pkg, DepPkg) :-
+            package_json(Pkg, 'dependencies', Deps),
+            package_json(DepPkg, 'version', DepVersion),
+            \\+ member(DepPkg-DepVersion, Deps),
+            Pkg \\= DepPkg, % Ensure we do not add self-dependency
+            set_package_json(Pkg, 'dependencies', DepPkg, DepVersion).
+          `;
+
+          await environment.writeFile('constraints.pro', constraintsProContent);
+          await environment.runTool({
+            releaseSpecification: {
+              packages: {
+                a: 'major',
+                b: 'intentionally-skip',
+              },
+            },
+          });
+
+          expect(
+            await environment.readJsonFileWithinPackage('a', 'package.json'),
+          ).toStrictEqual({
+            name: '@scope/a',
+            version: '2.0.0',
+          });
+          expect(
+            await environment.readJsonFileWithinPackage('b', 'package.json'),
+          ).toStrictEqual({
+            name: '@scope/b',
+            version: '2.0.0',
+            dependencies: { '@scope/a': '^2.0.0' },
+          });
+        },
+      );
+    });
+
+    it('updates the yarn lock file', async () => {
+      await withMonorepoProjectEnvironment(
+        {
+          packages: {
+            $root$: {
+              name: '@scope/monorepo',
+              version: '1.0.0',
+              directoryPath: '.',
+            },
+            a: {
+              name: '@scope/a',
+              version: '1.0.0',
+              directoryPath: 'packages/a',
+            },
+            b: {
+              name: '@scope/b',
+              version: '2.0.0',
+              directoryPath: 'packages/b',
+            },
+          },
+          workspaces: {
+            '.': ['packages/*'],
+          },
+        },
+        async (environment) => {
+          await environment.updateJsonFileWithinPackage('b', 'package.json', {
+            dependencies: {
+              '@scope/a': '1.0.0',
+            },
+          });
+          const constraintsProContent = `
+          % All packages must have a name and version defined.
+          \\+ gen_enforced_field(_, 'name', null).
+          \\+ gen_enforced_field(_, 'version', null).
+
+          % All version ranges used to reference one workspace package in another workspace package's \`dependencies\` or \`devDependencies\` must match the current version of that package.
+          gen_enforced_dependency(Pkg, DependencyIdent, CorrectDependencyRange, DependencyType) :-
+            DependencyType \\= 'peerDependencies',
+            workspace_has_dependency(Pkg, DependencyIdent, _, DependencyType),
+            workspace_ident(DepPkg, DependencyIdent),
+            workspace_version(DepPkg, DependencyVersion),
+            atomic_list_concat(['^', DependencyVersion], CorrectDependencyRange),
+            Pkg \\= DepPkg. % Ensure we do not add self-dependency
+
+          % Entry point to check all constraints.
+          workspace_package(Pkg) :-
+            package_json(Pkg, _, _).
+
+          enforce_all :-
+            workspace_package(Pkg),
+            enforce_has_name(Pkg),
+            enforce_has_version(Pkg),
+            (package_json(Pkg, 'dependencies', Deps) -> enforce_dependencies(Pkg, Deps) ; true).
+
+          enforce_has_name(Pkg) :-
+            package_json(Pkg, 'name', _).
+
+          enforce_has_version(Pkg) :-
+            package_json(Pkg, 'version', _).
+
+          enforce_dependencies(_, []).
+          enforce_dependencies(Pkg, [DepPkg-DepVersion | Rest]) :-
+            workspace_package(DepPkg),
+            package_json(DepPkg, 'version', DepVersion),
+            enforce_dependency_version(Pkg, DepPkg),
+            enforce_dependencies(Pkg, Rest).
+
+          enforce_dependency_version(Pkg, DepPkg) :-
+            package_json(Pkg, 'dependencies', Deps),
+            package_json(DepPkg, 'version', DepVersion),
+            member(DepPkg-DepVersion, Deps).
+
+          update_dependency_version(Pkg, DepPkg) :-
+            package_json(Pkg, 'dependencies', Deps),
+            package_json(DepPkg, 'version', DepVersion),
+            \\+ member(DepPkg-DepVersion, Deps),
+            Pkg \\= DepPkg, % Ensure we do not add self-dependency
+            set_package_json(Pkg, 'dependencies', DepPkg, DepVersion).
+          `;
+          await environment.writeFile('constraints.pro', constraintsProContent);
+          const outdatedLockfile = `
+          # This file is generated by running "yarn install" inside your project.
+          # Manual changes might be lost - proceed with caution!
+
+          __metadata:
+            version: 6
+
+          "@scope/a@^1.0.0, @scope/a@workspace:packages/a":
+            version: 0.0.0-use.local
+            resolution: "@scope/a@workspace:packages/a"
+            languageName: unknown
+            linkType: soft
+
+          "@scope/b@workspace:packages/b":
+            version: 0.0.0-use.local
+            resolution: "@scope/b@workspace:packages/b"
+            dependencies:
+              "@scope/a": ^1.0.0
+            languageName: unknown
+            linkType: soft
+
+          "@scope/monorepo@workspace:.":
+            version: 0.0.0-use.local
+            resolution: "@scope/monorepo@workspace:."
+            languageName: unknown
+            linkType: soft`;
+          await environment.writeFile('yarn.lock', outdatedLockfile);
+          await environment.runTool({
+            releaseSpecification: {
+              packages: {
+                a: 'major',
+                b: 'intentionally-skip',
+              },
+            },
+          });
+
+          const updatedLockfile = `# This file is generated by running "yarn install" inside your project.
+# Manual changes might be lost - proceed with caution!
+
+__metadata:
+  version: 6
+
+"@scope/a@^2.0.0, @scope/a@workspace:packages/a":
+  version: 0.0.0-use.local
+  resolution: "@scope/a@workspace:packages/a"
+  languageName: unknown
+  linkType: soft
+
+"@scope/b@workspace:packages/b":
+  version: 0.0.0-use.local
+  resolution: "@scope/b@workspace:packages/b"
+  dependencies:
+    "@scope/a": ^2.0.0
+  languageName: unknown
+  linkType: soft
+
+"@scope/monorepo@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "@scope/monorepo@workspace:."
+  languageName: unknown
+  linkType: soft
+`;
+
+          expect(await environment.readFile('yarn.lock')).toStrictEqual(
+            updatedLockfile,
+          );
+        },
+      );
+    });
+
     it('does not update the versions of any packages that have been tagged with intentionally-skip', async () => {
       await withMonorepoProjectEnvironment(
         {
