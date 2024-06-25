@@ -159,7 +159,10 @@ export default class LocalMonorepo<
   protected async afterCreate() {
     await super.afterCreate();
 
-    await this.writeJsonFile('package.json', { private: true });
+    await this.writeJsonFile('package.json', {
+      private: true,
+      packageManager: 'yarn@3.2.1',
+    });
 
     // Update manifests for root and workspace packages with `name`, `version`,
     // and (optionally) `workspaces`
@@ -179,6 +182,8 @@ export default class LocalMonorepo<
         );
       }),
     );
+
+    await this.runCommand('yarn', ['plugin', 'import', 'constraints']);
   }
 
   /**

@@ -21,6 +21,11 @@ import {
   validateReleaseSpecification,
 } from './release-specification.js';
 import { createReleaseBranch } from './workflow-operations.js';
+import {
+  deduplicateDependencies,
+  fixConstraints,
+  updateYarnLockfile,
+} from './yarn-commands.js';
 
 /**
  * For a monorepo, the process works like this:
@@ -147,6 +152,9 @@ export async function followMonorepoWorkflow({
   });
   await executeReleasePlan(project, releasePlan, stderr);
   await removeFile(releaseSpecificationPath);
+  await fixConstraints(project.directoryPath);
+  await updateYarnLockfile(project.directoryPath);
+  await deduplicateDependencies(project.directoryPath);
   await commitAllChanges(
     project.directoryPath,
     `Update Release ${newReleaseVersion}`,
