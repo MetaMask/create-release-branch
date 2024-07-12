@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ## [3.0.1]
+### Changed
+- Bump `@metamask/utils` to `^9.0.0` ([#150](https://github.com/MetaMask/create-release-branch/pull/150))
+
 ### Fixed
 - Correct Yarn constraint violations and update Yarn lockfile at the end of the release process ([#145](https://github.com/MetaMask/create-release-branch/pull/145))
   - This was previously a required step after running `create-release-branch`.
