@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.1]
+### Changed
+- Bump `@metamask/utils` to `^9.0.0` ([#150](https://github.com/MetaMask/create-release-branch/pull/150))
+
+### Fixed
+- Correct Yarn constraint violations and update Yarn lockfile at the end of the release process ([#145](https://github.com/MetaMask/create-release-branch/pull/145))
+  - This was previously a required step after running `create-release-branch`.
+
+### Security
+- Enable MetaMask security code scanner ([#133](https://github.com/MetaMask/create-release-branch/pull/133))
+
 ## [3.0.0]
 ### Changed
 - **BREAKING:** Format changelogs using Prettier ([#100](https://github.com/MetaMask/create-release-branch/pull/100))
@@ -48,7 +59,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - In this first release, this tool only supports monorepos with an independent versioning scheme. We will add support for other kinds of projects in future releases.
   - You can learn more on how to use this tool by reading the [documentation](docs/).
 
-[Unreleased]: https://github.com/MetaMask/create-release-branch/compare/v3.0.0...HEAD
+[Unreleased]: https://github.com/MetaMask/create-release-branch/compare/v3.0.1...HEAD
+[3.0.1]: https://github.com/MetaMask/create-release-branch/compare/v3.0.0...v3.0.1
 [3.0.0]: https://github.com/MetaMask/create-release-branch/compare/v2.0.1...v3.0.0
 [2.0.1]: https://github.com/MetaMask/create-release-branch/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/MetaMask/create-release-branch/compare/v1.1.0...v2.0.0
