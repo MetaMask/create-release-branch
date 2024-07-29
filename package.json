@@ -27,7 +27,7 @@
   "dependencies": {
     "@metamask/action-utils": "^1.0.0",
     "@metamask/auto-changelog": "~3.3.0",
-    "@metamask/utils": "^9.0.0",
+    "@metamask/utils": "github:MetaMask/utils#head=apply-superstruct-v2.0.3-1-expose-build",
     "debug": "^4.3.4",
     "execa": "^8.0.1",
     "pony-cause": "^2.1.9",

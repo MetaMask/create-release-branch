@@ -2082,7 +2082,7 @@ __metadata:
     "@metamask/eslint-config-jest": ^10.0.0
     "@metamask/eslint-config-nodejs": ^10.0.0
     "@metamask/eslint-config-typescript": ^10.0.0
-    "@metamask/utils": ^9.0.0
+    "@metamask/utils": "github:MetaMask/utils#head=apply-superstruct-v2.0.3-1-expose-build"
     "@types/debug": ^4.1.7
     "@types/jest": ^29.5.10
     "@types/jest-when": ^3.5.2
@@ -2182,9 +2182,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/utils@npm:^9.0.0":
-  version: 9.0.0
-  resolution: "@metamask/utils@npm:9.0.0"
+"@metamask/utils@github:MetaMask/utils#head=apply-superstruct-v2.0.3-1-expose-build":
+  version: 9.1.0
+  resolution: "@metamask/utils@https://github.com/MetaMask/utils.git#commit=91c274a9c738f12671a36400a0e5b7e7bb92f2f6"
   dependencies:
     "@ethereumjs/tx": ^4.2.0
     "@metamask/superstruct": ^3.1.0
@@ -2194,8 +2194,9 @@ __metadata:
     debug: ^4.3.4
     pony-cause: ^2.1.10
     semver: ^7.5.4
+    superstruct: 2.0.3-1
     uuid: ^9.0.1
-  checksum: 5dcb9d47c4768c33d451cc74c83207726c68b1340be1d091ca44105564f0ba0703026d357de7996de4459ac41cd420a0eb1f06db32f5ebbeeee581393f45fd44
+  checksum: 3e941369634c0efd94ca907106cc77e08174f9711b03cbc906e6f7ad359d9e01292f1c03ca1a9091ad21a9c20bfffc10561abf24a3a00f2a09d6fecd2aada433
   languageName: node
   linkType: hard
 
@@ -7348,6 +7349,13 @@ __metadata:
   version: 3.1.1
   resolution: "strip-json-comments@npm:3.1.1"
   checksum: 492f73e27268f9b1c122733f28ecb0e7e8d8a531a6662efbd08e22cccb3f9475e90a1b82cab06a392f6afae6d2de636f977e231296400d0ec5304ba70f166443
+  languageName: node
+  linkType: hard
+
+"superstruct@npm:2.0.3-1":
+  version: 2.0.3-1
+  resolution: "superstruct@npm:2.0.3-1"
+  checksum: 474af27b2b69f1556f085b07061d09ba2ff065fccb4a1b1f934669d0dba1c5f9c797fc379d9051a9bc345f1aadcf466534e3e0298f4b0020a5328f2a067c8df6
   languageName: node
   linkType: hard
 
