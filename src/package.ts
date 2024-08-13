@@ -305,16 +305,19 @@ export async function formatChangelog(changelog: string) {
  * @param args.project - The project.
  * @param args.package - A particular package in the project.
  * @param args.stderr - A stream that can be used to write to standard error.
+ * @param args.fetchRemote - Whether to synchronize local tags with remote.
  * @returns The result of writing to the changelog.
  */
 export async function updatePackageChangelog({
   project: { repositoryUrl },
   package: pkg,
   stderr,
+  fetchRemote,
 }: {
   project: Pick<Project, 'directoryPath' | 'repositoryUrl'>;
   package: Package;
   stderr: Pick<WriteStream, 'write'>;
+  fetchRemote?: boolean | undefined;
 }): Promise<void> {
   let changelogContent;
 
@@ -341,6 +344,7 @@ export async function updatePackageChangelog({
     repoUrl: repositoryUrl,
     tagPrefixes: [`${pkg.validatedManifest.name}@`, 'v'],
     formatter: formatChangelog,
+    fetchRemote,
   });
 
   if (newChangelogContent) {

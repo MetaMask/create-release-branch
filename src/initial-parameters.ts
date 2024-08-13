@@ -21,6 +21,7 @@ type InitialParameters = {
   reset: boolean;
   releaseType: ReleaseType;
   defaultBranch: string;
+  fetchRemote: boolean;
 };
 
 /**
@@ -64,5 +65,6 @@ export async function determineInitialParameters({
     reset: args.reset,
     defaultBranch: args.defaultBranch,
     releaseType: args.backport ? 'backport' : 'ordinary',
+    fetchRemote: args.fetchRemote,
   };
 }
