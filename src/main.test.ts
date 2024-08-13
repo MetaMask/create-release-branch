@@ -20,6 +20,7 @@ describe('main', () => {
         reset: true,
         defaultBranch: 'main',
         releaseType: 'backport',
+        fetchRemote: true,
       });
     const followMonorepoWorkflowSpy = jest
       .spyOn(monorepoWorkflowOperations, 'followMonorepoWorkflow')
@@ -40,6 +41,7 @@ describe('main', () => {
       defaultBranch: 'main',
       stdout,
       stderr,
+      fetchRemote: true,
     });
   });
 
@@ -55,6 +57,7 @@ describe('main', () => {
         reset: false,
         defaultBranch: 'main',
         releaseType: 'backport',
+        fetchRemote: true,
       });
     const followMonorepoWorkflowSpy = jest
       .spyOn(monorepoWorkflowOperations, 'followMonorepoWorkflow')

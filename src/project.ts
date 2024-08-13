@@ -136,17 +136,20 @@ export async function readProject(
  * @param args - The arguments.
  * @param args.project - The project.
  * @param args.stderr - A stream that can be used to write to standard error.
+ * @param args.fetchRemote - Whether to synchronize local tags with remote.
  * @returns The result of writing to the changelog.
  */
 export async function updateChangelogsForChangedPackages({
   project,
   stderr,
+  fetchRemote,
 }: {
   project: Pick<
     Project,
     'directoryPath' | 'repositoryUrl' | 'workspacePackages'
   >;
   stderr: Pick<WriteStream, 'write'>;
+  fetchRemote?: boolean | undefined;
 }): Promise<void> {
   await Promise.all(
     Object.values(project.workspacePackages)
@@ -158,6 +161,7 @@ export async function updateChangelogsForChangedPackages({
           project,
           package: pkg,
           stderr,
+          fetchRemote,
         }),
       ),
   );
