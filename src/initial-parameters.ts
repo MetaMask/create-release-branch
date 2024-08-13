@@ -45,7 +45,10 @@ export async function determineInitialParameters({
   const args = await readCommandLineArguments(argv);
 
   const projectDirectoryPath = path.resolve(cwd, args.projectDirectory);
-  const project = await readProject(projectDirectoryPath, { stderr });
+  const project = await readProject(projectDirectoryPath, {
+    stderr,
+    fetchRemote: args.fetchRemote,
+  });
   const tempDirectoryPath =
     args.tempDirectory === undefined
       ? path.join(
