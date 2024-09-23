@@ -7,9 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ## [4.0.0]
-### Uncategorized
-- BREAKING: Bump `@metamask/auto-changelog` to `^4.0.0`, and bump related dependencies ([#156](https://github.com/MetaMask/create-release-branch/pull/156))
-- chore(devdeps): @lavamoat/allow-scripts@^2.3.1->^3.1.0 ([#146](https://github.com/MetaMask/create-release-branch/pull/146))
+### Changed
+- **BREAKING:** Bump minimum Node.js version to `^18.18` ([#156](https://github.com/MetaMask/create-release-branch/pull/156))
+- **BREAKING:** Bump `@metamask/auto-changelog` to `^4.0.0` ([#156](https://github.com/MetaMask/create-release-branch/pull/156))
+  - This requires `prettier@>=3.0.0`.
 
 ## [3.0.1]
 ### Changed
