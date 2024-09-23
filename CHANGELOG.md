@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.0.0]
+### Uncategorized
+- BREAKING: Bump `@metamask/auto-changelog` to `^4.0.0`, and bump related dependencies ([#156](https://github.com/MetaMask/create-release-branch/pull/156))
+- chore(devdeps): @lavamoat/allow-scripts@^2.3.1->^3.1.0 ([#146](https://github.com/MetaMask/create-release-branch/pull/146))
+
 ## [3.0.1]
 ### Changed
 - Bump `@metamask/utils` to `^9.0.0` ([#150](https://github.com/MetaMask/create-release-branch/pull/150))
@@ -59,7 +64,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - In this first release, this tool only supports monorepos with an independent versioning scheme. We will add support for other kinds of projects in future releases.
   - You can learn more on how to use this tool by reading the [documentation](docs/).
 
-[Unreleased]: https://github.com/MetaMask/create-release-branch/compare/v3.0.1...HEAD
+[Unreleased]: https://github.com/MetaMask/create-release-branch/compare/v4.0.0...HEAD
+[4.0.0]: https://github.com/MetaMask/create-release-branch/compare/v3.0.1...v4.0.0
 [3.0.1]: https://github.com/MetaMask/create-release-branch/compare/v3.0.0...v3.0.1
 [3.0.0]: https://github.com/MetaMask/create-release-branch/compare/v2.0.1...v3.0.0
 [2.0.1]: https://github.com/MetaMask/create-release-branch/compare/v2.0.0...v2.0.1
