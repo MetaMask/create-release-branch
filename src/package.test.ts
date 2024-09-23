@@ -4,7 +4,7 @@ import { when } from 'jest-when';
 import * as autoChangelog from '@metamask/auto-changelog';
 import { SemVer } from 'semver';
 import { MockWritable } from 'stdio-mock';
-import { buildChangelog, withSandbox } from '../tests/helpers';
+import { buildChangelog, withSandbox } from '../tests/helpers.js';
 import {
   buildMockPackage,
   buildMockProject,
@@ -682,7 +682,7 @@ describe('package', () => {
   });
 
   describe('formatChangelog', () => {
-    it('formats a changelog', () => {
+    it('formats a changelog', async () => {
       const unformattedChangelog = `#  Changelog
 ##     1.0.0
 
@@ -692,7 +692,8 @@ describe('package', () => {
 - Some other change
 `;
 
-      expect(formatChangelog(unformattedChangelog)).toMatchInlineSnapshot(`
+      expect(await formatChangelog(unformattedChangelog))
+        .toMatchInlineSnapshot(`
         "# Changelog
 
         ## 1.0.0

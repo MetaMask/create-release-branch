@@ -113,9 +113,12 @@ export async function readProject(
         });
       }),
     )
-  ).reduce((obj, pkg) => {
-    return { ...obj, [pkg.validatedManifest.name]: pkg };
-  }, {} as Record<string, Package>);
+  ).reduce(
+    (obj, pkg) => {
+      return { ...obj, [pkg.validatedManifest.name]: pkg };
+    },
+    {} as Record<string, Package>,
+  );
 
   const isMonorepo = Object.keys(workspacePackages).length > 0;
 
