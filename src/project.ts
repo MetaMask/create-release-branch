@@ -74,6 +74,7 @@ function examineReleaseVersion(packageVersion: SemVer): ReleaseVersion {
  * @param projectDirectoryPath - The path to the project.
  * @param args - Additional arguments.
  * @param args.stderr - A stream that can be used to write to standard error.
+ * @param args.fetchRemote - Whether to synchronize local tags with remote.
  * @returns An object that represents information about the project.
  * @throws if the project does not contain a root `package.json` (polyrepo and
  * monorepo) or if any of the workspaces specified in the root `package.json` do
@@ -81,10 +82,10 @@ function examineReleaseVersion(packageVersion: SemVer): ReleaseVersion {
  */
 export async function readProject(
   projectDirectoryPath: string,
-  { stderr }: { stderr: WriteStreamLike },
+  { fetchRemote, stderr }: { fetchRemote?: boolean; stderr: WriteStreamLike },
 ): Promise<Project> {
   const repositoryUrl = await getRepositoryHttpsUrl(projectDirectoryPath);
-  const tagNames = await getTagNames(projectDirectoryPath);
+  const tagNames = await getTagNames(projectDirectoryPath, fetchRemote);
   const rootPackage = await readMonorepoRootPackage({
     packageDirectoryPath: projectDirectoryPath,
     projectDirectoryPath,
@@ -138,17 +139,20 @@ export async function readProject(
  * @param args - The arguments.
  * @param args.project - The project.
  * @param args.stderr - A stream that can be used to write to standard error.
+ * @param args.fetchRemote - Whether to synchronize local tags with remote.
  * @returns The result of writing to the changelog.
  */
 export async function updateChangelogsForChangedPackages({
   project,
   stderr,
+  fetchRemote,
 }: {
   project: Pick<
     Project,
     'directoryPath' | 'repositoryUrl' | 'workspacePackages'
   >;
   stderr: Pick<WriteStream, 'write'>;
+  fetchRemote?: boolean | undefined;
 }): Promise<void> {
   await Promise.all(
     Object.values(project.workspacePackages)
@@ -160,6 +164,7 @@ export async function updateChangelogsForChangedPackages({
           project,
           package: pkg,
           stderr,
+          fetchRemote,
         }),
       ),
   );

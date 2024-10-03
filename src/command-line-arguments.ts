@@ -7,6 +7,7 @@ export type CommandLineArguments = {
   reset: boolean;
   backport: boolean;
   defaultBranch: string;
+  fetchRemote: boolean;
 };
 
 /**
@@ -50,6 +51,12 @@ export async function readCommandLineArguments(
       describe: 'The name of the default branch in the repository.',
       default: 'main',
       type: 'string',
+    })
+    .option('fetch-remote', {
+      alias: 'f',
+      describe: 'Syncronizes local git references with remote',
+      default: true,
+      type: 'boolean',
     })
     .help()
     .strict()

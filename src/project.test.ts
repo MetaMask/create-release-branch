@@ -63,7 +63,7 @@ describe('project', () => {
           .calledWith(projectDirectoryPath)
           .mockResolvedValue(projectRepositoryUrl);
         when(jest.spyOn(repoModule, 'getTagNames'))
-          .calledWith(projectDirectoryPath)
+          .calledWith(projectDirectoryPath, true)
           .mockResolvedValue(projectTagNames);
         when(jest.spyOn(packageModule, 'readMonorepoRootPackage'))
           .calledWith({
@@ -111,7 +111,10 @@ describe('project', () => {
         );
 
         expect(
-          await readProject(projectDirectoryPath, { stderr }),
+          await readProject(projectDirectoryPath, {
+            stderr,
+            fetchRemote: true,
+          }),
         ).toStrictEqual({
           directoryPath: projectDirectoryPath,
           repositoryUrl: projectRepositoryUrl,
