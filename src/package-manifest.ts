@@ -4,6 +4,7 @@ import {
   ManifestDependencyFieldNames as PackageManifestDependenciesFieldNames,
 } from '@metamask/action-utils';
 import { isPlainObject } from '@metamask/utils';
+import validateNPMPackageName from 'validate-npm-package-name';
 import { readJsonObjectFile } from './fs.js';
 import { isTruthyString } from './misc-utils.js';
 import { semver, SemVer } from './semver.js';
@@ -144,8 +145,10 @@ function isValidPackageManifestVersionField(
 
 /**
  * Type guard to ensure that the provided version value is a valid dependency version
- * specifier for a package manifest. This function validates both semantic versioning
- * ranges and the special 'workspace:^' notation.
+ * specifier for a package manifest. This function validates:
+ * semantic versioning ranges
+ * 'workspace:^' notation
+ * 'npm:{packageName}:{semverRange}' redirections.
  *
  * @param version - The value to check.
  * @returns `true` if the version is a valid string that either
@@ -155,9 +158,34 @@ function isValidPackageManifestVersionField(
 function isValidPackageManifestDependencyValue(
   version: unknown,
 ): version is string {
-  return (
-    isValidPackageManifestVersionField(version) || version === 'workspace:^'
-  );
+  if (typeof version !== 'string') {
+    return false;
+  }
+
+  if (
+    isValidPackageManifestVersionField(version) ||
+    version === 'workspace:^'
+  ) {
+    return true;
+  }
+
+  const redirectedDependencyRegexp = /^npm:(.*)@(.*?)$/u;
+
+  try {
+    const redirectedDependencyMatch = redirectedDependencyRegexp.exec(version);
+
+    if (!redirectedDependencyMatch || redirectedDependencyMatch.length < 3) {
+      return false;
+    }
+
+    const [, redirectedName, redirectedVersion] = redirectedDependencyMatch;
+    return (
+      validateNPMPackageName(redirectedName)?.validForOldPackages &&
+      isValidPackageManifestVersionField(redirectedVersion)
+    );
+  } catch (e) {
+    return false;
+  }
 }
 
 /**

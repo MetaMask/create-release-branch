@@ -67,6 +67,7 @@ describe('package-manifest', () => {
             b: '^2.0.0',
             c: '~4.3.0',
             d: 'workspace:^',
+            e: 'npm:a@^2.0.0',
           },
         };
         const validated = {
@@ -79,6 +80,7 @@ describe('package-manifest', () => {
             b: '^2.0.0',
             c: '~4.3.0',
             d: 'workspace:^',
+            e: 'npm:a@^2.0.0',
           },
           peerDependencies: {},
         };

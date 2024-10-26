@@ -2090,6 +2090,7 @@ __metadata:
     "@types/node": ^17.0.23
     "@types/prettier": ^2.7.3
     "@types/rimraf": ^4.0.5
+    "@types/validate-npm-package-name": ^4.0.2
     "@types/which": ^3.0.0
     "@types/yargs": ^17.0.10
     "@typescript-eslint/eslint-plugin": ^5.62.0
@@ -2117,6 +2118,7 @@ __metadata:
     stdio-mock: ^1.2.0
     tsx: ^4.6.1
     typescript: ~5.1.6
+    validate-npm-package-name: ^5.0.0
     which: ^3.0.0
     yaml: ^2.2.2
     yargs: ^17.7.1
@@ -2603,6 +2605,13 @@ __metadata:
   version: 2.0.1
   resolution: "@types/stack-utils@npm:2.0.1"
   checksum: 205fdbe3326b7046d7eaf5e494d8084f2659086a266f3f9cf00bccc549c8e36e407f88168ad4383c8b07099957ad669f75f2532ed4bc70be2b037330f7bae019
+  languageName: node
+  linkType: hard
+
+"@types/validate-npm-package-name@npm:^4.0.2":
+  version: 4.0.2
+  resolution: "@types/validate-npm-package-name@npm:4.0.2"
+  checksum: 3f35a3cc8ddd919b456843f36d55a4f1df5f03d5d9b6494b4d8f5f3b24e3f24a11c922772d9970a67f1249214da18c157776e9c6d2e72227799459849dfd9c76
   languageName: node
   linkType: hard
 
