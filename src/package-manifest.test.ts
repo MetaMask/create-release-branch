@@ -67,7 +67,7 @@ describe('package-manifest', () => {
             b: '^2.0.0',
             c: '~4.3.0',
             d: 'workspace:^',
-            e: 'npm:a@^2.0.0',
+            e: 'npm:@a/abc@^2.0.0',
           },
         };
         const validated = {
@@ -80,7 +80,7 @@ describe('package-manifest', () => {
             b: '^2.0.0',
             c: '~4.3.0',
             d: 'workspace:^',
-            e: 'npm:a@^2.0.0',
+            e: 'npm:@a/abc@^2.0.0',
           },
           peerDependencies: {},
         };
@@ -317,7 +317,9 @@ describe('package-manifest', () => {
             name: 'foo',
             version: '1.0.0',
             peerDependencies: {
-              a: 12345,
+              a: 'npm:@foo',
+              b: 'npm:foo@',
+              c: '12345',
             },
           }),
         );

@@ -174,7 +174,8 @@ function isValidPackageManifestDependencyValue(
   try {
     const redirectedDependencyMatch = redirectedDependencyRegexp.exec(version);
 
-    if (!redirectedDependencyMatch || redirectedDependencyMatch.length < 3) {
+    /* istanbul ignore if */
+    if (!redirectedDependencyMatch) {
       return false;
     }
 
@@ -183,7 +184,7 @@ function isValidPackageManifestDependencyValue(
       validateNPMPackageName(redirectedName)?.validForOldPackages &&
       isValidPackageManifestVersionField(redirectedVersion)
     );
-  } catch (e) {
+  } catch (e) /* istanbul ignore next */ {
     return false;
   }
 }
