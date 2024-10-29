@@ -7,8 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ## [3.1.0]
-### Uncategorized
-- [3.x] feat: allow `npm:name@version` dependency redirections in manifest (#158) ([#158](https://github.com/MetaMask/create-release-branch/pull/158))
+### Changed
+- Allow `npm:name@version` dependency redirections in manifest ([#158](https://github.com/MetaMask/create-release-branch/pull/158)) ([#159](https://github.com/MetaMask/create-release-branch/pull/159))
 
 ## [3.0.1]
 ### Changed
