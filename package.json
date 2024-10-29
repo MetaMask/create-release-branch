@@ -32,6 +32,7 @@
     "execa": "^8.0.1",
     "pony-cause": "^2.1.9",
     "semver": "^7.5.4",
+    "validate-npm-package-name": "^5.0.0",
     "which": "^3.0.0",
     "yaml": "^2.2.2",
     "yargs": "^17.7.1"
@@ -52,6 +53,7 @@
     "@types/node": "^17.0.23",
     "@types/prettier": "^2.7.3",
     "@types/rimraf": "^4.0.5",
+    "@types/validate-npm-package-name": "^4.0.2",
     "@types/which": "^3.0.0",
     "@types/yargs": "^17.0.10",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
