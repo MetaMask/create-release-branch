@@ -21,6 +21,7 @@ type InitialParameters = {
   reset: boolean;
   releaseType: ReleaseType;
   defaultBranch: string;
+  fetchRemote: boolean;
 };
 
 /**
@@ -45,7 +46,10 @@ export async function determineInitialParameters({
   const args = await readCommandLineArguments(argv);
 
   const projectDirectoryPath = path.resolve(cwd, args.projectDirectory);
-  const project = await readProject(projectDirectoryPath, { stderr });
+  const project = await readProject(projectDirectoryPath, {
+    stderr,
+    fetchRemote: args.fetchRemote,
+  });
   const tempDirectoryPath =
     args.tempDirectory === undefined
       ? path.join(
@@ -61,5 +65,6 @@ export async function determineInitialParameters({
     reset: args.reset,
     defaultBranch: args.defaultBranch,
     releaseType: args.backport ? 'backport' : 'ordinary',
+    fetchRemote: args.fetchRemote,
   };
 }

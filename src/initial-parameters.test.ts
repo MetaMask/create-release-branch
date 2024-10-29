@@ -36,12 +36,13 @@ describe('initial-parameters', () => {
           reset: true,
           backport: false,
           defaultBranch: 'main',
+          fetchRemote: true,
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
         .mockReturnValue({ EDITOR: undefined });
       when(jest.spyOn(projectModule, 'readProject'))
-        .calledWith('/path/to/project', { stderr })
+        .calledWith('/path/to/project', { stderr, fetchRemote: true })
         .mockResolvedValue(project);
 
       const initialParameters = await determineInitialParameters({
@@ -56,6 +57,7 @@ describe('initial-parameters', () => {
         reset: true,
         releaseType: 'ordinary',
         defaultBranch: 'main',
+        fetchRemote: true,
       });
     });
 
@@ -72,6 +74,7 @@ describe('initial-parameters', () => {
           reset: true,
           backport: false,
           defaultBranch: 'main',
+          fetchRemote: true,
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
@@ -88,6 +91,7 @@ describe('initial-parameters', () => {
 
       expect(readProjectSpy).toHaveBeenCalledWith('/path/to/cwd/project', {
         stderr,
+        fetchRemote: true,
       });
     });
 
@@ -102,12 +106,13 @@ describe('initial-parameters', () => {
           reset: true,
           backport: false,
           defaultBranch: 'main',
+          fetchRemote: true,
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
         .mockReturnValue({ EDITOR: undefined });
       when(jest.spyOn(projectModule, 'readProject'))
-        .calledWith('/path/to/project', { stderr })
+        .calledWith('/path/to/project', { stderr, fetchRemote: true })
         .mockResolvedValue(project);
 
       const initialParameters = await determineInitialParameters({
@@ -132,12 +137,13 @@ describe('initial-parameters', () => {
           reset: true,
           backport: false,
           defaultBranch: 'main',
+          fetchRemote: true,
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
         .mockReturnValue({ EDITOR: undefined });
       when(jest.spyOn(projectModule, 'readProject'))
-        .calledWith('/path/to/project', { stderr })
+        .calledWith('/path/to/project', { stderr, fetchRemote: true })
         .mockResolvedValue(project);
 
       const initialParameters = await determineInitialParameters({
@@ -162,12 +168,13 @@ describe('initial-parameters', () => {
           reset: true,
           backport: false,
           defaultBranch: 'main',
+          fetchRemote: true,
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
         .mockReturnValue({ EDITOR: undefined });
       when(jest.spyOn(projectModule, 'readProject'))
-        .calledWith('/path/to/project', { stderr })
+        .calledWith('/path/to/project', { stderr, fetchRemote: true })
         .mockResolvedValue(project);
 
       const initialParameters = await determineInitialParameters({
@@ -190,12 +197,13 @@ describe('initial-parameters', () => {
           reset: false,
           backport: false,
           defaultBranch: 'main',
+          fetchRemote: true,
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
         .mockReturnValue({ EDITOR: undefined });
       when(jest.spyOn(projectModule, 'readProject'))
-        .calledWith('/path/to/project', { stderr })
+        .calledWith('/path/to/project', { stderr, fetchRemote: true })
         .mockResolvedValue(project);
 
       const initialParameters = await determineInitialParameters({
@@ -218,12 +226,13 @@ describe('initial-parameters', () => {
           reset: false,
           backport: true,
           defaultBranch: 'main',
+          fetchRemote: true,
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
         .mockReturnValue({ EDITOR: undefined });
       when(jest.spyOn(projectModule, 'readProject'))
-        .calledWith('/path/to/project', { stderr })
+        .calledWith('/path/to/project', { stderr, fetchRemote: true })
         .mockResolvedValue(project);
 
       const initialParameters = await determineInitialParameters({
@@ -246,12 +255,13 @@ describe('initial-parameters', () => {
           reset: false,
           backport: false,
           defaultBranch: 'main',
+          fetchRemote: true,
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
         .mockReturnValue({ EDITOR: undefined });
       when(jest.spyOn(projectModule, 'readProject'))
-        .calledWith('/path/to/project', { stderr })
+        .calledWith('/path/to/project', { stderr, fetchRemote: true })
         .mockResolvedValue(project);
 
       const initialParameters = await determineInitialParameters({

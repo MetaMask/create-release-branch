@@ -25,8 +25,14 @@ export async function main({
   stdout: Pick<WriteStream, 'write'>;
   stderr: Pick<WriteStream, 'write'>;
 }) {
-  const { project, tempDirectoryPath, reset, releaseType, defaultBranch } =
-    await determineInitialParameters({ argv, cwd, stderr });
+  const {
+    project,
+    tempDirectoryPath,
+    reset,
+    releaseType,
+    defaultBranch,
+    fetchRemote,
+  } = await determineInitialParameters({ argv, cwd, stderr });
 
   if (project.isMonorepo) {
     stdout.write(
@@ -40,6 +46,7 @@ export async function main({
       defaultBranch,
       stdout,
       stderr,
+      fetchRemote,
     });
   } else {
     stdout.write(
