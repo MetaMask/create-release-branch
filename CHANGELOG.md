@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.1.0]
+### Changed
+- Allow `npm:name@version` dependency redirections in manifest ([#158](https://github.com/MetaMask/create-release-branch/pull/158)) ([#159](https://github.com/MetaMask/create-release-branch/pull/159))
+
 ## [3.0.1]
 ### Changed
 - Bump `@metamask/utils` to `^9.0.0` ([#150](https://github.com/MetaMask/create-release-branch/pull/150))
@@ -59,7 +63,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - In this first release, this tool only supports monorepos with an independent versioning scheme. We will add support for other kinds of projects in future releases.
   - You can learn more on how to use this tool by reading the [documentation](docs/).
 
-[Unreleased]: https://github.com/MetaMask/create-release-branch/compare/v3.0.1...HEAD
+[Unreleased]: https://github.com/MetaMask/create-release-branch/compare/v3.1.0...HEAD
+[3.1.0]: https://github.com/MetaMask/create-release-branch/compare/v3.0.1...v3.1.0
 [3.0.1]: https://github.com/MetaMask/create-release-branch/compare/v3.0.0...v3.0.1
 [3.0.0]: https://github.com/MetaMask/create-release-branch/compare/v2.0.1...v3.0.0
 [2.0.1]: https://github.com/MetaMask/create-release-branch/compare/v2.0.0...v2.0.1
