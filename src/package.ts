@@ -2,7 +2,8 @@ import fs, { WriteStream } from 'fs';
 import path from 'path';
 import { format } from 'util';
 import { parseChangelog, updateChangelog } from '@metamask/auto-changelog';
-import prettier from 'prettier';
+import { format as formatPrettier } from 'prettier/standalone';
+import * as markdown from 'prettier/plugins/markdown';
 import { WriteStreamLike, readFile, writeFile, writeJsonFile } from './fs.js';
 import { isErrorWithCode } from './misc-utils.js';
 import {
@@ -278,7 +279,7 @@ export async function migrateUnreleasedChangelogChangesToRelease({
 
   changelog.addRelease({ version });
   changelog.migrateUnreleasedChangesToRelease(version);
-  await writeFile(pkg.changelogPath, changelog.toString());
+  await writeFile(pkg.changelogPath, await changelog.toString());
 }
 
 /**
@@ -288,8 +289,11 @@ export async function migrateUnreleasedChangelogChangesToRelease({
  * @param changelog - The changelog to format.
  * @returns The formatted changelog.
  */
-export function formatChangelog(changelog: string) {
-  return prettier.format(changelog, { parser: 'markdown' });
+export async function formatChangelog(changelog: string) {
+  return await formatPrettier(changelog, {
+    parser: 'markdown',
+    plugins: [markdown],
+  });
 }
 
 /**
