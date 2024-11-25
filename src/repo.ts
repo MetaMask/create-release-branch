@@ -256,13 +256,17 @@ export async function branchExists(
  * advised to only run this once.
  *
  * @param repositoryDirectoryPath - The path to the repository directory.
+ * @param fetchRemote - Whether to synchronize local tags with remote.
  * @returns The names of the tags.
  * @throws If no tags are found and the local git history is incomplete.
  */
 export async function getTagNames(
   repositoryDirectoryPath: string,
+  fetchRemote?: boolean,
 ): Promise<string[]> {
-  await runGitCommandWithin(repositoryDirectoryPath, 'fetch', ['--tags']);
+  if (typeof fetchRemote !== 'boolean' || fetchRemote) {
+    await runGitCommandWithin(repositoryDirectoryPath, 'fetch', ['--tags']);
+  }
 
   const tagNames = await getLinesFromGitCommandWithin(
     repositoryDirectoryPath,

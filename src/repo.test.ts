@@ -108,7 +108,7 @@ describe('repo', () => {
         })
         .mockResolvedValue(['tag1', 'tag2', 'tag3']);
 
-      expect(await getTagNames('/path/to/repo')).toStrictEqual([
+      expect(await getTagNames('/path/to/repo', false)).toStrictEqual([
         'tag1',
         'tag2',
         'tag3',

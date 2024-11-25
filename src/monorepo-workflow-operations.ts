@@ -59,6 +59,7 @@ import {
  * @param args.defaultBranch - The name of the default branch in the repository.
  * @param args.stdout - A stream that can be used to write to standard out.
  * @param args.stderr - A stream that can be used to write to standard error.
+ * @param args.fetchRemote - Whether to synchronize local tags with remote.
  */
 export async function followMonorepoWorkflow({
   project,
@@ -68,6 +69,7 @@ export async function followMonorepoWorkflow({
   defaultBranch,
   stdout,
   stderr,
+  fetchRemote,
 }: {
   project: Project;
   tempDirectoryPath: string;
@@ -76,6 +78,7 @@ export async function followMonorepoWorkflow({
   defaultBranch: string;
   stdout: Pick<WriteStream, 'write'>;
   stderr: Pick<WriteStream, 'write'>;
+  fetchRemote?: boolean;
 }) {
   const { version: newReleaseVersion, firstRun } = await createReleaseBranch({
     project,
@@ -83,7 +86,7 @@ export async function followMonorepoWorkflow({
   });
 
   if (firstRun) {
-    await updateChangelogsForChangedPackages({ project, stderr });
+    await updateChangelogsForChangedPackages({ project, stderr, fetchRemote });
     await commitAllChanges(
       project.directoryPath,
       `Initialize Release ${newReleaseVersion}`,
