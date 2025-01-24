@@ -74,17 +74,20 @@ export default abstract class LocalRepo extends Repo {
       'remote',
       'add',
       'origin',
-      'https://github.com/example-org/example-repo',
+      'https://github.com/Example-Org/example-repo.git',
     ]);
     await this.runCommand('git', [
       'config',
       `url.${this.#remoteRepoDirectoryPath}.insteadOf`,
-      'https://github.com/example-org/example-repo',
+      'https://github.com/Example-Org/example-repo.git',
     ]);
 
     await this.writeJsonFile('package.json', {
       name: this.getPackageName(),
       version: this.getPackageVersion(),
+      repository: {
+        url: 'https://github.com/example-org/example-repo.git',
+      },
     });
 
     await this.writeFile(

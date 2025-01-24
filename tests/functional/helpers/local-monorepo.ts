@@ -159,7 +159,7 @@ export default class LocalMonorepo<
   protected async afterCreate() {
     await super.afterCreate();
 
-    await this.writeJsonFile('package.json', {
+    await this.updateJsonFile('package.json', {
       private: true,
       packageManager: 'yarn@3.2.1',
     });
