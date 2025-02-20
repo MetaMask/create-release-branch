@@ -1,6 +1,5 @@
 import type { WriteStream } from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { join } from 'path';
 import express from 'express';
 import {
   restoreChangelogsForSkippedPackages,
@@ -25,11 +24,9 @@ import {
   updateYarnLockfile,
 } from './yarn-commands.js';
 import { readFile } from './fs.js';
+import { getCurrentDirectoryPath } from './dirname.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const UI_BUILD_DIR = join(__dirname, 'ui');
+const UI_BUILD_DIR = join(getCurrentDirectoryPath(), 'ui');
 
 type InteractiveUIOptions = {
   project: Project;

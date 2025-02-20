@@ -8,6 +8,9 @@ import * as interactiveUi from './interactive-ui.js';
 jest.mock('./initial-parameters');
 jest.mock('./monorepo-workflow-operations');
 jest.mock('./interactive-ui');
+jest.mock('./dirname', () => ({
+  getCurrentDirectoryPath: jest.fn().mockReturnValue('/path/to/somewhere'),
+}));
 
 describe('main', () => {
   it('executes the monorepo workflow if the project is a monorepo', async () => {
