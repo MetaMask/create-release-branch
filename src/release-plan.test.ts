@@ -31,7 +31,7 @@ describe('release-plan-utils', () => {
       const newReleaseVersion = '2.0.0';
       const releasePlan = await planRelease({
         project,
-        releaseSpecification,
+        releaseSpecificationPackages: releaseSpecification.packages,
         newReleaseVersion,
       });
 
@@ -84,7 +84,7 @@ describe('release-plan-utils', () => {
       const newReleaseVersion = '1.1.0';
       const releasePlan = await planRelease({
         project,
-        releaseSpecification,
+        releaseSpecificationPackages: releaseSpecification.packages,
         newReleaseVersion,
       });
 
@@ -136,7 +136,7 @@ describe('release-plan-utils', () => {
       };
       const releasePlan = await planRelease({
         project,
-        releaseSpecification,
+        releaseSpecificationPackages: releaseSpecification.packages,
         newReleaseVersion: '2.0.0',
       });
 

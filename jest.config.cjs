@@ -59,6 +59,7 @@ module.exports = {
     '/node_modules/',
     '/src/cli.ts',
     '/src/command-line-arguments.ts',
+    '/src/interactive-ui.ts',
   ],
 
   // Indicates which provider should be used to instrument code for coverage

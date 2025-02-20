@@ -156,11 +156,8 @@ describe('project', () => {
       await restoreChangelogsForSkippedPackages({
         project,
         defaultBranch: 'main',
-        releaseSpecification: {
-          packages: {
-            a: IncrementableVersionParts.minor,
-          },
-          path: '/path/to/release/specs',
+        releaseSpecificationPackages: {
+          a: IncrementableVersionParts.minor,
         },
       });
 
@@ -192,11 +189,8 @@ describe('project', () => {
       await restoreChangelogsForSkippedPackages({
         project,
         defaultBranch: 'main',
-        releaseSpecification: {
-          packages: {
-            a: IncrementableVersionParts.minor,
-          },
-          path: '/path/to/release/specs',
+        releaseSpecificationPackages: {
+          a: IncrementableVersionParts.minor,
         },
       });
 
@@ -229,11 +223,8 @@ describe('project', () => {
       await restoreChangelogsForSkippedPackages({
         project,
         defaultBranch: 'main',
-        releaseSpecification: {
-          packages: {
-            a: IncrementableVersionParts.minor,
-          },
-          path: '/path/to/release/specs',
+        releaseSpecificationPackages: {
+          a: IncrementableVersionParts.minor,
         },
       });
 

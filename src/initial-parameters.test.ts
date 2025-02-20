@@ -36,6 +36,8 @@ describe('initial-parameters', () => {
           reset: true,
           backport: false,
           defaultBranch: 'main',
+          interactive: false,
+          port: 3000,
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
@@ -56,6 +58,8 @@ describe('initial-parameters', () => {
         reset: true,
         releaseType: 'ordinary',
         defaultBranch: 'main',
+        interactive: false,
+        port: 3000,
       });
     });
 
@@ -72,6 +76,8 @@ describe('initial-parameters', () => {
           reset: true,
           backport: false,
           defaultBranch: 'main',
+          interactive: false,
+          port: 3000,
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
@@ -102,6 +108,8 @@ describe('initial-parameters', () => {
           reset: true,
           backport: false,
           defaultBranch: 'main',
+          interactive: false,
+          port: 3000,
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
@@ -132,6 +140,8 @@ describe('initial-parameters', () => {
           reset: true,
           backport: false,
           defaultBranch: 'main',
+          interactive: false,
+          port: 3000,
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
@@ -162,6 +172,8 @@ describe('initial-parameters', () => {
           reset: true,
           backport: false,
           defaultBranch: 'main',
+          interactive: false,
+          port: 3000,
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
@@ -190,6 +202,8 @@ describe('initial-parameters', () => {
           reset: false,
           backport: false,
           defaultBranch: 'main',
+          interactive: false,
+          port: 3000,
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
@@ -218,6 +232,8 @@ describe('initial-parameters', () => {
           reset: false,
           backport: true,
           defaultBranch: 'main',
+          interactive: false,
+          port: 3000,
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
@@ -246,6 +262,8 @@ describe('initial-parameters', () => {
           reset: false,
           backport: false,
           defaultBranch: 'main',
+          interactive: false,
+          port: 3000,
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')

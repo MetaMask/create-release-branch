@@ -134,20 +134,20 @@ export async function followMonorepoWorkflow({
     }
   }
 
-  const releaseSpecification = await validateReleaseSpecification(
+  const { packages } = await validateReleaseSpecification(
     project,
     releaseSpecificationPath,
   );
 
   await restoreChangelogsForSkippedPackages({
     project,
-    releaseSpecification,
+    releaseSpecificationPackages: packages,
     defaultBranch,
   });
 
   const releasePlan = await planRelease({
     project,
-    releaseSpecification,
+    releaseSpecificationPackages: packages,
     newReleaseVersion,
   });
   await executeReleasePlan(project, releasePlan, stderr);

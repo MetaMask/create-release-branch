@@ -7,6 +7,8 @@ export type CommandLineArguments = {
   reset: boolean;
   backport: boolean;
   defaultBranch: string;
+  interactive: boolean;
+  port: number;
 };
 
 /**
@@ -50,6 +52,19 @@ export async function readCommandLineArguments(
       describe: 'The name of the default branch in the repository.',
       default: 'main',
       type: 'string',
+    })
+    .option('interactive', {
+      alias: 'i',
+      describe:
+        'Start an interactive web UI for selecting package versions to release',
+      type: 'boolean',
+      default: false,
+    })
+    .option('port', {
+      describe:
+        'Port to run the interactive web UI server (only used with --interactive)',
+      type: 'number',
+      default: 3000,
     })
     .help()
     .strict()
