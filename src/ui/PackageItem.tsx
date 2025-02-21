@@ -22,6 +22,8 @@ type PackageItemProps = {
   onFetchChangelog: (packageName: string) => Promise<void>;
   setSelections: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   setChangelogs: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  isSelected: boolean;
+  onToggleSelect: () => void;
 };
 
 export function PackageItem({
@@ -36,6 +38,8 @@ export function PackageItem({
   onFetchChangelog,
   setSelections,
   setChangelogs,
+  isSelected,
+  onToggleSelect,
 }: PackageItemProps) {
   return (
     <div
@@ -52,42 +56,56 @@ export function PackageItem({
           : ''
       }`}
     >
-      <h2 className="text-xl font-semibold">{pkg.name}</h2>
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-gray-600">Current version: {pkg.version}</p>
-          {selections[pkg.name] &&
-            selections[pkg.name] !== 'intentionally-skip' &&
-            selections[pkg.name] !== 'custom' &&
-            !versionErrors[pkg.name] && (
-              <p className="text-yellow-700">
-                New version:{' '}
-                {!['patch', 'minor', 'major'].includes(selections[pkg.name])
-                  ? selections[pkg.name]
-                  : new SemVer(pkg.version)
-                      .inc(
-                        selections[pkg.name] as Exclude<
-                          ReleaseType,
-                          'intentionally-skip' | 'custom' | string
-                        >,
-                      )
-                      .toString()}
-              </p>
-            )}
-          {versionErrors[pkg.name] && (
-            <p className="text-red-500 text-sm mt-1">
-              {versionErrors[pkg.name]}
-            </p>
-          )}
+      <div className="flex items-start gap-3">
+        <div className="pt-1">
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={onToggleSelect}
+            className={`h-5 w-5 rounded border-gray-300
+              ${isSelected ? 'text-blue-600' : 'text-gray-300'}
+            `}
+          />
         </div>
-        <VersionSelector
-          packageName={pkg.name}
-          selection={selections[pkg.name]}
-          onSelectionChange={onSelectionChange}
-          onCustomVersionChange={onCustomVersionChange}
-          onFetchChangelog={onFetchChangelog}
-          isLoadingChangelog={loadingChangelogs[pkg.name] === true}
-        />
+        <div className="flex-1">
+          <h2 className="text-xl font-semibold">{pkg.name}</h2>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-600">Current version: {pkg.version}</p>
+              {selections[pkg.name] &&
+                selections[pkg.name] !== 'intentionally-skip' &&
+                selections[pkg.name] !== 'custom' &&
+                !versionErrors[pkg.name] && (
+                  <p className="text-yellow-700">
+                    New version:{' '}
+                    {!['patch', 'minor', 'major'].includes(selections[pkg.name])
+                      ? selections[pkg.name]
+                      : new SemVer(pkg.version)
+                          .inc(
+                            selections[pkg.name] as Exclude<
+                              ReleaseType,
+                              'intentionally-skip' | 'custom' | string
+                            >,
+                          )
+                          .toString()}
+                  </p>
+                )}
+              {versionErrors[pkg.name] && (
+                <p className="text-red-500 text-sm mt-1">
+                  {versionErrors[pkg.name]}
+                </p>
+              )}
+            </div>
+            <VersionSelector
+              packageName={pkg.name}
+              selection={selections[pkg.name]}
+              onSelectionChange={onSelectionChange}
+              onCustomVersionChange={onCustomVersionChange}
+              onFetchChangelog={onFetchChangelog}
+              isLoadingChangelog={loadingChangelogs[pkg.name] === true}
+            />
+          </div>
+        </div>
       </div>
 
       {packageDependencyErrors[pkg.name] && (

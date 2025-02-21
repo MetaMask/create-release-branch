@@ -5,6 +5,45 @@ import { ErrorMessage } from './ErrorMessage.js';
 import { PackageItem } from './PackageItem.js';
 import { Package, ReleaseType } from './types.js';
 
+type SubmitButtonProps = {
+  isSubmitting: boolean;
+  selections: Record<string, string>;
+  packageDependencyErrors: Record<
+    string,
+    { missingDependentNames: string[]; missingDependencies: string[] }
+  >;
+  onSubmit: () => Promise<void>;
+};
+
+function SubmitButton({
+  isSubmitting,
+  selections,
+  packageDependencyErrors,
+  onSubmit,
+}: SubmitButtonProps) {
+  const isDisabled =
+    isSubmitting ||
+    Object.keys(selections).length === 0 ||
+    Object.keys(packageDependencyErrors).length > 0 ||
+    Object.values(selections).every((value) => value === 'intentionally-skip');
+
+  return (
+    <button
+      onClick={() => void onSubmit()}
+      disabled={isDisabled}
+      className={`mt-6 px-4 py-2 rounded ${
+        isDisabled
+          ? 'bg-blue-300 cursor-not-allowed'
+          : 'bg-blue-500 hover:bg-blue-600'
+      } text-white`}
+    >
+      {isSubmitting
+        ? 'Processing Release (This may take a few minutes)...'
+        : 'Submit Release Selections'}
+    </button>
+  );
+}
+
 function App() {
   const [packages, setPackages] = useState<Package[]>([]);
   const [selections, setSelections] = useState<Record<string, string>>({});
@@ -28,6 +67,9 @@ function App() {
     >
   >({});
   const [isSuccess, setIsSuccess] = useState(false);
+  const [selectedPackages, setSelectedPackages] = useState<Set<string>>(
+    new Set(),
+  );
 
   useEffect(() => {
     fetch('/api/packages')
@@ -212,6 +254,42 @@ function App() {
     }
   };
 
+  const handleBulkAction = (action: ReleaseType) => {
+    const newSelections = { ...selections };
+    selectedPackages.forEach((packageName) => {
+      newSelections[packageName] = action;
+    });
+    setSelections(newSelections);
+    setSelectedPackages(new Set());
+  };
+
+  const togglePackageSelection = (packageName: string) => {
+    setSelectedPackages((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(packageName)) {
+        newSet.delete(packageName);
+      } else {
+        newSet.add(packageName);
+      }
+      return newSet;
+    });
+  };
+
+  if (isSubmitting) {
+    return (
+      <div className="fixed inset-0 bg-white bg-opacity-90 flex items-center justify-center z-50">
+        <div className="text-center p-8">
+          <h2 className="text-2xl font-bold mb-4">Processing Release</h2>
+          <p className="mb-6">
+            Please wait while we process your release. This may take a few
+            minutes...
+          </p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
+
   if (isSuccess) {
     return (
       <div className="fixed inset-0 bg-white flex items-center justify-center">
@@ -235,6 +313,23 @@ function App() {
         Create Release Branch Interactive UI
       </h1>
 
+      {selectedPackages.size > 0 && (
+        <div className="mb-4 p-4 bg-gray-100 rounded">
+          <span className="mr-2">
+            Bulk action for {selectedPackages.size} packages:
+          </span>
+          {['major', 'minor', 'patch', 'intentionally-skip'].map((action) => (
+            <button
+              key={action}
+              onClick={() => handleBulkAction(action as ReleaseType)}
+              className="mr-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              {action}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="space-y-4">
         {packages.map((pkg) => (
           <PackageItem
@@ -250,28 +345,19 @@ function App() {
             onFetchChangelog={fetchChangelog}
             setSelections={setSelections}
             setChangelogs={setChangelogs}
+            isSelected={selectedPackages.has(pkg.name)}
+            onToggleSelect={() => togglePackageSelection(pkg.name)}
           />
         ))}
       </div>
 
       {packages.length > 0 && (
-        <button
-          onClick={() => void handleSubmit()}
-          disabled={
-            isSubmitting ||
-            Object.keys(selections).length === 0 ||
-            Object.keys(packageDependencyErrors).length > 0
-          }
-          className={`mt-6 px-4 py-2 rounded ${
-            isSubmitting ||
-            Object.keys(selections).length === 0 ||
-            Object.keys(packageDependencyErrors).length > 0
-              ? 'bg-blue-300 cursor-not-allowed'
-              : 'bg-blue-500 hover:bg-blue-600'
-          } text-white`}
-        >
-          {isSubmitting ? 'Submitting...' : 'Submit Release Selections'}
-        </button>
+        <SubmitButton
+          isSubmitting={isSubmitting}
+          selections={selections}
+          packageDependencyErrors={packageDependencyErrors}
+          onSubmit={handleSubmit}
+        />
       )}
 
       {error && <div className="text-red-600 p-4">Error: {error}</div>}
