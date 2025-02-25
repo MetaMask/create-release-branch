@@ -1,4 +1,4 @@
-import { ReleaseType } from './types.js';
+import { RELEASE_TYPE_OPTIONS, ReleaseType } from './types.js';
 
 type VersionSelectorProps = {
   packageName: string;
@@ -27,10 +27,11 @@ export function VersionSelector({
         className="border rounded px-2 py-1"
       >
         <option value="">Select version bump</option>
-        <option value="major">Major</option>
-        <option value="minor">Minor</option>
-        <option value="patch">Patch</option>
-        <option value="intentionally-skip">Skip</option>
+        {RELEASE_TYPE_OPTIONS.map(({ label, value }) => (
+          <option key={value} value={value}>
+            {label}
+          </option>
+        ))}
         <option value="custom">Custom Version</option>
         {selection &&
           ![

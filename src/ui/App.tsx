@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { SemVer } from 'semver';
 import { ErrorMessage } from './ErrorMessage.js';
 import { PackageItem } from './PackageItem.js';
-import { Package, ReleaseType } from './types.js';
+import { Package, RELEASE_TYPE_OPTIONS, ReleaseType } from './types.js';
 
 type SubmitButtonProps = {
   selections: Record<string, string>;
@@ -306,13 +306,13 @@ function App() {
           <span className="mr-2">
             Bulk action for {selectedPackages.size} packages:
           </span>
-          {['major', 'minor', 'patch', 'intentionally-skip'].map((action) => (
+          {RELEASE_TYPE_OPTIONS.map(({ label, value }) => (
             <button
-              key={action}
-              onClick={() => handleBulkAction(action as ReleaseType)}
+              key={value}
+              onClick={() => handleBulkAction(value as ReleaseType)}
               className="mr-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
             >
-              {action}
+              {label}
             </button>
           ))}
         </div>
