@@ -1,6 +1,8 @@
 import type { WriteStream } from 'fs';
 import { join } from 'path';
 import express from 'express';
+import open, { apps } from 'open';
+
 import {
   restoreChangelogsForSkippedPackages,
   updateChangelogsForChangedPackages,
@@ -84,6 +86,7 @@ export async function startUI({
   const server = app.listen(port, async () => {
     const url = `http://localhost:${port}`;
     stdout.write(`UI server running at ${url}\n`);
+    open(url, { app: { name: apps.browser } });
   });
 
   return new Promise((resolve, reject) => {
@@ -296,10 +299,6 @@ function createApp({
       }
     },
   );
-
-  app.get('*', (_req, res) => {
-    res.sendFile(join(UI_BUILD_DIR, 'index.html'));
-  });
 
   return app;
 }

@@ -11,6 +11,11 @@ jest.mock('./ui');
 jest.mock('./dirname', () => ({
   getCurrentDirectoryPath: jest.fn().mockReturnValue('/path/to/somewhere'),
 }));
+jest.mock('open', () => ({
+  apps: {
+    browser: jest.fn(),
+  },
+}));
 
 describe('main', () => {
   it('executes the CLI monorepo workflow if the project is a monorepo and interactive is false', async () => {
