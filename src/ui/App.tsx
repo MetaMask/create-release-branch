@@ -303,29 +303,34 @@ function App() {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">Create New Core Release</h1>
 
-      {showCheckboxes && selectedPackages.size > 0 ? (
-        <div className="mb-4 p-4 bg-gray-100 rounded">
-          <span className="mr-2">
-            Bulk action for {selectedPackages.size} packages:
-          </span>
-          {RELEASE_TYPE_OPTIONS.map(({ label, value }) => (
-            <button
-              key={value}
-              onClick={() => handleBulkAction(value as ReleaseType)}
-              className="mr-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      ) : (
-        <button
-          onClick={() => setShowCheckboxes(true)}
-          className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          Select multiple packages
-        </button>
-      )}
+      <div className="mb-4 p-4 bg-gray-100 rounded">
+        {showCheckboxes && selectedPackages.size > 0 ? (
+          <>
+            <span className="mr-2">
+              Bulk action for {selectedPackages.size} packages:
+            </span>
+            {RELEASE_TYPE_OPTIONS.map(({ label, value }) => (
+              <button
+                key={value}
+                onClick={() => {
+                  handleBulkAction(value as ReleaseType);
+                  setShowCheckboxes(false);
+                }}
+                className="mr-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+              >
+                {label}
+              </button>
+            ))}
+          </>
+        ) : (
+          <button
+            onClick={() => setShowCheckboxes(!showCheckboxes)}
+            className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Select multiple packages
+          </button>
+        )}
+      </div>
 
       <div className="space-y-4">
         {packages.map((pkg) => (
