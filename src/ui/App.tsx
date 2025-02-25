@@ -65,6 +65,7 @@ function App() {
   const [selectedPackages, setSelectedPackages] = useState<Set<string>>(
     new Set(),
   );
+  const [showCheckboxes, setShowCheckboxes] = useState(false);
 
   useEffect(() => {
     fetch('/api/packages')
@@ -255,6 +256,7 @@ function App() {
     });
     setSelections(newSelections);
     setSelectedPackages(new Set());
+    setShowCheckboxes(true);
   };
 
   const togglePackageSelection = (packageName: string) => {
@@ -301,7 +303,7 @@ function App() {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">Create New Core Release</h1>
 
-      {selectedPackages.size > 0 && (
+      {showCheckboxes && selectedPackages.size > 0 ? (
         <div className="mb-4 p-4 bg-gray-100 rounded">
           <span className="mr-2">
             Bulk action for {selectedPackages.size} packages:
@@ -316,6 +318,13 @@ function App() {
             </button>
           ))}
         </div>
+      ) : (
+        <button
+          onClick={() => setShowCheckboxes(true)}
+          className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Select multiple packages
+        </button>
       )}
 
       <div className="space-y-4">
@@ -328,12 +337,13 @@ function App() {
             packageDependencyErrors={packageDependencyErrors}
             loadingChangelogs={loadingChangelogs}
             changelogs={changelogs}
+            isSelected={selectedPackages.has(pkg.name)}
+            showCheckbox={showCheckboxes}
             onSelectionChange={handleSelectionChange}
             onCustomVersionChange={handleCustomVersionChange}
             onFetchChangelog={fetchChangelog}
             setSelections={setSelections}
             setChangelogs={setChangelogs}
-            isSelected={selectedPackages.has(pkg.name)}
             onToggleSelect={() => togglePackageSelection(pkg.name)}
           />
         ))}

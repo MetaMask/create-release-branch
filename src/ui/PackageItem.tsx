@@ -17,12 +17,13 @@ type PackageItemProps = {
   >;
   loadingChangelogs: Record<string, boolean>;
   changelogs: Record<string, string>;
+  isSelected: boolean;
+  showCheckbox: boolean;
   onSelectionChange: (packageName: string, value: ReleaseType | '') => void;
   onCustomVersionChange: (packageName: string, version: string) => void;
   onFetchChangelog: (packageName: string) => Promise<void>;
   setSelections: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   setChangelogs: React.Dispatch<React.SetStateAction<Record<string, string>>>;
-  isSelected: boolean;
   onToggleSelect: () => void;
 };
 
@@ -33,12 +34,13 @@ export function PackageItem({
   packageDependencyErrors,
   loadingChangelogs,
   changelogs,
+  isSelected,
+  showCheckbox,
   onSelectionChange,
   onCustomVersionChange,
   onFetchChangelog,
   setSelections,
   setChangelogs,
-  isSelected,
   onToggleSelect,
 }: PackageItemProps) {
   return (
@@ -58,14 +60,16 @@ export function PackageItem({
     >
       <div className="flex items-start gap-3">
         <div className="pt-1">
-          <input
-            type="checkbox"
-            checked={isSelected}
-            onChange={onToggleSelect}
-            className={`h-5 w-5 rounded border-gray-300
-              ${isSelected ? 'text-blue-600' : 'text-gray-300'}
-            `}
-          />
+          {showCheckbox && (
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={onToggleSelect}
+              className={`h-5 w-5 rounded border-gray-300
+                ${isSelected ? 'text-blue-600' : 'text-gray-300'}
+              `}
+            />
+          )}
         </div>
         <div className="flex-1">
           <h2 className="text-xl font-semibold">{pkg.name}</h2>
