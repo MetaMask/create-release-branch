@@ -60,6 +60,7 @@ module.exports = {
     '/src/cli.ts',
     '/src/command-line-arguments.ts',
     '/src/ui.ts',
+    '/src/ui/types.ts',
     '/src/dirname.ts',
   ],
 
