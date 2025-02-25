@@ -6,7 +6,6 @@ import { PackageItem } from './PackageItem.js';
 import { Package, ReleaseType } from './types.js';
 
 type SubmitButtonProps = {
-  isSubmitting: boolean;
   selections: Record<string, string>;
   packageDependencyErrors: Record<
     string,
@@ -16,13 +15,11 @@ type SubmitButtonProps = {
 };
 
 function SubmitButton({
-  isSubmitting,
   selections,
   packageDependencyErrors,
   onSubmit,
 }: SubmitButtonProps) {
   const isDisabled =
-    isSubmitting ||
     Object.keys(selections).length === 0 ||
     Object.keys(packageDependencyErrors).length > 0 ||
     Object.values(selections).every((value) => value === 'intentionally-skip');
@@ -37,9 +34,7 @@ function SubmitButton({
           : 'bg-blue-500 hover:bg-blue-600'
       } text-white`}
     >
-      {isSubmitting
-        ? 'Processing Release (This may take a few minutes)...'
-        : 'Submit Release Selections'}
+      Create Release Branch
     </button>
   );
 }
@@ -75,7 +70,7 @@ function App() {
     fetch('/api/packages')
       .then((res) => {
         if (!res.ok) {
-          throw new Error('Failed to fetch packages');
+          throw new Error(`Received ${res.status}`);
         }
         return res.json();
       })
@@ -172,19 +167,18 @@ function App() {
     packageName: string,
     value: ReleaseType | '',
   ): void => {
-    setSelections((prev) => {
-      if (value === '') {
-        const { [packageName]: _, ...rest } = prev;
-        const { [packageName]: __, ...remainingErrors } =
-          packageDependencyErrors;
-        setPackageDependencyErrors(remainingErrors);
-        return rest;
-      }
-      return {
-        ...prev,
+    if (value === '') {
+      const { [packageName]: _, ...rest } = selections;
+      setSelections(rest);
+
+      const { [packageName]: __, ...remainingErrors } = packageDependencyErrors;
+      setPackageDependencyErrors(remainingErrors);
+    } else {
+      setSelections({
+        ...selections,
         [packageName]: value,
-      };
-    });
+      });
+    }
   };
 
   const handleSubmit = async (): Promise<void> => {
@@ -279,10 +273,10 @@ function App() {
     return (
       <div className="fixed inset-0 bg-white bg-opacity-90 flex items-center justify-center z-50">
         <div className="text-center p-8">
-          <h2 className="text-2xl font-bold mb-4">Processing Release</h2>
+          <h2 className="text-2xl font-bold mb-4">Create Release Branch</h2>
           <p className="mb-6">
-            Please wait while we process your release. This may take a few
-            minutes...
+            Please wait while we create the release branch with your selections.
+            This may take a few minutes...
           </p>
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
         </div>
@@ -294,14 +288,10 @@ function App() {
     return (
       <div className="fixed inset-0 bg-white flex items-center justify-center">
         <div className="text-center p-8">
-          <h2 className="text-2xl font-bold mb-4">Release Successful!</h2>
+          <h2 className="text-2xl font-bold mb-4">
+            Release Branch Successfully Created!
+          </h2>
           <p className="mb-6">You can now close this window.</p>
-          <button
-            onClick={() => window.close()}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            Close Window
-          </button>
         </div>
       </div>
     );
@@ -309,9 +299,7 @@ function App() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">
-        Create Release Branch Interactive UI
-      </h1>
+      <h1 className="text-3xl font-bold mb-6">Create New Core Release</h1>
 
       {selectedPackages.size > 0 && (
         <div className="mb-4 p-4 bg-gray-100 rounded">
@@ -353,7 +341,6 @@ function App() {
 
       {packages.length > 0 && (
         <SubmitButton
-          isSubmitting={isSubmitting}
           selections={selections}
           packageDependencyErrors={packageDependencyErrors}
           onSubmit={handleSubmit}

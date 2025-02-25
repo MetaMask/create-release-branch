@@ -59,7 +59,7 @@ module.exports = {
     '/node_modules/',
     '/src/cli.ts',
     '/src/command-line-arguments.ts',
-    '/src/interactive-ui.ts',
+    '/src/ui.ts',
     '/src/dirname.ts',
   ],
 

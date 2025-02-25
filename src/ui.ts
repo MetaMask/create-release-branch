@@ -28,7 +28,7 @@ import { getCurrentDirectoryPath } from './dirname.js';
 
 const UI_BUILD_DIR = join(getCurrentDirectoryPath(), 'ui');
 
-type InteractiveUIOptions = {
+type UIOptions = {
   project: Project;
   releaseType: 'ordinary' | 'backport';
   defaultBranch: string;
@@ -38,9 +38,9 @@ type InteractiveUIOptions = {
 };
 
 /**
- * Starts the interactive UI for the release process.
+ * Starts the UI for the release process.
  *
- * @param options - The options for the interactive UI.
+ * @param options - The options for the UI.
  * @param options.project - The project object.
  * @param options.releaseType - The type of release.
  * @param options.defaultBranch - The default branch name.
@@ -48,14 +48,14 @@ type InteractiveUIOptions = {
  * @param options.stdout - The stdout stream.
  * @param options.stderr - The stderr stream.
  */
-export async function startInteractiveUI({
+export async function startUI({
   project,
   releaseType,
   defaultBranch,
   port,
   stdout,
   stderr,
-}: InteractiveUIOptions): Promise<void> {
+}: UIOptions): Promise<void> {
   const { version: newReleaseVersion, firstRun } = await createReleaseBranch({
     project,
     releaseType,
@@ -69,6 +69,59 @@ export async function startInteractiveUI({
     );
   }
 
+  const app = createApp({
+    project,
+    defaultBranch,
+    stderr,
+    version: newReleaseVersion,
+    closeServer: () => {
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+      server.close();
+      stdout.write('Release process completed. Server shutdown.\n');
+    },
+  });
+
+  const server = app.listen(port, async () => {
+    const url = `http://localhost:${port}`;
+    stdout.write(`UI server running at ${url}\n`);
+  });
+
+  return new Promise((resolve, reject) => {
+    server.on('error', (error) => {
+      stderr.write(`Failed to start server: ${error}\n`);
+      reject(error);
+    });
+
+    server.on('close', () => {
+      resolve();
+    });
+  });
+}
+
+/**
+ * Creates an Express application for the UI server.
+ *
+ * @param options - The options for creating the app.
+ * @param options.project - The project object.
+ * @param options.defaultBranch - The default branch name.
+ * @param options.stderr - The stderr stream.
+ * @param options.version - The release version.
+ * @param options.closeServer - The function to close the server.
+ * @returns The Express application.
+ */
+function createApp({
+  project,
+  defaultBranch,
+  stderr,
+  version,
+  closeServer,
+}: {
+  project: Project;
+  defaultBranch: string;
+  stderr: Pick<WriteStream, 'write'>;
+  version: string;
+  closeServer: () => void;
+}): express.Application {
   const app = express();
 
   app.use(express.static(UI_BUILD_DIR));
@@ -223,7 +276,7 @@ export async function startInteractiveUI({
         const releasePlan = await planRelease({
           project,
           releaseSpecificationPackages,
-          newReleaseVersion,
+          newReleaseVersion: version,
         });
         await executeReleasePlan(project, releasePlan, stderr);
         await fixConstraints(project.directoryPath);
@@ -231,14 +284,12 @@ export async function startInteractiveUI({
         await deduplicateDependencies(project.directoryPath);
         await commitAllChanges(
           project.directoryPath,
-          `Update Release ${newReleaseVersion}`,
+          `Update Release ${version}`,
         );
 
         res.json({ status: 'success' });
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        server.close(() => {
-          stdout.write('Release process completed. Server shutdown.\n');
-        });
+
+        closeServer();
       } catch (error) {
         stderr.write(`Release error: ${error}\n`);
         res.status(400).send('Invalid request');
@@ -250,14 +301,5 @@ export async function startInteractiveUI({
     res.sendFile(join(UI_BUILD_DIR, 'index.html'));
   });
 
-  const server = app.listen(port, () => {
-    stdout.write(`Interactive UI server running at http://localhost:${port}\n`);
-  });
-
-  return new Promise((_, reject) => {
-    server.on('error', (error) => {
-      stderr.write(`Failed to start server: ${error}\n`);
-      reject(error);
-    });
-  });
+  return app;
 }

@@ -47,7 +47,7 @@ export function PackageItem({
       id={`package-${pkg.name}`}
       className={`border p-4 rounded-lg ${
         selections[pkg.name] && selections[pkg.name] !== 'intentionally-skip'
-          ? 'border-gray-500'
+          ? 'border-2'
           : 'border-gray-200'
       } ${
         packageDependencyErrors[pkg.name] &&

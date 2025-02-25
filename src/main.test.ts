@@ -3,17 +3,17 @@ import { buildMockProject } from '../tests/unit/helpers.js';
 import { main } from './main.js';
 import * as initialParametersModule from './initial-parameters.js';
 import * as monorepoWorkflowOperations from './monorepo-workflow-operations.js';
-import * as interactiveUi from './interactive-ui.js';
+import * as ui from './ui.js';
 
 jest.mock('./initial-parameters');
 jest.mock('./monorepo-workflow-operations');
-jest.mock('./interactive-ui');
+jest.mock('./ui');
 jest.mock('./dirname', () => ({
   getCurrentDirectoryPath: jest.fn().mockReturnValue('/path/to/somewhere'),
 }));
 
 describe('main', () => {
-  it('executes the monorepo workflow if the project is a monorepo', async () => {
+  it('executes the CLI monorepo workflow if the project is a monorepo and interactive is false', async () => {
     const project = buildMockProject({ isMonorepo: true });
     const stdout = fs.createWriteStream('/dev/null');
     const stderr = fs.createWriteStream('/dev/null');
@@ -50,7 +50,7 @@ describe('main', () => {
     });
   });
 
-  it('executes the interactive UI workflow if the project is a monorepo', async () => {
+  it('executes the interactive UI monorepo workflow if the project is a monorepo and interactive is true', async () => {
     const project = buildMockProject({ isMonorepo: true });
     const stdout = fs.createWriteStream('/dev/null');
     const stderr = fs.createWriteStream('/dev/null');
@@ -65,9 +65,7 @@ describe('main', () => {
         interactive: true,
         port: 3000,
       });
-    const startInteractiveUISpy = jest
-      .spyOn(interactiveUi, 'startInteractiveUI')
-      .mockResolvedValue();
+    const startUISpy = jest.spyOn(ui, 'startUI').mockResolvedValue();
 
     await main({
       argv: [],
@@ -76,7 +74,7 @@ describe('main', () => {
       stderr,
     });
 
-    expect(startInteractiveUISpy).toHaveBeenCalledWith({
+    expect(startUISpy).toHaveBeenCalledWith({
       project,
       releaseType: 'backport',
       defaultBranch: 'main',

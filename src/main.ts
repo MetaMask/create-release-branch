@@ -1,7 +1,7 @@
 import type { WriteStream } from 'fs';
 import { determineInitialParameters } from './initial-parameters.js';
 import { followMonorepoWorkflow } from './monorepo-workflow-operations.js';
-import { startInteractiveUI } from './interactive-ui.js';
+import { startUI } from './ui.js';
 
 /**
  * The main function for this tool. Designed to not access `process.argv`,
@@ -42,8 +42,8 @@ export async function main({
     );
 
     if (interactive) {
-      stdout.write(`Starting interactive UI on port ${port}...\n`);
-      await startInteractiveUI({
+      stdout.write(`Starting UI on port ${port}...\n`);
+      await startUI({
         project,
         releaseType,
         defaultBranch,
