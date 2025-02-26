@@ -1,4 +1,5 @@
 import path from 'path';
+
 import {
   runCommand,
   getStdoutFromCommand,
@@ -193,7 +194,7 @@ export async function commitAllChanges(
  * @param repositoryDirectoryPath - The file system path to the git repository.
  * @returns The name of the current branch in the specified repository.
  */
-export function getCurrentBranchName(repositoryDirectoryPath: string) {
+export async function getCurrentBranchName(repositoryDirectoryPath: string) {
   return getStdoutFromGitCommandWithin(repositoryDirectoryPath, 'rev-parse', [
     '--abbrev-ref',
     'HEAD',

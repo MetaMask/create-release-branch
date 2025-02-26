@@ -1,15 +1,18 @@
 import path from 'path';
-import { PackageSpecification } from './environment.js';
-import LocalRepo, { LocalRepoOptions } from './local-repo.js';
+
+import type { PackageSpecification } from './environment.js';
+import type { LocalRepoOptions } from './local-repo.js';
+import LocalRepo from './local-repo.js';
 import { knownKeysOf } from './utils.js';
 
 /**
  * A set of configuration options for a {@link LocalMonorepo}. In addition
  * to the options listed in {@link LocalRepoOptions}, these include:
  *
- * @property packages - The known packages within this repo (including the
+ * packages - The known packages within this repo (including the
  * root).
- * @property workspaces - The known workspaces within this repo.
+ *
+ * workspaces - The known workspaces within this repo.
  */
 export type LocalMonorepoOptions<WorkspacePackageNickname extends string> = {
   packages: Record<WorkspacePackageNickname, PackageSpecification>;
@@ -26,12 +29,15 @@ export default class LocalMonorepo<
   /**
    * The known packages within this repo (including the root).
    */
-  #packages: Record<'$root$' | WorkspacePackageNickname, PackageSpecification>;
+  readonly #packages: Record<
+    '$root$' | WorkspacePackageNickname,
+    PackageSpecification
+  >;
 
   /**
    * The known workspaces within this repo.
    */
-  #workspaces: LocalMonorepoOptions<WorkspacePackageNickname>['workspaces'];
+  readonly #workspaces: LocalMonorepoOptions<WorkspacePackageNickname>['workspaces'];
 
   constructor({
     packages,
@@ -167,7 +173,7 @@ export default class LocalMonorepo<
     // Update manifests for root and workspace packages with `name`, `version`,
     // and (optionally) `workspaces`
     await Promise.all(
-      knownKeysOf(this.#packages).map((packageName) => {
+      knownKeysOf(this.#packages).map(async (packageName) => {
         const pkg = this.#packages[packageName];
         const content = {
           name: pkg.name,

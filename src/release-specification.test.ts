@@ -1,17 +1,18 @@
 import fs from 'fs';
-import path from 'path';
 import { when } from 'jest-when';
+import path from 'path';
+import { SemVer } from 'semver';
 import { MockWritable } from 'stdio-mock';
 import YAML from 'yaml';
-import { SemVer } from 'semver';
-import { withSandbox } from '../tests/helpers.js';
-import { buildMockProject, buildMockPackage } from '../tests/unit/helpers.js';
+
+import * as miscUtils from './misc-utils.js';
 import {
   generateReleaseSpecificationTemplateForMonorepo,
   waitForUserToEditReleaseSpecification,
   validateReleaseSpecification,
 } from './release-specification.js';
-import * as miscUtils from './misc-utils.js';
+import { withSandbox } from '../tests/helpers.js';
+import { buildMockProject, buildMockPackage } from '../tests/unit/helpers.js';
 
 jest.mock('./misc-utils', () => {
   return {

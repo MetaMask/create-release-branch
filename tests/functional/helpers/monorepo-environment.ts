@@ -1,12 +1,14 @@
+import type { ExecaReturnValue } from 'execa';
 import fs from 'fs';
 import path from 'path';
-import type { ExecaReturnValue } from 'execa';
 import YAML from 'yaml';
+
 import { TOOL_EXECUTABLE_PATH, TSX_PATH } from './constants.js';
-import Environment, {
+import type {
   EnvironmentOptions,
   PackageSpecification,
 } from './environment.js';
+import Environment from './environment.js';
 import LocalMonorepo from './local-monorepo.js';
 import { debug, knownKeysOf } from './utils.js';
 
@@ -14,9 +16,10 @@ import { debug, knownKeysOf } from './utils.js';
  * A set of configuration options for a {@link MonorepoEnvironment}. In addition
  * to the options listed in {@link EnvironmentOptions}, these include:
  *
- * @property packages - The known packages within this repo (including the
+ * packages - The known packages within this repo (including the
  * root).
- * @property workspaces - The known workspaces within this repo.
+ *
+ * workspaces - The known workspaces within this repo.
  */
 export type MonorepoEnvironmentOptions<
   WorkspacePackageNickname extends string,
@@ -28,7 +31,7 @@ export type MonorepoEnvironmentOptions<
 /**
  * The release specification data.
  *
- * @property packages - The workspace packages within this repo that will be
+ * packages - The workspace packages within this repo that will be
  * released.
  */
 type ReleaseSpecification<WorkspacePackageNickname extends string> = {
@@ -50,7 +53,7 @@ export default class MonorepoEnvironment<
 
   updateJsonFileWithinPackage: LocalMonorepo<WorkspacePackageNickname>['updateJsonFileWithinPackage'];
 
-  #packages: MonorepoEnvironmentOptions<WorkspacePackageNickname>['packages'];
+  readonly #packages: MonorepoEnvironmentOptions<WorkspacePackageNickname>['packages'];
 
   constructor(options: MonorepoEnvironmentOptions<WorkspacePackageNickname>) {
     super(options);
@@ -86,7 +89,7 @@ export default class MonorepoEnvironment<
   }: {
     args?: string[];
     releaseSpecification: ReleaseSpecification<WorkspacePackageNickname>;
-  }): Promise<ExecaReturnValue<string>> {
+  }): Promise<ExecaReturnValue> {
     const releaseSpecificationPath = path.join(
       this.directoryPath,
       'release-spec',

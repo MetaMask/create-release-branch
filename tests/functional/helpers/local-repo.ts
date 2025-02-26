@@ -1,14 +1,17 @@
 import path from 'path';
+
+import type { RepoOptions } from './repo.js';
+import Repo from './repo.js';
 import { buildChangelog } from '../../helpers.js';
-import Repo, { RepoOptions } from './repo.js';
 
 /**
  * A set of configuration options for a {@link LocalRepo}. In addition to the
  * options listed in {@link RepoOptions}, these include:
  *
- * @property remoteRepoDirectoryPath - The directory that holds the "remote"
+ * remoteRepoDirectoryPath - The directory that holds the "remote"
  * companion of this repo.
- * @property createInitialCommit - Usually when this repo is initialized, a
+ *
+ * createInitialCommit - Usually when this repo is initialized, a
  * commit is created (which will contain starting `package.json` files). You can
  * use this option to disable that if you need to create your own commits for
  * clarity.
@@ -26,14 +29,14 @@ export default abstract class LocalRepo extends Repo {
   /**
    * The directory that holds the "remote" companion of this repo.
    */
-  #remoteRepoDirectoryPath: string;
+  readonly #remoteRepoDirectoryPath: string;
 
   /**
    * Usually when this repo is initialized, a commit is created (which will
    * contain starting `package.json` files). You can use this option to disable
    * that if you need to create your own commits for clarity.
    */
-  #createInitialCommit: boolean;
+  readonly #createInitialCommit: boolean;
 
   constructor({
     remoteRepoDirectoryPath,

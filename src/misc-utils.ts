@@ -1,8 +1,9 @@
-import which from 'which';
-import { execa, Options } from 'execa';
-import createDebug from 'debug';
-import { ErrorWithCause } from 'pony-cause';
 import { isObject } from '@metamask/utils';
+import createDebug from 'debug';
+import type { Options } from 'execa';
+import { execa } from 'execa';
+import { ErrorWithCause } from 'pony-cause';
+import which from 'which';
 
 export { isTruthyString } from '@metamask/action-utils';
 export { hasProperty, isNullOrUndefined } from '@metamask/utils';

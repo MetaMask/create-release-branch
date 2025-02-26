@@ -1,4 +1,6 @@
 import { when } from 'jest-when';
+
+import * as miscUtils from './misc-utils.js';
 import {
   getRepositoryHttpsUrl,
   commitAllChanges,
@@ -8,7 +10,6 @@ import {
   branchExists,
   restoreFiles,
 } from './repo.js';
-import * as miscUtils from './misc-utils.js';
 
 jest.mock('./misc-utils');
 
