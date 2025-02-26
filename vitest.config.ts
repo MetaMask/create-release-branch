@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config';
+import { coverageConfigDefaults, defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
@@ -9,7 +9,11 @@ export default defineConfig({
       include: ['src/**/*.test.ts'],
 
       // Exclude certain files from the coverage.
-      exclude: ['node_modules/', 'src/cli.ts', 'src/command-line-arguments.ts'],
+      exclude: [
+        ...coverageConfigDefaults.exclude,
+        'src/cli.ts',
+        'src/command-line-arguments.ts',
+      ],
 
       // Configure the coverage provider. We use `istanbul` here, because it
       // is more stable than `v8`.
@@ -36,18 +40,19 @@ export default defineConfig({
     // inject the globals like `describe`, `it`, `expect`, etc.
     globals: true,
 
-    // Calls .mockReset on all spies before each test.
+    // Ensure all mock functions are reset before each test.
     mockReset: true,
 
-    // Calls .mockRestore on all spies before each test.
+    // Ensure all mock functions are restored before each test.
     restoreMocks: true,
 
-    // Calls vi.unstubAllEnvs before each test.
+    // Ensure environment variable stubs are removed before each test.
     unstubEnvs: true,
 
-    // Calls vi.unstubGlobals before each test.
+    // Ensure global variable stubs are removed before each test.
     unstubGlobals: true,
 
+    // Don't watch files unless requested to do so.
     watch: false,
   },
 });
