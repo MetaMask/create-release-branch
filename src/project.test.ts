@@ -75,7 +75,11 @@ describe('project', () => {
         vitest
           .spyOn(actionUtils, 'getWorkspaceLocations')
           .mockResolvedValue(['packages/a', 'packages/subpackages/b']);
-        when(vitest.spyOn(packageModule, 'readMonorepoWorkspacePackage'))
+        const readMonorepoWorkspacePackageSpy = vitest.spyOn(
+          packageModule,
+          'readMonorepoWorkspacePackage',
+        );
+        when(readMonorepoWorkspacePackageSpy)
           .calledWith({
             packageDirectoryPath: path.join(
               projectDirectoryPath,
@@ -89,7 +93,7 @@ describe('project', () => {
             stderr,
           })
           .thenResolve(workspacePackages.a);
-        when(vitest.spyOn(packageModule, 'readMonorepoWorkspacePackage'))
+        when(readMonorepoWorkspacePackageSpy)
           .calledWith({
             packageDirectoryPath: path.join(
               projectDirectoryPath,
@@ -127,6 +131,7 @@ describe('project', () => {
       });
     });
   });
+
   describe('restoreChangelogsForSkippedPackages', () => {
     it('should reset changelog for packages with changes not included in release', async () => {
       const project = buildMockProject({
@@ -146,11 +151,13 @@ describe('project', () => {
 
       const restoreFilesSpy = vitest.spyOn(repoModule, 'restoreFiles');
 
-      when(vitest.spyOn(fs, 'fileExists'))
+      const fileExistsSpy = vitest.spyOn(fs, 'fileExists');
+
+      when(fileExistsSpy)
         .calledWith(project.workspacePackages.b.changelogPath)
         .thenResolve(true);
 
-      when(vitest.spyOn(fs, 'fileExists'))
+      when(fileExistsSpy)
         .calledWith(project.workspacePackages.c.changelogPath)
         .thenResolve(true);
 

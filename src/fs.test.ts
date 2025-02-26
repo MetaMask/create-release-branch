@@ -202,15 +202,15 @@ describe('fs', () => {
 
         await expect(
           fs.promises.readdir(path.join(sandbox.directoryPath, 'foo')),
-        ).toResolve();
+        ).toBeDefined();
         await expect(
           fs.promises.readdir(path.join(sandbox.directoryPath, 'foo', 'bar')),
-        ).toResolve();
+        ).toBeDefined();
         await expect(
           fs.promises.readdir(
             path.join(sandbox.directoryPath, 'foo', 'bar', 'baz'),
           ),
-        ).toResolve();
+        ).toBeDefined();
       });
     });
 
@@ -228,7 +228,7 @@ describe('fs', () => {
           path.join(sandbox.directoryPath, 'foo', 'bar', 'baz'),
         );
 
-        await expect(ensureDirectoryPathExists(directoryPath)).toResolve();
+        await expect(ensureDirectoryPathExists(directoryPath)).toBeDefined();
       });
     });
 

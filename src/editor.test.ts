@@ -26,10 +26,9 @@ describe('editor', () => {
       vitest
         .spyOn(envModule, 'getEnvironmentVariables')
         .mockReturnValue({ EDITOR: 'editor' });
-      when(vitest.spyOn(miscUtils, 'resolveExecutable'))
-        .calledWith('editor')
-        .thenResolve(null);
-      when(vitest.spyOn(miscUtils, 'resolveExecutable'))
+      const resolveExecutableSpy = vitest.spyOn(miscUtils, 'resolveExecutable');
+      when(resolveExecutableSpy).calledWith('editor').thenResolve(null);
+      when(resolveExecutableSpy)
         .calledWith('code')
         .thenResolve('/path/to/code');
 
@@ -43,12 +42,9 @@ describe('editor', () => {
       vitest
         .spyOn(envModule, 'getEnvironmentVariables')
         .mockReturnValue({ EDITOR: 'editor' });
-      when(vitest.spyOn(miscUtils, 'resolveExecutable'))
-        .calledWith('editor')
-        .thenResolve(null);
-      when(vitest.spyOn(miscUtils, 'resolveExecutable'))
-        .calledWith('code')
-        .thenResolve(null);
+      const resolveExecutableSpy = vitest.spyOn(miscUtils, 'resolveExecutable');
+      when(resolveExecutableSpy).calledWith('editor').thenResolve(null);
+      when(resolveExecutableSpy).calledWith('code').thenResolve(null);
 
       expect(await determineEditor()).toBeNull();
     });
@@ -57,10 +53,9 @@ describe('editor', () => {
       vitest
         .spyOn(envModule, 'getEnvironmentVariables')
         .mockReturnValue({ EDITOR: 'editor' });
-      when(vitest.spyOn(miscUtils, 'resolveExecutable'))
-        .calledWith('editor')
-        .thenResolve(null);
-      when(vitest.spyOn(miscUtils, 'resolveExecutable'))
+      const resolveExecutableSpy = vitest.spyOn(miscUtils, 'resolveExecutable');
+      when(resolveExecutableSpy).calledWith('editor').thenResolve(null);
+      when(resolveExecutableSpy)
         .calledWith('code')
         .thenReject(new Error('some error'));
 
@@ -71,12 +66,11 @@ describe('editor', () => {
       vitest
         .spyOn(envModule, 'getEnvironmentVariables')
         .mockReturnValue({ EDITOR: 'editor' });
-      when(vitest.spyOn(miscUtils, 'resolveExecutable'))
+      const resolveExecutableSpy = vitest.spyOn(miscUtils, 'resolveExecutable');
+      when(resolveExecutableSpy)
         .calledWith('editor')
         .thenReject(new Error('some error'));
-      when(vitest.spyOn(miscUtils, 'resolveExecutable'))
-        .calledWith('code')
-        .thenResolve(null);
+      when(resolveExecutableSpy).calledWith('code').thenResolve(null);
 
       expect(await determineEditor()).toBeNull();
     });
@@ -85,10 +79,11 @@ describe('editor', () => {
       vitest
         .spyOn(envModule, 'getEnvironmentVariables')
         .mockReturnValue({ EDITOR: 'editor' });
-      when(vitest.spyOn(miscUtils, 'resolveExecutable'))
+      const resolveExecutableSpy = vitest.spyOn(miscUtils, 'resolveExecutable');
+      when(resolveExecutableSpy)
         .calledWith('editor')
         .thenReject(new Error('some error'));
-      when(vitest.spyOn(miscUtils, 'resolveExecutable'))
+      when(resolveExecutableSpy)
         .calledWith('code')
         .thenReject(new Error('some error'));
 

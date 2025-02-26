@@ -40,43 +40,29 @@ describe('repo', () => {
       );
     });
 
-    it('throws if the URL of the "origin" remote is in an invalid format', async () => {
-      const repositoryDirectoryPath = '/path/to/project';
-      when(vitest.spyOn(miscUtils, 'getStdoutFromCommand'))
-        .calledWith('git', ['config', '--get', 'remote.origin.url'], {
-          cwd: repositoryDirectoryPath,
-        })
-        // TODO: `vitest-when` doesn't have a `thenResolveOnce` method.
-        .mockResolvedValueOnce('foo')
-        .mockResolvedValueOnce('http://github.com/Foo/Bar')
-        .mockResolvedValueOnce('https://gitbar.foo/Foo/Bar')
-        .mockResolvedValueOnce('git@gitbar.foo:Foo/Bar.git')
-        .mockResolvedValueOnce('git@github.com:Foo/Bar.foo');
+    it.each([
+      'foo',
+      'http://github.com/Foo/Bar',
+      'https://gitbar.foo/Foo/Bar',
+      'git@gitbar.foo:Foo/Bar.git',
+      'git@github.com:Foo/Bar.foo',
+    ])(
+      'throws if the URL of the "origin" remote is in the invalid format "%s"',
+      async (originUrl) => {
+        const repositoryDirectoryPath = '/path/to/project';
+        when(vitest.spyOn(miscUtils, 'getStdoutFromCommand'))
+          .calledWith('git', ['config', '--get', 'remote.origin.url'], {
+            cwd: repositoryDirectoryPath,
+          })
+          .thenResolve(originUrl);
 
-      await expect(
-        getRepositoryHttpsUrl(repositoryDirectoryPath),
-      ).rejects.toThrow('Unrecognized URL for git remote "origin": foo');
-      await expect(
-        getRepositoryHttpsUrl(repositoryDirectoryPath),
-      ).rejects.toThrow(
-        'Unrecognized URL for git remote "origin": http://github.com/Foo/Bar',
-      );
-      await expect(
-        getRepositoryHttpsUrl(repositoryDirectoryPath),
-      ).rejects.toThrow(
-        'Unrecognized URL for git remote "origin": https://gitbar.foo/Foo/Bar',
-      );
-      await expect(
-        getRepositoryHttpsUrl(repositoryDirectoryPath),
-      ).rejects.toThrow(
-        'Unrecognized URL for git remote "origin": git@gitbar.foo:Foo/Bar.git',
-      );
-      await expect(
-        getRepositoryHttpsUrl(repositoryDirectoryPath),
-      ).rejects.toThrow(
-        'Unrecognized URL for git remote "origin": git@github.com:Foo/Bar.foo',
-      );
-    });
+        await expect(
+          getRepositoryHttpsUrl(repositoryDirectoryPath),
+        ).rejects.toThrow(
+          `Unrecognized URL for git remote "origin": ${originUrl}`,
+        );
+      },
+    );
   });
 
   describe('commitAllChanges', () => {
