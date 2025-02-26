@@ -1,6 +1,6 @@
 import { mkdir } from 'fs/promises';
 import path from 'path';
-import { when } from 'jest-when';
+import { when } from 'vitest-when';
 import { SemVer } from 'semver';
 import * as actionUtils from '@metamask/action-utils';
 import { withSandbox } from '../tests/helpers.js';
@@ -19,11 +19,11 @@ import * as repoModule from './repo.js';
 import * as fs from './fs.js';
 import { IncrementableVersionParts } from './release-specification.js';
 
-jest.mock('./package');
-jest.mock('./repo');
-jest.mock('@metamask/action-utils', () => ({
-  ...jest.requireActual('@metamask/action-utils'),
-  getWorkspaceLocations: jest.fn(),
+vitest.mock('./package');
+vitest.mock('./repo');
+vitest.mock('@metamask/action-utils', async (importOriginal) => ({
+  ...(await importOriginal()),
+  getWorkspaceLocations: vitest.fn(),
 }));
 
 describe('project', () => {
@@ -59,23 +59,23 @@ describe('project', () => {
         };
         const projectTagNames = ['tag1', 'tag2', 'tag3'];
         const stderr = createNoopWriteStream();
-        when(jest.spyOn(repoModule, 'getRepositoryHttpsUrl'))
+        when(vitest.spyOn(repoModule, 'getRepositoryHttpsUrl'))
           .calledWith(projectDirectoryPath)
-          .mockResolvedValue(projectRepositoryUrl);
-        when(jest.spyOn(repoModule, 'getTagNames'))
+          .thenResolve(projectRepositoryUrl);
+        when(vitest.spyOn(repoModule, 'getTagNames'))
           .calledWith(projectDirectoryPath)
-          .mockResolvedValue(projectTagNames);
-        when(jest.spyOn(packageModule, 'readMonorepoRootPackage'))
+          .thenResolve(projectTagNames);
+        when(vitest.spyOn(packageModule, 'readMonorepoRootPackage'))
           .calledWith({
             packageDirectoryPath: projectDirectoryPath,
             projectDirectoryPath,
             projectTagNames,
           })
-          .mockResolvedValue(rootPackage);
-        when(
-          jest.spyOn(actionUtils, 'getWorkspaceLocations'),
-        ).mockResolvedValue(['packages/a', 'packages/subpackages/b']);
-        when(jest.spyOn(packageModule, 'readMonorepoWorkspacePackage'))
+          .thenResolve(rootPackage);
+        vitest
+          .spyOn(actionUtils, 'getWorkspaceLocations')
+          .mockResolvedValue(['packages/a', 'packages/subpackages/b']);
+        when(vitest.spyOn(packageModule, 'readMonorepoWorkspacePackage'))
           .calledWith({
             packageDirectoryPath: path.join(
               projectDirectoryPath,
@@ -88,7 +88,8 @@ describe('project', () => {
             projectTagNames,
             stderr,
           })
-          .mockResolvedValue(workspacePackages.a)
+          .thenResolve(workspacePackages.a);
+        when(vitest.spyOn(packageModule, 'readMonorepoWorkspacePackage'))
           .calledWith({
             packageDirectoryPath: path.join(
               projectDirectoryPath,
@@ -102,7 +103,7 @@ describe('project', () => {
             projectTagNames,
             stderr,
           })
-          .mockResolvedValue(workspacePackages.b);
+          .thenResolve(workspacePackages.b);
         await mkdir(path.join(projectDirectoryPath, 'packages'));
         await mkdir(path.join(projectDirectoryPath, 'packages', 'a'));
         await mkdir(path.join(projectDirectoryPath, 'packages', 'subpackages'));
@@ -143,15 +144,15 @@ describe('project', () => {
         },
       });
 
-      const restoreFilesSpy = jest.spyOn(repoModule, 'restoreFiles');
+      const restoreFilesSpy = vitest.spyOn(repoModule, 'restoreFiles');
 
-      when(jest.spyOn(fs, 'fileExists'))
+      when(vitest.spyOn(fs, 'fileExists'))
         .calledWith(project.workspacePackages.b.changelogPath)
-        .mockResolvedValue(true);
+        .thenResolve(true);
 
-      when(jest.spyOn(fs, 'fileExists'))
+      when(vitest.spyOn(fs, 'fileExists'))
         .calledWith(project.workspacePackages.c.changelogPath)
-        .mockResolvedValue(true);
+        .thenResolve(true);
 
       await restoreChangelogsForSkippedPackages({
         project,
@@ -187,7 +188,7 @@ describe('project', () => {
         },
       });
 
-      const restoreFilesSpy = jest.spyOn(repoModule, 'restoreFiles');
+      const restoreFilesSpy = vitest.spyOn(repoModule, 'restoreFiles');
 
       await restoreChangelogsForSkippedPackages({
         project,
@@ -220,11 +221,11 @@ describe('project', () => {
         },
       });
 
-      when(jest.spyOn(fs, 'fileExists'))
+      when(vitest.spyOn(fs, 'fileExists'))
         .calledWith(project.workspacePackages.a.changelogPath)
-        .mockResolvedValue(false);
+        .thenResolve(false);
 
-      const restoreFilesSpy = jest.spyOn(repoModule, 'restoreFiles');
+      const restoreFilesSpy = vitest.spyOn(repoModule, 'restoreFiles');
 
       await restoreChangelogsForSkippedPackages({
         project,
@@ -260,7 +261,7 @@ describe('project', () => {
         },
       });
 
-      const updatePackageChangelogSpy = jest.spyOn(
+      const updatePackageChangelogSpy = vitest.spyOn(
         packageModule,
         'updatePackageChangelog',
       );
@@ -294,7 +295,7 @@ describe('project', () => {
         },
       });
 
-      const updatePackageChangelogSpy = jest.spyOn(
+      const updatePackageChangelogSpy = vitest.spyOn(
         packageModule,
         'updatePackageChangelog',
       );

@@ -10,7 +10,8 @@
     "noErrorTruncation": true,
     "skipLibCheck": true,
     "strict": true,
-    "target": "ES2017"
+    "target": "ES2017",
+    "types": ["vitest/globals"]
   },
   "exclude": ["./dist/**/*", "node_modules"]
 }

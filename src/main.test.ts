@@ -4,15 +4,15 @@ import { main } from './main.js';
 import * as initialParametersModule from './initial-parameters.js';
 import * as monorepoWorkflowOperations from './monorepo-workflow-operations.js';
 
-jest.mock('./initial-parameters');
-jest.mock('./monorepo-workflow-operations');
+vitest.mock('./initial-parameters');
+vitest.mock('./monorepo-workflow-operations');
 
 describe('main', () => {
   it('executes the monorepo workflow if the project is a monorepo', async () => {
     const project = buildMockProject({ isMonorepo: true });
     const stdout = fs.createWriteStream('/dev/null');
     const stderr = fs.createWriteStream('/dev/null');
-    jest
+    vitest
       .spyOn(initialParametersModule, 'determineInitialParameters')
       .mockResolvedValue({
         project,
@@ -21,7 +21,7 @@ describe('main', () => {
         defaultBranch: 'main',
         releaseType: 'backport',
       });
-    const followMonorepoWorkflowSpy = jest
+    const followMonorepoWorkflowSpy = vitest
       .spyOn(monorepoWorkflowOperations, 'followMonorepoWorkflow')
       .mockResolvedValue();
 
@@ -47,7 +47,7 @@ describe('main', () => {
     const project = buildMockProject({ isMonorepo: false });
     const stdout = fs.createWriteStream('/dev/null');
     const stderr = fs.createWriteStream('/dev/null');
-    jest
+    vitest
       .spyOn(initialParametersModule, 'determineInitialParameters')
       .mockResolvedValue({
         project,
@@ -56,7 +56,7 @@ describe('main', () => {
         defaultBranch: 'main',
         releaseType: 'backport',
       });
-    const followMonorepoWorkflowSpy = jest
+    const followMonorepoWorkflowSpy = vitest
       .spyOn(monorepoWorkflowOperations, 'followMonorepoWorkflow')
       .mockResolvedValue();
 
