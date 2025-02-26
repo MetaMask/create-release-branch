@@ -1,9 +1,9 @@
 import fs from 'fs';
 import path from 'path';
-import { when } from 'jest-when';
+import { when } from 'vitest-when';
 import { MockWritable } from 'stdio-mock';
-import { withSandbox, Sandbox, isErrorWithCode } from '../tests/helpers';
-import { buildMockProject, Require } from '../tests/unit/helpers';
+import { withSandbox, Sandbox, isErrorWithCode } from '../tests/helpers.js';
+import { buildMockProject, Require } from '../tests/unit/helpers.js';
 import { followMonorepoWorkflow } from './monorepo-workflow-operations.js';
 import * as editorModule from './editor.js';
 import type { Editor } from './editor.js';
@@ -15,11 +15,11 @@ import * as repoModule from './repo.js';
 import * as yarnCommands from './yarn-commands.js';
 import * as workflowOperations from './workflow-operations.js';
 
-jest.mock('./editor');
-jest.mock('./release-plan');
-jest.mock('./release-specification');
-jest.mock('./repo');
-jest.mock('./yarn-commands.js');
+vitest.mock('./editor');
+vitest.mock('./release-plan');
+vitest.mock('./release-specification');
+vitest.mock('./repo');
+vitest.mock('./yarn-commands.js');
 
 /**
  * Tests the given path to determine whether it represents a file.
@@ -47,29 +47,32 @@ async function fileExists(entryPath: string): Promise<boolean> {
  */
 function getDependencySpies() {
   return {
-    determineEditorSpy: jest.spyOn(editorModule, 'determineEditor'),
-    createReleaseBranchSpy: jest.spyOn(
+    determineEditorSpy: vitest.spyOn(editorModule, 'determineEditor'),
+    createReleaseBranchSpy: vitest.spyOn(
       workflowOperations,
       'createReleaseBranch',
     ),
-    generateReleaseSpecificationTemplateForMonorepoSpy: jest.spyOn(
+    generateReleaseSpecificationTemplateForMonorepoSpy: vitest.spyOn(
       releaseSpecificationModule,
       'generateReleaseSpecificationTemplateForMonorepo',
     ),
-    waitForUserToEditReleaseSpecificationSpy: jest.spyOn(
+    waitForUserToEditReleaseSpecificationSpy: vitest.spyOn(
       releaseSpecificationModule,
       'waitForUserToEditReleaseSpecification',
     ),
-    validateReleaseSpecificationSpy: jest.spyOn(
+    validateReleaseSpecificationSpy: vitest.spyOn(
       releaseSpecificationModule,
       'validateReleaseSpecification',
     ),
-    planReleaseSpy: jest.spyOn(releasePlanModule, 'planRelease'),
-    executeReleasePlanSpy: jest.spyOn(releasePlanModule, 'executeReleasePlan'),
-    commitAllChangesSpy: jest.spyOn(repoModule, 'commitAllChanges'),
-    fixConstraintsSpy: jest.spyOn(yarnCommands, 'fixConstraints'),
-    updateYarnLockfileSpy: jest.spyOn(yarnCommands, 'updateYarnLockfile'),
-    deduplicateDependenciesSpy: jest.spyOn(
+    planReleaseSpy: vitest.spyOn(releasePlanModule, 'planRelease'),
+    executeReleasePlanSpy: vitest.spyOn(
+      releasePlanModule,
+      'executeReleasePlan',
+    ),
+    commitAllChangesSpy: vitest.spyOn(repoModule, 'commitAllChanges'),
+    fixConstraintsSpy: vitest.spyOn(yarnCommands, 'fixConstraints'),
+    updateYarnLockfileSpy: vitest.spyOn(yarnCommands, 'updateYarnLockfile'),
+    deduplicateDependenciesSpy: vitest.spyOn(
       yarnCommands,
       'deduplicateDependencies',
     ),
@@ -208,26 +211,26 @@ async function setupFollowMonorepoWorkflow({
   determineEditorSpy.mockResolvedValue(isEditorAvailable ? editor : null);
   when(generateReleaseSpecificationTemplateForMonorepoSpy)
     .calledWith({ project, isEditorAvailable })
-    .mockResolvedValue('');
+    .thenResolve('');
 
   if (errorUponEditingReleaseSpec) {
     when(waitForUserToEditReleaseSpecificationSpy)
       .calledWith(releaseSpecificationPath, editor)
-      .mockRejectedValue(errorUponEditingReleaseSpec);
+      .thenReject(errorUponEditingReleaseSpec);
   } else {
     when(waitForUserToEditReleaseSpecificationSpy)
       .calledWith(releaseSpecificationPath, editor)
-      .mockResolvedValue();
+      .thenResolve();
   }
 
   if (errorUponValidatingReleaseSpec) {
     when(validateReleaseSpecificationSpy)
       .calledWith(project, releaseSpecificationPath)
-      .mockRejectedValue(errorUponValidatingReleaseSpec);
+      .thenReject(errorUponValidatingReleaseSpec);
   } else {
     when(validateReleaseSpecificationSpy)
       .calledWith(project, releaseSpecificationPath)
-      .mockResolvedValue(releaseSpecification);
+      .thenResolve(releaseSpecification);
   }
 
   if (errorUponPlanningRelease) {
@@ -237,7 +240,7 @@ async function setupFollowMonorepoWorkflow({
         releaseSpecification,
         newReleaseVersion: releaseVersion,
       })
-      .mockRejectedValue(errorUponPlanningRelease);
+      .thenReject(errorUponPlanningRelease);
   } else {
     when(planReleaseSpy)
       .calledWith({
@@ -245,22 +248,20 @@ async function setupFollowMonorepoWorkflow({
         releaseSpecification,
         newReleaseVersion: releaseVersion,
       })
-      .mockResolvedValue(releasePlan);
+      .thenResolve(releasePlan);
   }
 
   if (errorUponExecutingReleasePlan) {
     when(executeReleasePlanSpy)
       .calledWith(project, releasePlan, stderr)
-      .mockRejectedValue(errorUponExecutingReleasePlan);
+      .thenReject(errorUponExecutingReleasePlan);
   } else {
     when(executeReleasePlanSpy)
       .calledWith(project, releasePlan, stderr)
-      .mockResolvedValue(undefined);
+      .thenResolve(undefined);
   }
 
-  when(commitAllChangesSpy)
-    .calledWith(projectDirectoryPath, '')
-    .mockResolvedValue();
+  when(commitAllChangesSpy).calledWith(projectDirectoryPath, '').thenResolve();
 
   if (doesReleaseSpecFileExist) {
     await fs.promises.writeFile(

@@ -33,6 +33,7 @@ module.exports = {
         next: 'multiline-block-like',
       },
     ],
+
     // It's common for scripts to access `process.env`
     'node/no-process-env': 'off',
   },
@@ -46,6 +47,18 @@ module.exports = {
     {
       files: ['*.test.ts'],
       extends: ['@metamask/eslint-config-jest'],
+
+      settings: {
+        jest: {
+          // This package uses Vitest, but `@metamask/eslint-config-vitest` is
+          // only available for ESLint 9+. The Jest rules are similar enough,
+          // but we need to explicitly set the Jest version since we're not
+          // using the `jest` package directly.
+          // TODO: Remove this when migrating to
+          //  `@metamask/eslint-config-vitest`.
+          version: 29,
+        },
+      },
     },
   ],
 
