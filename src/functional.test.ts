@@ -2,6 +2,9 @@ import { withMonorepoProjectEnvironment } from '../tests/functional/helpers/with
 import { buildChangelog } from '../tests/helpers.js';
 
 describe(
+  // This is valid with Vitest.
+  // TODO: Remove this when migrating to `@metamask/eslint-config-vitest`.
+  // eslint-disable-next-line jest/valid-describe-callback
   'create-release-branch (functional)',
   {
     timeout: 10_000,
