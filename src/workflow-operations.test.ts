@@ -1,8 +1,8 @@
 import { when } from 'jest-when';
-import { buildMockProject } from '../tests/unit/helpers';
-import { createReleaseBranch } from './workflow-operations.js';
 
 import * as repoModule from './repo.js';
+import { createReleaseBranch } from './workflow-operations.js';
+import { buildMockProject } from '../tests/unit/helpers';
 
 jest.mock('./repo');
 

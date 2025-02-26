@@ -1,4 +1,5 @@
 import type { WriteStream } from 'fs';
+
 import { determineInitialParameters } from './initial-parameters.js';
 import { followMonorepoWorkflow } from './monorepo-workflow-operations.js';
 import { startUI } from './ui.js';
@@ -25,7 +26,7 @@ export async function main({
   cwd: string;
   stdout: Pick<WriteStream, 'write'>;
   stderr: Pick<WriteStream, 'write'>;
-}) {
+}): Promise<void> {
   const {
     project,
     tempDirectoryPath,

@@ -1,7 +1,8 @@
+import type { ExecaReturnValue } from 'execa';
 import fs from 'fs';
 import path from 'path';
-import type { ExecaReturnValue } from 'execa';
 import YAML from 'yaml';
+
 import { TOOL_EXECUTABLE_PATH, TSX_PATH } from './constants.js';
 import Environment, {
   EnvironmentOptions,
@@ -14,9 +15,10 @@ import { debug, knownKeysOf } from './utils.js';
  * A set of configuration options for a {@link MonorepoEnvironment}. In addition
  * to the options listed in {@link EnvironmentOptions}, these include:
  *
- * @property packages - The known packages within this repo (including the
+ * packages - The known packages within this repo (including the
  * root).
- * @property workspaces - The known workspaces within this repo.
+ *
+ * workspaces - The known workspaces within this repo.
  */
 export type MonorepoEnvironmentOptions<
   WorkspacePackageNickname extends string,
@@ -28,7 +30,7 @@ export type MonorepoEnvironmentOptions<
 /**
  * The release specification data.
  *
- * @property packages - The workspace packages within this repo that will be
+ * packages - The workspace packages within this repo that will be
  * released.
  */
 type ReleaseSpecification<WorkspacePackageNickname extends string> = {
@@ -50,8 +52,13 @@ export default class MonorepoEnvironment<
 
   updateJsonFileWithinPackage: LocalMonorepo<WorkspacePackageNickname>['updateJsonFileWithinPackage'];
 
-  #packages: MonorepoEnvironmentOptions<WorkspacePackageNickname>['packages'];
+  readonly #packages: MonorepoEnvironmentOptions<WorkspacePackageNickname>['packages'];
 
+  /**
+   * Creates a MonorepoEnvironment.
+   *
+   * @param options - The options.
+   */
   constructor(options: MonorepoEnvironmentOptions<WorkspacePackageNickname>) {
     super(options);
     this.#packages = options.packages;
@@ -147,6 +154,16 @@ cat "${releaseSpecificationPath}" > "$1"
     return result;
   }
 
+  /**
+   * Creates a local monorepo.
+   *
+   * @param args - The arguments.
+   * @param args.packages - The packages to include in the monorepo.
+   * @param args.workspaces - The workspaces to include in the monorepo.
+   * @param args.createInitialCommit - Whether to create an initial commit
+   * when the monorepo is initialized.
+   * @returns The local monorepo.
+   */
   protected buildLocalRepo({
     packages,
     workspaces,

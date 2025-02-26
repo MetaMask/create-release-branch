@@ -1,9 +1,10 @@
+import { parseChangelog, updateChangelog } from '@metamask/auto-changelog';
 import fs, { WriteStream } from 'fs';
 import path from 'path';
-import { format } from 'util';
-import { parseChangelog, updateChangelog } from '@metamask/auto-changelog';
-import { format as formatPrettier } from 'prettier/standalone';
 import * as markdown from 'prettier/plugins/markdown';
+import { format as formatPrettier } from 'prettier/standalone';
+import { format } from 'util';
+
 import { WriteStreamLike, readFile, writeFile, writeJsonFile } from './fs.js';
 import { isErrorWithCode } from './misc-utils.js';
 import {
@@ -22,12 +23,13 @@ const CHANGELOG_FILE_NAME = 'CHANGELOG.md';
 /**
  * Information about a package within a project.
  *
- * @property directoryPath - The path to the directory where the package is
- * located.
- * @property manifestPath - The path to the manifest file.
- * @property manifest - The data extracted from the manifest.
- * @property changelogPath - The path to the changelog file (which may or may
- * not exist).
+ * Properties:
+ *
+ * - `directoryPath` - The path to the directory where the package is located.
+ * - `manifestPath` - The path to the manifest file.
+ * - `manifest` - The data extracted from the manifest.
+ * - `changelogPath` - The path to the changelog file (which may or may not
+ *   exist).
  */
 export type Package = {
   directoryPath: string;
@@ -45,7 +47,9 @@ export type Package = {
  * @param packageVersion - The version of the package.
  * @returns An array of possible release tag names.
  */
-function generateMonorepoRootPackageReleaseTagName(packageVersion: string) {
+function generateMonorepoRootPackageReleaseTagName(
+  packageVersion: string,
+): string {
   return `v${packageVersion}`;
 }
 
@@ -61,7 +65,7 @@ function generateMonorepoRootPackageReleaseTagName(packageVersion: string) {
 function generateMonorepoWorkspacePackageReleaseTagName(
   packageName: string,
   packageVersion: string,
-) {
+): string {
   return `${packageName}@${packageVersion}`;
 }
 
@@ -89,7 +93,7 @@ export async function readMonorepoRootPackage({
     await readPackageManifest(manifestPath);
   const expectedTagNameForLatestRelease =
     generateMonorepoRootPackageReleaseTagName(
-      validatedManifest.version.toString(),
+      validatedManifest.version.version,
     );
   const matchingTagNameForLatestRelease = projectTagNames.find(
     (tagName) => tagName === expectedTagNameForLatestRelease,
@@ -164,10 +168,10 @@ export async function readMonorepoWorkspacePackage({
   const expectedTagNameForWorkspacePackageLatestRelease =
     generateMonorepoWorkspacePackageReleaseTagName(
       validatedManifest.name,
-      validatedManifest.version.toString(),
+      validatedManifest.version.version,
     );
   const expectedTagNameForRootPackageLatestRelease =
-    generateMonorepoRootPackageReleaseTagName(rootPackageVersion.toString());
+    generateMonorepoRootPackageReleaseTagName(rootPackageVersion.version);
   const matchingTagNameForWorkspacePackageLatestRelease = projectTagNames.find(
     (tagName) => tagName === expectedTagNameForWorkspacePackageLatestRelease,
   );
@@ -289,7 +293,7 @@ export async function migrateUnreleasedChangelogChangesToRelease({
  * @param changelog - The changelog to format.
  * @returns The formatted changelog.
  */
-export async function formatChangelog(changelog: string) {
+export async function formatChangelog(changelog: string): Promise<string> {
   return await formatPrettier(changelog, {
     parser: 'markdown',
     plugins: [markdown],

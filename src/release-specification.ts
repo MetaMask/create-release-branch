@@ -1,6 +1,7 @@
 import fs, { WriteStream } from 'fs';
-import YAML from 'yaml';
 import { diff } from 'semver';
+import YAML from 'yaml';
+
 import { Editor } from './editor.js';
 import { readFile } from './fs.js';
 import {
@@ -10,32 +11,40 @@ import {
   isObject,
   runCommand,
 } from './misc-utils.js';
+import { Package } from './package.js';
 import { Project } from './project.js';
 import { isValidSemver, semver, SemVer } from './semver.js';
-import { Package } from './package.js';
 
 /**
  * The SemVer-compatible parts of a version string that can be bumped by this
  * tool.
  */
-export enum IncrementableVersionParts {
-  major = 'major',
-  minor = 'minor',
-  patch = 'patch',
-}
+export const IncrementableVersionParts = {
+  major: 'major',
+  minor: 'minor',
+  patch: 'patch',
+} as const;
+
+/**
+ * The SemVer-compatible parts of a version string that can be bumped by this
+ * tool.
+ */
+export type IncrementableVersionParts =
+  (typeof IncrementableVersionParts)[keyof typeof IncrementableVersionParts];
 
 /**
  * Describes how to update the version for a package, either by bumping a part
  * of the version or by setting that version exactly.
  */
-type VersionSpecifier = IncrementableVersionParts | SemVer;
+export type VersionSpecifier = IncrementableVersionParts | SemVer;
 
 /**
  * User-provided instructions for how to update this project in order to prepare
  * it for a new release.
  *
- * @property packages - A mapping of package names to version specifiers.
- * @property path - The path to the original release specification file.
+ * packages - A mapping of package names to version specifiers.
+ *
+ * path - The path to the original release specification file.
  */
 export type ReleaseSpecification = {
   packages: Record<string, VersionSpecifier>;
@@ -61,7 +70,7 @@ export async function generateReleaseSpecificationTemplateForMonorepo({
 }: {
   project: Project;
   isEditorAvailable: boolean;
-}) {
+}): Promise<string> {
   const afterEditingInstructions = isEditorAvailable
     ? `
 # When you're finished, save this file and close it. The tool will update the
@@ -132,7 +141,7 @@ export async function waitForUserToEditReleaseSpecification(
   releaseSpecificationPath: string,
   editor: Editor,
   stdout: Pick<WriteStream, 'write'> = fs.createWriteStream('/dev/null'),
-) {
+): Promise<void> {
   let caughtError: unknown;
 
   debug(
@@ -368,7 +377,7 @@ export function validateAllPackageEntries(
           errors.push({
             message: [
               `${JSON.stringify(versionSpecifierOrDirective)} is not a valid version specifier for package "${changedPackageName}"`,
-              `("${changedPackageName}" is at a greater version "${project.workspacePackages[changedPackageName].validatedManifest.version}")`,
+              `("${changedPackageName}" is at a greater version "${project.workspacePackages[changedPackageName].validatedManifest.version.version}")`,
             ],
             lineNumber,
           });
@@ -515,11 +524,8 @@ export async function validateReleaseSpecification(
         .flatMap((error) => {
           const itemPrefix = '* ';
 
-          if (error.lineNumber === undefined) {
-            return `${itemPrefix}${error.message}`;
-          }
-
-          const lineNumberPrefix = `Line ${error.lineNumber}: `;
+          const lineNumberPrefix =
+            error.lineNumber === undefined ? '' : `Line ${error.lineNumber}: `;
 
           if (Array.isArray(error.message)) {
             return [
@@ -540,41 +546,38 @@ export async function validateReleaseSpecification(
     throw new Error(message);
   }
 
-  const packages = Object.keys(unvalidatedReleaseSpecification.packages).reduce(
-    (obj, packageName) => {
-      const versionSpecifierOrDirective =
-        unvalidatedReleaseSpecification.packages[packageName];
+  const packages = Object.keys(unvalidatedReleaseSpecification.packages).reduce<
+    ReleaseSpecification['packages']
+  >((obj, packageName) => {
+    const versionSpecifierOrDirective =
+      unvalidatedReleaseSpecification.packages[packageName];
+    // Downcast this so that we can check for inclusion below.
+    const incrementableVersionParts = Object.values(
+      IncrementableVersionParts,
+    ) as string[];
 
-      if (
-        versionSpecifierOrDirective !== SKIP_PACKAGE_DIRECTIVE &&
-        versionSpecifierOrDirective !== INTENTIONALLY_SKIP_PACKAGE_DIRECTIVE
-      ) {
-        if (
-          Object.values(IncrementableVersionParts).includes(
-            // Typecast: It doesn't matter what type versionSpecifierOrDirective
-            // is as we are checking for inclusion.
-            versionSpecifierOrDirective as any,
-          )
-        ) {
-          return {
-            ...obj,
-            // Typecast: We know what this is as we've checked it above.
-            [packageName]:
-              versionSpecifierOrDirective as IncrementableVersionParts,
-          };
-        }
-
+    if (
+      versionSpecifierOrDirective !== SKIP_PACKAGE_DIRECTIVE &&
+      versionSpecifierOrDirective !== INTENTIONALLY_SKIP_PACKAGE_DIRECTIVE
+    ) {
+      if (incrementableVersionParts.includes(versionSpecifierOrDirective)) {
         return {
           ...obj,
-          // Typecast: We know that this will safely parse.
-          [packageName]: semver.parse(versionSpecifierOrDirective) as SemVer,
+          // Typecast: We know what this is as we've checked it above.
+          [packageName]:
+            versionSpecifierOrDirective as IncrementableVersionParts,
         };
       }
 
-      return obj;
-    },
-    {} as ReleaseSpecification['packages'],
-  );
+      return {
+        ...obj,
+        // Typecast: We know that this will safely parse.
+        [packageName]: semver.parse(versionSpecifierOrDirective) as SemVer,
+      };
+    }
+
+    return obj;
+  }, {});
 
   return { packages, path: releaseSpecificationPath };
 }

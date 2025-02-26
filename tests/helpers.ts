@@ -1,9 +1,9 @@
+import { hasProperty, isObject } from '@metamask/utils';
+import type { ExecaError } from 'execa';
 import fs from 'fs';
+import { nanoid } from 'nanoid';
 import os from 'os';
 import path from 'path';
-import { nanoid } from 'nanoid';
-import type { ExecaError } from 'execa';
-import { hasProperty, isObject } from '@metamask/utils';
 
 /**
  * Information about the sandbox provided to tests that need access to the
@@ -36,8 +36,13 @@ async function ensureFileEntryDoesNotExist(entryPath: string): Promise<void> {
   try {
     await fs.promises.access(entryPath);
     throw new Error(`${entryPath} already exists, cannot continue`);
-  } catch (error: any) {
-    if (error.code !== 'ENOENT') {
+  } catch (error) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      hasProperty(error, 'code') &&
+      error.code !== 'ENOENT'
+    ) {
       throw error;
     }
   }
@@ -51,7 +56,9 @@ async function ensureFileEntryDoesNotExist(entryPath: string): Promise<void> {
  * @throws If the temporary directory already exists for some reason. This would
  * indicate a bug in how the names of the directory is determined.
  */
-export async function withSandbox(fn: (sandbox: Sandbox) => any) {
+export async function withSandbox<ReturnValue>(
+  fn: (sandbox: Sandbox) => ReturnValue,
+): Promise<void> {
   const directoryPath = path.join(TEMP_DIRECTORY_PATH, nanoid());
   await ensureFileEntryDoesNotExist(directoryPath);
   await fs.promises.mkdir(directoryPath, { recursive: true });
@@ -136,6 +143,8 @@ export function buildChangelog(variantContent: string): string {
   return `${invariantContent}\n${normalizeMultilineString(variantContent)}`;
 }
 
+// This function is concerned with reading and writing environment variables.
+/* eslint-disable n/no-process-env */
 /**
  * Runs the given function and ensures that even if `process.env` is changed
  * during the function, it is restored afterward.
@@ -144,7 +153,9 @@ export function buildChangelog(variantContent: string): string {
  * `process.env`.
  * @returns Whatever the callback returns.
  */
-export async function withProtectedProcessEnv<T>(callback: () => Promise<T>) {
+export async function withProtectedProcessEnv<ReturnValue>(
+  callback: () => Promise<ReturnValue>,
+): Promise<ReturnValue> {
   const originalEnv = { ...process.env };
 
   try {
@@ -164,3 +175,4 @@ export async function withProtectedProcessEnv<T>(callback: () => Promise<T>) {
       });
   }
 }
+/* eslint-enable n/no-process-env */

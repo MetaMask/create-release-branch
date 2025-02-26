@@ -1,5 +1,6 @@
-import * as whichModule from 'which';
 import * as execaModule from 'execa';
+import * as whichModule from 'which';
+
 import {
   isErrorWithCode,
   isErrorWithMessage,

@@ -1,14 +1,18 @@
+import { getErrorMessage } from '@metamask/utils';
+import express, { static as expressStatic, json as expressJson } from 'express';
 import type { WriteStream } from 'fs';
-import { join } from 'path';
-import express from 'express';
 import open from 'open';
+import { join } from 'path';
 
+import { getCurrentDirectoryPath } from './dirname.js';
+import { readFile } from './fs.js';
+import { Package } from './package.js';
 import {
   restoreChangelogsForSkippedPackages,
   updateChangelogsForChangedPackages,
-  type Project,
 } from './project.js';
-import { Package } from './package.js';
+import type { Project } from './project.js';
+import { executeReleasePlan, planRelease } from './release-plan.js';
 import {
   findAllWorkspacePackagesThatDependOnPackage,
   findMissingUnreleasedDependenciesForRelease,
@@ -17,20 +21,20 @@ import {
   ReleaseSpecification,
   validateAllPackageEntries,
 } from './release-specification.js';
-import { createReleaseBranch } from './workflow-operations.js';
 import { commitAllChanges } from './repo.js';
 import { SemVer, semver } from './semver.js';
-import { executeReleasePlan, planRelease } from './release-plan.js';
+import { createReleaseBranch } from './workflow-operations.js';
 import {
   deduplicateDependencies,
   fixConstraints,
   updateYarnLockfile,
 } from './yarn-commands.js';
-import { readFile } from './fs.js';
-import { getCurrentDirectoryPath } from './dirname.js';
 
 const UI_BUILD_DIR = join(getCurrentDirectoryPath(), 'ui');
 
+/**
+ * The set of options that can be used to start the UI.
+ */
 type UIOptions = {
   project: Project;
   releaseType: 'ordinary' | 'backport';
@@ -84,20 +88,22 @@ export async function startUI({
     },
   });
 
-  const server = app.listen(port, async () => {
+  const server = app.listen(port, () => {
     const url = `http://localhost:${port}`;
 
-    try {
-      stdout.write(`\nAttempting to open UI in browser...`);
-      await open(url);
-      stdout.write(`\nUI server running at ${url}\n`);
-    } catch (error) {
-      stderr.write(`\n---------------------------------------------------\n`);
-      stderr.write(`Error automatically opening browser: ${error}\n`);
-      stderr.write(`Please open the following URL manually:\n`);
-      stderr.write(`${url}\n`);
-      stderr.write(`---------------------------------------------------\n\n`);
-    }
+    stdout.write(`\nAttempting to open UI in browser...`);
+    open(url)
+      .then(() => {
+        stdout.write(`\nUI server running at ${url}\n`);
+        return undefined;
+      })
+      .catch((error) => {
+        stderr.write(`\n---------------------------------------------------\n`);
+        stderr.write(`Error automatically opening browser: ${error}\n`);
+        stderr.write(`Please open the following URL manually:\n`);
+        stderr.write(`${url}\n`);
+        stderr.write(`---------------------------------------------------\n\n`);
+      });
   });
 
   return new Promise((resolve, reject) => {
@@ -138,8 +144,8 @@ function createApp({
 }): express.Application {
   const app = express();
 
-  app.use(express.static(UI_BUILD_DIR));
-  app.use(express.json());
+  app.use(expressStatic(UI_BUILD_DIR));
+  app.use(expressJson());
 
   app.get('/api/packages', (req, res) => {
     const { majorBumps } = req.query;
@@ -147,7 +153,7 @@ function createApp({
     const majorBumpsArray =
       typeof majorBumps === 'string'
         ? majorBumps.split(',').filter(Boolean)
-        : (req.query.majorBumps as string[] | undefined) || [];
+        : ((req.query.majorBumps as string[] | undefined) ?? []);
 
     const requiredDependents = new Set(
       majorBumpsArray.flatMap((majorBump) =>
@@ -181,7 +187,7 @@ function createApp({
 
       res.send(changelogContent);
     } catch (error) {
-      stderr.write(`Changelog error: ${error}\n`);
+      stderr.write(`Changelog error: ${getErrorMessage(error)}\n`);
       res.status(500).send('Internal Server Error');
     }
   });
@@ -241,7 +247,7 @@ function createApp({
 
         res.json({ status: 'success' });
       } catch (error) {
-        stderr.write(`Release error: ${error}\n`);
+        stderr.write(`Release error: ${getErrorMessage(error)}\n`);
         res.status(400).send('Invalid request');
       }
     },
@@ -265,35 +271,37 @@ function createApp({
 
         const releaseSpecificationPackages = Object.keys(
           releasedPackages,
-        ).reduce(
-          (obj, packageName) => {
-            const versionSpecifierOrDirective = releasedPackages[packageName];
+        ).reduce<ReleaseSpecification['packages']>((obj, packageName) => {
+          const versionSpecifierOrDirective = releasedPackages[packageName];
+          // Downcast this so that we can check for inclusion below.
+          const incrementableVersionParts = Object.values(
+            IncrementableVersionParts,
+          ) as string[];
 
-            if (versionSpecifierOrDirective !== 'intentionally-skip') {
-              if (
-                Object.values(IncrementableVersionParts).includes(
-                  versionSpecifierOrDirective as any,
-                )
-              ) {
-                return {
-                  ...obj,
-                  [packageName]:
-                    versionSpecifierOrDirective as IncrementableVersionParts,
-                };
-              }
-
+          if (versionSpecifierOrDirective !== 'intentionally-skip') {
+            if (
+              versionSpecifierOrDirective &&
+              incrementableVersionParts.includes(versionSpecifierOrDirective)
+            ) {
               return {
                 ...obj,
-                [packageName]: semver.parse(
-                  versionSpecifierOrDirective,
-                ) as SemVer,
+                [packageName]:
+                  // Typecast: We know what this is as we've checked it above.
+                  versionSpecifierOrDirective as IncrementableVersionParts,
               };
             }
 
-            return obj;
-          },
-          {} as ReleaseSpecification['packages'],
-        );
+            return {
+              ...obj,
+              // Typecast: We know that this will safely parse.
+              [packageName]: semver.parse(
+                versionSpecifierOrDirective,
+              ) as SemVer,
+            };
+          }
+
+          return obj;
+        }, {});
 
         await restoreChangelogsForSkippedPackages({
           project,
@@ -319,7 +327,7 @@ function createApp({
 
         closeServer();
       } catch (error) {
-        stderr.write(`Release error: ${error}\n`);
+        stderr.write(`Release error: ${getErrorMessage(error)}\n`);
         res.status(400).send('Invalid request');
       }
     },

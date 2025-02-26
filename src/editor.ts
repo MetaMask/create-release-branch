@@ -1,12 +1,15 @@
+import { getErrorMessage } from '@metamask/utils';
+
 import { getEnvironmentVariables } from './env.js';
 import { debug, resolveExecutable } from './misc-utils.js';
 
 /**
  * Information about the editor present on the user's computer.
  *
- * @property path - The path to the executable representing the editor.
- * @property args - Command-line arguments to pass to the executable when
- * calling it.
+ * Properties:
+ *
+ * - `path` - The path to the executable representing the editor.
+ * - `args` - Command-line arguments to pass to the executable when calling it.
  */
 export type Editor = {
   path: string;
@@ -31,7 +34,7 @@ export async function determineEditor(): Promise<Editor | null> {
       executablePath = await resolveExecutable(EDITOR);
     } catch (error) {
       debug(
-        `Could not resolve executable ${EDITOR} (${error}), falling back to VSCode`,
+        `Could not resolve executable ${EDITOR} (${getErrorMessage(error)}), falling back to VSCode`,
       );
     }
   }
@@ -43,7 +46,7 @@ export async function determineEditor(): Promise<Editor | null> {
       executableArgs.push('--wait');
     } catch (error) {
       debug(
-        `Could not resolve path to VSCode: ${error}, continuing regardless`,
+        `Could not resolve path to VSCode: ${getErrorMessage(error)}, continuing regardless`,
       );
     }
   }

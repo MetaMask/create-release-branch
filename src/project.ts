@@ -1,38 +1,41 @@
-import { WriteStream } from 'fs';
-import { resolve } from 'path';
 import { getWorkspaceLocations } from '@metamask/action-utils';
 import { isPlainObject } from '@metamask/utils';
+import { WriteStream } from 'fs';
+import { resolve } from 'path';
+
 import { WriteStreamLike, fileExists } from './fs.js';
+import {
+  convertToHttpsGitHubRepositoryUrl,
+  getStdoutFromCommand,
+} from './misc-utils.js';
+import {
+  PackageManifestFieldNames,
+  UnvalidatedPackageManifest,
+} from './package-manifest.js';
 import {
   Package,
   readMonorepoRootPackage,
   readMonorepoWorkspacePackage,
   updatePackageChangelog,
 } from './package.js';
+import { ReleaseSpecification } from './release-specification.js';
 import { getTagNames, restoreFiles } from './repo.js';
 import { SemVer } from './semver.js';
-import {
-  PackageManifestFieldNames,
-  UnvalidatedPackageManifest,
-} from './package-manifest.js';
-import { ReleaseSpecification } from './release-specification.js';
-import {
-  convertToHttpsGitHubRepositoryUrl,
-  getStdoutFromCommand,
-} from './misc-utils.js';
 
 /**
  * The release version of the root package of a monorepo extracted from its
  * version string.
  *
- * @property ordinaryNumber - The number assigned to the release if it
- * introduces new changes that haven't appeared in any previous release; it will
- * be 0 if there haven't been any releases yet.
- * @property backportNumber - A backport release is a change ported from one
- * ordinary release to a previous ordinary release. This, then, is the number
- * which identifies this release relative to other backport releases under the
- * same ordinary release, starting from 1; it will be 0 if there aren't any
- * backport releases for the ordinary release yet.
+ * Properties:
+ *
+ * - `ordinaryNumber` - The number assigned to the release if it introduces new
+ *   changes that haven't appeared in any previous release; it will be 0 if
+ *   there haven't been any releases yet.
+ * - `backportNumber` - A backport release is a change ported from one ordinary
+ *   release to a previous ordinary release. This, then, is the number which
+ *   identifies this release relative to other backport releases under the same
+ *   ordinary release, starting from 1; it will be 0 if there aren't any
+ *   backport releases for the ordinary release yet.
  */
 type ReleaseVersion = {
   ordinaryNumber: number;
@@ -42,13 +45,15 @@ type ReleaseVersion = {
 /**
  * Represents the entire codebase on which this tool is operating.
  *
- * @property directoryPath - The directory in which the project lives.
- * @property repositoryUrl - The public URL of the Git repository where the
- * codebase for the project lives.
- * @property rootPackage - Information about the root package (assuming that the
- * project is a monorepo).
- * @property workspacePackages - Information about packages that are referenced
- * via workspaces (assuming that the project is a monorepo).
+ * Properties:
+ *
+ * - `directoryPath` - The directory in which the project lives.
+ * - `repositoryUrl` - The public URL of the Git repository where the codebase
+ *   for the project lives.
+ * - `rootPackage` - Information about the root package (assuming that the
+ *   project is a monorepo).
+ * - `workspacePackages` - Information about packages that are referenced via
+ *   workspaces (assuming that the project is a monorepo).
  */
 export type Project = {
   directoryPath: string;
@@ -124,12 +129,9 @@ export async function readProject(
         });
       }),
     )
-  ).reduce(
-    (obj, pkg) => {
-      return { ...obj, [pkg.validatedManifest.name]: pkg };
-    },
-    {} as Record<string, Package>,
-  );
+  ).reduce<Record<string, Package>>((obj, pkg) => {
+    return { ...obj, [pkg.validatedManifest.name]: pkg };
+  }, {});
 
   const isMonorepo = Object.keys(workspacePackages).length > 0;
 
@@ -174,6 +176,7 @@ export async function getValidRepositoryUrl(
   repositoryDirectoryPath: string,
 ): Promise<string> {
   // Set automatically by NPM or Yarn 1.x
+  // eslint-disable-next-line n/no-process-env
   const npmPackageRepositoryUrl = process.env.npm_package_repository_url;
 
   if (npmPackageRepositoryUrl) {
@@ -222,7 +225,7 @@ export async function updateChangelogsForChangedPackages({
       .filter(
         ({ hasChangesSinceLatestRelease }) => hasChangesSinceLatestRelease,
       )
-      .map((pkg) =>
+      .map(async (pkg) =>
         updatePackageChangelog({
           project,
           package: pkg,

@@ -1,10 +1,11 @@
-import path from 'path';
 import {
   ManifestFieldNames as PackageManifestFieldNames,
   ManifestDependencyFieldNames as PackageManifestDependenciesFieldNames,
 } from '@metamask/action-utils';
 import { isPlainObject } from '@metamask/utils';
+import path from 'path';
 import validateNPMPackageName from 'validate-npm-package-name';
+
 import { readJsonObjectFile } from './fs.js';
 import { isTruthyString } from './misc-utils.js';
 import { semver, SemVer } from './semver.js';
@@ -19,12 +20,14 @@ export type UnvalidatedPackageManifest = Readonly<Record<string, any>>;
 /**
  * A type-checked representation of the data in a package's `package.json`.
  *
- * @property name - The name of the package.
- * @property version - The version of the package.
- * @property private - Whether the package is private.
- * @property workspaces - Paths to subpackages within the package.
- * @property bundledDependencies - The set of packages that are expected to be
- * bundled when publishing the package.
+ * Properties:
+ *
+ * - `name` - The name of the package.
+ * - `version` - The version of the package.
+ * - `private` - Whether the package is private.
+ * - `workspaces` - Paths to subpackages within the package.
+ * - `bundledDependencies` - The set of packages that are expected to be bundled
+ *   when publishing the package.
  */
 export type ValidatedPackageManifest = {
   readonly [PackageManifestFieldNames.Name]: string;
@@ -60,7 +63,7 @@ function buildPackageManifestFieldValidationErrorMessage({
   parentDirectory: string;
   fieldName: keyof UnvalidatedPackageManifest;
   verbPhrase: string;
-}) {
+}): string {
   const subject = isTruthyString(manifest[PackageManifestFieldNames.Name])
     ? `The value of "${fieldName}" in the manifest for "${
         manifest[PackageManifestFieldNames.Name]
@@ -184,7 +187,7 @@ function isValidPackageManifestDependencyValue(
       validateNPMPackageName(redirectedName)?.validForOldPackages &&
       isValidPackageManifestVersionField(redirectedVersion)
     );
-  } catch (e) /* istanbul ignore next */ {
+  } catch /* istanbul ignore next */ {
     return false;
   }
 }

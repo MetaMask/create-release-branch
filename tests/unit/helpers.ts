@@ -1,8 +1,8 @@
+import { isPlainObject } from '@metamask/utils';
 import fs from 'fs';
 import path from 'path';
 import { SemVer } from 'semver';
-import { isPlainObject } from '@metamask/utils';
-import type { Package } from '../../src/package.js';
+
 import {
   PackageManifestDependenciesFieldNames,
   PackageManifestFieldNames,
@@ -11,22 +11,32 @@ import type {
   UnvalidatedPackageManifest,
   ValidatedPackageManifest,
 } from '../../src/package-manifest.js';
+import type { Package } from '../../src/package.js';
 import type { Project } from '../../src/project.js';
 
 /**
  * Returns a version of the given record type where optionality is removed from
  * the designated keys.
  */
-export type Require<T, K extends keyof T> = Omit<T, K> & { [P in K]-?: T[P] };
+export type Require<ObjectType, Key extends keyof ObjectType> = Omit<
+  ObjectType,
+  Key
+> & { [P in Key]-?: ObjectType[P] };
 
 /**
  * Returns a version of the given record type where optionality is added to
  * the designated keys.
  */
-type Unrequire<T, K extends keyof T> = Omit<T, K> & {
-  [P in K]+?: T[P];
+type Unrequire<ObjectType, Key extends keyof ObjectType> = Omit<
+  ObjectType,
+  Key
+> & {
+  [P in Key]+?: ObjectType[P];
 };
 
+/**
+ * Specifies how a mock package should be defined.
+ */
 type MockPackageOverrides = Omit<
   Unrequire<
     Package,

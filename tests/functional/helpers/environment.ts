@@ -1,4 +1,5 @@
 import path from 'path';
+
 import LocalRepo from './local-repo.js';
 import RemoteRepo from './remote-repo.js';
 import Repo from './repo.js';
@@ -7,9 +8,11 @@ import Repo from './repo.js';
  * Describes the package that is used to initialize a polyrepo, or one of the
  * packages that is used to initialize a monorepo.
  *
- * @property name - The desired name of the package.
- * @property version - The desired version of the package.
- * @property directory - The path relative to the repo's root directory that
+ * name - The desired name of the package.
+ *
+ * version - The desired version of the package.
+ *
+ * directory - The path relative to the repo's root directory that
  * holds this package.
  */
 export type PackageSpecification = {
@@ -21,9 +24,10 @@ export type PackageSpecification = {
 /**
  * A set of configuration options for an {@link Environment}.
  *
- * @property directoryPath - The directory out of which this environment will
+ * directoryPath - The directory out of which this environment will
  * operate.
- * @property createInitialCommit - Usually when a repo is initialized, a commit
+ *
+ * createInitialCommit - Usually when a repo is initialized, a commit
  * is created (which will contain starting `package.json` files). You can use
  * this option to disable that if you need to create your own commits for
  * clarity.
@@ -62,6 +66,11 @@ export default abstract class Environment<SpecificLocalRepo extends LocalRepo> {
 
   createCommit: SpecificLocalRepo['createCommit'];
 
+  /**
+   * Creates an Environment.
+   *
+   * @param options - The options.
+   */
   constructor(options: EnvironmentOptions) {
     const { directoryPath, createInitialCommit = true } = options;
     this.directoryPath = directoryPath;
@@ -88,7 +97,7 @@ export default abstract class Environment<SpecificLocalRepo extends LocalRepo> {
    * as `git fetch --tags`, and a "local" repo, which is the one against which
    * the tool is run.
    */
-  async initialize() {
+  async initialize(): Promise<void> {
     await this.remoteRepo.initialize();
     await this.localRepo.initialize();
   }

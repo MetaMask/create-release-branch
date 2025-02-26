@@ -1,14 +1,15 @@
+import deepmerge from 'deepmerge';
+import { execa, ExecaChildProcess, Options as ExecaOptions } from 'execa';
 import fs from 'fs';
 import path from 'path';
-import { execa, ExecaChildProcess, Options as ExecaOptions } from 'execa';
-import deepmerge from 'deepmerge';
-import { isErrorWithCode } from '../../helpers.js';
+
 import { debug, sleepFor } from './utils.js';
+import { isErrorWithCode } from '../../helpers.js';
 
 /**
  * A set of configuration options for a {@link Repo}.
  *
- * @property environmentDirectoryPath - The directory that holds the environment
+ * environmentDirectoryPath - The directory that holds the environment
  * that created this repo.
  */
 export type RepoOptions = {
@@ -37,6 +38,12 @@ export default abstract class Repo {
    */
   #latestCommitTime: Date | undefined;
 
+  /**
+   * Creates a Repo instance.
+   *
+   * @param args - The arguments.
+   * @param args.environmentDirectoryPath - The environment directory path.
+   */
   constructor({ environmentDirectoryPath }: RepoOptions) {
     this.environmentDirectoryPath = environmentDirectoryPath;
     this.#latestCommitTime = undefined;
@@ -45,7 +52,7 @@ export default abstract class Repo {
   /**
    * Sets up the repo.
    */
-  async initialize() {
+  async initialize(): Promise<void> {
     await this.create();
     await this.afterCreate();
   }
@@ -180,8 +187,7 @@ export default abstract class Repo {
     args?: readonly string[] | undefined,
     options?: ExecaOptions | undefined,
   ): Promise<ExecaChildProcess<string>> {
-    const { env, ...remainingOptions } =
-      options === undefined ? { env: {} } : options;
+    const { env, ...remainingOptions } = options ?? { env: {} };
 
     debug(
       'Running command `%s %s`...',
