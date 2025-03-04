@@ -295,12 +295,8 @@ export async function validateReleaseSpecification(
           (possibleDependentName) => {
             const possibleDependent =
               project.workspacePackages[possibleDependentName];
-            const { dependencies, peerDependencies } =
-              possibleDependent.validatedManifest;
-            return (
-              hasProperty(dependencies, changedPackageName) ||
-              hasProperty(peerDependencies, changedPackageName)
-            );
+            const { peerDependencies } = possibleDependent.validatedManifest;
+            return hasProperty(peerDependencies, changedPackageName);
           },
         );
         const changedDependentNames = dependentNames.filter(
