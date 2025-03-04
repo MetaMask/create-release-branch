@@ -8,9 +8,7 @@ export function ErrorMessage({ errors }: ErrorMessageProps) {
   return (
     <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
       <h3 className="text-red-700 font-semibold mb-2">
-        {
-          'Your release spec could not be processed due to the following issues:'
-        }
+        {'Your release could not be created due to the following issues:'}
       </h3>
       <ul className="list-disc pl-5">
         {errors.map((error, index) => (

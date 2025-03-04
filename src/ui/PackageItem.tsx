@@ -121,6 +121,9 @@ export function PackageItem({
                 title="Missing Dependencies"
                 items={packageDependencyErrors[pkg.name].missingDependencies}
                 setSelections={setSelections}
+                description={`The following packages are dependencies or peer dependencies of ${pkg.name}. Because they may have introduced new changes that ${pkg.name} is now using, you need to verify whether to include them in the release.
+
+To do this, look at the change history for each package and compare it with the change history for ${pkg.name}. If ${pkg.name} uses any new changes from a package, then you need to include it by bumping its version. If you have confirmed that the changes to a package do not affect ${pkg.name}, you may omit it from the release by choosing "Skip" instead.`}
               />
             )}
             {packageDependencyErrors[pkg.name].missingDependentNames.length >
@@ -132,6 +135,7 @@ export function PackageItem({
                     packageDependencyErrors[pkg.name].missingDependentNames
                   }
                   setSelections={setSelections}
+                  description={`Because ${pkg.name} is being released with a new major version, to prevent peer dependency warnings in consuming projects, all of the following packages which list as a peer dependency need to be included in the release. Please choose new versions for these packages. If for some reason you feel it is safe to omit a package you may choose "Skip".`}
                 />
               </div>
             )}

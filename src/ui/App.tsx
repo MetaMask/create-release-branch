@@ -294,7 +294,12 @@ function App() {
           <h2 className="text-2xl font-bold mb-4">
             Release Branch Successfully Created!
           </h2>
-          <p className="mb-6">You can now close this window.</p>
+          <p className="mb-6">
+            You are now on a new branch that represents the new release. You are
+            free to close this window and make whatever other changes you would
+            like to the branch. When you're ready, push it up and make a new
+            pull request.
+          </p>
         </div>
       </div>
     );
@@ -303,6 +308,27 @@ function App() {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">Create New Core Release</h1>
+
+      <div className="mb-6 p-4 bg-gray-50 rounded border border-gray-200">
+        <h2 className="text-xl font-semibold mb-2">How to use this tool</h2>
+        <p className="mb-2">
+          Listed below are the packages in this monorepo which have unreleased
+          changes. You do not need to release all packages; you may release a
+          subset. To add a new package, you first need to decide how to bump its
+          version. Look over the changelog or commit history to understand the
+          nature of the changes that have been made to the package. Then you can
+          select a version from the dropdown next to the package. If there are
+          breaking changes, select "Major"; if there are new features, select
+          "Minor"; and if there are only non-functional backward-compatible
+          changes, select "Patch".
+        </p>
+        <p>
+          Some packages are linked via dependencies, and because of this you may
+          be asked to include other packages in the release you were not
+          anticipating. We've done our best to explain why, but feel free to
+          reach out to the Wallet Framework team if you have any questions.
+        </p>
+      </div>
 
       <div className="mb-4 p-4 bg-gray-100 rounded">
         {showCheckboxes && selectedPackages.size > 0 ? (

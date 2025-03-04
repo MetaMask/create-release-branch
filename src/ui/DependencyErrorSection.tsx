@@ -2,12 +2,14 @@ type DependencyErrorSectionProps = {
   title: string;
   items: string[];
   setSelections: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  description: string;
 };
 
 export function DependencyErrorSection({
   title,
   items,
   setSelections,
+  description,
 }: DependencyErrorSectionProps) {
   return (
     <div className="text-red-800">
@@ -31,10 +33,7 @@ export function DependencyErrorSection({
           Skip All
         </button>
       </div>
-      <p className="text-sm mb-2">
-        Please either include these packages in your release selections, or
-        choose "Skip" if you are absolutely sure they are safe to omit:
-      </p>
+      <p className="text-sm mb-2">{description}</p>
       <ul className="list-disc ml-4">
         {items.map((dep) => (
           <li key={dep} className="flex justify-between items-center mb-2">
