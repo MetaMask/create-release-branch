@@ -1,6 +1,6 @@
+import type { ReleaseType } from './initial-parameters.js';
 import { debug } from './misc-utils.js';
-import { ReleaseType } from './initial-parameters.js';
-import { Project } from './project.js';
+import type { Project } from './project.js';
 import {
   branchExists,
   getCurrentBranchName,

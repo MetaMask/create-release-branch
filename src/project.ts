@@ -1,26 +1,29 @@
-import { WriteStream } from 'fs';
-import { resolve } from 'path';
 import { getWorkspaceLocations } from '@metamask/action-utils';
-import { WriteStreamLike, fileExists } from './fs.js';
+import type { WriteStream } from 'fs';
+import { resolve } from 'path';
+
+import type { WriteStreamLike } from './fs.js';
+import { fileExists } from './fs.js';
+import { PackageManifestFieldNames } from './package-manifest.js';
+import type { Package } from './package.js';
 import {
-  Package,
   readMonorepoRootPackage,
   readMonorepoWorkspacePackage,
   updatePackageChangelog,
 } from './package.js';
+import type { ReleaseSpecification } from './release-specification.js';
 import { getRepositoryHttpsUrl, getTagNames, restoreFiles } from './repo.js';
-import { SemVer } from './semver.js';
-import { PackageManifestFieldNames } from './package-manifest.js';
-import { ReleaseSpecification } from './release-specification.js';
+import type { SemVer } from './semver.js';
 
 /**
  * The release version of the root package of a monorepo extracted from its
  * version string.
  *
- * @property ordinaryNumber - The number assigned to the release if it
+ * ordinaryNumber - The number assigned to the release if it
  * introduces new changes that haven't appeared in any previous release; it will
  * be 0 if there haven't been any releases yet.
- * @property backportNumber - A backport release is a change ported from one
+ *
+ * backportNumber - A backport release is a change ported from one
  * ordinary release to a previous ordinary release. This, then, is the number
  * which identifies this release relative to other backport releases under the
  * same ordinary release, starting from 1; it will be 0 if there aren't any
@@ -34,12 +37,15 @@ type ReleaseVersion = {
 /**
  * Represents the entire codebase on which this tool is operating.
  *
- * @property directoryPath - The directory in which the project lives.
- * @property repositoryUrl - The public URL of the Git repository where the
+ * directoryPath - The directory in which the project lives.
+ *
+ * repositoryUrl - The public URL of the Git repository where the
  * codebase for the project lives.
- * @property rootPackage - Information about the root package (assuming that the
+ *
+ * rootPackage - Information about the root package (assuming that the
  * project is a monorepo).
- * @property workspacePackages - Information about packages that are referenced
+ *
+ * workspacePackages - Information about packages that are referenced
  * via workspaces (assuming that the project is a monorepo).
  */
 export type Project = {
@@ -113,12 +119,9 @@ export async function readProject(
         });
       }),
     )
-  ).reduce(
-    (obj, pkg) => {
-      return { ...obj, [pkg.validatedManifest.name]: pkg };
-    },
-    {} as Record<string, Package>,
-  );
+  ).reduce<Record<string, Package>>((obj, pkg) => {
+    return { ...obj, [pkg.validatedManifest.name]: pkg };
+  }, {});
 
   const isMonorepo = Object.keys(workspacePackages).length > 0;
 
@@ -155,7 +158,7 @@ export async function updateChangelogsForChangedPackages({
       .filter(
         ({ hasChangesSinceLatestRelease }) => hasChangesSinceLatestRelease,
       )
-      .map((pkg) =>
+      .map(async (pkg) =>
         updatePackageChangelog({
           project,
           package: pkg,

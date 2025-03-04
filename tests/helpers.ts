@@ -1,9 +1,9 @@
+import { hasProperty, isObject } from '@metamask/utils';
+import type { ExecaError } from 'execa';
 import fs from 'fs';
+import { nanoid } from 'nanoid';
 import os from 'os';
 import path from 'path';
-import { nanoid } from 'nanoid';
-import type { ExecaError } from 'execa';
-import { hasProperty, isObject } from '@metamask/utils';
 
 /**
  * Information about the sandbox provided to tests that need access to the

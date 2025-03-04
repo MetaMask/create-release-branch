@@ -4,8 +4,9 @@ import { debug, resolveExecutable } from './misc-utils.js';
 /**
  * Information about the editor present on the user's computer.
  *
- * @property path - The path to the executable representing the editor.
- * @property args - Command-line arguments to pass to the executable when
+ * path - The path to the executable representing the editor.
+ *
+ * args - Command-line arguments to pass to the executable when
  * calling it.
  */
 export type Editor = {

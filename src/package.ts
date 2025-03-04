@@ -1,20 +1,23 @@
-import fs, { WriteStream } from 'fs';
-import path from 'path';
-import { format } from 'util';
 import { parseChangelog, updateChangelog } from '@metamask/auto-changelog';
-import { format as formatPrettier } from 'prettier/standalone';
+import type { WriteStream } from 'fs';
+import fs from 'fs';
+import path from 'path';
 import * as markdown from 'prettier/plugins/markdown';
-import { WriteStreamLike, readFile, writeFile, writeJsonFile } from './fs.js';
+import { format as formatPrettier } from 'prettier/standalone';
+import { format } from 'util';
+
+import type { WriteStreamLike } from './fs.js';
+import { readFile, writeFile, writeJsonFile } from './fs.js';
 import { isErrorWithCode } from './misc-utils.js';
-import {
-  readPackageManifest,
+import type {
   UnvalidatedPackageManifest,
   ValidatedPackageManifest,
 } from './package-manifest.js';
-import { Project } from './project.js';
-import { PackageReleasePlan } from './release-plan.js';
+import { readPackageManifest } from './package-manifest.js';
+import type { Project } from './project.js';
+import type { PackageReleasePlan } from './release-plan.js';
 import { hasChangesInDirectorySinceGitTag } from './repo.js';
-import { SemVer } from './semver.js';
+import type { SemVer } from './semver.js';
 
 const MANIFEST_FILE_NAME = 'package.json';
 const CHANGELOG_FILE_NAME = 'CHANGELOG.md';
@@ -22,11 +25,14 @@ const CHANGELOG_FILE_NAME = 'CHANGELOG.md';
 /**
  * Information about a package within a project.
  *
- * @property directoryPath - The path to the directory where the package is
+ * directoryPath - The path to the directory where the package is
  * located.
- * @property manifestPath - The path to the manifest file.
- * @property manifest - The data extracted from the manifest.
- * @property changelogPath - The path to the changelog file (which may or may
+ *
+ * manifestPath - The path to the manifest file.
+ *
+ * manifest - The data extracted from the manifest.
+ *
+ * changelogPath - The path to the changelog file (which may or may
  * not exist).
  */
 export type Package = {
