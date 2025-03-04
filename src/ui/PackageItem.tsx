@@ -135,7 +135,7 @@ To do this, look at the change history for each package and compare it with the 
                     packageDependencyErrors[pkg.name].missingDependentNames
                   }
                   setSelections={setSelections}
-                  description={`Because ${pkg.name} is being released with a new major version, to prevent peer dependency warnings in consuming projects, all of the following packages which list as a peer dependency need to be included in the release. Please choose new versions for these packages. If for some reason you feel it is safe to omit a package you may choose "Skip".`}
+                  description={`Because ${pkg.name} is being released with a new major version, to prevent peer dependency warnings in consuming projects, all of the following packages which list ${pkg.name} as a peer dependency need to be included in the release. Please choose new versions for these packages. If for some reason you feel it is safe to omit a package you may choose "Skip".`}
                 />
               </div>
             )}
