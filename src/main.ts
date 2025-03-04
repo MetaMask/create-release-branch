@@ -1,6 +1,7 @@
 import type { WriteStream } from 'fs';
 import { determineInitialParameters } from './initial-parameters.js';
 import { followMonorepoWorkflow } from './monorepo-workflow-operations.js';
+import { startUI } from './ui.js';
 
 /**
  * The main function for this tool. Designed to not access `process.argv`,
@@ -25,22 +26,42 @@ export async function main({
   stdout: Pick<WriteStream, 'write'>;
   stderr: Pick<WriteStream, 'write'>;
 }) {
-  const { project, tempDirectoryPath, reset, releaseType, defaultBranch } =
-    await determineInitialParameters({ argv, cwd, stderr });
+  const {
+    project,
+    tempDirectoryPath,
+    reset,
+    releaseType,
+    defaultBranch,
+    interactive,
+    port,
+  } = await determineInitialParameters({ argv, cwd, stderr });
 
   if (project.isMonorepo) {
     stdout.write(
       'Project appears to have workspaces. Following monorepo workflow.\n',
     );
-    await followMonorepoWorkflow({
-      project,
-      tempDirectoryPath,
-      firstRemovingExistingReleaseSpecification: reset,
-      releaseType,
-      defaultBranch,
-      stdout,
-      stderr,
-    });
+
+    if (interactive) {
+      stdout.write(`Starting UI on port ${port}...\n`);
+      await startUI({
+        project,
+        releaseType,
+        defaultBranch,
+        port,
+        stdout,
+        stderr,
+      });
+    } else {
+      await followMonorepoWorkflow({
+        project,
+        tempDirectoryPath,
+        firstRemovingExistingReleaseSpecification: reset,
+        releaseType,
+        defaultBranch,
+        stdout,
+        stderr,
+      });
+    }
   } else {
     stdout.write(
       'Project does not appear to have any workspaces. Following polyrepo workflow.\n',

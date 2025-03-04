@@ -2,8 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import { when } from 'jest-when';
 import { MockWritable } from 'stdio-mock';
-import { withSandbox, Sandbox, isErrorWithCode } from '../tests/helpers';
-import { buildMockProject, Require } from '../tests/unit/helpers';
+import { withSandbox, Sandbox, isErrorWithCode } from '../tests/helpers.js';
+import { buildMockProject, Require } from '../tests/unit/helpers.js';
 import { followMonorepoWorkflow } from './monorepo-workflow-operations.js';
 import * as editorModule from './editor.js';
 import type { Editor } from './editor.js';
@@ -234,7 +234,7 @@ async function setupFollowMonorepoWorkflow({
     when(planReleaseSpy)
       .calledWith({
         project,
-        releaseSpecification,
+        releaseSpecificationPackages: releaseSpecification.packages,
         newReleaseVersion: releaseVersion,
       })
       .mockRejectedValue(errorUponPlanningRelease);
@@ -242,7 +242,7 @@ async function setupFollowMonorepoWorkflow({
     when(planReleaseSpy)
       .calledWith({
         project,
-        releaseSpecification,
+        releaseSpecificationPackages: releaseSpecification.packages,
         newReleaseVersion: releaseVersion,
       })
       .mockResolvedValue(releasePlan);
@@ -371,7 +371,7 @@ describe('monorepo-workflow-operations', () => {
 
           expect(planReleaseSpy).toHaveBeenCalledWith({
             project,
-            releaseSpecification,
+            releaseSpecificationPackages: releaseSpecification.packages,
             newReleaseVersion: '2.0.0',
           });
         });
@@ -403,7 +403,7 @@ describe('monorepo-workflow-operations', () => {
 
           expect(planReleaseSpy).toHaveBeenCalledWith({
             project,
-            releaseSpecification,
+            releaseSpecificationPackages: releaseSpecification.packages,
             newReleaseVersion: '1.1.0',
           });
         });
@@ -958,7 +958,7 @@ describe('monorepo-workflow-operations', () => {
 
           expect(planReleaseSpy).toHaveBeenCalledWith({
             project,
-            releaseSpecification,
+            releaseSpecificationPackages: releaseSpecification.packages,
             newReleaseVersion: '2.0.0',
           });
         });
@@ -989,7 +989,7 @@ describe('monorepo-workflow-operations', () => {
 
           expect(planReleaseSpy).toHaveBeenCalledWith({
             project,
-            releaseSpecification,
+            releaseSpecificationPackages: releaseSpecification.packages,
             newReleaseVersion: '1.1.0',
           });
         });
@@ -1193,7 +1193,7 @@ describe('monorepo-workflow-operations', () => {
 
           expect(planReleaseSpy).toHaveBeenCalledWith({
             project,
-            releaseSpecification,
+            releaseSpecificationPackages: releaseSpecification.packages,
             newReleaseVersion: '2.0.0',
           });
         });
@@ -1225,7 +1225,7 @@ describe('monorepo-workflow-operations', () => {
 
           expect(planReleaseSpy).toHaveBeenCalledWith({
             project,
-            releaseSpecification,
+            releaseSpecificationPackages: releaseSpecification.packages,
             newReleaseVersion: '1.1.0',
           });
         });
@@ -1683,7 +1683,7 @@ describe('monorepo-workflow-operations', () => {
 
           expect(planReleaseSpy).toHaveBeenCalledWith({
             project,
-            releaseSpecification,
+            releaseSpecificationPackages: releaseSpecification.packages,
             newReleaseVersion: '2.0.0',
           });
         });
@@ -1715,7 +1715,7 @@ describe('monorepo-workflow-operations', () => {
 
           expect(planReleaseSpy).toHaveBeenCalledWith({
             project,
-            releaseSpecification,
+            releaseSpecificationPackages: releaseSpecification.packages,
             newReleaseVersion: '1.1.0',
           });
         });

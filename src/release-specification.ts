@@ -12,6 +12,7 @@ import {
 } from './misc-utils.js';
 import { Project } from './project.js';
 import { isValidSemver, semver, SemVer } from './semver.js';
+import { Package } from './package.js';
 
 /**
  * The SemVer-compatible parts of a version string that can be bumped by this
@@ -167,6 +168,274 @@ export async function waitForUserToEditReleaseSpecification(
 }
 
 /**
+ * Finds all workspace packages that depend on the given package and have changes since their latest release.
+ *
+ * @param project - The project containing workspace packages.
+ * @param packageName - The name of the package to find dependents for.
+ * @param unvalidatedReleaseSpecificationPackages - The packages in the release specification.
+ * @returns An array of package names that depend on the given package and are missing from the release spec.
+ */
+export function findMissingUnreleasedDependents(
+  project: Project,
+  packageName: string,
+  unvalidatedReleaseSpecificationPackages: Record<string, string | null>,
+): string[] {
+  const dependentNames = Object.keys(project.workspacePackages).filter(
+    (possibleDependentName) => {
+      const possibleDependent =
+        project.workspacePackages[possibleDependentName];
+      const { peerDependencies } = possibleDependent.validatedManifest;
+      return hasProperty(peerDependencies, packageName);
+    },
+  );
+
+  const changedDependentNames = dependentNames.filter(
+    (possibleDependentName) => {
+      return project.workspacePackages[possibleDependentName]
+        .hasChangesSinceLatestRelease;
+    },
+  );
+
+  return changedDependentNames.filter((dependentName) => {
+    return !unvalidatedReleaseSpecificationPackages[dependentName];
+  });
+}
+
+/**
+ * Finds all workspace packages that are dependencies of the given package and have changes since their latest release.
+ *
+ * @param project - The project containing workspace packages.
+ * @param changedPackage - The package to find dependencies for.
+ * @param unvalidatedReleaseSpecificationPackages - The packages in the release specification.
+ * @returns An array of package names that are dependencies and are missing from the release spec.
+ */
+function findMissingUnreleasedDependencies(
+  project: Project,
+  changedPackage: Package,
+  unvalidatedReleaseSpecificationPackages: Record<string, string | null>,
+): string[] {
+  return Object.keys({
+    ...changedPackage.validatedManifest.dependencies,
+    ...changedPackage.validatedManifest.peerDependencies,
+  }).filter((dependency) => {
+    return (
+      project.workspacePackages[dependency]?.hasChangesSinceLatestRelease &&
+      !unvalidatedReleaseSpecificationPackages[dependency]
+    );
+  });
+}
+
+/**
+ * Finds all dependents of a package that are missing from the release spec when
+ * making breaking changes.
+ *
+ * @param project - Information about the whole project (e.g., names of packages
+ * and where they can found).
+ * @param packageName - The name of the package to validate.
+ * @param versionSpecifierOrDirective - The version specifier or directive for the package.
+ * @param unvalidatedReleaseSpecificationPackages - The packages in the release specification.
+ * @returns An array of validation errors, if any.
+ */
+export function findMissingUnreleasedDependentsForBreakingChanges(
+  project: Project,
+  packageName: string,
+  versionSpecifierOrDirective: string | null,
+  unvalidatedReleaseSpecificationPackages: Record<string, string | null>,
+): string[] {
+  const changedPackage = project.workspacePackages[packageName];
+
+  if (
+    versionSpecifierOrDirective === 'major' ||
+    (isValidSemver(versionSpecifierOrDirective) &&
+      diff(
+        changedPackage.validatedManifest.version,
+        versionSpecifierOrDirective,
+      ) === 'major')
+  ) {
+    return findMissingUnreleasedDependents(
+      project,
+      packageName,
+      unvalidatedReleaseSpecificationPackages,
+    );
+  }
+
+  return [];
+}
+
+/**
+ * Finds all dependencies of a package that are missing from the release spec when
+ * making breaking changes.
+ *
+ * @param project - Information about the whole project (e.g., names of packages
+ * and where they can found).
+ * @param changedPackage - The package to validate.
+ * @param versionSpecifierOrDirective - The version specifier or directive for the package.
+ * @param unvalidatedReleaseSpecificationPackages - The packages in the release specification.
+ * @returns An array of validation errors, if any.
+ */
+export function findMissingUnreleasedDependenciesForRelease(
+  project: Project,
+  changedPackage: Package,
+  versionSpecifierOrDirective: string | null,
+  unvalidatedReleaseSpecificationPackages: Record<string, string | null>,
+): string[] {
+  if (
+    changedPackage &&
+    versionSpecifierOrDirective &&
+    (hasProperty(IncrementableVersionParts, versionSpecifierOrDirective) ||
+      isValidSemver(versionSpecifierOrDirective))
+  ) {
+    return findMissingUnreleasedDependencies(
+      project,
+      changedPackage,
+      unvalidatedReleaseSpecificationPackages,
+    );
+  }
+
+  return [];
+}
+
+/**
+ * Validates all package entries in the release specification.
+ *
+ * @param project - Information about the whole project (e.g., names of packages
+ * and where they can found).
+ * @param unvalidatedReleaseSpecificationPackages - The packages in the release specification.
+ * @param indexOfFirstUsableLine - The index of the first non-comment, non-whitespace line
+ * in the release spec.
+ * @returns An array of validation errors, if any.
+ */
+export function validateAllPackageEntries(
+  project: Project,
+  unvalidatedReleaseSpecificationPackages: Record<string, string | null>,
+  indexOfFirstUsableLine: number,
+): { message: string | string[]; lineNumber?: number }[] {
+  const errors: { message: string | string[]; lineNumber?: number }[] = [];
+
+  Object.entries(unvalidatedReleaseSpecificationPackages).forEach(
+    ([changedPackageName, versionSpecifierOrDirective], index) => {
+      const lineNumber = indexOfFirstUsableLine + index + 2;
+      const changedPackage = project.workspacePackages[changedPackageName];
+
+      if (changedPackage === undefined) {
+        errors.push({
+          message: `${JSON.stringify(changedPackageName)} is not a package in the project`,
+          lineNumber,
+        });
+      }
+
+      if (
+        versionSpecifierOrDirective !== SKIP_PACKAGE_DIRECTIVE &&
+        versionSpecifierOrDirective !== INTENTIONALLY_SKIP_PACKAGE_DIRECTIVE &&
+        !hasProperty(IncrementableVersionParts, versionSpecifierOrDirective) &&
+        !isValidSemver(versionSpecifierOrDirective)
+      ) {
+        errors.push({
+          message: [
+            `${JSON.stringify(versionSpecifierOrDirective)} is not a valid version specifier for package "${changedPackageName}"`,
+            `(must be "major", "minor", or "patch"; or a version string with major, minor, and patch parts, such as "1.2.3")`,
+          ],
+          lineNumber,
+        });
+      }
+
+      if (isValidSemver(versionSpecifierOrDirective)) {
+        const comparison = new SemVer(versionSpecifierOrDirective).compare(
+          changedPackage.validatedManifest.version,
+        );
+
+        if (comparison === 0) {
+          errors.push({
+            message: [
+              `${JSON.stringify(versionSpecifierOrDirective)} is not a valid version specifier for package "${changedPackageName}"`,
+              `("${changedPackageName}" is already at version "${versionSpecifierOrDirective}")`,
+            ],
+            lineNumber,
+          });
+        } else if (comparison < 0) {
+          errors.push({
+            message: [
+              `${JSON.stringify(versionSpecifierOrDirective)} is not a valid version specifier for package "${changedPackageName}"`,
+              `("${changedPackageName}" is at a greater version "${project.workspacePackages[changedPackageName].validatedManifest.version}")`,
+            ],
+            lineNumber,
+          });
+        }
+      }
+
+      const missingDependentNames =
+        findMissingUnreleasedDependentsForBreakingChanges(
+          project,
+          changedPackageName,
+          versionSpecifierOrDirective,
+          unvalidatedReleaseSpecificationPackages,
+        );
+
+      if (missingDependentNames.length > 0) {
+        errors.push({
+          message: [
+            `The following dependents of package '${changedPackageName}', which is being released with a major version bump, are missing from the release spec.`,
+            missingDependentNames
+              .map((dependent) => `  - ${dependent}`)
+              .join('\n'),
+            ` Consider including them in the release spec so that they are compatible with the new '${changedPackageName}' version.`,
+            `  If you are ABSOLUTELY SURE these packages are safe to omit, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:`,
+            YAML.stringify({
+              packages: missingDependentNames.reduce(
+                (object, dependent) => ({
+                  ...object,
+                  [dependent]: INTENTIONALLY_SKIP_PACKAGE_DIRECTIVE,
+                }),
+                {},
+              ),
+            })
+              .trim()
+              .split('\n')
+              .map((line) => `    ${line}`)
+              .join('\n'),
+          ].join('\n\n'),
+        });
+      }
+
+      const missingDependencies = findMissingUnreleasedDependenciesForRelease(
+        project,
+        changedPackage,
+        versionSpecifierOrDirective,
+        unvalidatedReleaseSpecificationPackages,
+      );
+
+      if (missingDependencies.length > 0) {
+        errors.push({
+          message: [
+            `The following packages, which are dependencies or peer dependencies of the package '${changedPackageName}' being released, are missing from the release spec.`,
+            missingDependencies
+              .map((dependency) => `  - ${dependency}`)
+              .join('\n'),
+            `  These packages may have changes that '${changedPackageName}' relies upon. Consider including them in the release spec.`,
+            `  If you are ABSOLUTELY SURE these packages are safe to omit, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:`,
+            YAML.stringify({
+              packages: missingDependencies.reduce(
+                (object, dependency) => ({
+                  ...object,
+                  [dependency]: INTENTIONALLY_SKIP_PACKAGE_DIRECTIVE,
+                }),
+                {},
+              ),
+            })
+              .trim()
+              .split('\n')
+              .map((line) => `    ${line}`)
+              .join('\n'),
+          ].join('\n\n'),
+        });
+      }
+    },
+  );
+
+  return errors;
+}
+
+/**
  * Looks over the release spec that the user has edited to ensure that:
  *
  * 1. the names of all packages match those within the project; and
@@ -221,166 +490,10 @@ export async function validateReleaseSpecification(
     throw new Error(message);
   }
 
-  const errors: { message: string | string[]; lineNumber?: number }[] = [];
-
-  Object.entries(unvalidatedReleaseSpecification.packages).forEach(
-    ([changedPackageName, versionSpecifierOrDirective], index) => {
-      const lineNumber = indexOfFirstUsableLine + index + 2;
-      const changedPackage = project.workspacePackages[changedPackageName];
-
-      if (changedPackage === undefined) {
-        errors.push({
-          message: `${JSON.stringify(
-            changedPackageName,
-          )} is not a package in the project`,
-          lineNumber,
-        });
-      }
-
-      if (
-        versionSpecifierOrDirective !== SKIP_PACKAGE_DIRECTIVE &&
-        versionSpecifierOrDirective !== INTENTIONALLY_SKIP_PACKAGE_DIRECTIVE &&
-        !hasProperty(IncrementableVersionParts, versionSpecifierOrDirective) &&
-        !isValidSemver(versionSpecifierOrDirective)
-      ) {
-        errors.push({
-          message: [
-            `${JSON.stringify(
-              versionSpecifierOrDirective,
-            )} is not a valid version specifier for package "${changedPackageName}"`,
-            `(must be "major", "minor", or "patch"; or a version string with major, minor, and patch parts, such as "1.2.3")`,
-          ],
-          lineNumber,
-        });
-      }
-
-      if (isValidSemver(versionSpecifierOrDirective)) {
-        const comparison = new SemVer(versionSpecifierOrDirective).compare(
-          changedPackage.validatedManifest.version,
-        );
-
-        if (comparison === 0) {
-          errors.push({
-            message: [
-              `${JSON.stringify(
-                versionSpecifierOrDirective,
-              )} is not a valid version specifier for package "${changedPackageName}"`,
-              `("${changedPackageName}" is already at version "${versionSpecifierOrDirective}")`,
-            ],
-            lineNumber,
-          });
-        } else if (comparison < 0) {
-          errors.push({
-            message: [
-              `${JSON.stringify(
-                versionSpecifierOrDirective,
-              )} is not a valid version specifier for package "${changedPackageName}"`,
-              `("${changedPackageName}" is at a greater version "${project.workspacePackages[changedPackageName].validatedManifest.version}")`,
-            ],
-            lineNumber,
-          });
-        }
-      }
-
-      // Check to compel users to release packages with breaking changes alongside their dependents
-      if (
-        versionSpecifierOrDirective === 'major' ||
-        (isValidSemver(versionSpecifierOrDirective) &&
-          diff(
-            changedPackage.validatedManifest.version,
-            versionSpecifierOrDirective,
-          ) === 'major')
-      ) {
-        const dependentNames = Object.keys(project.workspacePackages).filter(
-          (possibleDependentName) => {
-            const possibleDependent =
-              project.workspacePackages[possibleDependentName];
-            const { peerDependencies } = possibleDependent.validatedManifest;
-            return hasProperty(peerDependencies, changedPackageName);
-          },
-        );
-        const changedDependentNames = dependentNames.filter(
-          (possibleDependentName) => {
-            return project.workspacePackages[possibleDependentName]
-              .hasChangesSinceLatestRelease;
-          },
-        );
-        const missingDependentNames = changedDependentNames.filter(
-          (dependentName) => {
-            return !unvalidatedReleaseSpecification.packages[dependentName];
-          },
-        );
-
-        if (missingDependentNames.length > 0) {
-          errors.push({
-            message: [
-              `The following dependents of package '${changedPackageName}', which is being released with a major version bump, are missing from the release spec.`,
-              missingDependentNames
-                .map((dependent) => `  - ${dependent}`)
-                .join('\n'),
-              ` Consider including them in the release spec so that they are compatible with the new '${changedPackageName}' version.`,
-              `  If you are ABSOLUTELY SURE these packages are safe to omit, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:`,
-              YAML.stringify({
-                packages: missingDependentNames.reduce((object, dependent) => {
-                  return {
-                    ...object,
-                    [dependent]: INTENTIONALLY_SKIP_PACKAGE_DIRECTIVE,
-                  };
-                }, {}),
-              })
-                .trim()
-                .split('\n')
-                .map((line) => `    ${line}`)
-                .join('\n'),
-            ].join('\n\n'),
-          });
-        }
-      }
-
-      // Check to compel users to release new versions of dependencies alongside their dependents
-      if (
-        changedPackage &&
-        versionSpecifierOrDirective &&
-        (hasProperty(IncrementableVersionParts, versionSpecifierOrDirective) ||
-          isValidSemver(versionSpecifierOrDirective))
-      ) {
-        const missingDependencies = Object.keys({
-          ...changedPackage.validatedManifest.dependencies,
-          ...changedPackage.validatedManifest.peerDependencies,
-        }).filter((dependency) => {
-          return (
-            project.workspacePackages[dependency]
-              ?.hasChangesSinceLatestRelease &&
-            !unvalidatedReleaseSpecification.packages[dependency]
-          );
-        });
-
-        if (missingDependencies.length > 0) {
-          errors.push({
-            message: [
-              `The following packages, which are dependencies or peer dependencies of the package '${changedPackageName}' being released, are missing from the release spec.`,
-              missingDependencies
-                .map((dependency) => `  - ${dependency}`)
-                .join('\n'),
-              `  These packages may have changes that '${changedPackageName}' relies upon. Consider including them in the release spec.`,
-              `  If you are ABSOLUTELY SURE these packages are safe to omit, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:`,
-              YAML.stringify({
-                packages: missingDependencies.reduce((object, dependency) => {
-                  return {
-                    ...object,
-                    [dependency]: INTENTIONALLY_SKIP_PACKAGE_DIRECTIVE,
-                  };
-                }, {}),
-              })
-                .trim()
-                .split('\n')
-                .map((line) => `    ${line}`)
-                .join('\n'),
-            ].join('\n\n'),
-          });
-        }
-      }
-    },
+  const errors = validateAllPackageEntries(
+    project,
+    unvalidatedReleaseSpecification.packages,
+    indexOfFirstUsableLine,
   );
 
   if (errors.length > 0) {
