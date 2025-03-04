@@ -184,8 +184,12 @@ export function findMissingUnreleasedDependents(
     (possibleDependentName) => {
       const possibleDependent =
         project.workspacePackages[possibleDependentName];
-      const { peerDependencies } = possibleDependent.validatedManifest;
-      return hasProperty(peerDependencies, packageName);
+      const { dependencies, peerDependencies } =
+        possibleDependent.validatedManifest;
+      return (
+        hasProperty(dependencies, packageName) ||
+        hasProperty(peerDependencies, packageName)
+      );
     },
   );
 
