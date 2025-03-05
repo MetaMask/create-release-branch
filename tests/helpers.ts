@@ -135,3 +135,32 @@ export function buildChangelog(variantContent: string): string {
 
   return `${invariantContent}\n${normalizeMultilineString(variantContent)}`;
 }
+
+/**
+ * Runs the given function and ensures that even if `process.env` is changed
+ * during the function, it is restored afterward.
+ *
+ * @param callback - The function to call that presumably will change
+ * `process.env`.
+ * @returns Whatever the callback returns.
+ */
+export async function withProtectedProcessEnv<T>(callback: () => Promise<T>) {
+  const originalEnv = { ...process.env };
+
+  try {
+    return await callback();
+  } finally {
+    const originalKeys = Object.keys(originalEnv);
+    const currentKeys = Object.keys(process.env);
+
+    originalKeys.forEach((key) => {
+      process.env[key] = originalEnv[key];
+    });
+
+    currentKeys
+      .filter((key) => !originalKeys.includes(key))
+      .forEach((key) => {
+        delete process.env[key];
+      });
+  }
+}

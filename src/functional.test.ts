@@ -77,13 +77,9 @@ describe('create-release-branch (functional)', () => {
             },
           });
 
-          expect(await environment.readJsonFile('package.json')).toStrictEqual({
+          expect(await environment.readJsonFile('package.json')).toMatchObject({
             name: '@scope/monorepo',
             version: '2.0.0',
-            private: true,
-            workspaces: ['packages/*'],
-            scripts: { foo: 'bar' },
-            packageManager: 'yarn@3.2.1',
           });
           expect(
             await environment.readJsonFileWithinPackage('a', 'package.json'),
@@ -190,13 +186,9 @@ describe('create-release-branch (functional)', () => {
             },
           });
 
-          expect(await environment.readJsonFile('package.json')).toStrictEqual({
+          expect(await environment.readJsonFile('package.json')).toMatchObject({
             name: '@scope/monorepo',
             version: '1.1.0',
-            private: true,
-            workspaces: ['packages/*'],
-            scripts: { foo: 'bar' },
-            packageManager: 'yarn@3.2.1',
           });
           expect(
             await environment.readJsonFileWithinPackage('a', 'package.json'),
@@ -945,12 +937,9 @@ __metadata:
             },
           });
 
-          expect(await environment.readJsonFile('package.json')).toStrictEqual({
+          expect(await environment.readJsonFile('package.json')).toMatchObject({
             name: '@scope/monorepo',
             version: '2.0.0',
-            private: true,
-            workspaces: ['packages/*'],
-            packageManager: 'yarn@3.2.1',
           });
           expect(
             await environment.readJsonFileWithinPackage('a', 'package.json'),

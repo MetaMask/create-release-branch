@@ -1,6 +1,7 @@
 import { WriteStream } from 'fs';
 import { resolve } from 'path';
 import { getWorkspaceLocations } from '@metamask/action-utils';
+import { isPlainObject } from '@metamask/utils';
 import { WriteStreamLike, fileExists } from './fs.js';
 import {
   Package,
@@ -8,10 +9,17 @@ import {
   readMonorepoWorkspacePackage,
   updatePackageChangelog,
 } from './package.js';
-import { getRepositoryHttpsUrl, getTagNames, restoreFiles } from './repo.js';
+import { getTagNames, restoreFiles } from './repo.js';
 import { SemVer } from './semver.js';
-import { PackageManifestFieldNames } from './package-manifest.js';
+import {
+  PackageManifestFieldNames,
+  UnvalidatedPackageManifest,
+} from './package-manifest.js';
 import { ReleaseSpecification } from './release-specification.js';
+import {
+  convertToHttpsGitHubRepositoryUrl,
+  getStdoutFromCommand,
+} from './misc-utils.js';
 
 /**
  * The release version of the root package of a monorepo extracted from its
@@ -83,13 +91,16 @@ export async function readProject(
   projectDirectoryPath: string,
   { stderr }: { stderr: WriteStreamLike },
 ): Promise<Project> {
-  const repositoryUrl = await getRepositoryHttpsUrl(projectDirectoryPath);
   const tagNames = await getTagNames(projectDirectoryPath);
   const rootPackage = await readMonorepoRootPackage({
     packageDirectoryPath: projectDirectoryPath,
     projectDirectoryPath,
     projectTagNames: tagNames,
   });
+  const repositoryUrl = await getValidRepositoryUrl(
+    rootPackage.unvalidatedManifest,
+    projectDirectoryPath,
+  );
   const releaseVersion = examineReleaseVersion(
     rootPackage.validatedManifest.version,
   );
@@ -130,6 +141,62 @@ export async function readProject(
     isMonorepo,
     releaseVersion,
   };
+}
+
+/**
+ * Returns the https-prefixed GitHub repository URL for the project, so that we
+ * know how to construct links to releases inside of the changelog.
+ *
+ * This URL is obtained by looking at the following sources, in this order:
+ *
+ * - `process.env.npm_package_repository_url` (to support MetaMask projects
+ * which still use NPM or Yarn 1.x)
+ * - The `repository` field inside of `package.json` (to support most MetaMask
+ * projects)
+ * - The URL of the "origin" remote (to support newer projects which for some
+ * reason do not have a "repository" field)
+ *
+ * Note that there is a function in `@metamask/auto-changelog` that offers a
+ * similar capability, and in fact, this function should match it as closely as
+ * possible so that when changelogs are updated they also pass
+ * `@metamask/auto-changelog`'s validation step.
+ *
+ * @param packageManifest - The manifest for the package that represents a
+ * project.
+ * @param repositoryDirectoryPath - The path to the repository for the project.
+ * @returns The HTTPS URL of the repository, e.g.
+ * `https://github.com/OrganizationName/RepositoryName`.
+ * @throws If the URL obtained via `package.json` or the "origin" remote is in
+ * in invalid format.
+ */
+export async function getValidRepositoryUrl(
+  packageManifest: UnvalidatedPackageManifest,
+  repositoryDirectoryPath: string,
+): Promise<string> {
+  // Set automatically by NPM or Yarn 1.x
+  const npmPackageRepositoryUrl = process.env.npm_package_repository_url;
+
+  if (npmPackageRepositoryUrl) {
+    return convertToHttpsGitHubRepositoryUrl(npmPackageRepositoryUrl);
+  }
+
+  if (typeof packageManifest.repository === 'string') {
+    return convertToHttpsGitHubRepositoryUrl(packageManifest.repository);
+  }
+
+  if (
+    isPlainObject(packageManifest.repository) &&
+    typeof packageManifest.repository.url === 'string'
+  ) {
+    return convertToHttpsGitHubRepositoryUrl(packageManifest.repository.url);
+  }
+
+  const gitConfigUrl = await getStdoutFromCommand(
+    'git',
+    ['config', '--get', 'remote.origin.url'],
+    { cwd: repositoryDirectoryPath },
+  );
+  return convertToHttpsGitHubRepositoryUrl(gitConfigUrl);
 }
 
 /**
