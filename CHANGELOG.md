@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.1.0]
+### Uncategorized
+- chore: bump `actions/upload-artifact` from `v3` to `v4` ([#171](https://github.com/MetaMask/create-release-branch/pull/171))
+- feat: release UI beta ([#166](https://github.com/MetaMask/create-release-branch/pull/166))
+- fix: limit breaking change dependent detection to peer dependencies ([#170](https://github.com/MetaMask/create-release-branch/pull/170))
+- chore: add workflow_dispatch to security-code-scanner ([#169](https://github.com/MetaMask/create-release-branch/pull/169))
+- Sync v3.x with main branch ([#162](https://github.com/MetaMask/create-release-branch/pull/162))
+- 4.0.0 ([#157](https://github.com/MetaMask/create-release-branch/pull/157))
+- chore(devdeps): @lavamoat/allow-scripts@^2.3.1->^3.1.0 ([#146](https://github.com/MetaMask/create-release-branch/pull/146))
+
 ## [4.0.0]
 ### Changed
 - **BREAKING:** Bump minimum Node.js version to `^18.18` ([#156](https://github.com/MetaMask/create-release-branch/pull/156))
@@ -69,7 +79,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - In this first release, this tool only supports monorepos with an independent versioning scheme. We will add support for other kinds of projects in future releases.
   - You can learn more on how to use this tool by reading the [documentation](docs/).
 
-[Unreleased]: https://github.com/MetaMask/create-release-branch/compare/v4.0.0...HEAD
+[Unreleased]: https://github.com/MetaMask/create-release-branch/compare/v4.1.0...HEAD
+[4.1.0]: https://github.com/MetaMask/create-release-branch/compare/v4.0.0...v4.1.0
 [4.0.0]: https://github.com/MetaMask/create-release-branch/compare/v3.1.0...v4.0.0
 [3.1.0]: https://github.com/MetaMask/create-release-branch/compare/v3.0.1...v3.1.0
 [3.0.1]: https://github.com/MetaMask/create-release-branch/compare/v3.0.0...v3.0.1
