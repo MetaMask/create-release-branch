@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.1.0]
+### Added
+- Add interactive web UI for selecting package versions to release ([#166](https://github.com/MetaMask/create-release-branch/pull/166))
+  - Added `--interactive` (`-i`) flag to launch a web-based UI for easier version selection
+  - Added `--port` option to configure the web server port (default: 3000)
+
+### Changed
+- Refine breaking change dependent detection to only consider peer dependencies ([#170](https://github.com/MetaMask/create-release-branch/pull/170))
+  - This change supports our policy of requiring packages with breaking changes to be released alongside their dependents
+  - Regular dependencies are no longer included in this check
+- Allow `npm:name@version` dependency redirections in manifest ([#158](https://github.com/MetaMask/create-release-branch/pull/158))
+
 ## [4.0.0]
 ### Changed
 - **BREAKING:** Bump minimum Node.js version to `^18.18` ([#156](https://github.com/MetaMask/create-release-branch/pull/156))
@@ -69,7 +81,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - In this first release, this tool only supports monorepos with an independent versioning scheme. We will add support for other kinds of projects in future releases.
   - You can learn more on how to use this tool by reading the [documentation](docs/).
 
-[Unreleased]: https://github.com/MetaMask/create-release-branch/compare/v4.0.0...HEAD
+[Unreleased]: https://github.com/MetaMask/create-release-branch/compare/v4.1.0...HEAD
+[4.1.0]: https://github.com/MetaMask/create-release-branch/compare/v4.0.0...v4.1.0
 [4.0.0]: https://github.com/MetaMask/create-release-branch/compare/v3.1.0...v4.0.0
 [3.1.0]: https://github.com/MetaMask/create-release-branch/compare/v3.0.1...v3.1.0
 [3.0.1]: https://github.com/MetaMask/create-release-branch/compare/v3.0.0...v3.0.1
