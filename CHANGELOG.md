@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Refine breaking change dependent detection to only consider peer dependencies ([#170](https://github.com/MetaMask/create-release-branch/pull/170))
   - This change supports our policy of requiring packages with breaking changes to be released alongside their dependents
   - Regular dependencies are no longer included in this check
+- Allow `npm:name@version` dependency redirections in manifest ([#158](https://github.com/MetaMask/create-release-branch/pull/158))
 
 ## [4.0.0]
 ### Changed
