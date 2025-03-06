@@ -7,14 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ## [4.1.0]
-### Uncategorized
-- chore: bump `actions/upload-artifact` from `v3` to `v4` ([#171](https://github.com/MetaMask/create-release-branch/pull/171))
-- feat: release UI beta ([#166](https://github.com/MetaMask/create-release-branch/pull/166))
-- fix: limit breaking change dependent detection to peer dependencies ([#170](https://github.com/MetaMask/create-release-branch/pull/170))
-- chore: add workflow_dispatch to security-code-scanner ([#169](https://github.com/MetaMask/create-release-branch/pull/169))
-- Sync v3.x with main branch ([#162](https://github.com/MetaMask/create-release-branch/pull/162))
-- 4.0.0 ([#157](https://github.com/MetaMask/create-release-branch/pull/157))
-- chore(devdeps): @lavamoat/allow-scripts@^2.3.1->^3.1.0 ([#146](https://github.com/MetaMask/create-release-branch/pull/146))
+### Added
+- Add interactive web UI for selecting package versions to release ([#166](https://github.com/MetaMask/create-release-branch/pull/166))
+  - Added `--interactive` (`-i`) flag to launch a web-based UI for easier version selection
+  - Added `--port` option to configure the web server port (default: 3000)
+
+### Changed
+- Refine breaking change dependent detection to only consider peer dependencies ([#170](https://github.com/MetaMask/create-release-branch/pull/170))
+  - This change supports our policy of requiring packages with breaking changes to be released alongside their dependents
+  - Regular dependencies are no longer included in this check
 
 ## [4.0.0]
 ### Changed
