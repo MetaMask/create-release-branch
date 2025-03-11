@@ -168,7 +168,7 @@ export async function waitForUserToEditReleaseSpecification(
 }
 
 /**
- * Finds all workspace packages that depend on the given package and have changes since their latest release.
+ * Finds all workspace packages that depend on the given package.
  *
  * @param project - The project containing workspace packages.
  * @param packageName - The name of the package to find dependents for.
@@ -189,14 +189,7 @@ export function findMissingUnreleasedDependents(
     },
   );
 
-  const changedDependentNames = dependentNames.filter(
-    (possibleDependentName) => {
-      return project.workspacePackages[possibleDependentName]
-        .hasChangesSinceLatestRelease;
-    },
-  );
-
-  return changedDependentNames.filter((dependentName) => {
+  return dependentNames.filter((dependentName) => {
     return !unvalidatedReleaseSpecificationPackages[dependentName];
   });
 }
