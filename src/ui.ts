@@ -139,18 +139,16 @@ function createApp({
         ? majorBumps.split(',').filter(Boolean)
         : (req.query.majorBumps as string[] | undefined) || [];
 
-    const requiredDependents = [
-      ...new Set(
-        majorBumpsArray.flatMap((majorBump) =>
-          findAllWorkspacePackagesThatDependOnPackage(project, majorBump),
-        ),
+    const requiredDependents = new Set(
+      majorBumpsArray.flatMap((majorBump) =>
+        findAllWorkspacePackagesThatDependOnPackage(project, majorBump),
       ),
-    ];
+    );
 
     const pkgs = Object.values(project.workspacePackages).filter(
       (pkg) =>
         pkg.hasChangesSinceLatestRelease ||
-        requiredDependents.includes(pkg.validatedManifest.name),
+        requiredDependents.has(pkg.validatedManifest.name),
     );
 
     const packages = pkgs.map((pkg) => ({
