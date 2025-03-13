@@ -172,13 +172,11 @@ export async function waitForUserToEditReleaseSpecification(
  *
  * @param project - The project containing workspace packages.
  * @param packageName - The name of the package to find dependents for.
- * @param unvalidatedReleaseSpecificationPackages - The packages in the release specification.
- * @returns An array of package names that depend on the given package and are missing from the release spec.
+ * @returns An array of package names that depend on the given package.
  */
-export function findMissingUnreleasedDependents(
+export function findAllWorkspacePackagesThatDependOnPackage(
   project: Project,
   packageName: string,
-  unvalidatedReleaseSpecificationPackages: Record<string, string | null>,
 ): string[] {
   const dependentNames = Object.keys(project.workspacePackages).filter(
     (possibleDependentName) => {
@@ -187,6 +185,27 @@ export function findMissingUnreleasedDependents(
       const { peerDependencies } = possibleDependent.validatedManifest;
       return hasProperty(peerDependencies, packageName);
     },
+  );
+
+  return dependentNames;
+}
+
+/**
+ * Finds all workspace packages that depend on the given package.
+ *
+ * @param project - The project containing workspace packages.
+ * @param packageName - The name of the package to find dependents for.
+ * @param unvalidatedReleaseSpecificationPackages - The packages in the release specification.
+ * @returns An array of package names that depend on the given package and are missing from the release spec.
+ */
+export function findMissingUnreleasedDependents(
+  project: Project,
+  packageName: string,
+  unvalidatedReleaseSpecificationPackages: Record<string, string | null>,
+): string[] {
+  const dependentNames = findAllWorkspacePackagesThatDependOnPackage(
+    project,
+    packageName,
   );
 
   return dependentNames.filter((dependentName) => {

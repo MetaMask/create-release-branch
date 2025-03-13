@@ -1,10 +1,16 @@
 import './style.css';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { SemVer } from 'semver';
 import { ErrorMessage } from './ErrorMessage.js';
 import { PackageItem } from './PackageItem.js';
 import { Package, RELEASE_TYPE_OPTIONS, ReleaseType } from './types.js';
+
+// Helper function to compare sets
+const setsAreEqual = (a: Set<string>, b: Set<string>) => {
+  if (a.size !== b.size) return false;
+  return [...a].every((value) => b.has(value));
+};
 
 type SubmitButtonProps = {
   selections: Record<string, string>;
@@ -67,9 +73,14 @@ function App() {
     new Set(),
   );
   const [showCheckboxes, setShowCheckboxes] = useState(false);
+  const previousPackages = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    fetch('/api/packages')
+    const majorBumps = Object.entries(selections)
+      .filter(([_, type]) => type === 'major')
+      .map(([pkgName]) => pkgName);
+
+    fetch(`/api/packages?majorBumps=${majorBumps.join(',')}`)
       .then((res) => {
         if (!res.ok) {
           throw new Error(`Received ${res.status}`);
@@ -77,6 +88,20 @@ function App() {
         return res.json();
       })
       .then((data: Package[]) => {
+        const newPackageNames = new Set(data.map((pkg) => pkg.name));
+
+        // Only clean up selections if the package list actually changed
+        if (!setsAreEqual(previousPackages.current, newPackageNames)) {
+          setSelections((prev) =>
+            Object.fromEntries(
+              Object.entries(prev).filter(([pkgName]) =>
+                newPackageNames.has(pkgName),
+              ),
+            ),
+          );
+          previousPackages.current = newPackageNames;
+        }
+
         setPackages(data);
         setLoadingChangelogs(
           data.reduce((acc, pkg) => ({ ...acc, [pkg.name]: false }), {}),
@@ -86,7 +111,7 @@ function App() {
         setError(err.message);
         console.error('Error fetching packages:', err);
       });
-  }, []);
+  }, [selections]);
 
   const checkDependencies = async (selectionData: Record<string, string>) => {
     if (Object.keys(selectionData).length === 0) return;
