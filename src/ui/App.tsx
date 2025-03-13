@@ -13,7 +13,7 @@ const setsAreEqual = (a: Set<string>, b: Set<string>) => {
 };
 
 type SubmitButtonProps = {
-  releaseSelections: Record<string, string>;
+  selections: Record<string, string>;
   packageDependencyErrors: Record<
     string,
     { missingDependentNames: string[]; missingDependencies: string[] }
@@ -22,16 +22,14 @@ type SubmitButtonProps = {
 };
 
 function SubmitButton({
-  releaseSelections,
+  selections,
   packageDependencyErrors,
   onSubmit,
 }: SubmitButtonProps) {
   const isDisabled =
-    Object.keys(releaseSelections).length === 0 ||
+    Object.keys(selections).length === 0 ||
     Object.keys(packageDependencyErrors).length > 0 ||
-    Object.values(releaseSelections).every(
-      (value) => value === 'intentionally-skip',
-    );
+    Object.values(selections).every((value) => value === 'intentionally-skip');
 
   return (
     <button
@@ -50,9 +48,7 @@ function SubmitButton({
 
 function App() {
   const [packages, setPackages] = useState<Package[]>([]);
-  const [releaseSelections, setReleaseSelections] = useState<
-    Record<string, string>
-  >({});
+  const [selections, setSelections] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [changelogs, setChangelogs] = useState<Record<string, string>>({});
@@ -80,7 +76,7 @@ function App() {
   const previousPackages = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    const majorBumps = Object.entries(releaseSelections)
+    const majorBumps = Object.entries(selections)
       .filter(([_, type]) => type === 'major')
       .map(([pkgName]) => pkgName);
 
@@ -94,9 +90,9 @@ function App() {
       .then((data: Package[]) => {
         const newPackageNames = new Set(data.map((pkg) => pkg.name));
 
-        // Only clean up releaseSelections if the package list actually changed
+        // Only clean up selections if the package list actually changed
         if (!setsAreEqual(previousPackages.current, newPackageNames)) {
-          setReleaseSelections((prev) =>
+          setSelections((prev) =>
             Object.fromEntries(
               Object.entries(prev).filter(([pkgName]) =>
                 newPackageNames.has(pkgName),
@@ -115,7 +111,7 @@ function App() {
         setError(err.message);
         console.error('Error fetching packages:', err);
       });
-  }, [releaseSelections]);
+  }, [selections]);
 
   const checkDependencies = async (selectionData: Record<string, string>) => {
     if (Object.keys(selectionData).length === 0) return;
@@ -148,11 +144,11 @@ function App() {
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      void checkDependencies(releaseSelections);
+      void checkDependencies(selections);
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [releaseSelections]);
+  }, [selections]);
 
   const handleCustomVersionChange = (packageName: string, version: string) => {
     try {
@@ -182,7 +178,7 @@ function App() {
         return rest;
       });
 
-      setReleaseSelections((prev) => ({
+      setSelections((prev) => ({
         ...prev,
         [packageName]: version,
       }));
@@ -199,14 +195,14 @@ function App() {
     value: ReleaseType | '',
   ): void => {
     if (value === '') {
-      const { [packageName]: _, ...rest } = releaseSelections;
-      setReleaseSelections(rest);
+      const { [packageName]: _, ...rest } = selections;
+      setSelections(rest);
 
       const { [packageName]: __, ...remainingErrors } = packageDependencyErrors;
       setPackageDependencyErrors(remainingErrors);
     } else {
-      setReleaseSelections({
-        ...releaseSelections,
+      setSelections({
+        ...selections,
         [packageName]: value,
       });
     }
@@ -218,7 +214,7 @@ function App() {
       const response = await fetch('/api/release', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(releaseSelections),
+        body: JSON.stringify(selections),
       });
 
       const data: {
@@ -254,8 +250,8 @@ function App() {
       const errorMessage =
         err instanceof Error ? err.message : 'An error occurred';
       setError(errorMessage);
-      console.error('Error submitting releaseSelections:', err);
-      alert('Failed to submit releaseSelections. Please try again.');
+      console.error('Error submitting selections:', err);
+      alert('Failed to submit selections. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -280,11 +276,11 @@ function App() {
   };
 
   const handleBulkAction = (action: ReleaseType) => {
-    const newReleaseSelections = { ...releaseSelections };
+    const newReleaseSelections = { ...selections };
     selectedPackages.forEach((packageName) => {
       newReleaseSelections[packageName] = action;
     });
-    setReleaseSelections(newReleaseSelections);
+    setSelections(newReleaseSelections);
     setSelectedPackages(new Set());
     setShowCheckboxes(true);
   };
@@ -393,7 +389,7 @@ function App() {
           <PackageItem
             key={pkg.name}
             pkg={pkg}
-            releaseSelections={releaseSelections}
+            selections={selections}
             versionErrors={versionErrors}
             packageDependencyErrors={packageDependencyErrors}
             loadingChangelogs={loadingChangelogs}
@@ -403,7 +399,7 @@ function App() {
             onSelectionChange={handleSelectionChange}
             onCustomVersionChange={handleCustomVersionChange}
             onFetchChangelog={fetchChangelog}
-            setReleaseSelections={setReleaseSelections}
+            setSelections={setSelections}
             setChangelogs={setChangelogs}
             onToggleSelect={() => togglePackageSelection(pkg.name)}
           />
@@ -412,7 +408,7 @@ function App() {
 
       {packages.length > 0 && (
         <SubmitButton
-          releaseSelections={releaseSelections}
+          selections={selections}
           packageDependencyErrors={packageDependencyErrors}
           onSubmit={handleSubmit}
         />
