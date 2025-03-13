@@ -6,7 +6,7 @@ import { Package, ReleaseType } from './types.js';
 
 type PackageItemProps = {
   pkg: Package;
-  selections: Record<string, string>;
+  releaseSelections: Record<string, string>;
   versionErrors: Record<string, string>;
   packageDependencyErrors: Record<
     string,
@@ -22,14 +22,16 @@ type PackageItemProps = {
   onSelectionChange: (packageName: string, value: ReleaseType | '') => void;
   onCustomVersionChange: (packageName: string, version: string) => void;
   onFetchChangelog: (packageName: string) => Promise<void>;
-  setSelections: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  setReleaseSelections: React.Dispatch<
+    React.SetStateAction<Record<string, string>>
+  >;
   setChangelogs: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   onToggleSelect: () => void;
 };
 
 export function PackageItem({
   pkg,
-  selections,
+  releaseSelections,
   versionErrors,
   packageDependencyErrors,
   loadingChangelogs,
@@ -39,7 +41,7 @@ export function PackageItem({
   onSelectionChange,
   onCustomVersionChange,
   onFetchChangelog,
-  setSelections,
+  setReleaseSelections,
   setChangelogs,
   onToggleSelect,
 }: PackageItemProps) {
@@ -48,7 +50,8 @@ export function PackageItem({
       key={pkg.name}
       id={`package-${pkg.name}`}
       className={`border p-4 rounded-lg ${
-        selections[pkg.name] && selections[pkg.name] !== 'intentionally-skip'
+        releaseSelections[pkg.name] &&
+        releaseSelections[pkg.name] !== 'intentionally-skip'
           ? 'border-2'
           : 'border-gray-200'
       } ${
@@ -76,17 +79,19 @@ export function PackageItem({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600">Current version: {pkg.version}</p>
-              {selections[pkg.name] &&
-                selections[pkg.name] !== 'intentionally-skip' &&
-                selections[pkg.name] !== 'custom' &&
+              {releaseSelections[pkg.name] &&
+                releaseSelections[pkg.name] !== 'intentionally-skip' &&
+                releaseSelections[pkg.name] !== 'custom' &&
                 !versionErrors[pkg.name] && (
                   <p className="text-yellow-700">
                     New version:{' '}
-                    {!['patch', 'minor', 'major'].includes(selections[pkg.name])
-                      ? selections[pkg.name]
+                    {!['patch', 'minor', 'major'].includes(
+                      releaseSelections[pkg.name],
+                    )
+                      ? releaseSelections[pkg.name]
                       : new SemVer(pkg.version)
                           .inc(
-                            selections[pkg.name] as Exclude<
+                            releaseSelections[pkg.name] as Exclude<
                               ReleaseType,
                               'intentionally-skip' | 'custom' | string
                             >,
@@ -102,7 +107,7 @@ export function PackageItem({
             </div>
             <VersionSelector
               packageName={pkg.name}
-              selection={selections[pkg.name]}
+              selection={releaseSelections[pkg.name]}
               onSelectionChange={onSelectionChange}
               onCustomVersionChange={onCustomVersionChange}
               onFetchChangelog={onFetchChangelog}
@@ -120,7 +125,7 @@ export function PackageItem({
               <DependencyErrorSection
                 title="Missing Dependencies"
                 items={packageDependencyErrors[pkg.name].missingDependencies}
-                setSelections={setSelections}
+                setSelections={setReleaseSelections}
                 description={`The following packages are dependencies or peer dependencies of ${pkg.name}. Because they may have introduced new changes that ${pkg.name} is now using, you need to verify whether to include them in the release.
 
 To do this, look at the change history for each package and compare it with the change history for ${pkg.name}. If ${pkg.name} uses any new changes from a package, then you need to include it by bumping its version. If you have confirmed that the changes to a package do not affect ${pkg.name}, you may omit it from the release by choosing "Skip" instead.`}
@@ -134,7 +139,7 @@ To do this, look at the change history for each package and compare it with the 
                   items={
                     packageDependencyErrors[pkg.name].missingDependentNames
                   }
-                  setSelections={setSelections}
+                  setSelections={setReleaseSelections}
                   description={`Because ${pkg.name} is being released with a new major version, to prevent peer dependency warnings in consuming projects, all of the following packages which list ${pkg.name} as a peer dependency need to be included in the release. Please choose new versions for these packages. If for some reason you feel it is safe to omit a package you may choose "Skip".`}
                 />
               </div>

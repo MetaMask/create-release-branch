@@ -657,7 +657,7 @@ ${releaseSpecificationPath}
       });
     });
 
-    it('throws if there are any packages in the release with a major version bump using the word "major", but any of their dependents defined as "peerDependencies" have no changes since their latest release and are not listed in the release', async () => {
+    it('throws if there are any packages in the release with a major version bump using the word "major", but any of their dependents defined as "peerDependencies" are not listed in the release, even if they have no changes', async () => {
       await withSandbox(async (sandbox) => {
         const project = buildMockProject({
           workspacePackages: {
@@ -767,7 +767,7 @@ ${releaseSpecificationPath}
       });
     });
 
-    it('throws if there are any packages in the release with a major version bump using a literal version, but any of their dependents defined as "peerDependencies" have no changes since their latest release and are not listed in the release', async () => {
+    it('throws if there are any packages in the release with a major version bump using a literal version, but any of their dependents defined as "peerDependencies" are not listed in the release, even if they have no changes', async () => {
       await withSandbox(async (sandbox) => {
         const project = buildMockProject({
           workspacePackages: {
@@ -878,7 +878,7 @@ ${releaseSpecificationPath}
       });
     });
 
-    it('throws if there are any packages in the release with a major version bump using the word "major", but their dependents via "peerDependencies" have no changes since their latest release and have their version specified as null in the release spec', async () => {
+    it('throws if there are any packages in the release with a major version bump using the word "major", but their dependents via "peerDependencies" have their version specified as null in the release spec, even if they have no changes', async () => {
       await withSandbox(async (sandbox) => {
         const project = buildMockProject({
           workspacePackages: {
@@ -990,7 +990,7 @@ ${releaseSpecificationPath}
       });
     });
 
-    it('throws if there are any packages in the release with a major version bump using a literal version, but their dependents via "peerDependencies" have no changes since their latest release and have their version specified as null in the release spec', async () => {
+    it('throws if there are any packages in the release with a major version bump using a literal version, but their dependents via "peerDependencies" have their version specified as null in the release spec, even if they have no changes', async () => {
       await withSandbox(async (sandbox) => {
         const project = buildMockProject({
           workspacePackages: {
