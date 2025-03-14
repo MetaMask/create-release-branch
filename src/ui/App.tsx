@@ -276,11 +276,11 @@ function App() {
   };
 
   const handleBulkAction = (action: ReleaseType) => {
-    const newReleaseSelections = { ...selections };
+    const newSelections = { ...selections };
     selectedPackages.forEach((packageName) => {
-      newReleaseSelections[packageName] = action;
+      newSelections[packageName] = action;
     });
-    setSelections(newReleaseSelections);
+    setSelections(newSelections);
     setSelectedPackages(new Set());
     setShowCheckboxes(true);
   };
