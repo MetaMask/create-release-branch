@@ -168,7 +168,30 @@ export async function waitForUserToEditReleaseSpecification(
 }
 
 /**
- * Finds all workspace packages that depend on the given package and have changes since their latest release.
+ * Finds all workspace packages that depend on the given package.
+ *
+ * @param project - The project containing workspace packages.
+ * @param packageName - The name of the package to find dependents for.
+ * @returns An array of package names that depend on the given package.
+ */
+export function findAllWorkspacePackagesThatDependOnPackage(
+  project: Project,
+  packageName: string,
+): string[] {
+  const dependentNames = Object.keys(project.workspacePackages).filter(
+    (possibleDependentName) => {
+      const possibleDependent =
+        project.workspacePackages[possibleDependentName];
+      const { peerDependencies } = possibleDependent.validatedManifest;
+      return hasProperty(peerDependencies, packageName);
+    },
+  );
+
+  return dependentNames;
+}
+
+/**
+ * Finds all workspace packages that depend on the given package.
  *
  * @param project - The project containing workspace packages.
  * @param packageName - The name of the package to find dependents for.
@@ -180,23 +203,12 @@ export function findMissingUnreleasedDependents(
   packageName: string,
   unvalidatedReleaseSpecificationPackages: Record<string, string | null>,
 ): string[] {
-  const dependentNames = Object.keys(project.workspacePackages).filter(
-    (possibleDependentName) => {
-      const possibleDependent =
-        project.workspacePackages[possibleDependentName];
-      const { peerDependencies } = possibleDependent.validatedManifest;
-      return hasProperty(peerDependencies, packageName);
-    },
+  const dependentNames = findAllWorkspacePackagesThatDependOnPackage(
+    project,
+    packageName,
   );
 
-  const changedDependentNames = dependentNames.filter(
-    (possibleDependentName) => {
-      return project.workspacePackages[possibleDependentName]
-        .hasChangesSinceLatestRelease;
-    },
-  );
-
-  return changedDependentNames.filter((dependentName) => {
+  return dependentNames.filter((dependentName) => {
     return !unvalidatedReleaseSpecificationPackages[dependentName];
   });
 }

@@ -10,6 +10,7 @@ import {
 } from './project.js';
 import { Package } from './package.js';
 import {
+  findAllWorkspacePackagesThatDependOnPackage,
   findMissingUnreleasedDependenciesForRelease,
   findMissingUnreleasedDependentsForBreakingChanges,
   IncrementableVersionParts,
@@ -130,15 +131,29 @@ function createApp({
   app.use(express.static(UI_BUILD_DIR));
   app.use(express.json());
 
-  app.get('/api/packages', (_req, res) => {
+  app.get('/api/packages', (req, res) => {
+    const { majorBumps } = req.query;
+
+    const majorBumpsArray =
+      typeof majorBumps === 'string'
+        ? majorBumps.split(',').filter(Boolean)
+        : (req.query.majorBumps as string[] | undefined) || [];
+
+    const requiredDependents = new Set(
+      majorBumpsArray.flatMap((majorBump) =>
+        findAllWorkspacePackagesThatDependOnPackage(project, majorBump),
+      ),
+    );
+
     const pkgs = Object.values(project.workspacePackages).filter(
-      (pkg) => pkg.hasChangesSinceLatestRelease,
+      (pkg) =>
+        pkg.hasChangesSinceLatestRelease ||
+        requiredDependents.has(pkg.validatedManifest.name),
     );
 
     const packages = pkgs.map((pkg) => ({
       name: pkg.validatedManifest.name,
       version: pkg.validatedManifest.version.version,
-      location: pkg.directoryPath,
     }));
 
     res.json(packages);
