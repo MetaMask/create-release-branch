@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.1.1]
+### Fixed
+- Ask users to include peer dependents of a major-bumped package in the release, even they've had no changes ([#173](https://github.com/MetaMask/create-release-branch/pull/173))
+- UI: Include all peer dependents of a major-bumped package as available packages to release, even if they've had no changes ([#173](https://github.com/MetaMask/create-release-branch/pull/173))
+
 ## [4.1.0]
 ### Added
 - Add interactive web UI for selecting package versions to release ([#166](https://github.com/MetaMask/create-release-branch/pull/166))
@@ -81,7 +86,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - In this first release, this tool only supports monorepos with an independent versioning scheme. We will add support for other kinds of projects in future releases.
   - You can learn more on how to use this tool by reading the [documentation](docs/).
 
-[Unreleased]: https://github.com/MetaMask/create-release-branch/compare/v4.1.0...HEAD
+[Unreleased]: https://github.com/MetaMask/create-release-branch/compare/v4.1.1...HEAD
+[4.1.1]: https://github.com/MetaMask/create-release-branch/compare/v4.1.0...v4.1.1
 [4.1.0]: https://github.com/MetaMask/create-release-branch/compare/v4.0.0...v4.1.0
 [4.0.0]: https://github.com/MetaMask/create-release-branch/compare/v3.1.0...v4.0.0
 [3.1.0]: https://github.com/MetaMask/create-release-branch/compare/v3.0.1...v3.1.0
