@@ -1,7 +1,7 @@
 import type { WriteStream } from 'fs';
 import { join } from 'path';
 import express from 'express';
-import open, { apps } from 'open';
+import open from 'open';
 
 import {
   restoreChangelogsForSkippedPackages,
@@ -86,8 +86,18 @@ export async function startUI({
 
   const server = app.listen(port, async () => {
     const url = `http://localhost:${port}`;
-    stdout.write(`UI server running at ${url}\n`);
-    open(url, { app: { name: apps.browser } });
+
+    try {
+      stdout.write(`\nAttempting to open UI in browser...`);
+      await open(url);
+      stdout.write(`\nUI server running at ${url}\n`);
+    } catch (error) {
+      stderr.write(`\n---------------------------------------------------\n`);
+      stderr.write(`Error automatically opening browser: ${error}\n`);
+      stderr.write(`Please open the following URL manually:\n`);
+      stderr.write(`${url}\n`);
+      stderr.write(`---------------------------------------------------\n\n`);
+    }
   });
 
   return new Promise((resolve, reject) => {
