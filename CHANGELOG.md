@@ -120,7 +120,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - In this first release, this tool only supports monorepos with an independent versioning scheme. We will add support for other kinds of projects in future releases.
   - You can learn more on how to use this tool by reading the [documentation](docs/).
 
-[Unreleased]: https://github.com/MetaMask/create-release-branch/compare/v4.1.1...HEAD
+[Unreleased]: https://github.com/MetaMask/create-release-branch/compare/v4.1.2...HEAD
+[4.1.2]: https://github.com/MetaMask/create-release-branch/compare/v4.1.1...v4.1.2
 [4.1.1]: https://github.com/MetaMask/create-release-branch/compare/v4.1.0...v4.1.1
 [4.1.0]: https://github.com/MetaMask/create-release-branch/compare/v4.0.0...v4.1.0
 [4.0.0]: https://github.com/MetaMask/create-release-branch/compare/v3.1.0...v4.0.0
