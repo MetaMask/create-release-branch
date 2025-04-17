@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Improved error handling when opening browser fails due to System Events permissions or non-standard browser configurations ([#178](https://github.com/MetaMask/create-release-branch/pull/178))
+  - Now provides clear manual URL instructions instead of failing with osascript errors
+  - Handles both cases: when terminal lacks System Events permissions and when using alternative browsers like Brave
 
 ## [4.1.1]
 ### Fixed

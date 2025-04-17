@@ -42,7 +42,6 @@ export async function main({
     );
 
     if (interactive) {
-      stdout.write(`Starting UI on port ${port}...\n`);
       await startUI({
         project,
         releaseType,
