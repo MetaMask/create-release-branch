@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.1.2]
+
 ### Fixed
 
 - Improved error handling when opening browser fails due to System Events permissions or non-standard browser configurations ([#178](https://github.com/MetaMask/create-release-branch/pull/178))
