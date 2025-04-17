@@ -16,6 +16,20 @@ export { isObject };
 export const debug = createDebug('create-release-branch:impl');
 
 /**
+ * Matches URLs in the formats:
+ *
+ * - "https://github.com/OrganizationName/RepoName"
+ * - "https://github.com/OrganizationName/RepoName.git"
+ */
+const HTTPS_GITHUB_URL_REGEX =
+  /^https:\/\/github\.com\/(.+?)\/(.+?)(?:\.git)?$/u;
+
+/**
+ * Matches a URL in the format "git@github.com/OrganizationName/RepoName.git".
+ */
+const SSH_GITHUB_URL_REGEX = /^git@github\.com:(.+?)\/(.+?)\.git$/u;
+
+/**
  * Type guard for determining whether the given value is an instance of Error.
  * For errors generated via `fs.promises`, `error instanceof Error` won't work,
  * so we have to come up with another way of testing.
@@ -171,4 +185,29 @@ export async function getLinesFromCommand(
 ): Promise<string[]> {
   const { stdout } = await execa(command, args, options);
   return stdout.split('\n').filter((value) => value !== '');
+}
+
+/**
+ * Converts the given GitHub repository URL to its HTTPS version.
+ *
+ * A "GitHub repository URL" looks like one of:
+ *
+ * - https://github.com/OrganizationName/RepositoryName
+ * - git@github.com:OrganizationName/RepositoryName.git
+ *
+ * If the URL does not match either of these patterns, an error is thrown.
+ *
+ * @param url - The URL to convert.
+ * @returns The HTTPS URL of the repository, e.g.
+ * `https://github.com/OrganizationName/RepositoryName`.
+ */
+export function convertToHttpsGitHubRepositoryUrl(url: string): string {
+  const match =
+    url.match(HTTPS_GITHUB_URL_REGEX) ?? url.match(SSH_GITHUB_URL_REGEX);
+
+  if (match) {
+    return `https://github.com/${match[1]}/${match[2]}`;
+  }
+
+  throw new Error(`Unrecognized repository URL: ${url}`);
 }

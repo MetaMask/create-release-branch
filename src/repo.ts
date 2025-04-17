@@ -30,6 +30,8 @@ export async function runGitCommandWithin(
  * Runs a Git command within the given repository, obtaining the immediate
  * output.
  *
+ * @deprecated Simply use {@link getStdoutFromCommand} instead of this. It is
+ * just as easy to test!
  * @param repositoryDirectoryPath - The path to the repository directory.
  * @param commandName - The name of the Git command (e.g., "commit").
  * @param commandArgs - The arguments to the command.
@@ -121,52 +123,6 @@ async function getFilesChangedSince(
   return partialFilePaths.map((partialFilePath) =>
     path.join(repositoryDirectoryPath, partialFilePath),
   );
-}
-
-/**
- * Gets the HTTPS URL of the primary remote with which the given repository has
- * been configured. Assumes that the git config `remote.origin.url` string
- * matches one of:
- *
- * - https://github.com/OrganizationName/RepositoryName
- * - git@github.com:OrganizationName/RepositoryName.git
- *
- * If the URL of the "origin" remote matches neither pattern, an error is
- * thrown.
- *
- * @param repositoryDirectoryPath - The path to the repository directory.
- * @returns The HTTPS URL of the repository, e.g.
- * `https://github.com/OrganizationName/RepositoryName`.
- */
-export async function getRepositoryHttpsUrl(
-  repositoryDirectoryPath: string,
-): Promise<string> {
-  const httpsPrefix = 'https://github.com';
-  const sshPrefixRegex = /^git@github\.com:/u;
-  const sshPostfixRegex = /\.git$/u;
-  const gitConfigUrl = await getStdoutFromGitCommandWithin(
-    repositoryDirectoryPath,
-    'config',
-    ['--get', 'remote.origin.url'],
-  );
-
-  if (gitConfigUrl.startsWith(httpsPrefix)) {
-    return gitConfigUrl;
-  }
-
-  // Extracts "OrganizationName/RepositoryName" from
-  // "git@github.com:OrganizationName/RepositoryName.git" and returns the
-  // corresponding HTTPS URL.
-  if (
-    gitConfigUrl.match(sshPrefixRegex) &&
-    gitConfigUrl.match(sshPostfixRegex)
-  ) {
-    return `${httpsPrefix}/${gitConfigUrl
-      .replace(sshPrefixRegex, '')
-      .replace(sshPostfixRegex, '')}`;
-  }
-
-  throw new Error(`Unrecognized URL for git remote "origin": ${gitConfigUrl}`);
 }
 
 /**

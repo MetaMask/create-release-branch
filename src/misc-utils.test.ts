@@ -9,6 +9,7 @@ import {
   runCommand,
   getStdoutFromCommand,
   getLinesFromCommand,
+  convertToHttpsGitHubRepositoryUrl,
 } from './misc-utils.js';
 
 jest.mock('which');
@@ -210,5 +211,50 @@ describe('misc-utils', () => {
       });
       expect(lines).toStrictEqual(['  line 1', 'line 2', '   line 3   ']);
     });
+  });
+
+  describe('convertToHttpsRepositoryUrl', () => {
+    it('returns the URL of the "origin" remote of the given repo if it looks like a HTTPS public GitHub repo URL', () => {
+      expect(
+        convertToHttpsGitHubRepositoryUrl(
+          'https://github.com/example-org/example-repo',
+        ),
+      ).toBe('https://github.com/example-org/example-repo');
+    });
+
+    it('lops ".git" off from the HTTPS public GitHub repo URL', () => {
+      expect(
+        convertToHttpsGitHubRepositoryUrl(
+          'https://github.com/example-org/example-repo.git',
+        ),
+      ).toBe('https://github.com/example-org/example-repo');
+    });
+
+    it('converts an SSH GitHub repo URL into an HTTPS URL (without the trailing ".git")', () => {
+      expect(
+        convertToHttpsGitHubRepositoryUrl(
+          'git@github.com:example-org/example-repo.git',
+        ),
+      ).toBe('https://github.com/example-org/example-repo');
+    });
+
+    it.each([
+      'foo',
+      'http://github.com/example-org',
+      'https://github.com/example-org',
+      'http://github.com/example-org/example-repo',
+      'https://github.comzzzz/example-org/example-repo',
+      'https://gitbar.foo/example-org/example-repo',
+      'git@github.com:example-org',
+      'git@gitbar.foo:example-org/example-repo.git',
+      'git@github.com:example-org/example-repo.foo',
+    ])(
+      'throws if the URL is in an invalid format such as "%s"',
+      (repositoryUrl) => {
+        expect(() => convertToHttpsGitHubRepositoryUrl(repositoryUrl)).toThrow(
+          `Unrecognized repository URL: ${repositoryUrl}`,
+        );
+      },
+    );
   });
 });
