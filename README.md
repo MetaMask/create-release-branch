@@ -2,7 +2,7 @@
 
 This is an interactive command-line tool that automates steps involved in preparing a new release of a project. These steps include updating versions of one or more desired packages, adding a new section to the packages' changelogs to include changes since the previous release, and then creating a new branch from which a pull request can be submitted for review before the release goes live.
 
-> **Note**  
+> **Note**
 > At the moment, this tool only supports monorepos that use an independent versioning strategy. Support for other types of projects is planned in a future release.
 
 ## Installation
@@ -61,7 +61,7 @@ The project follows the same release process as the other libraries in the MetaM
    - Generally any changes that don't affect consumers of the package (e.g. lockfile changes or development environment changes) are omitted. Exceptions may be made for changes that might be of interest despite not having an effect upon the published package (e.g. major test improvements, security improvements, improved documentation, etc.).
    - Try to explain each change in terms that users of the package would understand (e.g. avoid referencing internal variables/concepts).
    - Consolidate related changes into one change entry if it makes it easier to explain.
-   - Run `yarn auto-changelog validate --rc` to check that the changelog is correctly formatted.
+   - Run `yarn auto-changelog validate --rc --prettier` to check that the changelog is correctly formatted.
 
 5. Review and QA the release.
 
