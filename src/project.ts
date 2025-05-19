@@ -237,21 +237,21 @@ export async function updateChangelogsForChangedPackages({
  *
  * @param args - The arguments.
  * @param args.project - The project.
- * @param args.releaseSpecification - A parsed version of the release spec
+ * @param args.releaseSpecificationPackages - A parsed version of the release spec
  * entered by the user.
  * @param args.defaultBranch - The name of the default branch in the repository.
  * @returns The result of writing to the changelog.
  */
 export async function restoreChangelogsForSkippedPackages({
   project: { directoryPath, workspacePackages },
-  releaseSpecification,
+  releaseSpecificationPackages,
   defaultBranch,
 }: {
   project: Pick<
     Project,
     'directoryPath' | 'repositoryUrl' | 'workspacePackages'
   >;
-  releaseSpecification: ReleaseSpecification;
+  releaseSpecificationPackages: ReleaseSpecification['packages'];
   defaultBranch: string;
 }): Promise<void> {
   const existingSkippedPackageChangelogPaths = (
@@ -263,7 +263,7 @@ export async function restoreChangelogsForSkippedPackages({
         );
         const shouldInclude =
           pkg.hasChangesSinceLatestRelease &&
-          !releaseSpecification.packages[name] &&
+          !releaseSpecificationPackages[name] &&
           (await fileExists(pkg.changelogPath));
         return [changelogPath, shouldInclude] as const;
       }),

@@ -33,7 +33,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version-file: '.nvmrc'
-      - uses: MetaMask/action-create-release-pr@v1
+      - uses: MetaMask/action-create-release-pr@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -41,7 +41,7 @@ jobs:
           release-version: ${{ github.event.inputs.release-version }}
           artifacts-path: gh-action__release-authors
       # Upload the release author artifact for use in subsequent workflows
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: release-authors
           path: gh-action__release-authors

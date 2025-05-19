@@ -59,6 +59,9 @@ module.exports = {
     '/node_modules/',
     '/src/cli.ts',
     '/src/command-line-arguments.ts',
+    '/src/ui.ts',
+    '/src/ui/types.ts',
+    '/src/dirname.ts',
   ],
 
   // Indicates which provider should be used to instrument code for coverage
@@ -217,7 +220,7 @@ module.exports = {
 
   // A map from regular expressions to paths to transformers
   transform: {
-    "\\.[jt]sx?$": "babel-jest"
+    '\\.[jt]sx?$': 'babel-jest',
   },
 
   // An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation

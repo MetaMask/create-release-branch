@@ -47,18 +47,18 @@ export type PackageReleasePlan = {
  * @param args - The arguments.
  * @param args.project - Information about the whole project (e.g., names of
  * packages and where they can found).
- * @param args.releaseSpecification - A parsed version of the release spec
+ * @param args.releaseSpecificationPackages - A parsed version of the release spec
  * entered by the user.
  * @param args.newReleaseVersion - The new release version.
  * @returns A promise for information about the new release.
  */
 export async function planRelease({
   project,
-  releaseSpecification,
+  releaseSpecificationPackages,
   newReleaseVersion,
 }: {
   project: Project;
-  releaseSpecification: ReleaseSpecification;
+  releaseSpecificationPackages: ReleaseSpecification['packages'];
   newReleaseVersion: string;
 }): Promise<ReleasePlan> {
   const rootReleasePlan: PackageReleasePlan = {
@@ -67,10 +67,10 @@ export async function planRelease({
   };
 
   const workspaceReleasePlans: PackageReleasePlan[] = Object.keys(
-    releaseSpecification.packages,
+    releaseSpecificationPackages,
   ).map((packageName) => {
     const pkg = project.workspacePackages[packageName];
-    const versionSpecifier = releaseSpecification.packages[packageName];
+    const versionSpecifier = releaseSpecificationPackages[packageName];
     const currentVersion = pkg.validatedManifest.version;
     const newVersion =
       versionSpecifier instanceof SemVer
