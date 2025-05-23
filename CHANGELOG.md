@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.1.3]
+
+### Fixed
+
+- When creating a new release and populating the Unreleased section, use the same repo URLs in PR links as `auto-changelog update` would use ([#165](https://github.com/MetaMask/create-release-branch/pull/165))
+  - This prevents the updated changelog that `create-release-branch` produces from being invalid in the case where a non-standard URL was used to clone the repo originally.
+
 ## [4.1.2]
 
 ### Fixed
@@ -122,7 +129,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - In this first release, this tool only supports monorepos with an independent versioning scheme. We will add support for other kinds of projects in future releases.
   - You can learn more on how to use this tool by reading the [documentation](docs/).
 
-[Unreleased]: https://github.com/MetaMask/create-release-branch/compare/v4.1.2...HEAD
+[Unreleased]: https://github.com/MetaMask/create-release-branch/compare/v4.1.3...HEAD
+[4.1.3]: https://github.com/MetaMask/create-release-branch/compare/v4.1.2...v4.1.3
 [4.1.2]: https://github.com/MetaMask/create-release-branch/compare/v4.1.1...v4.1.2
 [4.1.1]: https://github.com/MetaMask/create-release-branch/compare/v4.1.0...v4.1.1
 [4.1.0]: https://github.com/MetaMask/create-release-branch/compare/v4.0.0...v4.1.0
