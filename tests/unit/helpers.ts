@@ -7,7 +7,10 @@ import {
   PackageManifestDependenciesFieldNames,
   PackageManifestFieldNames,
 } from '../../src/package-manifest.js';
-import type { ValidatedPackageManifest } from '../../src/package-manifest.js';
+import type {
+  UnvalidatedPackageManifest,
+  ValidatedPackageManifest,
+} from '../../src/package-manifest.js';
 import type { Project } from '../../src/project.js';
 
 /**
@@ -38,6 +41,7 @@ type MockPackageOverrides = Omit<
     Partial<ValidatedPackageManifest>,
     PackageManifestFieldNames.Name | PackageManifestFieldNames.Version
   >;
+  unvalidatedManifest?: UnvalidatedPackageManifest;
 };
 
 /**
@@ -105,6 +109,7 @@ export function buildMockPackage(
 
   const {
     validatedManifest = {},
+    unvalidatedManifest = {},
     directoryPath = `/path/to/packages/${name}`,
     manifestPath = path.join(directoryPath, 'package.json'),
     changelogPath = path.join(directoryPath, 'CHANGELOG.md'),
@@ -113,7 +118,7 @@ export function buildMockPackage(
 
   return {
     directoryPath,
-    unvalidatedManifest: {},
+    unvalidatedManifest,
     validatedManifest: buildMockManifest({
       ...validatedManifest,
       [PackageManifestFieldNames.Name]: name,

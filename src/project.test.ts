@@ -3,13 +3,15 @@ import path from 'path';
 import { when } from 'jest-when';
 import { SemVer } from 'semver';
 import * as actionUtils from '@metamask/action-utils';
-import { withSandbox } from '../tests/helpers.js';
+import { withProtectedProcessEnv, withSandbox } from '../tests/helpers.js';
 import {
   buildMockPackage,
   buildMockProject,
   createNoopWriteStream,
 } from '../tests/unit/helpers.js';
+import * as miscUtils from './misc-utils.js';
 import {
+  getValidRepositoryUrl,
   readProject,
   restoreChangelogsForSkippedPackages,
   updateChangelogsForChangedPackages,
@@ -42,6 +44,11 @@ describe('project', () => {
             validatedManifest: {
               workspaces: ['packages/a', 'packages/subpackages/*'],
             },
+            unvalidatedManifest: {
+              repository: {
+                url: projectRepositoryUrl,
+              },
+            },
           },
         );
         const workspacePackages = {
@@ -59,9 +66,6 @@ describe('project', () => {
         };
         const projectTagNames = ['tag1', 'tag2', 'tag3'];
         const stderr = createNoopWriteStream();
-        when(jest.spyOn(repoModule, 'getRepositoryHttpsUrl'))
-          .calledWith(projectDirectoryPath)
-          .mockResolvedValue(projectRepositoryUrl);
         when(jest.spyOn(repoModule, 'getTagNames'))
           .calledWith(projectDirectoryPath)
           .mockResolvedValue(projectTagNames);
@@ -126,6 +130,71 @@ describe('project', () => {
       });
     });
   });
+
+  describe('getValidRepositoryUrl', () => {
+    describe('if the `npm_package_repository_url` environment variable is set', () => {
+      it('returns the HTTPS version of this URL', async () => {
+        await withProtectedProcessEnv(async () => {
+          process.env.npm_package_repository_url =
+            'git@github.com:example-org/example-repo.git';
+          const packageManifest = {};
+          const repositoryDirectoryPath = '/path/to/project';
+
+          expect(
+            await getValidRepositoryUrl(
+              packageManifest,
+              repositoryDirectoryPath,
+            ),
+          ).toBe('https://github.com/example-org/example-repo');
+        });
+      });
+    });
+
+    describe('if package.json has a string "repository" field', () => {
+      it('returns the HTTPS version of this URL', async () => {
+        const packageManifest = {
+          repository: 'git@github.com:example-org/example-repo.git',
+        };
+        const repositoryDirectoryPath = '/path/to/project';
+
+        expect(
+          await getValidRepositoryUrl(packageManifest, repositoryDirectoryPath),
+        ).toBe('https://github.com/example-org/example-repo');
+      });
+    });
+
+    describe('if package.json has an object "repository" field with a string "url" field', () => {
+      it('returns the HTTPS version of this URL', async () => {
+        const packageManifest = {
+          repository: {
+            url: 'git@github.com:example-org/example-repo.git',
+          },
+        };
+        const repositoryDirectoryPath = '/path/to/project';
+
+        expect(
+          await getValidRepositoryUrl(packageManifest, repositoryDirectoryPath),
+        ).toBe('https://github.com/example-org/example-repo');
+      });
+    });
+
+    describe('if package.json does not have a "repository" field', () => {
+      it('returns the HTTPS version of this URL', async () => {
+        const packageManifest = {};
+        const repositoryDirectoryPath = '/path/to/project';
+        when(jest.spyOn(miscUtils, 'getStdoutFromCommand'))
+          .calledWith('git', ['config', '--get', 'remote.origin.url'], {
+            cwd: repositoryDirectoryPath,
+          })
+          .mockResolvedValue('git@github.com:example-org/example-repo.git');
+
+        expect(
+          await getValidRepositoryUrl(packageManifest, repositoryDirectoryPath),
+        ).toBe('https://github.com/example-org/example-repo');
+      });
+    });
+  });
+
   describe('restoreChangelogsForSkippedPackages', () => {
     it('should reset changelog for packages with changes not included in release', async () => {
       const project = buildMockProject({
