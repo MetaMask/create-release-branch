@@ -207,7 +207,9 @@ index 1234567..890abcd 100644
       when(jest.spyOn(packageManifestModule, 'readPackageManifest'))
         .calledWith('/path/to/project/package.json')
         .mockResolvedValue({
-          unvalidated: { repository: 'https://github.com/MetaMask/core' },
+          unvalidated: {
+            repository: 'https://github.com/example-org/example-repo',
+          },
           validated: buildMockManifest(),
         });
 
@@ -222,7 +224,7 @@ index 1234567..890abcd 100644
 
       jest
         .spyOn(projectModule, 'getValidRepositoryUrl')
-        .mockResolvedValue('https://github.com/MetaMask/core');
+        .mockResolvedValue('https://github.com/example-org/example-repo');
 
       jest
         .spyOn(changelogValidatorModule, 'validateChangelogs')
@@ -264,7 +266,7 @@ index 1234567..890abcd 100644
       expect(changelogValidatorModule.validateChangelogs).toHaveBeenCalledWith(
         expect.any(Object),
         '/path/to/project',
-        'https://github.com/MetaMask/core',
+        'https://github.com/example-org/example-repo',
       );
     });
 
@@ -291,7 +293,9 @@ diff --git a/packages/controller-utils/package.json b/packages/controller-utils/
       when(jest.spyOn(packageManifestModule, 'readPackageManifest'))
         .calledWith('/path/to/project/package.json')
         .mockResolvedValue({
-          unvalidated: { repository: 'https://github.com/MetaMask/core' },
+          unvalidated: {
+            repository: 'https://github.com/example-org/example-repo',
+          },
           validated: buildMockManifest(),
         });
 
@@ -306,7 +310,7 @@ diff --git a/packages/controller-utils/package.json b/packages/controller-utils/
 
       jest
         .spyOn(projectModule, 'getValidRepositoryUrl')
-        .mockResolvedValue('https://github.com/MetaMask/core');
+        .mockResolvedValue('https://github.com/example-org/example-repo');
 
       jest
         .spyOn(changelogValidatorModule, 'validateChangelogs')
@@ -330,7 +334,7 @@ diff --git a/packages/controller-utils/package.json b/packages/controller-utils/
         expect.objectContaining({
           projectRoot: '/path/to/project',
           prNumber: '1234',
-          repoUrl: 'https://github.com/MetaMask/core',
+          repoUrl: 'https://github.com/example-org/example-repo',
           stdout,
           stderr,
         }),
@@ -375,7 +379,7 @@ diff --git a/packages/controller-utils/package.json b/packages/controller-utils/
 
       jest
         .spyOn(projectModule, 'getValidRepositoryUrl')
-        .mockResolvedValue('https://github.com/MetaMask/core');
+        .mockResolvedValue('https://github.com/example-org/example-repo');
 
       jest
         .spyOn(changelogValidatorModule, 'validateChangelogs')
@@ -593,7 +597,7 @@ diff --git a/packages/controller-utils/package.json b/packages/controller-utils/
 
       jest
         .spyOn(projectModule, 'getValidRepositoryUrl')
-        .mockResolvedValue('https://github.com/MetaMask/core');
+        .mockResolvedValue('https://github.com/example-org/example-repo');
 
       jest
         .spyOn(changelogValidatorModule, 'validateChangelogs')
@@ -669,7 +673,7 @@ diff --git a/packages/controller-utils/package.json b/packages/controller-utils/
 
       jest
         .spyOn(projectModule, 'getValidRepositoryUrl')
-        .mockResolvedValue('https://github.com/MetaMask/core');
+        .mockResolvedValue('https://github.com/example-org/example-repo');
 
       jest
         .spyOn(changelogValidatorModule, 'validateChangelogs')
@@ -736,7 +740,7 @@ diff --git a/packages/controller-utils/package.json b/packages/controller-utils/
 
       jest
         .spyOn(projectModule, 'getValidRepositoryUrl')
-        .mockResolvedValue('https://github.com/MetaMask/core');
+        .mockResolvedValue('https://github.com/example-org/example-repo');
 
       jest
         .spyOn(changelogValidatorModule, 'validateChangelogs')
@@ -816,7 +820,7 @@ diff --git a/packages/controller-utils/package.json b/packages/controller-utils/
 
       jest
         .spyOn(projectModule, 'getValidRepositoryUrl')
-        .mockResolvedValue('https://github.com/MetaMask/core');
+        .mockResolvedValue('https://github.com/example-org/example-repo');
 
       jest
         .spyOn(changelogValidatorModule, 'validateChangelogs')
@@ -904,7 +908,7 @@ diff --git a/packages/controller-utils/package.json b/packages/controller-utils/
 
       jest
         .spyOn(projectModule, 'getValidRepositoryUrl')
-        .mockResolvedValue('https://github.com/MetaMask/core');
+        .mockResolvedValue('https://github.com/example-org/example-repo');
 
       jest
         .spyOn(changelogValidatorModule, 'validateChangelogs')
@@ -969,7 +973,7 @@ diff --git a/packages/controller-utils/package.json b/packages/controller-utils/
 
       jest
         .spyOn(projectModule, 'getValidRepositoryUrl')
-        .mockResolvedValue('https://github.com/MetaMask/core');
+        .mockResolvedValue('https://github.com/example-org/example-repo');
 
       jest
         .spyOn(changelogValidatorModule, 'validateChangelogs')
@@ -1048,7 +1052,7 @@ diff --git a/packages/controller-utils/package.json b/packages/controller-utils/
 
       jest
         .spyOn(projectModule, 'getValidRepositoryUrl')
-        .mockResolvedValue('https://github.com/MetaMask/core');
+        .mockResolvedValue('https://github.com/example-org/example-repo');
 
       jest
         .spyOn(changelogValidatorModule, 'validateChangelogs')
@@ -1111,7 +1115,7 @@ diff --git a/packages/controller-utils/package.json b/packages/controller-utils/
 
       jest
         .spyOn(projectModule, 'getValidRepositoryUrl')
-        .mockResolvedValue('https://github.com/MetaMask/core');
+        .mockResolvedValue('https://github.com/example-org/example-repo');
 
       jest
         .spyOn(changelogValidatorModule, 'validateChangelogs')
@@ -1173,7 +1177,7 @@ diff --git a/packages/controller-utils/package.json b/packages/controller-utils/
 
       jest
         .spyOn(projectModule, 'getValidRepositoryUrl')
-        .mockResolvedValue('https://github.com/MetaMask/core');
+        .mockResolvedValue('https://github.com/example-org/example-repo');
 
       jest
         .spyOn(changelogValidatorModule, 'validateChangelogs')
@@ -1277,7 +1281,7 @@ index 1234567..890abcd 100644
 
       jest
         .spyOn(projectModule, 'getValidRepositoryUrl')
-        .mockResolvedValue('https://github.com/MetaMask/core');
+        .mockResolvedValue('https://github.com/example-org/example-repo');
 
       jest
         .spyOn(changelogValidatorModule, 'validateChangelogs')
@@ -1376,7 +1380,7 @@ index abc123..def456 100644
 
       jest
         .spyOn(projectModule, 'getValidRepositoryUrl')
-        .mockResolvedValue('https://github.com/MetaMask/core');
+        .mockResolvedValue('https://github.com/example-org/example-repo');
 
       jest
         .spyOn(changelogValidatorModule, 'validateChangelogs')
@@ -1564,7 +1568,7 @@ diff --git a/packages/controller-utils/package.json b/packages/controller-utils/
 
       jest
         .spyOn(projectModule, 'getValidRepositoryUrl')
-        .mockResolvedValue('https://github.com/MetaMask/core');
+        .mockResolvedValue('https://github.com/example-org/example-repo');
 
       jest
         .spyOn(changelogValidatorModule, 'validateChangelogs')
@@ -1623,7 +1627,7 @@ diff --git a/packages/controller-utils/package.json b/packages/controller-utils/
 
       jest
         .spyOn(projectModule, 'getValidRepositoryUrl')
-        .mockResolvedValue('https://github.com/MetaMask/core');
+        .mockResolvedValue('https://github.com/example-org/example-repo');
 
       jest
         .spyOn(changelogValidatorModule, 'validateChangelogs')
@@ -1756,7 +1760,7 @@ diff --git a/packages/controller-utils/package.json b/packages/controller-utils/
 
       jest
         .spyOn(projectModule, 'getValidRepositoryUrl')
-        .mockResolvedValue('https://github.com/MetaMask/core');
+        .mockResolvedValue('https://github.com/example-org/example-repo');
 
       jest
         .spyOn(changelogValidatorModule, 'validateChangelogs')
@@ -1824,7 +1828,7 @@ diff --git a/packages/controller-utils/package.json b/packages/controller-utils/
 
       jest
         .spyOn(projectModule, 'getValidRepositoryUrl')
-        .mockResolvedValue('https://github.com/MetaMask/core');
+        .mockResolvedValue('https://github.com/example-org/example-repo');
 
       jest
         .spyOn(changelogValidatorModule, 'validateChangelogs')
@@ -1950,7 +1954,7 @@ diff --git a/packages/controller-utils/package.json b/packages/controller-utils/
 
       jest
         .spyOn(projectModule, 'getValidRepositoryUrl')
-        .mockResolvedValue('https://github.com/MetaMask/core');
+        .mockResolvedValue('https://github.com/example-org/example-repo');
 
       jest
         .spyOn(changelogValidatorModule, 'validateChangelogs')
@@ -1971,7 +1975,7 @@ diff --git a/packages/controller-utils/package.json b/packages/controller-utils/
       expect(changelogValidatorModule.validateChangelogs).toHaveBeenCalledWith(
         expect.any(Object),
         '/path/to/project',
-        'https://github.com/MetaMask/core',
+        'https://github.com/example-org/example-repo',
       );
     });
   });

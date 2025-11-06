@@ -41,7 +41,7 @@ describe('changelog-validator', () => {
       const results = await validateChangelogs(
         mockChanges,
         '/path/to/project',
-        'https://github.com/MetaMask/core',
+        'https://github.com/example-org/example-repo',
       );
 
       expect(results).toStrictEqual([
@@ -63,7 +63,7 @@ describe('changelog-validator', () => {
       const results = await validateChangelogs(
         mockChanges,
         '/path/to/project',
-        'https://github.com/MetaMask/core',
+        'https://github.com/example-org/example-repo',
       );
 
       expect(results).toStrictEqual([
@@ -92,7 +92,7 @@ describe('changelog-validator', () => {
       const results = await validateChangelogs(
         mockChanges,
         '/path/to/project',
-        'https://github.com/MetaMask/core',
+        'https://github.com/example-org/example-repo',
       );
 
       expect(results).toStrictEqual([
@@ -121,7 +121,7 @@ describe('changelog-validator', () => {
       const results = await validateChangelogs(
         mockChanges,
         '/path/to/project',
-        'https://github.com/MetaMask/core',
+        'https://github.com/example-org/example-repo',
       );
 
       expect(results).toStrictEqual([
@@ -147,7 +147,7 @@ describe('changelog-validator', () => {
       const parseChangelogSpy = jest.fn().mockReturnValue({
         getUnreleasedChanges: () => ({
           Changed: [
-            'Bump `@metamask/transaction-controller` from `^61.0.0` to `^62.0.0` ([#1234](https://github.com/MetaMask/core/pull/1234))',
+            'Bump `@metamask/transaction-controller` from `^61.0.0` to `^62.0.0` ([#1234](https://github.com/example-org/example-repo/pull/1234))',
           ],
         }),
       });
@@ -156,7 +156,7 @@ describe('changelog-validator', () => {
       const results = await validateChangelogs(
         mockChanges,
         '/path/to/project',
-        'https://github.com/MetaMask/core',
+        'https://github.com/example-org/example-repo',
       );
 
       expect(results).toStrictEqual([
@@ -190,7 +190,7 @@ describe('changelog-validator', () => {
         getUnreleasedChanges: () => ({ Changed: [] }),
         getReleaseChanges: jest.fn().mockReturnValue({
           Changed: [
-            'Bump `@metamask/transaction-controller` from `^61.0.0` to `^62.0.0` ([#1234](https://github.com/MetaMask/core/pull/1234))',
+            'Bump `@metamask/transaction-controller` from `^61.0.0` to `^62.0.0` ([#1234](https://github.com/example-org/example-repo/pull/1234))',
           ],
         }),
       };
@@ -206,7 +206,7 @@ describe('changelog-validator', () => {
       const results = await validateChangelogs(
         changesWithVersion,
         '/path/to/project',
-        'https://github.com/MetaMask/core',
+        'https://github.com/example-org/example-repo',
       );
 
       expect(mockChangelog.getReleaseChanges).toHaveBeenCalledWith('1.1.0');
@@ -233,7 +233,7 @@ describe('changelog-validator', () => {
       const mockChangelog = {
         getUnreleasedChanges: jest.fn().mockReturnValue({
           Changed: [
-            'Bump `@metamask/transaction-controller` from `^61.0.0` to `^62.0.0` ([#1234](https://github.com/MetaMask/core/pull/1234))',
+            'Bump `@metamask/transaction-controller` from `^61.0.0` to `^62.0.0` ([#1234](https://github.com/example-org/example-repo/pull/1234))',
           ],
         }),
         getReleaseChanges: jest.fn(),
@@ -243,7 +243,7 @@ describe('changelog-validator', () => {
       const results = await validateChangelogs(
         mockChanges, // No newVersion in mockChanges
         '/path/to/project',
-        'https://github.com/MetaMask/core',
+        'https://github.com/example-org/example-repo',
       );
 
       expect(mockChangelog.getUnreleasedChanges).toHaveBeenCalled();
@@ -261,7 +261,7 @@ describe('changelog-validator', () => {
     it('concatenates multiple existing PR numbers when updating entry', async () => {
       const writeFileSpy = jest.spyOn(fsModule, 'writeFile');
       const existingEntry =
-        'Bump `@metamask/transaction-controller` from `^61.0.0` to `^61.1.0` ([#1234](https://github.com/MetaMask/core/pull/1234), [#5555](https://github.com/MetaMask/core/pull/5555))';
+        'Bump `@metamask/transaction-controller` from `^61.0.0` to `^61.1.0` ([#1234](https://github.com/example-org/example-repo/pull/1234), [#5555](https://github.com/example-org/example-repo/pull/5555))';
 
       when(jest.spyOn(fsModule, 'fileExists'))
         .calledWith('/path/to/project/packages/controller-utils/CHANGELOG.md')
@@ -278,7 +278,7 @@ describe('changelog-validator', () => {
       await updateChangelogs(mockChanges, {
         projectRoot: '/path/to/project',
         prNumber: '6789',
-        repoUrl: 'https://github.com/MetaMask/core',
+        repoUrl: 'https://github.com/example-org/example-repo',
         stdout,
         stderr,
       });
@@ -301,7 +301,7 @@ describe('changelog-validator', () => {
     it('does not duplicate PR numbers when updating entry', async () => {
       const writeFileSpy = jest.spyOn(fsModule, 'writeFile');
       const existingEntry =
-        'Bump `@metamask/transaction-controller` from `^61.0.0` to `^61.1.0` ([#1234](https://github.com/MetaMask/core/pull/1234))';
+        'Bump `@metamask/transaction-controller` from `^61.0.0` to `^61.1.0` ([#1234](https://github.com/example-org/example-repo/pull/1234))';
 
       when(jest.spyOn(fsModule, 'fileExists'))
         .calledWith('/path/to/project/packages/controller-utils/CHANGELOG.md')
@@ -318,7 +318,7 @@ describe('changelog-validator', () => {
       await updateChangelogs(mockChanges, {
         projectRoot: '/path/to/project',
         prNumber: '1234', // Same as existing
-        repoUrl: 'https://github.com/MetaMask/core',
+        repoUrl: 'https://github.com/example-org/example-repo',
         stdout,
         stderr,
       });
@@ -347,7 +347,7 @@ describe('changelog-validator', () => {
 
       const writeFileSpy = jest.spyOn(fsModule, 'writeFile');
       const existingEntry =
-        '**BREAKING:** Bump `@metamask/transaction-controller` from `^61.0.0` to `^61.1.0` ([#1234](https://github.com/MetaMask/core/pull/1234))';
+        '**BREAKING:** Bump `@metamask/transaction-controller` from `^61.0.0` to `^61.1.0` ([#1234](https://github.com/example-org/example-repo/pull/1234))';
 
       when(jest.spyOn(fsModule, 'fileExists'))
         .calledWith('/path/to/project/packages/controller-utils/CHANGELOG.md')
@@ -364,7 +364,7 @@ describe('changelog-validator', () => {
       await updateChangelogs(peerDepChanges, {
         projectRoot: '/path/to/project',
         prNumber: '5678',
-        repoUrl: 'https://github.com/MetaMask/core',
+        repoUrl: 'https://github.com/example-org/example-repo',
         stdout,
         stderr,
       });
@@ -397,7 +397,7 @@ describe('changelog-validator', () => {
       await updateChangelogs(mockChanges, {
         projectRoot: '/path/to/project',
         // No prNumber provided
-        repoUrl: 'https://github.com/MetaMask/core',
+        repoUrl: 'https://github.com/example-org/example-repo',
         stdout,
         stderr,
       });
@@ -418,7 +418,7 @@ describe('changelog-validator', () => {
     it('uses placeholder when updating entry without prNumber', async () => {
       const writeFileSpy = jest.spyOn(fsModule, 'writeFile');
       const existingEntry =
-        'Bump `@metamask/transaction-controller` from `^61.0.0` to `^61.1.0` ([#1234](https://github.com/MetaMask/core/pull/1234))';
+        'Bump `@metamask/transaction-controller` from `^61.0.0` to `^61.1.0` ([#1234](https://github.com/example-org/example-repo/pull/1234))';
 
       when(jest.spyOn(fsModule, 'fileExists'))
         .calledWith('/path/to/project/packages/controller-utils/CHANGELOG.md')
@@ -435,7 +435,7 @@ describe('changelog-validator', () => {
       await updateChangelogs(mockChanges, {
         projectRoot: '/path/to/project',
         // No prNumber provided
-        repoUrl: 'https://github.com/MetaMask/core',
+        repoUrl: 'https://github.com/example-org/example-repo',
         stdout,
         stderr,
       });
@@ -449,7 +449,7 @@ describe('changelog-validator', () => {
     it('preserves existing XXXXX placeholder when updating entry', async () => {
       const writeFileSpy = jest.spyOn(fsModule, 'writeFile');
       const existingEntry =
-        'Bump `@metamask/transaction-controller` from `^61.0.0` to `^61.1.0` ([#XXXXX](https://github.com/MetaMask/core/pull/XXXXX))';
+        'Bump `@metamask/transaction-controller` from `^61.0.0` to `^61.1.0` ([#XXXXX](https://github.com/example-org/example-repo/pull/XXXXX))';
 
       when(jest.spyOn(fsModule, 'fileExists'))
         .calledWith('/path/to/project/packages/controller-utils/CHANGELOG.md')
@@ -466,7 +466,7 @@ describe('changelog-validator', () => {
       await updateChangelogs(mockChanges, {
         projectRoot: '/path/to/project',
         prNumber: '1234',
-        repoUrl: 'https://github.com/MetaMask/core',
+        repoUrl: 'https://github.com/example-org/example-repo',
         stdout,
         stderr,
       });
@@ -486,7 +486,7 @@ describe('changelog-validator', () => {
 
       const count = await updateChangelogs(mockChanges, {
         projectRoot: '/path/to/project',
-        repoUrl: 'https://github.com/MetaMask/core',
+        repoUrl: 'https://github.com/example-org/example-repo',
         stdout,
         stderr,
       });
@@ -509,14 +509,14 @@ describe('changelog-validator', () => {
       (parseChangelog as jest.Mock).mockReturnValue({
         getUnreleasedChanges: () => ({
           Changed: [
-            'Bump `@metamask/transaction-controller` from `^61.0.0` to `^62.0.0` ([#1234](https://github.com/MetaMask/core/pull/1234))',
+            'Bump `@metamask/transaction-controller` from `^61.0.0` to `^62.0.0` ([#1234](https://github.com/example-org/example-repo/pull/1234))',
           ],
         }),
       });
 
       const count = await updateChangelogs(mockChanges, {
         projectRoot: '/path/to/project',
-        repoUrl: 'https://github.com/MetaMask/core',
+        repoUrl: 'https://github.com/example-org/example-repo',
         stdout,
         stderr,
       });
@@ -548,7 +548,7 @@ describe('changelog-validator', () => {
 
       const count = await updateChangelogs(mockChanges, {
         projectRoot: '/path/to/project',
-        repoUrl: 'https://github.com/MetaMask/core',
+        repoUrl: 'https://github.com/example-org/example-repo',
         stdout,
         stderr,
       });
@@ -580,7 +580,7 @@ describe('changelog-validator', () => {
       const stdoutWriteSpy = jest.spyOn(stdout, 'write');
       const writeFileSpy = jest.spyOn(fsModule, 'writeFile');
       const existingEntry =
-        'Bump `@metamask/transaction-controller` from `^61.0.0` to `^61.1.0` ([#1234](https://github.com/MetaMask/core/pull/1234))';
+        'Bump `@metamask/transaction-controller` from `^61.0.0` to `^61.1.0` ([#1234](https://github.com/example-org/example-repo/pull/1234))';
 
       when(jest.spyOn(fsModule, 'fileExists'))
         .calledWith('/path/to/project/packages/controller-utils/CHANGELOG.md')
@@ -597,7 +597,7 @@ describe('changelog-validator', () => {
       const count = await updateChangelogs(mockChanges, {
         projectRoot: '/path/to/project',
         prNumber: '5678',
-        repoUrl: 'https://github.com/MetaMask/core',
+        repoUrl: 'https://github.com/example-org/example-repo',
         stdout,
         stderr,
       });
@@ -646,9 +646,9 @@ describe('changelog-validator', () => {
       };
 
       const existingEntry1 =
-        'Bump `@metamask/transaction-controller` from `^61.0.0` to `^61.1.0` ([#1234](https://github.com/MetaMask/core/pull/1234))';
+        'Bump `@metamask/transaction-controller` from `^61.0.0` to `^61.1.0` ([#1234](https://github.com/example-org/example-repo/pull/1234))';
       const existingEntry2 =
-        'Bump `@metamask/network-controller` from `^5.0.0` to `^5.1.0` ([#1234](https://github.com/MetaMask/core/pull/1234))';
+        'Bump `@metamask/network-controller` from `^5.0.0` to `^5.1.0` ([#1234](https://github.com/example-org/example-repo/pull/1234))';
 
       const stdoutWriteSpy = jest.spyOn(stdout, 'write');
       jest.spyOn(fsModule, 'writeFile');
@@ -672,7 +672,7 @@ describe('changelog-validator', () => {
       const count = await updateChangelogs(multipleExistingChanges, {
         projectRoot: '/path/to/project',
         prNumber: '5678',
-        repoUrl: 'https://github.com/MetaMask/core',
+        repoUrl: 'https://github.com/example-org/example-repo',
         stdout,
         stderr,
       });
@@ -717,7 +717,7 @@ describe('changelog-validator', () => {
 
       await updateChangelogs(peerDepChanges, {
         projectRoot: '/path/to/project',
-        repoUrl: 'https://github.com/MetaMask/core',
+        repoUrl: 'https://github.com/example-org/example-repo',
         stdout,
         stderr,
       });
@@ -775,7 +775,7 @@ describe('changelog-validator', () => {
 
       await updateChangelogs(mixedTypeChanges, {
         projectRoot: '/path/to/project',
-        repoUrl: 'https://github.com/MetaMask/core',
+        repoUrl: 'https://github.com/example-org/example-repo',
         stdout,
         stderr,
       });
@@ -835,7 +835,7 @@ describe('changelog-validator', () => {
       };
 
       const existingEntry =
-        'Bump `@metamask/transaction-controller` from `^61.0.0` to `^61.1.0` ([#1234](https://github.com/MetaMask/core/pull/1234))';
+        'Bump `@metamask/transaction-controller` from `^61.0.0` to `^61.1.0` ([#1234](https://github.com/example-org/example-repo/pull/1234))';
 
       const stdoutWriteSpy = jest.spyOn(stdout, 'write');
       const writeFileSpy = jest.spyOn(fsModule, 'writeFile');
@@ -851,7 +851,7 @@ describe('changelog-validator', () => {
           `# Changelog\n## [Unreleased]\n- ${existingEntry}`,
         )
         .mockResolvedValueOnce(
-          `# Changelog\n## [Unreleased]\n- Bump \`@metamask/transaction-controller\` from \`^61.0.0\` to \`^62.0.0\` ([#1234](https://github.com/MetaMask/core/pull/1234), [#5678](https://github.com/MetaMask/core/pull/5678))`,
+          `# Changelog\n## [Unreleased]\n- Bump \`@metamask/transaction-controller\` from \`^61.0.0\` to \`^62.0.0\` ([#1234](https://github.com/example-org/example-repo/pull/1234), [#5678](https://github.com/example-org/example-repo/pull/5678))`,
         );
 
       jest.spyOn(packageModule, 'formatChangelog').mockResolvedValue('');
@@ -865,7 +865,7 @@ describe('changelog-validator', () => {
       const mockChangelog2 = {
         getUnreleasedChanges: () => ({
           Changed: [
-            'Bump `@metamask/transaction-controller` from `^61.0.0` to `^62.0.0` ([#1234](https://github.com/MetaMask/core/pull/1234), [#5678](https://github.com/MetaMask/core/pull/5678))',
+            'Bump `@metamask/transaction-controller` from `^61.0.0` to `^62.0.0` ([#1234](https://github.com/example-org/example-repo/pull/1234), [#5678](https://github.com/example-org/example-repo/pull/5678))',
           ],
         }),
         addChange: jest.fn(),
@@ -879,7 +879,7 @@ describe('changelog-validator', () => {
       const count = await updateChangelogs(mixedChanges, {
         projectRoot: '/path/to/project',
         prNumber: '5678',
-        repoUrl: 'https://github.com/MetaMask/core',
+        repoUrl: 'https://github.com/example-org/example-repo',
         stdout,
         stderr,
       });
@@ -938,7 +938,7 @@ describe('changelog-validator', () => {
       };
 
       const existingEntry =
-        'Bump `@metamask/transaction-controller` from `^61.0.0` to `^61.1.0` ([#1234](https://github.com/MetaMask/core/pull/1234))';
+        'Bump `@metamask/transaction-controller` from `^61.0.0` to `^61.1.0` ([#1234](https://github.com/example-org/example-repo/pull/1234))';
 
       const stdoutWriteSpy = jest.spyOn(stdout, 'write');
       jest.spyOn(fsModule, 'writeFile');
@@ -973,7 +973,7 @@ describe('changelog-validator', () => {
       await updateChangelogs(mixedChanges, {
         projectRoot: '/path/to/project',
         prNumber: '5678',
-        repoUrl: 'https://github.com/MetaMask/core',
+        repoUrl: 'https://github.com/example-org/example-repo',
         stdout,
         stderr,
       });
@@ -1018,7 +1018,7 @@ describe('changelog-validator', () => {
       };
 
       const existingEntry =
-        'Bump `@metamask/transaction-controller` from `^61.0.0` to `^61.1.0` ([#1234](https://github.com/MetaMask/core/pull/1234))';
+        'Bump `@metamask/transaction-controller` from `^61.0.0` to `^61.1.0` ([#1234](https://github.com/example-org/example-repo/pull/1234))';
 
       jest.spyOn(fsModule, 'writeFile');
 
@@ -1052,7 +1052,7 @@ describe('changelog-validator', () => {
       await updateChangelogs(mixedChanges, {
         projectRoot: '/path/to/project',
         prNumber: '5678',
-        repoUrl: 'https://github.com/MetaMask/core',
+        repoUrl: 'https://github.com/example-org/example-repo',
         stdout,
         stderr,
       });
@@ -1092,7 +1092,7 @@ describe('changelog-validator', () => {
       };
 
       const existingEntry =
-        'Bump `@metamask/transaction-controller` from `^61.0.0` to `^61.1.0` ([#1234](https://github.com/MetaMask/core/pull/1234))';
+        'Bump `@metamask/transaction-controller` from `^61.0.0` to `^61.1.0` ([#1234](https://github.com/example-org/example-repo/pull/1234))';
 
       const writeFileSpy = jest.spyOn(fsModule, 'writeFile');
 
@@ -1106,7 +1106,7 @@ describe('changelog-validator', () => {
           `# Changelog\n## [Unreleased]\n- ${existingEntry}`,
         )
         .mockResolvedValueOnce(
-          `# Changelog\n## [Unreleased]\n- Bump \`@metamask/transaction-controller\` from \`^61.0.0\` to \`^62.0.0\` ([#1234](https://github.com/MetaMask/core/pull/1234), [#5678](https://github.com/MetaMask/core/pull/5678))`,
+          `# Changelog\n## [Unreleased]\n- Bump \`@metamask/transaction-controller\` from \`^61.0.0\` to \`^62.0.0\` ([#1234](https://github.com/example-org/example-repo/pull/1234), [#5678](https://github.com/example-org/example-repo/pull/5678))`,
         );
 
       jest.spyOn(packageModule, 'formatChangelog').mockResolvedValue('');
@@ -1118,7 +1118,7 @@ describe('changelog-validator', () => {
       const mockChangelog2 = {
         getUnreleasedChanges: () => ({
           Changed: [
-            'Bump `@metamask/transaction-controller` from `^61.0.0` to `^62.0.0` ([#1234](https://github.com/MetaMask/core/pull/1234), [#5678](https://github.com/MetaMask/core/pull/5678))',
+            'Bump `@metamask/transaction-controller` from `^61.0.0` to `^62.0.0` ([#1234](https://github.com/example-org/example-repo/pull/1234), [#5678](https://github.com/example-org/example-repo/pull/5678))',
           ],
         }),
         addChange: jest.fn(),
@@ -1132,7 +1132,7 @@ describe('changelog-validator', () => {
       await updateChangelogs(mixedChanges, {
         projectRoot: '/path/to/project',
         prNumber: '5678',
-        repoUrl: 'https://github.com/MetaMask/core',
+        repoUrl: 'https://github.com/example-org/example-repo',
         stdout,
         stderr,
       });
@@ -1177,7 +1177,7 @@ describe('changelog-validator', () => {
 
       await updateChangelogs(mockChanges, {
         projectRoot: '/path/to/project',
-        repoUrl: 'https://github.com/MetaMask/core',
+        repoUrl: 'https://github.com/example-org/example-repo',
         stdout,
         stderr,
       });
@@ -1229,7 +1229,7 @@ describe('changelog-validator', () => {
 
       await updateChangelogs(multipleChanges, {
         projectRoot: '/path/to/project',
-        repoUrl: 'https://github.com/MetaMask/core',
+        repoUrl: 'https://github.com/example-org/example-repo',
         stdout,
         stderr,
       });
@@ -1254,7 +1254,7 @@ describe('changelog-validator', () => {
 
       const count = await updateChangelogs(mockChanges, {
         projectRoot: '/path/to/project',
-        repoUrl: 'https://github.com/MetaMask/core',
+        repoUrl: 'https://github.com/example-org/example-repo',
         stdout,
         stderr,
       });
@@ -1268,7 +1268,7 @@ describe('changelog-validator', () => {
     it('updates entries in release section when package version is provided', async () => {
       const writeFileSpy = jest.spyOn(fsModule, 'writeFile');
       const existingEntry =
-        'Bump `@metamask/transaction-controller` from `^61.0.0` to `^61.1.0` ([#1234](https://github.com/MetaMask/core/pull/1234))';
+        'Bump `@metamask/transaction-controller` from `^61.0.0` to `^61.1.0` ([#1234](https://github.com/example-org/example-repo/pull/1234))';
 
       when(jest.spyOn(fsModule, 'fileExists'))
         .calledWith('/path/to/project/packages/controller-utils/CHANGELOG.md')
@@ -1296,7 +1296,7 @@ describe('changelog-validator', () => {
       await updateChangelogs(changesWithVersion, {
         projectRoot: '/path/to/project',
         prNumber: '5678',
-        repoUrl: 'https://github.com/MetaMask/core',
+        repoUrl: 'https://github.com/example-org/example-repo',
         stdout,
         stderr,
       });
@@ -1338,7 +1338,7 @@ describe('changelog-validator', () => {
       await updateChangelogs(changesWithVersion, {
         projectRoot: '/path/to/project',
         prNumber: '5678',
-        repoUrl: 'https://github.com/MetaMask/core',
+        repoUrl: 'https://github.com/example-org/example-repo',
         stdout,
         stderr,
       });
@@ -1375,7 +1375,7 @@ describe('changelog-validator', () => {
       await updateChangelogs(mockChanges, {
         projectRoot: '/path/to/project',
         prNumber: '5678',
-        repoUrl: 'https://github.com/MetaMask/core',
+        repoUrl: 'https://github.com/example-org/example-repo',
         stdout,
         stderr,
       });
@@ -1426,7 +1426,7 @@ describe('changelog-validator', () => {
       await updateChangelogs(peerDepChanges, {
         projectRoot: '/path/to/project',
         prNumber: '5678',
-        repoUrl: 'https://github.com/MetaMask/core',
+        repoUrl: 'https://github.com/example-org/example-repo',
         stdout,
         stderr,
       });
@@ -1476,7 +1476,7 @@ describe('changelog-validator', () => {
       await updateChangelogs(peerDepChanges, {
         projectRoot: '/path/to/project',
         prNumber: '5678',
-        repoUrl: 'https://github.com/MetaMask/core',
+        repoUrl: 'https://github.com/example-org/example-repo',
         stdout,
         stderr,
       });
@@ -1513,7 +1513,7 @@ describe('changelog-validator', () => {
       };
 
       const existingEntry =
-        'Bump `@metamask/transaction-controller` from `^61.0.0` to `^61.1.0` ([#1234](https://github.com/MetaMask/core/pull/1234))';
+        'Bump `@metamask/transaction-controller` from `^61.0.0` to `^61.1.0` ([#1234](https://github.com/example-org/example-repo/pull/1234))';
 
       jest.spyOn(fsModule, 'writeFile');
 
@@ -1554,7 +1554,7 @@ describe('changelog-validator', () => {
       await updateChangelogs(mixedChangesWithVersion, {
         projectRoot: '/path/to/project',
         prNumber: '5678',
-        repoUrl: 'https://github.com/MetaMask/core',
+        repoUrl: 'https://github.com/example-org/example-repo',
         stdout,
         stderr,
       });
@@ -1591,7 +1591,7 @@ describe('changelog-validator', () => {
       };
 
       const existingEntry =
-        'Bump `@metamask/transaction-controller` from `^61.0.0` to `^61.1.0` ([#1234](https://github.com/MetaMask/core/pull/1234))';
+        'Bump `@metamask/transaction-controller` from `^61.0.0` to `^61.1.0` ([#1234](https://github.com/example-org/example-repo/pull/1234))';
 
       jest.spyOn(fsModule, 'writeFile');
 
@@ -1632,7 +1632,7 @@ describe('changelog-validator', () => {
       await updateChangelogs(mixedChangesWithVersion, {
         projectRoot: '/path/to/project',
         prNumber: '5678',
-        repoUrl: 'https://github.com/MetaMask/core',
+        repoUrl: 'https://github.com/example-org/example-repo',
         stdout,
         stderr,
       });
