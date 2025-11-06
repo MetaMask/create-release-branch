@@ -2,6 +2,8 @@ import type { WriteStream } from 'fs';
 import { determineInitialParameters } from './initial-parameters.js';
 import { followMonorepoWorkflow } from './monorepo-workflow-operations.js';
 import { startUI } from './ui.js';
+import { readCommandLineArguments } from './command-line-arguments.js';
+import { checkDependencyBumps } from './check-dependency-bumps.js';
 
 /**
  * The main function for this tool. Designed to not access `process.argv`,
@@ -26,6 +28,24 @@ export async function main({
   stdout: Pick<WriteStream, 'write'>;
   stderr: Pick<WriteStream, 'write'>;
 }) {
+  const args = await readCommandLineArguments(argv);
+
+  // Route to check-deps command if requested
+  if (args.command === 'check-deps') {
+    await checkDependencyBumps({
+      projectRoot: cwd,
+      defaultBranch: args.defaultBranch,
+      ...(args.fromRef !== undefined && { fromRef: args.fromRef }),
+      ...(args.toRef !== undefined && { toRef: args.toRef }),
+      ...(args.fix !== undefined && { fix: args.fix }),
+      ...(args.pr !== undefined && { prNumber: args.pr }),
+      stdout,
+      stderr,
+    });
+    return;
+  }
+
+  // Otherwise, follow the release workflow
   const {
     project,
     tempDirectoryPath,
