@@ -13,10 +13,7 @@ import { getCurrentBranchName } from './repo.js';
 import { getStdoutFromCommand } from './misc-utils.js';
 import { getValidRepositoryUrl } from './project.js';
 import { readPackageManifest } from './package-manifest.js';
-import type { DependencyChange, PackageInfo, PackageChanges } from './types.js';
-
-// Re-export types for convenience
-export type { DependencyChange, PackageInfo, PackageChanges };
+import type { PackageInfo, PackageChanges } from './types.js';
 
 /**
  * Retrieves the git diff between two references for package.json files.
