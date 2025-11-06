@@ -17,6 +17,8 @@ export type DependencyChange = {
  * Information about a package with changes
  */
 export type PackageInfo = {
+  /** Actual package name from package.json (e.g., '@metamask/controller-utils') */
+  packageName: string;
   /** Dependency changes for this package */
   dependencyChanges: DependencyChange[];
   /** New version if package is being released */

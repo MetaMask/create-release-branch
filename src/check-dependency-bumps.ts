@@ -58,9 +58,13 @@ async function getGitDiff(
  * Parses git diff output to extract dependency version changes and package version changes.
  *
  * @param diff - Raw git diff output.
+ * @param projectRoot - Project root directory for reading package names.
  * @returns Object mapping package names to their changes and version info.
  */
-function parseDiff(diff: string): PackageChanges {
+async function parseDiff(
+  diff: string,
+  projectRoot: string,
+): Promise<PackageChanges> {
   const lines = diff.split('\n');
   const changes: PackageChanges = {};
 
@@ -159,7 +163,18 @@ function parseDiff(diff: string): PackageChanges {
               processedChanges.add(changeId);
 
               if (!changes[packageName]) {
+                // Read the actual package name from package.json
+                const manifestPath = path.join(
+                  projectRoot,
+                  'packages',
+                  packageName,
+                  'package.json',
+                );
+                const { validated: packageManifest } =
+                  await readPackageManifest(manifestPath);
+
                 const pkgInfo: PackageInfo = {
+                  packageName: packageManifest.name,
                   dependencyChanges: [],
                 };
                 const packageNewVersion = packageVersionsMap.get(packageName);
@@ -196,38 +211,6 @@ function parseDiff(diff: string): PackageChanges {
   }
 
   return changes;
-}
-
-/**
- * Reads package names from package.json files for all packages with changes.
- *
- * @param changes - Package changes with version info keyed by directory name.
- * @param projectRoot - The project root directory.
- * @returns Map of directory names to actual package names.
- * @throws If a package.json cannot be read or is invalid.
- */
-async function getPackageNames(
-  changes: PackageChanges,
-  projectRoot: string,
-): Promise<Record<string, string>> {
-  const packageNames: Record<string, string> = {};
-
-  for (const packageDirName of Object.keys(changes)) {
-    const manifestPath = path.join(
-      projectRoot,
-      'packages',
-      packageDirName,
-      'package.json',
-    );
-
-    // We detected changes in this package.json via git diff,
-    // so it must exist and be readable. If it's not, something is wrong.
-    const { validated: packageManifest } =
-      await readPackageManifest(manifestPath);
-    packageNames[packageDirName] = packageManifest.name;
-  }
-
-  return packageNames;
 }
 
 /**
@@ -339,26 +322,23 @@ export async function checkDependencyBumps({
     return {};
   }
 
-  const changes = parseDiff(diff);
+  const changes = await parseDiff(diff, projectRoot);
 
   if (Object.keys(changes).length === 0) {
     stdout.write('No dependency version bumps found.\n');
     return {};
   }
 
-  stdout.write('\n\n📊 JSON Output:\n');
-  stdout.write('==============\n');
-  stdout.write(JSON.stringify(changes, null, 2));
-  stdout.write('\n');
-
-  // Get repository URL and package names for validation/fixing
+  // Get repository URL for validation/fixing
   const manifestPath = path.join(projectRoot, 'package.json');
   const { unvalidated: packageManifest } =
     await readPackageManifest(manifestPath);
   const repoUrl = await getValidRepositoryUrl(packageManifest, projectRoot);
 
-  // Read package names once for all packages with changes
-  const packageNames = await getPackageNames(changes, projectRoot);
+  stdout.write('\n\n📊 JSON Output:\n');
+  stdout.write('==============\n');
+  stdout.write(JSON.stringify(changes, null, 2));
+  stdout.write('\n');
 
   // Always validate to provide feedback
   stdout.write('\n\n🔍 Validating changelogs...\n');
@@ -368,7 +348,6 @@ export async function checkDependencyBumps({
     changes,
     projectRoot,
     repoUrl,
-    packageNames,
   );
 
   let hasErrors = false;
@@ -408,13 +387,11 @@ export async function checkDependencyBumps({
       projectRoot: string;
       prNumber?: string;
       repoUrl: string;
-      packageNames: Record<string, string>;
       stdout: Pick<WriteStream, 'write'>;
       stderr: Pick<WriteStream, 'write'>;
     } = {
       projectRoot,
       repoUrl,
-      packageNames,
       stdout,
       stderr,
     };

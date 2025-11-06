@@ -12,6 +12,7 @@ jest.mock('@metamask/auto-changelog');
 describe('changelog-validator', () => {
   const mockChanges = {
     'controller-utils': {
+      packageName: '@metamask/controller-utils',
       dependencyChanges: [
         {
           package: 'controller-utils',
@@ -24,41 +25,7 @@ describe('changelog-validator', () => {
     },
   };
 
-  const mockPackageNames = {
-    'controller-utils': '@metamask/controller-utils',
-  };
-
   describe('validateChangelogs', () => {
-    it('uses fallback package name when not in packageNames map', async () => {
-      when(jest.spyOn(fsModule, 'fileExists'))
-        .calledWith('/path/to/project/packages/controller-utils/CHANGELOG.md')
-        .mockResolvedValue(true);
-      when(jest.spyOn(fsModule, 'readFile'))
-        .calledWith('/path/to/project/packages/controller-utils/CHANGELOG.md')
-        .mockResolvedValue('# Changelog\n## [Unreleased]');
-      jest.spyOn(packageModule, 'formatChangelog').mockResolvedValue('');
-
-      const parseChangelogSpy = jest.fn().mockReturnValue({
-        getUnreleasedChanges: () => ({ Changed: [] }),
-      });
-      (parseChangelog as jest.Mock).mockImplementation(parseChangelogSpy);
-
-      // Pass empty packageNames to trigger fallback
-      await validateChangelogs(
-        mockChanges,
-        '/path/to/project',
-        'https://github.com/MetaMask/core',
-        {},
-      );
-
-      // Verify it uses the directory name as fallback
-      expect(parseChangelogSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          tagPrefix: 'controller-utils@',
-        }),
-      );
-    });
-
     it('handles changelog with no Changed section', async () => {
       when(jest.spyOn(fsModule, 'fileExists'))
         .calledWith('/path/to/project/packages/controller-utils/CHANGELOG.md')
@@ -75,7 +42,6 @@ describe('changelog-validator', () => {
         mockChanges,
         '/path/to/project',
         'https://github.com/MetaMask/core',
-        mockPackageNames,
       );
 
       expect(results).toStrictEqual([
@@ -98,7 +64,6 @@ describe('changelog-validator', () => {
         mockChanges,
         '/path/to/project',
         'https://github.com/MetaMask/core',
-        mockPackageNames,
       );
 
       expect(results).toStrictEqual([
@@ -128,7 +93,6 @@ describe('changelog-validator', () => {
         mockChanges,
         '/path/to/project',
         'https://github.com/MetaMask/core',
-        mockPackageNames,
       );
 
       expect(results).toStrictEqual([
@@ -158,7 +122,6 @@ describe('changelog-validator', () => {
         mockChanges,
         '/path/to/project',
         'https://github.com/MetaMask/core',
-        mockPackageNames,
       );
 
       expect(results).toStrictEqual([
@@ -194,7 +157,6 @@ describe('changelog-validator', () => {
         mockChanges,
         '/path/to/project',
         'https://github.com/MetaMask/core',
-        mockPackageNames,
       );
 
       expect(results).toStrictEqual([
@@ -245,7 +207,6 @@ describe('changelog-validator', () => {
         changesWithVersion,
         '/path/to/project',
         'https://github.com/MetaMask/core',
-        mockPackageNames,
       );
 
       expect(mockChangelog.getReleaseChanges).toHaveBeenCalledWith('1.1.0');
@@ -283,7 +244,6 @@ describe('changelog-validator', () => {
         mockChanges, // No newVersion in mockChanges
         '/path/to/project',
         'https://github.com/MetaMask/core',
-        mockPackageNames,
       );
 
       expect(mockChangelog.getUnreleasedChanges).toHaveBeenCalled();
@@ -297,41 +257,6 @@ describe('changelog-validator', () => {
   describe('updateChangelogs', () => {
     const stdout = fs.createWriteStream('/dev/null');
     const stderr = fs.createWriteStream('/dev/null');
-
-    it('uses fallback package name when not in packageNames map', async () => {
-      jest.spyOn(fsModule, 'writeFile');
-      when(jest.spyOn(fsModule, 'fileExists'))
-        .calledWith('/path/to/project/packages/controller-utils/CHANGELOG.md')
-        .mockResolvedValue(true);
-      when(jest.spyOn(fsModule, 'readFile'))
-        .calledWith('/path/to/project/packages/controller-utils/CHANGELOG.md')
-        .mockResolvedValue('# Changelog\n## [Unreleased]');
-      jest.spyOn(packageModule, 'formatChangelog').mockResolvedValue('');
-
-      const mockChangelog = {
-        getUnreleasedChanges: () => ({ Changed: [] }),
-        addChange: jest.fn(),
-        toString: jest.fn().mockResolvedValue('Updated changelog content'),
-      };
-      const parseChangelogSpy = jest.fn().mockReturnValue(mockChangelog);
-      (parseChangelog as jest.Mock).mockImplementation(parseChangelogSpy);
-
-      // Pass empty packageNames to trigger fallback
-      await updateChangelogs(mockChanges, {
-        projectRoot: '/path/to/project',
-        repoUrl: 'https://github.com/MetaMask/core',
-        packageNames: {},
-        stdout,
-        stderr,
-      });
-
-      // Verify it uses the directory name as fallback
-      expect(parseChangelogSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          tagPrefix: 'controller-utils@',
-        }),
-      );
-    });
 
     it('concatenates multiple existing PR numbers when updating entry', async () => {
       const writeFileSpy = jest.spyOn(fsModule, 'writeFile');
@@ -354,7 +279,6 @@ describe('changelog-validator', () => {
         projectRoot: '/path/to/project',
         prNumber: '6789',
         repoUrl: 'https://github.com/MetaMask/core',
-        packageNames: mockPackageNames,
         stdout,
         stderr,
       });
@@ -395,7 +319,6 @@ describe('changelog-validator', () => {
         projectRoot: '/path/to/project',
         prNumber: '1234', // Same as existing
         repoUrl: 'https://github.com/MetaMask/core',
-        packageNames: mockPackageNames,
         stdout,
         stderr,
       });
@@ -409,6 +332,7 @@ describe('changelog-validator', () => {
     it('updates peerDependency entry with BREAKING prefix preserved', async () => {
       const peerDepChanges = {
         'controller-utils': {
+          packageName: '@metamask/controller-utils',
           dependencyChanges: [
             {
               package: 'controller-utils',
@@ -441,7 +365,6 @@ describe('changelog-validator', () => {
         projectRoot: '/path/to/project',
         prNumber: '5678',
         repoUrl: 'https://github.com/MetaMask/core',
-        packageNames: mockPackageNames,
         stdout,
         stderr,
       });
@@ -475,7 +398,6 @@ describe('changelog-validator', () => {
         projectRoot: '/path/to/project',
         // No prNumber provided
         repoUrl: 'https://github.com/MetaMask/core',
-        packageNames: mockPackageNames,
         stdout,
         stderr,
       });
@@ -514,7 +436,6 @@ describe('changelog-validator', () => {
         projectRoot: '/path/to/project',
         // No prNumber provided
         repoUrl: 'https://github.com/MetaMask/core',
-        packageNames: mockPackageNames,
         stdout,
         stderr,
       });
@@ -546,7 +467,6 @@ describe('changelog-validator', () => {
         projectRoot: '/path/to/project',
         prNumber: '1234',
         repoUrl: 'https://github.com/MetaMask/core',
-        packageNames: mockPackageNames,
         stdout,
         stderr,
       });
@@ -567,7 +487,6 @@ describe('changelog-validator', () => {
       const count = await updateChangelogs(mockChanges, {
         projectRoot: '/path/to/project',
         repoUrl: 'https://github.com/MetaMask/core',
-        packageNames: mockPackageNames,
         stdout,
         stderr,
       });
@@ -598,7 +517,6 @@ describe('changelog-validator', () => {
       const count = await updateChangelogs(mockChanges, {
         projectRoot: '/path/to/project',
         repoUrl: 'https://github.com/MetaMask/core',
-        packageNames: mockPackageNames,
         stdout,
         stderr,
       });
@@ -631,7 +549,6 @@ describe('changelog-validator', () => {
       const count = await updateChangelogs(mockChanges, {
         projectRoot: '/path/to/project',
         repoUrl: 'https://github.com/MetaMask/core',
-        packageNames: mockPackageNames,
         stdout,
         stderr,
       });
@@ -681,7 +598,6 @@ describe('changelog-validator', () => {
         projectRoot: '/path/to/project',
         prNumber: '5678',
         repoUrl: 'https://github.com/MetaMask/core',
-        packageNames: mockPackageNames,
         stdout,
         stderr,
       });
@@ -709,6 +625,7 @@ describe('changelog-validator', () => {
     it('updates multiple existing entries with plural message', async () => {
       const multipleExistingChanges = {
         'controller-utils': {
+          packageName: '@metamask/controller-utils',
           dependencyChanges: [
             {
               package: 'controller-utils',
@@ -756,7 +673,6 @@ describe('changelog-validator', () => {
         projectRoot: '/path/to/project',
         prNumber: '5678',
         repoUrl: 'https://github.com/MetaMask/core',
-        packageNames: mockPackageNames,
         stdout,
         stderr,
       });
@@ -770,6 +686,7 @@ describe('changelog-validator', () => {
     it('handles peerDependencies changes with BREAKING prefix', async () => {
       const peerDepChanges = {
         'controller-utils': {
+          packageName: '@metamask/controller-utils',
           dependencyChanges: [
             {
               package: 'controller-utils',
@@ -801,7 +718,6 @@ describe('changelog-validator', () => {
       await updateChangelogs(peerDepChanges, {
         projectRoot: '/path/to/project',
         repoUrl: 'https://github.com/MetaMask/core',
-        packageNames: mockPackageNames,
         stdout,
         stderr,
       });
@@ -821,6 +737,7 @@ describe('changelog-validator', () => {
     it('adds both peerDependencies and dependencies in correct order', async () => {
       const mixedTypeChanges = {
         'controller-utils': {
+          packageName: '@metamask/controller-utils',
           dependencyChanges: [
             {
               package: 'controller-utils',
@@ -859,7 +776,6 @@ describe('changelog-validator', () => {
       await updateChangelogs(mixedTypeChanges, {
         projectRoot: '/path/to/project',
         repoUrl: 'https://github.com/MetaMask/core',
-        packageNames: mockPackageNames,
         stdout,
         stderr,
       });
@@ -898,6 +814,7 @@ describe('changelog-validator', () => {
     it('updates existing entries and adds new entries in same package', async () => {
       const mixedChanges = {
         'controller-utils': {
+          packageName: '@metamask/controller-utils',
           dependencyChanges: [
             {
               package: 'controller-utils',
@@ -963,7 +880,6 @@ describe('changelog-validator', () => {
         projectRoot: '/path/to/project',
         prNumber: '5678',
         repoUrl: 'https://github.com/MetaMask/core',
-        packageNames: mockPackageNames,
         stdout,
         stderr,
       });
@@ -1001,6 +917,7 @@ describe('changelog-validator', () => {
     it('updates existing entry and adds only new peerDependency', async () => {
       const mixedChanges = {
         'controller-utils': {
+          packageName: '@metamask/controller-utils',
           dependencyChanges: [
             {
               package: 'controller-utils',
@@ -1057,7 +974,6 @@ describe('changelog-validator', () => {
         projectRoot: '/path/to/project',
         prNumber: '5678',
         repoUrl: 'https://github.com/MetaMask/core',
-        packageNames: mockPackageNames,
         stdout,
         stderr,
       });
@@ -1081,6 +997,7 @@ describe('changelog-validator', () => {
     it('updates existing entry and adds only new dependency (no peerDeps)', async () => {
       const mixedChanges = {
         'controller-utils': {
+          packageName: '@metamask/controller-utils',
           dependencyChanges: [
             {
               package: 'controller-utils',
@@ -1136,7 +1053,6 @@ describe('changelog-validator', () => {
         projectRoot: '/path/to/project',
         prNumber: '5678',
         repoUrl: 'https://github.com/MetaMask/core',
-        packageNames: mockPackageNames,
         stdout,
         stderr,
       });
@@ -1155,6 +1071,7 @@ describe('changelog-validator', () => {
     it('updates existing entries and adds new peerDependencies correctly', async () => {
       const mixedChanges = {
         'controller-utils': {
+          packageName: '@metamask/controller-utils',
           dependencyChanges: [
             {
               package: 'controller-utils',
@@ -1216,7 +1133,6 @@ describe('changelog-validator', () => {
         projectRoot: '/path/to/project',
         prNumber: '5678',
         repoUrl: 'https://github.com/MetaMask/core',
-        packageNames: mockPackageNames,
         stdout,
         stderr,
       });
@@ -1262,7 +1178,6 @@ describe('changelog-validator', () => {
       await updateChangelogs(mockChanges, {
         projectRoot: '/path/to/project',
         repoUrl: 'https://github.com/MetaMask/core',
-        packageNames: mockPackageNames,
         stdout,
         stderr,
       });
@@ -1275,6 +1190,7 @@ describe('changelog-validator', () => {
     it('adds multiple new entries with plural message', async () => {
       const multipleChanges = {
         'controller-utils': {
+          packageName: '@metamask/controller-utils',
           dependencyChanges: [
             {
               package: 'controller-utils',
@@ -1314,7 +1230,6 @@ describe('changelog-validator', () => {
       await updateChangelogs(multipleChanges, {
         projectRoot: '/path/to/project',
         repoUrl: 'https://github.com/MetaMask/core',
-        packageNames: mockPackageNames,
         stdout,
         stderr,
       });
@@ -1340,7 +1255,6 @@ describe('changelog-validator', () => {
       const count = await updateChangelogs(mockChanges, {
         projectRoot: '/path/to/project',
         repoUrl: 'https://github.com/MetaMask/core',
-        packageNames: mockPackageNames,
         stdout,
         stderr,
       });
@@ -1383,7 +1297,6 @@ describe('changelog-validator', () => {
         projectRoot: '/path/to/project',
         prNumber: '5678',
         repoUrl: 'https://github.com/MetaMask/core',
-        packageNames: mockPackageNames,
         stdout,
         stderr,
       });
@@ -1426,7 +1339,6 @@ describe('changelog-validator', () => {
         projectRoot: '/path/to/project',
         prNumber: '5678',
         repoUrl: 'https://github.com/MetaMask/core',
-        packageNames: mockPackageNames,
         stdout,
         stderr,
       });
@@ -1464,7 +1376,6 @@ describe('changelog-validator', () => {
         projectRoot: '/path/to/project',
         prNumber: '5678',
         repoUrl: 'https://github.com/MetaMask/core',
-        packageNames: mockPackageNames,
         stdout,
         stderr,
       });
@@ -1482,6 +1393,7 @@ describe('changelog-validator', () => {
     it('adds peerDependencies to unreleased section when not being released', async () => {
       const peerDepChanges = {
         'controller-utils': {
+          packageName: '@metamask/controller-utils',
           dependencyChanges: [
             {
               package: 'controller-utils',
@@ -1515,7 +1427,6 @@ describe('changelog-validator', () => {
         projectRoot: '/path/to/project',
         prNumber: '5678',
         repoUrl: 'https://github.com/MetaMask/core',
-        packageNames: mockPackageNames,
         stdout,
         stderr,
       });
@@ -1530,6 +1441,7 @@ describe('changelog-validator', () => {
     it('adds peerDependencies to release section when package is being released', async () => {
       const peerDepChanges = {
         'controller-utils': {
+          packageName: '@metamask/controller-utils',
           dependencyChanges: [
             {
               package: 'controller-utils',
@@ -1565,7 +1477,6 @@ describe('changelog-validator', () => {
         projectRoot: '/path/to/project',
         prNumber: '5678',
         repoUrl: 'https://github.com/MetaMask/core',
-        packageNames: mockPackageNames,
         stdout,
         stderr,
       });
@@ -1581,6 +1492,7 @@ describe('changelog-validator', () => {
     it('updates and adds entries to release section when package is being released', async () => {
       const mixedChanges = {
         'controller-utils': {
+          packageName: '@metamask/controller-utils',
           dependencyChanges: [
             {
               package: 'controller-utils',
@@ -1643,7 +1555,6 @@ describe('changelog-validator', () => {
         projectRoot: '/path/to/project',
         prNumber: '5678',
         repoUrl: 'https://github.com/MetaMask/core',
-        packageNames: mockPackageNames,
         stdout,
         stderr,
       });
@@ -1659,6 +1570,7 @@ describe('changelog-validator', () => {
     it('updates and adds peerDependency to release section when package is being released', async () => {
       const mixedChanges = {
         'controller-utils': {
+          packageName: '@metamask/controller-utils',
           dependencyChanges: [
             {
               package: 'controller-utils',
@@ -1721,7 +1633,6 @@ describe('changelog-validator', () => {
         projectRoot: '/path/to/project',
         prNumber: '5678',
         repoUrl: 'https://github.com/MetaMask/core',
-        packageNames: mockPackageNames,
         stdout,
         stderr,
       });

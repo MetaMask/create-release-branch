@@ -125,28 +125,26 @@ function hasChangelogEntry(
  * @param changes - Package changes to validate.
  * @param projectRoot - Root directory of the project.
  * @param repoUrl - Repository URL for changelog links.
- * @param packageNames - Map of directory names to actual package names.
  * @returns Validation results for each package.
  */
 export async function validateChangelogs(
   changes: PackageChanges,
   projectRoot: string,
   repoUrl: string,
-  packageNames: Record<string, string>,
 ): Promise<ChangelogValidationResult[]> {
   const results: ChangelogValidationResult[] = [];
 
-  for (const [packageName, packageInfo] of Object.entries(changes)) {
+  for (const [packageDirName, packageInfo] of Object.entries(changes)) {
     const packageChanges = packageInfo.dependencyChanges;
     const packageVersion = packageInfo.newVersion;
-    const packagePath = path.join(projectRoot, 'packages', packageName);
+    const packagePath = path.join(projectRoot, 'packages', packageDirName);
     const changelogPath = path.join(packagePath, 'CHANGELOG.md');
 
     const changelogContent = await readChangelog(changelogPath);
 
     if (!changelogContent) {
       results.push({
-        package: packageName,
+        package: packageDirName,
         hasChangelog: false,
         hasUnreleasedSection: false,
         missingEntries: packageChanges,
@@ -156,8 +154,8 @@ export async function validateChangelogs(
     }
 
     try {
-      // Get the actual package name from the provided map
-      const actualPackageName = packageNames[packageName] || packageName;
+      // Use the actual package name from packageInfo
+      const actualPackageName = packageInfo.packageName;
 
       // Parse the changelog using auto-changelog
       const changelog = parseChangelog({
@@ -190,7 +188,7 @@ export async function validateChangelogs(
       }
 
       results.push({
-        package: packageName,
+        package: packageDirName,
         hasChangelog: true,
         hasUnreleasedSection,
         missingEntries,
@@ -199,7 +197,7 @@ export async function validateChangelogs(
     } catch (error) {
       // If parsing fails, assume changelog is malformed
       results.push({
-        package: packageName,
+        package: packageDirName,
         hasChangelog: true,
         hasUnreleasedSection: false,
         missingEntries: packageChanges,
@@ -219,7 +217,6 @@ export async function validateChangelogs(
  * @param options.projectRoot - Root directory of the project.
  * @param options.prNumber - PR number to use in entries.
  * @param options.repoUrl - Repository URL for changelog links.
- * @param options.packageNames - Map of directory names to actual package names.
  * @param options.stdout - Stream for output messages.
  * @param options.stderr - Stream for error messages.
  * @returns Number of changelogs updated.
@@ -230,38 +227,36 @@ export async function updateChangelogs(
     projectRoot,
     prNumber,
     repoUrl,
-    packageNames,
     stdout,
     stderr,
   }: {
     projectRoot: string;
     prNumber?: string;
     repoUrl: string;
-    packageNames: Record<string, string>;
     stdout: Pick<WriteStream, 'write'>;
     stderr: Pick<WriteStream, 'write'>;
   },
 ): Promise<number> {
   let updatedCount = 0;
 
-  for (const [packageName, packageInfo] of Object.entries(changes)) {
+  for (const [packageDirName, packageInfo] of Object.entries(changes)) {
     const packageChanges = packageInfo.dependencyChanges;
     const packageVersion = packageInfo.newVersion;
-    const packagePath = path.join(projectRoot, 'packages', packageName);
+    const packagePath = path.join(projectRoot, 'packages', packageDirName);
     const changelogPath = path.join(packagePath, 'CHANGELOG.md');
 
     const changelogContent = await readChangelog(changelogPath);
 
     if (!changelogContent) {
       stderr.write(
-        `⚠️  No CHANGELOG.md found for ${packageName} at ${changelogPath}\n`,
+        `⚠️  No CHANGELOG.md found for ${packageDirName} at ${changelogPath}\n`,
       );
       continue;
     }
 
     try {
-      // Get the actual package name from the provided map
-      const actualPackageName = packageNames[packageName] || packageName;
+      // Use the actual package name from packageInfo
+      const actualPackageName = packageInfo.packageName;
 
       // Parse the changelog using auto-changelog
       const changelog = parseChangelog({
@@ -302,7 +297,7 @@ export async function updateChangelogs(
       }
 
       if (entriesToAdd.length === 0 && entriesToUpdate.length === 0) {
-        stdout.write(`✅ ${packageName}: All entries already exist\n`);
+        stdout.write(`✅ ${packageDirName}: All entries already exist\n`);
         continue;
       }
 
@@ -342,7 +337,7 @@ export async function updateChangelogs(
         // Re-parse to add new entries if needed
         if (entriesToAdd.length === 0) {
           stdout.write(
-            `✅ ${packageName}: Updated ${entriesToUpdate.length} existing ${entriesToUpdate.length === 1 ? 'entry' : 'entries'}\n`,
+            `✅ ${packageDirName}: Updated ${entriesToUpdate.length} existing ${entriesToUpdate.length === 1 ? 'entry' : 'entries'}\n`,
           );
           updatedCount += 1;
           continue;
@@ -387,7 +382,7 @@ export async function updateChangelogs(
         await writeFile(changelogPath, await updatedChangelog.toString());
 
         stdout.write(
-          `✅ ${packageName}: Updated ${entriesToUpdate.length} and added ${entriesToAdd.length} changelog entries\n`,
+          `✅ ${packageDirName}: Updated ${entriesToUpdate.length} and added ${entriesToAdd.length} changelog entries\n`,
         );
       } else {
         // Only adding new entries
@@ -422,14 +417,14 @@ export async function updateChangelogs(
         await writeFile(changelogPath, updatedChangelogContent);
 
         stdout.write(
-          `✅ ${packageName}: Added ${entriesToAdd.length} changelog ${entriesToAdd.length === 1 ? 'entry' : 'entries'}\n`,
+          `✅ ${packageDirName}: Added ${entriesToAdd.length} changelog ${entriesToAdd.length === 1 ? 'entry' : 'entries'}\n`,
         );
       }
 
       updatedCount += 1;
     } catch (error) {
       stderr.write(
-        `⚠️  Error updating CHANGELOG.md for ${packageName}: ${error}\n`,
+        `⚠️  Error updating CHANGELOG.md for ${packageDirName}: ${error}\n`,
       );
     }
   }

@@ -245,6 +245,7 @@ index 1234567..890abcd 100644
 
       expect(result).toStrictEqual({
         'controller-utils': {
+          packageName: '@metamask/controller-utils',
           dependencyChanges: [
             {
               package: 'controller-utils',
@@ -264,7 +265,6 @@ index 1234567..890abcd 100644
         expect.any(Object),
         '/path/to/project',
         'https://github.com/MetaMask/core',
-        { 'controller-utils': '@metamask/controller-utils' },
       );
     });
 
@@ -331,7 +331,6 @@ diff --git a/packages/controller-utils/package.json b/packages/controller-utils/
           projectRoot: '/path/to/project',
           prNumber: '1234',
           repoUrl: 'https://github.com/MetaMask/core',
-          packageNames: { 'controller-utils': '@metamask/controller-utils' },
           stdout,
           stderr,
         }),
@@ -391,6 +390,7 @@ diff --git a/packages/controller-utils/package.json b/packages/controller-utils/
 
       expect(result).toStrictEqual({
         'controller-utils': {
+          packageName: '@metamask/controller-utils',
           dependencyChanges: [
             {
               package: 'controller-utils',
@@ -1972,7 +1972,6 @@ diff --git a/packages/controller-utils/package.json b/packages/controller-utils/
         expect.any(Object),
         '/path/to/project',
         'https://github.com/MetaMask/core',
-        { 'controller-utils': '@metamask/controller-utils' },
       );
     });
   });
