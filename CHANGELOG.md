@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add `check-deps` command to validate and update dependency bump changelog entries ([#186](https://github.com/MetaMask/create-release-branch/pull/186))
+  - Automatically detects dependency version changes from git diffs
+  - Validates changelog entries with exact version matching (catches stale entries)
+  - Auto-updates changelogs with `--fix` flag, preserving PR history
+  - Detects package releases and validates/updates in correct changelog section (Unreleased vs specific version)
+  - Smart PR concatenation when same dependency bumped multiple times
+  - Usage: `yarn check-dependency-bumps --fix --pr <number>`
+
 ## [4.1.3]
 
 ### Fixed
