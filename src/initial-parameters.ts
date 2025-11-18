@@ -46,6 +46,13 @@ export async function determineInitialParameters({
 }): Promise<InitialParameters> {
   const args = await readCommandLineArguments(argv);
 
+  // Ensure we're handling the release command
+  if (args.command !== 'release') {
+    throw new Error(
+      'determineInitialParameters should only be called for release command',
+    );
+  }
+
   const projectDirectoryPath = path.resolve(cwd, args.projectDirectory);
   const project = await readProject(projectDirectoryPath, { stderr });
   const tempDirectoryPath =
