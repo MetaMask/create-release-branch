@@ -1,12 +1,15 @@
 import fs from 'fs';
 import { when } from 'jest-when';
 import { parseChangelog } from '@metamask/auto-changelog';
+import { buildMockManifest } from '../tests/unit/helpers.js';
 import { validateChangelogs, updateChangelogs } from './changelog-validator.js';
 import * as fsModule from './fs.js';
 import * as packageModule from './package.js';
+import * as packageManifestModule from './package-manifest.js';
 
 jest.mock('./fs');
 jest.mock('./package');
+jest.mock('./package-manifest');
 jest.mock('@metamask/auto-changelog');
 
 describe('changelog-validator', () => {
@@ -363,6 +366,293 @@ describe('changelog-validator', () => {
             '@metamask/transaction-controller',
             '@metamask/transaction-controller',
           ],
+          checkedVersion: null,
+        },
+      ]);
+    });
+
+    it('handles renamed packages by reading rename info from package.json scripts', async () => {
+      when(jest.spyOn(fsModule, 'fileExists'))
+        .calledWith(
+          '/path/to/project/packages/json-rpc-middleware-stream/CHANGELOG.md',
+        )
+        .mockResolvedValue(true)
+        .calledWith(
+          '/path/to/project/packages/json-rpc-middleware-stream/package.json',
+        )
+        .mockResolvedValue(true);
+      when(jest.spyOn(fsModule, 'readFile'))
+        .calledWith(
+          '/path/to/project/packages/json-rpc-middleware-stream/CHANGELOG.md',
+        )
+        .mockResolvedValue('# Changelog\n## [Unreleased]')
+        .calledWith(
+          '/path/to/project/packages/json-rpc-middleware-stream/package.json',
+        )
+        .mockResolvedValue(
+          JSON.stringify({
+            name: '@metamask/json-rpc-middleware-stream',
+            scripts: {
+              'changelog:update':
+                '../../scripts/update-changelog.sh @metamask/json-rpc-middleware-stream --tag-prefix-before-package-rename json-rpc-middleware-stream@ --version-before-package-rename 5.0.1',
+            },
+          }),
+        );
+      jest.spyOn(packageModule, 'formatChangelog').mockResolvedValue('');
+
+      when(jest.spyOn(packageManifestModule, 'readPackageManifest'))
+        .calledWith(
+          '/path/to/project/packages/json-rpc-middleware-stream/package.json',
+        )
+        .mockResolvedValue({
+          unvalidated: {
+            name: '@metamask/json-rpc-middleware-stream',
+            scripts: {
+              'changelog:update':
+                '../../scripts/update-changelog.sh @metamask/json-rpc-middleware-stream --tag-prefix-before-package-rename json-rpc-middleware-stream@ --version-before-package-rename 5.0.1',
+            },
+          },
+          validated: buildMockManifest({
+            name: '@metamask/json-rpc-middleware-stream',
+          }),
+        });
+
+      const mockChangelog = {
+        getUnreleasedChanges: jest.fn().mockReturnValue({
+          Changed: [
+            'Bump `@metamask/json-rpc-engine` from `^10.1.1` to `^10.1.2` ([#1234](https://github.com/example-org/example-repo/pull/1234))',
+          ],
+        }),
+        getReleaseChanges: jest.fn(),
+      };
+      (parseChangelog as jest.Mock).mockReturnValue(mockChangelog);
+
+      const renamedPackageChanges = {
+        'json-rpc-middleware-stream': {
+          packageName: '@metamask/json-rpc-middleware-stream',
+          dependencyChanges: [
+            {
+              package: 'json-rpc-middleware-stream',
+              dependency: '@metamask/json-rpc-engine',
+              type: 'dependencies' as const,
+              oldVersion: '^10.1.1',
+              newVersion: '^10.1.2',
+            },
+          ],
+        },
+      };
+
+      const results = await validateChangelogs(
+        renamedPackageChanges,
+        '/path/to/project',
+        'https://github.com/example-org/example-repo',
+      );
+
+      // Verify parseChangelog was called with packageRename info
+      expect(parseChangelog).toHaveBeenCalledWith({
+        changelogContent: '# Changelog\n## [Unreleased]',
+        repoUrl: 'https://github.com/example-org/example-repo',
+        tagPrefix: '@metamask/json-rpc-middleware-stream@',
+        formatter: expect.any(Function),
+        packageRename: {
+          tagPrefixBeforeRename: 'json-rpc-middleware-stream@',
+          versionBeforeRename: '5.0.1',
+        },
+      });
+
+      expect(results).toStrictEqual([
+        {
+          package: 'json-rpc-middleware-stream',
+          hasChangelog: true,
+          hasUnreleasedSection: true,
+          missingEntries: [],
+          existingEntries: ['@metamask/json-rpc-engine'],
+          checkedVersion: null,
+        },
+      ]);
+    });
+
+    it('works without package rename info when scripts do not contain rename flags', async () => {
+      when(jest.spyOn(fsModule, 'fileExists'))
+        .calledWith('/path/to/project/packages/controller-utils/CHANGELOG.md')
+        .mockResolvedValue(true)
+        .calledWith('/path/to/project/packages/controller-utils/package.json')
+        .mockResolvedValue(true);
+      when(jest.spyOn(fsModule, 'readFile'))
+        .calledWith('/path/to/project/packages/controller-utils/CHANGELOG.md')
+        .mockResolvedValue('# Changelog\n## [Unreleased]')
+        .calledWith('/path/to/project/packages/controller-utils/package.json')
+        .mockResolvedValue(
+          JSON.stringify({
+            name: '@metamask/controller-utils',
+            scripts: {
+              test: 'jest',
+            },
+          }),
+        );
+      jest.spyOn(packageModule, 'formatChangelog').mockResolvedValue('');
+
+      when(jest.spyOn(packageManifestModule, 'readPackageManifest'))
+        .calledWith('/path/to/project/packages/controller-utils/package.json')
+        .mockResolvedValue({
+          unvalidated: {
+            name: '@metamask/controller-utils',
+            scripts: {
+              test: 'jest',
+            },
+          },
+          validated: buildMockManifest({
+            name: '@metamask/controller-utils',
+          }),
+        });
+
+      const mockChangelog = {
+        getUnreleasedChanges: jest.fn().mockReturnValue({
+          Changed: [
+            'Bump `@metamask/transaction-controller` from `^61.0.0` to `^62.0.0` ([#1234](https://github.com/example-org/example-repo/pull/1234))',
+          ],
+        }),
+        getReleaseChanges: jest.fn(),
+      };
+      (parseChangelog as jest.Mock).mockReturnValue(mockChangelog);
+
+      const results = await validateChangelogs(
+        mockChanges,
+        '/path/to/project',
+        'https://github.com/example-org/example-repo',
+      );
+
+      // Verify parseChangelog was called without packageRename
+      expect(parseChangelog).toHaveBeenCalledWith({
+        changelogContent: '# Changelog\n## [Unreleased]',
+        repoUrl: 'https://github.com/example-org/example-repo',
+        tagPrefix: '@metamask/controller-utils@',
+        formatter: expect.any(Function),
+      });
+
+      expect(results).toStrictEqual([
+        {
+          package: 'controller-utils',
+          hasChangelog: true,
+          hasUnreleasedSection: true,
+          missingEntries: [],
+          existingEntries: ['@metamask/transaction-controller'],
+          checkedVersion: null,
+        },
+      ]);
+    });
+
+    it('handles package.json without scripts field', async () => {
+      when(jest.spyOn(fsModule, 'fileExists'))
+        .calledWith('/path/to/project/packages/controller-utils/CHANGELOG.md')
+        .mockResolvedValue(true)
+        .calledWith('/path/to/project/packages/controller-utils/package.json')
+        .mockResolvedValue(true);
+      when(jest.spyOn(fsModule, 'readFile'))
+        .calledWith('/path/to/project/packages/controller-utils/CHANGELOG.md')
+        .mockResolvedValue('# Changelog\n## [Unreleased]')
+        .calledWith('/path/to/project/packages/controller-utils/package.json')
+        .mockResolvedValue(
+          JSON.stringify({
+            name: '@metamask/controller-utils',
+          }),
+        );
+      jest.spyOn(packageModule, 'formatChangelog').mockResolvedValue('');
+
+      when(jest.spyOn(packageManifestModule, 'readPackageManifest'))
+        .calledWith('/path/to/project/packages/controller-utils/package.json')
+        .mockResolvedValue({
+          unvalidated: {
+            name: '@metamask/controller-utils',
+          },
+          validated: buildMockManifest({
+            name: '@metamask/controller-utils',
+          }),
+        });
+
+      const mockChangelog = {
+        getUnreleasedChanges: jest.fn().mockReturnValue({
+          Changed: [
+            'Bump `@metamask/transaction-controller` from `^61.0.0` to `^62.0.0` ([#1234](https://github.com/example-org/example-repo/pull/1234))',
+          ],
+        }),
+        getReleaseChanges: jest.fn(),
+      };
+      (parseChangelog as jest.Mock).mockReturnValue(mockChangelog);
+
+      const results = await validateChangelogs(
+        mockChanges,
+        '/path/to/project',
+        'https://github.com/example-org/example-repo',
+      );
+
+      // Verify parseChangelog was called without packageRename
+      expect(parseChangelog).toHaveBeenCalledWith({
+        changelogContent: '# Changelog\n## [Unreleased]',
+        repoUrl: 'https://github.com/example-org/example-repo',
+        tagPrefix: '@metamask/controller-utils@',
+        formatter: expect.any(Function),
+      });
+
+      expect(results).toStrictEqual([
+        {
+          package: 'controller-utils',
+          hasChangelog: true,
+          hasUnreleasedSection: true,
+          missingEntries: [],
+          existingEntries: ['@metamask/transaction-controller'],
+          checkedVersion: null,
+        },
+      ]);
+    });
+
+    it('handles errors when reading package.json gracefully', async () => {
+      when(jest.spyOn(fsModule, 'fileExists'))
+        .calledWith('/path/to/project/packages/controller-utils/CHANGELOG.md')
+        .mockResolvedValue(true)
+        .calledWith('/path/to/project/packages/controller-utils/package.json')
+        .mockResolvedValue(true);
+      when(jest.spyOn(fsModule, 'readFile'))
+        .calledWith('/path/to/project/packages/controller-utils/CHANGELOG.md')
+        .mockResolvedValue('# Changelog\n## [Unreleased]');
+      jest.spyOn(packageModule, 'formatChangelog').mockResolvedValue('');
+
+      // Mock readPackageManifest to throw an error
+      when(jest.spyOn(packageManifestModule, 'readPackageManifest'))
+        .calledWith('/path/to/project/packages/controller-utils/package.json')
+        .mockRejectedValue(new Error('Failed to read package.json'));
+
+      const mockChangelog = {
+        getUnreleasedChanges: jest.fn().mockReturnValue({
+          Changed: [
+            'Bump `@metamask/transaction-controller` from `^61.0.0` to `^62.0.0` ([#1234](https://github.com/example-org/example-repo/pull/1234))',
+          ],
+        }),
+        getReleaseChanges: jest.fn(),
+      };
+      (parseChangelog as jest.Mock).mockReturnValue(mockChangelog);
+
+      const results = await validateChangelogs(
+        mockChanges,
+        '/path/to/project',
+        'https://github.com/example-org/example-repo',
+      );
+
+      // Verify parseChangelog was called without packageRename (error handled gracefully)
+      expect(parseChangelog).toHaveBeenCalledWith({
+        changelogContent: '# Changelog\n## [Unreleased]',
+        repoUrl: 'https://github.com/example-org/example-repo',
+        tagPrefix: '@metamask/controller-utils@',
+        formatter: expect.any(Function),
+      });
+
+      expect(results).toStrictEqual([
+        {
+          package: 'controller-utils',
+          hasChangelog: true,
+          hasUnreleasedSection: true,
+          missingEntries: [],
+          existingEntries: ['@metamask/transaction-controller'],
           checkedVersion: null,
         },
       ]);
@@ -1855,6 +2145,105 @@ describe('changelog-validator', () => {
       expect(writtenContent).toContain(
         '**BREAKING:** Bump `@metamask/transaction-controller` from `^61.0.0` to `^62.0.0` ([#1234](https://github.com/example-org/example-repo/pull/1234), [#5678](https://github.com/example-org/example-repo/pull/5678))',
       );
+    });
+
+    it('handles renamed packages when updating changelogs', async () => {
+      const renamedPackageChanges = {
+        'json-rpc-middleware-stream': {
+          packageName: '@metamask/json-rpc-middleware-stream',
+          dependencyChanges: [
+            {
+              package: 'json-rpc-middleware-stream',
+              dependency: '@metamask/json-rpc-engine',
+              type: 'dependencies' as const,
+              oldVersion: '^10.1.1',
+              newVersion: '^10.1.2',
+            },
+          ],
+        },
+      };
+
+      const writeFileSpy = jest.spyOn(fsModule, 'writeFile');
+
+      when(jest.spyOn(fsModule, 'fileExists'))
+        .calledWith(
+          '/path/to/project/packages/json-rpc-middleware-stream/CHANGELOG.md',
+        )
+        .mockResolvedValue(true)
+        .calledWith(
+          '/path/to/project/packages/json-rpc-middleware-stream/package.json',
+        )
+        .mockResolvedValue(true);
+
+      when(jest.spyOn(fsModule, 'readFile'))
+        .calledWith(
+          '/path/to/project/packages/json-rpc-middleware-stream/CHANGELOG.md',
+        )
+        .mockResolvedValue('# Changelog\n## [Unreleased]')
+        .calledWith(
+          '/path/to/project/packages/json-rpc-middleware-stream/package.json',
+        )
+        .mockResolvedValue(
+          JSON.stringify({
+            name: '@metamask/json-rpc-middleware-stream',
+            scripts: {
+              'changelog:update':
+                '../../scripts/update-changelog.sh @metamask/json-rpc-middleware-stream --tag-prefix-before-package-rename json-rpc-middleware-stream@ --version-before-package-rename 5.0.1',
+            },
+          }),
+        );
+
+      jest.spyOn(packageModule, 'formatChangelog').mockResolvedValue('');
+
+      when(jest.spyOn(packageManifestModule, 'readPackageManifest'))
+        .calledWith(
+          '/path/to/project/packages/json-rpc-middleware-stream/package.json',
+        )
+        .mockResolvedValue({
+          unvalidated: {
+            name: '@metamask/json-rpc-middleware-stream',
+            scripts: {
+              'changelog:update':
+                '../../scripts/update-changelog.sh @metamask/json-rpc-middleware-stream --tag-prefix-before-package-rename json-rpc-middleware-stream@ --version-before-package-rename 5.0.1',
+            },
+          },
+          validated: buildMockManifest({
+            name: '@metamask/json-rpc-middleware-stream',
+          }),
+        });
+
+      const mockChangelog = {
+        getUnreleasedChanges: () => ({ Changed: [] }),
+        addChange: jest.fn(),
+        toString: jest.fn().mockResolvedValue('Updated changelog content'),
+      };
+      (parseChangelog as jest.Mock).mockReturnValue(mockChangelog);
+
+      await updateChangelogs(renamedPackageChanges, {
+        projectRoot: '/path/to/project',
+        repoUrl: 'https://github.com/example-org/example-repo',
+        stdout,
+        stderr,
+      });
+
+      // Verify parseChangelog was called with packageRename info
+      expect(parseChangelog).toHaveBeenCalledWith({
+        changelogContent: '# Changelog\n## [Unreleased]',
+        repoUrl: 'https://github.com/example-org/example-repo',
+        tagPrefix: '@metamask/json-rpc-middleware-stream@',
+        formatter: expect.any(Function),
+        packageRename: {
+          tagPrefixBeforeRename: 'json-rpc-middleware-stream@',
+          versionBeforeRename: '5.0.1',
+        },
+      });
+
+      // Verify changelog was updated
+      expect(writeFileSpy).toHaveBeenCalledWith(
+        '/path/to/project/packages/json-rpc-middleware-stream/CHANGELOG.md',
+        'Updated changelog content',
+      );
+      expect(mockChangelog.addChange).toHaveBeenCalled();
     });
   });
 });

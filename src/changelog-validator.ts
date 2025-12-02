@@ -10,6 +10,7 @@ import type { WriteStream } from 'fs';
 import { parseChangelog } from '@metamask/auto-changelog';
 import { readFile, writeFile, fileExists } from './fs.js';
 import { formatChangelog } from './package.js';
+import { readPackageManifest } from './package-manifest.js';
 import type { DependencyChange, PackageChanges } from './types.js';
 
 type ChangelogValidationResult = {
@@ -55,6 +56,56 @@ async function readChangelog(changelogPath: string): Promise<string | null> {
   }
 
   return await readFile(changelogPath);
+}
+
+/**
+ * Extracts package rename information from package.json scripts.
+ * Looks for --tag-prefix-before-package-rename and --version-before-package-rename flags.
+ *
+ * @param packagePath - Path to the package directory.
+ * @returns Package rename info if found, undefined otherwise.
+ */
+async function getPackageRenameInfo(
+  packagePath: string,
+): Promise<
+  { versionBeforeRename: string; tagPrefixBeforeRename: string } | undefined
+> {
+  const packageJsonPath = path.join(packagePath, 'package.json');
+
+  if (!(await fileExists(packageJsonPath))) {
+    return undefined;
+  }
+
+  try {
+    const { unvalidated } = await readPackageManifest(packageJsonPath);
+    const scripts = unvalidated.scripts as Record<string, string> | undefined;
+
+    if (!scripts) {
+      return undefined;
+    }
+
+    // Look for the flags in any script
+    for (const script of Object.values(scripts)) {
+      const tagPrefixMatch = script.match(
+        /--tag-prefix-before-package-rename\s+(\S+)/u,
+      );
+      const versionMatch = script.match(
+        /--version-before-package-rename\s+(\S+)/u,
+      );
+
+      if (tagPrefixMatch && versionMatch) {
+        return {
+          tagPrefixBeforeRename: tagPrefixMatch[1],
+          versionBeforeRename: versionMatch[1],
+        };
+      }
+    }
+  } catch {
+    // If reading fails, return undefined
+    return undefined;
+  }
+
+  return undefined;
 }
 
 /**
@@ -180,12 +231,16 @@ export async function validateChangelogs(
       // Use the actual package name from packageInfo
       const actualPackageName = packageInfo.packageName;
 
+      // Check for package rename info in package.json scripts
+      const packageRename = await getPackageRenameInfo(packagePath);
+
       // Parse the changelog using auto-changelog
       const changelog = parseChangelog({
         changelogContent,
         repoUrl,
         tagPrefix: `${actualPackageName}@`,
         formatter: formatChangelog,
+        ...(packageRename && { packageRename }),
       });
 
       // Check if package is being released (has version change)
@@ -283,12 +338,16 @@ export async function updateChangelogs(
       // Use the actual package name from packageInfo
       const actualPackageName = packageInfo.packageName;
 
+      // Check for package rename info in package.json scripts
+      const packageRename = await getPackageRenameInfo(packagePath);
+
       // Parse the changelog using auto-changelog
       const changelog = parseChangelog({
         changelogContent,
         repoUrl,
         tagPrefix: `${actualPackageName}@`,
         formatter: formatChangelog,
+        ...(packageRename && { packageRename }),
       });
 
       // Check if package is being released (has version change)
