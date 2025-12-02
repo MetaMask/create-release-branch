@@ -2245,5 +2245,144 @@ describe('changelog-validator', () => {
       );
       expect(mockChangelog.addChange).toHaveBeenCalled();
     });
+
+    it('handles renamed packages when updating existing entries and adding new ones', async () => {
+      const renamedPackageChanges = {
+        'json-rpc-middleware-stream': {
+          packageName: '@metamask/json-rpc-middleware-stream',
+          dependencyChanges: [
+            {
+              package: 'json-rpc-middleware-stream',
+              dependency: '@metamask/json-rpc-engine',
+              type: 'dependencies' as const,
+              oldVersion: '^10.1.1',
+              newVersion: '^10.1.2',
+            },
+            {
+              package: 'json-rpc-middleware-stream',
+              dependency: '@metamask/base-controller',
+              type: 'dependencies' as const,
+              oldVersion: '^9.0.0',
+              newVersion: '^9.1.0',
+            },
+          ],
+        },
+      };
+
+      const existingEntry =
+        'Bump `@metamask/json-rpc-engine` from `^10.1.1` to `^10.1.0` ([#1234](https://github.com/example-org/example-repo/pull/1234))';
+
+      const writeFileSpy = jest.spyOn(fsModule, 'writeFile');
+
+      when(jest.spyOn(fsModule, 'fileExists'))
+        .calledWith(
+          '/path/to/project/packages/json-rpc-middleware-stream/CHANGELOG.md',
+        )
+        .mockResolvedValue(true)
+        .calledWith(
+          '/path/to/project/packages/json-rpc-middleware-stream/package.json',
+        )
+        .mockResolvedValue(true);
+
+      when(jest.spyOn(fsModule, 'readFile'))
+        .calledWith(
+          '/path/to/project/packages/json-rpc-middleware-stream/CHANGELOG.md',
+        )
+        .mockResolvedValueOnce(
+          `# Changelog\n## [Unreleased]\n- ${existingEntry}`,
+        )
+        .mockResolvedValueOnce(
+          `# Changelog\n## [Unreleased]\n- Bump \`@metamask/json-rpc-engine\` from \`^10.1.1\` to \`^10.1.2\` ([#1234](https://github.com/example-org/example-repo/pull/1234), [#5678](https://github.com/example-org/example-repo/pull/5678))`,
+        )
+        .calledWith(
+          '/path/to/project/packages/json-rpc-middleware-stream/package.json',
+        )
+        .mockResolvedValue(
+          JSON.stringify({
+            name: '@metamask/json-rpc-middleware-stream',
+            scripts: {
+              'changelog:update':
+                '../../scripts/update-changelog.sh @metamask/json-rpc-middleware-stream --tag-prefix-before-package-rename json-rpc-middleware-stream@ --version-before-package-rename 5.0.1',
+            },
+          }),
+        );
+
+      jest.spyOn(packageModule, 'formatChangelog').mockResolvedValue('');
+
+      when(jest.spyOn(packageManifestModule, 'readPackageManifest'))
+        .calledWith(
+          '/path/to/project/packages/json-rpc-middleware-stream/package.json',
+        )
+        .mockResolvedValue({
+          unvalidated: {
+            name: '@metamask/json-rpc-middleware-stream',
+            scripts: {
+              'changelog:update':
+                '../../scripts/update-changelog.sh @metamask/json-rpc-middleware-stream --tag-prefix-before-package-rename json-rpc-middleware-stream@ --version-before-package-rename 5.0.1',
+            },
+          },
+          validated: buildMockManifest({
+            name: '@metamask/json-rpc-middleware-stream',
+          }),
+        });
+
+      const mockChangelog1 = {
+        getUnreleasedChanges: () => ({ Changed: [existingEntry] }),
+      };
+
+      const mockChangelog2 = {
+        getUnreleasedChanges: () => ({
+          Changed: [
+            'Bump `@metamask/json-rpc-engine` from `^10.1.1` to `^10.1.2` ([#1234](https://github.com/example-org/example-repo/pull/1234), [#5678](https://github.com/example-org/example-repo/pull/5678))',
+          ],
+        }),
+        addChange: jest.fn(),
+        toString: jest.fn().mockResolvedValue('Final updated changelog'),
+      };
+
+      (parseChangelog as jest.Mock)
+        .mockReturnValueOnce(mockChangelog1)
+        .mockReturnValueOnce(mockChangelog2);
+
+      await updateChangelogs(renamedPackageChanges, {
+        projectRoot: '/path/to/project',
+        prNumber: '5678',
+        repoUrl: 'https://github.com/example-org/example-repo',
+        stdout,
+        stderr,
+      });
+
+      const packageRename = {
+        tagPrefixBeforeRename: 'json-rpc-middleware-stream@',
+        versionBeforeRename: '5.0.1',
+      };
+
+      // Verify both parseChangelog calls include packageRename
+      expect(parseChangelog).toHaveBeenCalledTimes(2);
+      expect(parseChangelog).toHaveBeenNthCalledWith(1, {
+        changelogContent: `# Changelog\n## [Unreleased]\n- ${existingEntry}`,
+        repoUrl: 'https://github.com/example-org/example-repo',
+        tagPrefix: '@metamask/json-rpc-middleware-stream@',
+        formatter: expect.any(Function),
+        packageRename,
+      });
+      expect(parseChangelog).toHaveBeenNthCalledWith(2, {
+        changelogContent:
+          '# Changelog\n## [Unreleased]\n- Bump `@metamask/json-rpc-engine` from `^10.1.1` to `^10.1.2` ([#1234](https://github.com/example-org/example-repo/pull/1234), [#5678](https://github.com/example-org/example-repo/pull/5678))',
+        repoUrl: 'https://github.com/example-org/example-repo',
+        tagPrefix: '@metamask/json-rpc-middleware-stream@',
+        formatter: expect.any(Function),
+        packageRename,
+      });
+
+      // Verify new entry was added
+      expect(mockChangelog2.addChange).toHaveBeenCalledWith({
+        category: 'Changed',
+        description: expect.stringContaining('@metamask/base-controller'),
+      });
+
+      // Verify writeFile was called (once for update, once for final)
+      expect(writeFileSpy).toHaveBeenCalledTimes(2);
+    });
   });
 });

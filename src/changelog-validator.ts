@@ -434,6 +434,7 @@ export async function updateChangelogs(
           repoUrl,
           tagPrefix: `${actualPackageName}@`,
           formatter: formatChangelog,
+          ...(packageRename && { packageRename }),
         });
 
         // Group new entries by type (dependencies first, then peerDependencies)
