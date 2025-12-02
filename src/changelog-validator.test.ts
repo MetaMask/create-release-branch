@@ -780,33 +780,33 @@ describe('changelog-validator', () => {
         stderr,
       });
 
-      // Verify peerDependencies (BREAKING) is added first
+      // addChange prepends entries, so deps are added first (to appear after BREAKING)
+      // Then peerDeps are added (to appear first in final output)
       expect(mockChangelog.addChange).toHaveBeenNthCalledWith(
         1,
-        expect.objectContaining({
-          description: expect.stringContaining('**BREAKING:**'),
-        }),
-      );
-      expect(mockChangelog.addChange).toHaveBeenNthCalledWith(
-        1,
-        expect.objectContaining({
-          description: expect.stringContaining(
-            '@metamask/transaction-controller',
-          ),
-        }),
-      );
-
-      // Verify dependencies is added second
-      expect(mockChangelog.addChange).toHaveBeenNthCalledWith(
-        2,
         expect.objectContaining({
           description: expect.not.stringContaining('**BREAKING:**'),
         }),
       );
       expect(mockChangelog.addChange).toHaveBeenNthCalledWith(
-        2,
+        1,
         expect.objectContaining({
           description: expect.stringContaining('@metamask/network-controller'),
+        }),
+      );
+
+      expect(mockChangelog.addChange).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          description: expect.stringContaining('**BREAKING:**'),
+        }),
+      );
+      expect(mockChangelog.addChange).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          description: expect.stringContaining(
+            '@metamask/transaction-controller',
+          ),
         }),
       );
     });

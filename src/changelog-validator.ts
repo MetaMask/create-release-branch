@@ -352,15 +352,17 @@ export async function updateChangelogs(
           formatter: formatChangelog,
         });
 
-        // Group new entries by type (peerDependencies first, then dependencies)
+        // Group new entries by type (dependencies first, then peerDependencies)
+        const deps = entriesToAdd.filter((c) => c.type === 'dependencies');
         const peerDeps = entriesToAdd.filter(
           (c) => c.type === 'peerDependencies',
         );
-        const deps = entriesToAdd.filter((c) => c.type === 'dependencies');
 
-        // Add peerDependencies first (BREAKING changes)
-        for (const change of peerDeps) {
-          const description = formatChangelogEntry(change, prNumber, repoUrl);
+        // addChange prepends entries, so we iterate in reverse to maintain
+        // alphabetical order in the final changelog output.
+        // Add dependencies first (they'll appear after BREAKING in final output)
+        for (let i = deps.length - 1; i >= 0; i--) {
+          const description = formatChangelogEntry(deps[i], prNumber, repoUrl);
           updatedChangelog.addChange({
             category: 'Changed' as any,
             description,
@@ -368,9 +370,13 @@ export async function updateChangelogs(
           });
         }
 
-        // Then add dependencies
-        for (const change of deps) {
-          const description = formatChangelogEntry(change, prNumber, repoUrl);
+        // Then add peerDependencies (BREAKING - they'll appear first in final output)
+        for (let i = peerDeps.length - 1; i >= 0; i--) {
+          const description = formatChangelogEntry(
+            peerDeps[i],
+            prNumber,
+            repoUrl,
+          );
           updatedChangelog.addChange({
             category: 'Changed' as any,
             description,
@@ -386,15 +392,17 @@ export async function updateChangelogs(
         );
       } else {
         // Only adding new entries
-        // Group entries by type (peerDependencies first, then dependencies)
+        // Group entries by type (dependencies first, then peerDependencies)
+        const deps = entriesToAdd.filter((c) => c.type === 'dependencies');
         const peerDeps = entriesToAdd.filter(
           (c) => c.type === 'peerDependencies',
         );
-        const deps = entriesToAdd.filter((c) => c.type === 'dependencies');
 
-        // Add peerDependencies first (BREAKING changes)
-        for (const change of peerDeps) {
-          const description = formatChangelogEntry(change, prNumber, repoUrl);
+        // addChange prepends entries, so we iterate in reverse to maintain
+        // alphabetical order in the final changelog output.
+        // Add dependencies first (they'll appear after BREAKING in final output)
+        for (let i = deps.length - 1; i >= 0; i--) {
+          const description = formatChangelogEntry(deps[i], prNumber, repoUrl);
           changelog.addChange({
             category: 'Changed' as any,
             description,
@@ -402,9 +410,13 @@ export async function updateChangelogs(
           });
         }
 
-        // Then add dependencies
-        for (const change of deps) {
-          const description = formatChangelogEntry(change, prNumber, repoUrl);
+        // Then add peerDependencies (BREAKING - they'll appear first in final output)
+        for (let i = peerDeps.length - 1; i >= 0; i--) {
+          const description = formatChangelogEntry(
+            peerDeps[i],
+            prNumber,
+            repoUrl,
+          );
           changelog.addChange({
             category: 'Changed' as any,
             description,
