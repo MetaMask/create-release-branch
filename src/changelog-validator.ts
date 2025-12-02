@@ -79,15 +79,28 @@ function hasChangelogEntry(
     '\\$&',
   );
 
+  // For peerDependencies, require **BREAKING:** prefix
+  // For dependencies, explicitly exclude **BREAKING:** prefix
+  const breakingPrefix =
+    change.type === 'peerDependencies' ? '\\*\\*BREAKING:\\*\\* ' : '';
+  const isBreaking = change.type === 'peerDependencies';
+
   // Look for exact version match: dependency from oldVersion to newVersion
   const exactPattern = new RegExp(
-    `Bump \`${escapedDep}\` from \`${escapedOldVer}\` to \`${escapedNewVer}\``,
+    `${breakingPrefix}Bump \`${escapedDep}\` from \`${escapedOldVer}\` to \`${escapedNewVer}\``,
     'u',
   );
 
-  const exactIndex = changedEntries.findIndex((entry) =>
-    exactPattern.test(entry),
-  );
+  const exactIndex = changedEntries.findIndex((entry) => {
+    const matchesPattern = exactPattern.test(entry);
+
+    // For dependencies, also ensure it doesn't have BREAKING prefix
+    if (!isBreaking) {
+      return matchesPattern && !entry.startsWith('**BREAKING:**');
+    }
+
+    return matchesPattern;
+  });
 
   if (exactIndex !== -1) {
     return {
@@ -100,13 +113,20 @@ function hasChangelogEntry(
   // Check if there's an entry for this dependency with different versions
   // Use \x60 (backtick) to avoid template literal issues
   const anyVersionPattern = new RegExp(
-    `Bump \x60${escapedDep}\x60 from \x60[^\x60]+\x60 to \x60[^\x60]+\x60`,
+    `${breakingPrefix}Bump \x60${escapedDep}\x60 from \x60[^\x60]+\x60 to \x60[^\x60]+\x60`,
     'u',
   );
 
-  const anyIndex = changedEntries.findIndex((entry) =>
-    anyVersionPattern.test(entry),
-  );
+  const anyIndex = changedEntries.findIndex((entry) => {
+    const matchesPattern = anyVersionPattern.test(entry);
+
+    // For dependencies, also ensure it doesn't have BREAKING prefix
+    if (!isBreaking) {
+      return matchesPattern && !entry.startsWith('**BREAKING:**');
+    }
+
+    return matchesPattern;
+  });
 
   if (anyIndex !== -1) {
     return {

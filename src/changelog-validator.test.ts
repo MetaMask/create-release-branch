@@ -252,6 +252,71 @@ describe('changelog-validator', () => {
         '@metamask/transaction-controller',
       );
     });
+
+    it('correctly distinguishes same dependency in dependencies vs peerDependencies', async () => {
+      when(jest.spyOn(fsModule, 'fileExists'))
+        .calledWith('/path/to/project/packages/controller-utils/CHANGELOG.md')
+        .mockResolvedValue(true);
+      when(jest.spyOn(fsModule, 'readFile'))
+        .calledWith('/path/to/project/packages/controller-utils/CHANGELOG.md')
+        .mockResolvedValue('# Changelog\n## [Unreleased]');
+      jest.spyOn(packageModule, 'formatChangelog').mockResolvedValue('');
+
+      // Changelog has both BREAKING and non-BREAKING entries for same dependency
+      const mockChangelog = {
+        getUnreleasedChanges: jest.fn().mockReturnValue({
+          Changed: [
+            'Bump `@metamask/transaction-controller` from `^61.0.0` to `^62.0.0` ([#1234](https://github.com/example-org/example-repo/pull/1234))',
+            '**BREAKING:** Bump `@metamask/transaction-controller` from `^61.0.0` to `^62.0.0` ([#1234](https://github.com/example-org/example-repo/pull/1234))',
+          ],
+        }),
+        getReleaseChanges: jest.fn(),
+      };
+      (parseChangelog as jest.Mock).mockReturnValue(mockChangelog);
+
+      // Same dependency in both dependencies and peerDependencies
+      const changesWithSameDep = {
+        'controller-utils': {
+          packageName: '@metamask/controller-utils',
+          dependencyChanges: [
+            {
+              package: 'controller-utils',
+              dependency: '@metamask/transaction-controller',
+              type: 'dependencies' as const,
+              oldVersion: '^61.0.0',
+              newVersion: '^62.0.0',
+            },
+            {
+              package: 'controller-utils',
+              dependency: '@metamask/transaction-controller',
+              type: 'peerDependencies' as const,
+              oldVersion: '^61.0.0',
+              newVersion: '^62.0.0',
+            },
+          ],
+        },
+      };
+
+      const results = await validateChangelogs(
+        changesWithSameDep,
+        '/path/to/project',
+        'https://github.com/example-org/example-repo',
+      );
+
+      // Both entries should be found (one for deps, one for peerDeps)
+      expect(results).toStrictEqual([
+        {
+          package: 'controller-utils',
+          hasChangelog: true,
+          hasUnreleasedSection: true,
+          missingEntries: [],
+          existingEntries: [
+            '@metamask/transaction-controller',
+            '@metamask/transaction-controller',
+          ],
+        },
+      ]);
+    });
   });
 
   describe('updateChangelogs', () => {
@@ -1648,6 +1713,98 @@ describe('changelog-validator', () => {
         description: expect.stringContaining('@metamask/network-controller'),
         version: '1.1.0',
       });
+    });
+
+    it('updates both entries when same dependency exists in dependencies and peerDependencies', async () => {
+      const sameDepInBothSections = {
+        'controller-utils': {
+          packageName: '@metamask/controller-utils',
+          dependencyChanges: [
+            {
+              package: 'controller-utils',
+              dependency: '@metamask/transaction-controller',
+              type: 'dependencies' as const,
+              oldVersion: '^61.0.0',
+              newVersion: '^62.0.0',
+            },
+            {
+              package: 'controller-utils',
+              dependency: '@metamask/transaction-controller',
+              type: 'peerDependencies' as const,
+              oldVersion: '^61.0.0',
+              newVersion: '^62.0.0',
+            },
+          ],
+        },
+      };
+
+      const existingDepEntry =
+        'Bump `@metamask/transaction-controller` from `^61.0.0` to `^61.1.0` ([#1234](https://github.com/example-org/example-repo/pull/1234))';
+      const existingPeerDepEntry =
+        '**BREAKING:** Bump `@metamask/transaction-controller` from `^61.0.0` to `^61.1.0` ([#1234](https://github.com/example-org/example-repo/pull/1234))';
+
+      const writeFileSpy = jest.spyOn(fsModule, 'writeFile');
+
+      when(jest.spyOn(fsModule, 'fileExists'))
+        .calledWith('/path/to/project/packages/controller-utils/CHANGELOG.md')
+        .mockResolvedValue(true);
+
+      when(jest.spyOn(fsModule, 'readFile'))
+        .calledWith('/path/to/project/packages/controller-utils/CHANGELOG.md')
+        .mockResolvedValueOnce(
+          `# Changelog\n## [Unreleased]\n- ${existingDepEntry}\n- ${existingPeerDepEntry}`,
+        )
+        .mockResolvedValueOnce(
+          `# Changelog\n## [Unreleased]\n- Bump \`@metamask/transaction-controller\` from \`^61.0.0\` to \`^62.0.0\` ([#1234](https://github.com/example-org/example-repo/pull/1234), [#5678](https://github.com/example-org/example-repo/pull/5678))\n- **BREAKING:** Bump \`@metamask/transaction-controller\` from \`^61.0.0\` to \`^62.0.0\` ([#1234](https://github.com/example-org/example-repo/pull/1234), [#5678](https://github.com/example-org/example-repo/pull/5678))`,
+        );
+
+      jest.spyOn(packageModule, 'formatChangelog').mockResolvedValue('');
+
+      const mockChangelog1 = {
+        getUnreleasedChanges: () => ({
+          Changed: [existingDepEntry, existingPeerDepEntry],
+        }),
+      };
+
+      const mockChangelog2 = {
+        getUnreleasedChanges: () => ({
+          Changed: [
+            'Bump `@metamask/transaction-controller` from `^61.0.0` to `^62.0.0` ([#1234](https://github.com/example-org/example-repo/pull/1234), [#5678](https://github.com/example-org/example-repo/pull/5678))',
+            '**BREAKING:** Bump `@metamask/transaction-controller` from `^61.0.0` to `^62.0.0` ([#1234](https://github.com/example-org/example-repo/pull/1234), [#5678](https://github.com/example-org/example-repo/pull/5678))',
+          ],
+        }),
+        toString: jest.fn().mockResolvedValue('Final updated changelog'),
+      };
+
+      (parseChangelog as jest.Mock)
+        .mockReturnValueOnce(mockChangelog1)
+        .mockReturnValueOnce(mockChangelog2);
+
+      await updateChangelogs(sameDepInBothSections, {
+        projectRoot: '/path/to/project',
+        prNumber: '5678',
+        repoUrl: 'https://github.com/example-org/example-repo',
+        stdout,
+        stderr,
+      });
+
+      // Should write once with both entries updated
+      expect(writeFileSpy).toHaveBeenCalledTimes(1);
+      const writeCall = writeFileSpy.mock.calls[0];
+      expect(writeCall[0]).toBe(
+        '/path/to/project/packages/controller-utils/CHANGELOG.md',
+      );
+
+      // Verify both entries were updated correctly
+      // (non-BREAKING dependency entry and BREAKING peerDependency entry)
+      // If hasChangelogEntry didn't distinguish them, one would fail to update
+      const writtenContent = writeCall[1];
+      expect(writtenContent).toContain(
+        'Bump `@metamask/transaction-controller` from `^61.0.0` to `^62.0.0` ([#1234](https://github.com/example-org/example-repo/pull/1234), [#5678](https://github.com/example-org/example-repo/pull/5678))',
+      );
+      expect(writtenContent).toContain(
+        '**BREAKING:** Bump `@metamask/transaction-controller` from `^61.0.0` to `^62.0.0` ([#1234](https://github.com/example-org/example-repo/pull/1234), [#5678](https://github.com/example-org/example-repo/pull/5678))',
+      );
     });
   });
 });
