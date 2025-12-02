@@ -51,6 +51,7 @@ describe('changelog-validator', () => {
           hasUnreleasedSection: false,
           missingEntries: mockChanges['controller-utils'].dependencyChanges,
           existingEntries: [],
+          checkedVersion: null,
         },
       ]);
     });
@@ -73,6 +74,7 @@ describe('changelog-validator', () => {
           hasUnreleasedSection: false,
           missingEntries: mockChanges['controller-utils'].dependencyChanges,
           existingEntries: [],
+          checkedVersion: null,
         },
       ]);
     });
@@ -102,6 +104,7 @@ describe('changelog-validator', () => {
           hasUnreleasedSection: false,
           missingEntries: mockChanges['controller-utils'].dependencyChanges,
           existingEntries: [],
+          checkedVersion: null,
         },
       ]);
     });
@@ -131,6 +134,7 @@ describe('changelog-validator', () => {
           hasUnreleasedSection: true,
           missingEntries: mockChanges['controller-utils'].dependencyChanges,
           existingEntries: [],
+          checkedVersion: null,
         },
       ]);
     });
@@ -166,6 +170,7 @@ describe('changelog-validator', () => {
           hasUnreleasedSection: true,
           missingEntries: [],
           existingEntries: ['@metamask/transaction-controller'],
+          checkedVersion: null,
         },
       ]);
 
@@ -217,6 +222,50 @@ describe('changelog-validator', () => {
           hasUnreleasedSection: true,
           missingEntries: [],
           existingEntries: ['@metamask/transaction-controller'],
+          checkedVersion: '1.1.0',
+        },
+      ]);
+    });
+
+    it('catches error when release version section does not exist', async () => {
+      when(jest.spyOn(fsModule, 'fileExists'))
+        .calledWith('/path/to/project/packages/controller-utils/CHANGELOG.md')
+        .mockResolvedValue(true);
+      when(jest.spyOn(fsModule, 'readFile'))
+        .calledWith('/path/to/project/packages/controller-utils/CHANGELOG.md')
+        .mockResolvedValue('# Changelog\n## [Unreleased]');
+      jest.spyOn(packageModule, 'formatChangelog').mockResolvedValue('');
+
+      const mockChangelog = {
+        getUnreleasedChanges: jest.fn().mockReturnValue({ Changed: [] }),
+        getReleaseChanges: jest.fn().mockImplementation(() => {
+          throw new Error('Version not found');
+        }),
+      };
+      (parseChangelog as jest.Mock).mockReturnValue(mockChangelog);
+
+      const changesWithVersion = {
+        'controller-utils': {
+          ...mockChanges['controller-utils'],
+          newVersion: '1.2.3',
+        },
+      };
+
+      const results = await validateChangelogs(
+        changesWithVersion,
+        '/path/to/project',
+        'https://github.com/example-org/example-repo',
+      );
+
+      expect(mockChangelog.getReleaseChanges).toHaveBeenCalledWith('1.2.3');
+      expect(results).toStrictEqual([
+        {
+          package: 'controller-utils',
+          hasChangelog: true,
+          hasUnreleasedSection: false,
+          missingEntries: mockChanges['controller-utils'].dependencyChanges,
+          existingEntries: [],
+          checkedVersion: '1.2.3',
         },
       ]);
     });
@@ -314,6 +363,7 @@ describe('changelog-validator', () => {
             '@metamask/transaction-controller',
             '@metamask/transaction-controller',
           ],
+          checkedVersion: null,
         },
       ]);
     });

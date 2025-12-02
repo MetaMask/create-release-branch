@@ -354,7 +354,10 @@ export async function checkDependencyBumps({
       stderr.write(`❌ ${result.package}: CHANGELOG.md not found\n`);
       hasErrors = true;
     } else if (!result.hasUnreleasedSection) {
-      stderr.write(`❌ ${result.package}: No [Unreleased] section found\n`);
+      const sectionName = result.checkedVersion
+        ? `[${result.checkedVersion}]`
+        : '[Unreleased]';
+      stderr.write(`❌ ${result.package}: No ${sectionName} section found\n`);
       hasErrors = true;
     } else if (result.missingEntries.length > 0) {
       stderr.write(

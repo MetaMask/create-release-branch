@@ -18,6 +18,8 @@ type ChangelogValidationResult = {
   hasUnreleasedSection: boolean;
   missingEntries: DependencyChange[];
   existingEntries: string[];
+  /** Version that was checked (null for [Unreleased] section) */
+  checkedVersion?: string | null;
 };
 
 /**
@@ -169,6 +171,7 @@ export async function validateChangelogs(
         hasUnreleasedSection: false,
         missingEntries: packageChanges,
         existingEntries: [],
+        checkedVersion: packageVersion ?? null,
       });
       continue;
     }
@@ -213,6 +216,7 @@ export async function validateChangelogs(
         hasUnreleasedSection,
         missingEntries,
         existingEntries,
+        checkedVersion: packageVersion ?? null,
       });
     } catch (error) {
       // If parsing fails, assume changelog is malformed
@@ -222,6 +226,7 @@ export async function validateChangelogs(
         hasUnreleasedSection: false,
         missingEntries: packageChanges,
         existingEntries: [],
+        checkedVersion: packageVersion ?? null,
       });
     }
   }

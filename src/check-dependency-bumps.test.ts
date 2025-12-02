@@ -235,6 +235,7 @@ index 1234567..890abcd 100644
             hasUnreleasedSection: true,
             missingEntries: [],
             existingEntries: ['@metamask/transaction-controller'],
+            checkedVersion: null,
           },
         ]);
 
@@ -616,6 +617,7 @@ diff --git a/packages/controller-utils/package.json b/packages/controller-utils/
               },
             ],
             existingEntries: [],
+            checkedVersion: null,
           },
         ]);
 
@@ -684,6 +686,7 @@ diff --git a/packages/controller-utils/package.json b/packages/controller-utils/
             hasUnreleasedSection: false,
             missingEntries: [],
             existingEntries: [],
+            checkedVersion: null,
           },
         ]);
 
@@ -697,6 +700,83 @@ diff --git a/packages/controller-utils/package.json b/packages/controller-utils/
       expect(stderrWriteSpy).toHaveBeenCalledWith(
         expect.stringContaining(
           '❌ controller-utils: No [Unreleased] section found',
+        ),
+      );
+    });
+
+    it('reports correct section name when checking release version', async () => {
+      const stderrWriteSpy = jest.spyOn(stderr, 'write');
+      const getStdoutSpy = jest.spyOn(miscUtilsModule, 'getStdoutFromCommand');
+
+      const diffWithVersion = `
+diff --git a/packages/controller-utils/package.json b/packages/controller-utils/package.json
+index 1234567..890abcd 100644
+--- a/packages/controller-utils/package.json
++++ b/packages/controller-utils/package.json
+@@ -1,6 +1,6 @@
+ {
+   "name": "@metamask/controller-utils",
+-  "version": "1.2.2",
++  "version": "1.2.3",
+   "dependencies": {
+-    "@metamask/transaction-controller": "^61.0.0"
++    "@metamask/transaction-controller": "^62.0.0"
+   }
+ }
+`;
+
+      when(getStdoutSpy)
+        .calledWith(
+          'git',
+          ['diff', '-U9999', 'abc123', 'HEAD', '--', '**/package.json'],
+          { cwd: '/path/to/project' },
+        )
+        .mockResolvedValue(diffWithVersion);
+
+      when(jest.spyOn(packageManifestModule, 'readPackageManifest'))
+        .calledWith('/path/to/project/package.json')
+        .mockResolvedValue({
+          unvalidated: {},
+          validated: buildMockManifest(),
+        });
+
+      when(jest.spyOn(packageManifestModule, 'readPackageManifest'))
+        .calledWith('/path/to/project/packages/controller-utils/package.json')
+        .mockResolvedValue({
+          unvalidated: {},
+          validated: buildMockManifest({
+            name: '@metamask/controller-utils',
+          }),
+        });
+
+      jest
+        .spyOn(projectModule, 'getValidRepositoryUrl')
+        .mockResolvedValue('https://github.com/example-org/example-repo');
+
+      const validateChangelogsSpy = jest
+        .spyOn(changelogValidatorModule, 'validateChangelogs')
+        .mockResolvedValue([
+          {
+            package: 'controller-utils',
+            hasChangelog: true,
+            hasUnreleasedSection: false,
+            missingEntries: [],
+            existingEntries: [],
+            checkedVersion: '1.2.3',
+          },
+        ]);
+
+      await checkDependencyBumps({
+        fromRef: 'abc123',
+        projectRoot: '/path/to/project',
+        stdout,
+        stderr,
+      });
+
+      expect(validateChangelogsSpy).toHaveBeenCalled();
+      expect(stderrWriteSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          '❌ controller-utils: No [1.2.3] section found',
         ),
       );
     });
@@ -759,6 +839,7 @@ diff --git a/packages/controller-utils/package.json b/packages/controller-utils/
               },
             ],
             existingEntries: [],
+            checkedVersion: null,
           },
         ]);
 
@@ -846,6 +927,7 @@ diff --git a/packages/controller-utils/package.json b/packages/controller-utils/
               },
             ],
             existingEntries: [],
+            checkedVersion: null,
           },
         ]);
 
@@ -919,6 +1001,7 @@ diff --git a/packages/controller-utils/package.json b/packages/controller-utils/
             hasUnreleasedSection: true,
             missingEntries: [],
             existingEntries: ['@metamask/transaction-controller'],
+            checkedVersion: null,
           },
         ]);
 
@@ -992,6 +1075,7 @@ diff --git a/packages/controller-utils/package.json b/packages/controller-utils/
               },
             ],
             existingEntries: [],
+            checkedVersion: null,
           },
         ]);
 
