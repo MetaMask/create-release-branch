@@ -122,7 +122,7 @@ async function parseDiff(
     }
 
     // Parse removed dependencies
-    if (line.startsWith('-') && currentSection && line.includes('"@')) {
+    if (line.startsWith('-') && currentSection) {
       const match = line.match(/^-\s*"([^"]+)":\s*"([^"]+)"/u);
 
       if (match && currentSection) {
@@ -136,7 +136,7 @@ async function parseDiff(
     }
 
     // Parse added dependencies and match with removed
-    if (line.startsWith('+') && currentSection && line.includes('"@')) {
+    if (line.startsWith('+') && currentSection) {
       const match = line.match(/^\+\s*"([^"]+)":\s*"([^"]+)"/u);
 
       if (match) {

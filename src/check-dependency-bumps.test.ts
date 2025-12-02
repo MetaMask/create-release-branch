@@ -271,6 +271,105 @@ index 1234567..890abcd 100644
       );
     });
 
+    it('detects non-scoped package dependency changes', async () => {
+      const getStdoutSpy = jest.spyOn(miscUtilsModule, 'getStdoutFromCommand');
+
+      const diffWithNonScopedDeps = `
+diff --git a/packages/controller-utils/package.json b/packages/controller-utils/package.json
+index 1234567..890abcd 100644
+--- a/packages/controller-utils/package.json
++++ b/packages/controller-utils/package.json
+@@ -10,7 +10,7 @@
+   },
+   "dependencies": {
+-    "lodash": "^4.17.20"
++    "lodash": "^4.17.21"
+   }
+ }
+`;
+
+      when(getStdoutSpy)
+        .calledWith(
+          'git',
+          ['diff', '-U9999', 'abc123', 'HEAD', '--', '**/package.json'],
+          { cwd: '/path/to/project' },
+        )
+        .mockResolvedValue(diffWithNonScopedDeps);
+
+      when(jest.spyOn(packageManifestModule, 'readPackageManifest'))
+        .calledWith('/path/to/project/package.json')
+        .mockResolvedValue({
+          unvalidated: {
+            repository: 'https://github.com/example-org/example-repo',
+          },
+          validated: buildMockManifest(),
+        });
+
+      when(jest.spyOn(packageManifestModule, 'readPackageManifest'))
+        .calledWith('/path/to/project/packages/controller-utils/package.json')
+        .mockResolvedValue({
+          unvalidated: {},
+          validated: buildMockManifest({
+            name: '@metamask/controller-utils',
+          }),
+        });
+
+      jest
+        .spyOn(projectModule, 'getValidRepositoryUrl')
+        .mockResolvedValue('https://github.com/example-org/example-repo');
+
+      jest
+        .spyOn(changelogValidatorModule, 'validateChangelogs')
+        .mockResolvedValue([
+          {
+            package: 'controller-utils',
+            hasChangelog: true,
+            hasUnreleasedSection: true,
+            missingEntries: [],
+            existingEntries: ['lodash'],
+            checkedVersion: null,
+          },
+        ]);
+
+      const result = await checkDependencyBumps({
+        fromRef: 'abc123',
+        projectRoot: '/path/to/project',
+        stdout,
+        stderr,
+      });
+
+      expect(result).toStrictEqual({
+        'controller-utils': {
+          packageName: '@metamask/controller-utils',
+          dependencyChanges: [
+            {
+              package: 'controller-utils',
+              dependency: 'lodash',
+              type: 'dependencies',
+              oldVersion: '^4.17.20',
+              newVersion: '^4.17.21',
+            },
+          ],
+        },
+      });
+
+      expect(changelogValidatorModule.validateChangelogs).toHaveBeenCalledWith(
+        expect.objectContaining({
+          'controller-utils': expect.objectContaining({
+            dependencyChanges: [
+              expect.objectContaining({
+                dependency: 'lodash',
+                oldVersion: '^4.17.20',
+                newVersion: '^4.17.21',
+              }),
+            ],
+          }),
+        }),
+        '/path/to/project',
+        'https://github.com/example-org/example-repo',
+      );
+    });
+
     it('calls updateChangelogs when fix flag is set', async () => {
       const getStdoutSpy = jest.spyOn(miscUtilsModule, 'getStdoutFromCommand');
 
