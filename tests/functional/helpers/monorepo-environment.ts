@@ -147,6 +147,47 @@ cat "${releaseSpecificationPath}" > "$1"
     return result;
   }
 
+  /**
+   * Runs the check-deps command within the context of the project.
+   *
+   * @param args - The arguments to this function.
+   * @param args.fromRef - The git ref to compare from (required).
+   * @param args.toRef - The git ref to compare to (optional, defaults to HEAD).
+   * @param args.fix - Whether to automatically fix missing changelog entries.
+   * @param args.prNumber - The PR number to use in changelog entries.
+   * @returns The result of the command.
+   */
+  async runCheckDeps({
+    fromRef,
+    toRef,
+    fix,
+    prNumber,
+  }: {
+    fromRef: string;
+    toRef?: string;
+    fix?: boolean;
+    prNumber?: string;
+  }): Promise<ExecaReturnValue<string>> {
+    const args = [
+      TOOL_EXECUTABLE_PATH,
+      'check-deps',
+      '--from',
+      fromRef,
+      ...(toRef ? ['--to', toRef] : []),
+      ...(fix ? ['--fix'] : []),
+      ...(prNumber ? ['--pr', prNumber] : []),
+    ];
+    const result = await this.localRepo.runCommand(TSX_PATH, args);
+
+    debug(
+      ['---- START OUTPUT -----', result.all, '---- END OUTPUT -----'].join(
+        '\n',
+      ),
+    );
+
+    return result;
+  }
+
   protected buildLocalRepo({
     packages,
     workspaces,
