@@ -1487,6 +1487,151 @@ index 1234567..890abcd 100644
       );
     });
 
+    it('ignores optionalDependencies and does not incorrectly attribute changes to dependencies', async () => {
+      const getStdoutSpy = jest.spyOn(miscUtilsModule, 'getStdoutFromCommand');
+
+      // Diff with dependencies, then optionalDependencies
+      // optionalDependencies changes should be ignored
+      const diffWithOptionalDeps = `
+diff --git a/packages/controller-utils/package.json b/packages/controller-utils/package.json
+index 1234567..890abcd 100644
+--- a/packages/controller-utils/package.json
++++ b/packages/controller-utils/package.json
+@@ -10,10 +10,13 @@
+   "dependencies": {
+     "@metamask/transaction-controller": "^61.0.0"
+   },
++  "optionalDependencies": {
++    "@metamask/some-optional": "^1.0.0"
++  }
+ }
+`;
+
+      when(getStdoutSpy)
+        .calledWith(
+          'git',
+          ['diff', '-U9999', 'abc123', 'HEAD', '--', '**/package.json'],
+          { cwd: '/path/to/project' },
+        )
+        .mockResolvedValue(diffWithOptionalDeps);
+
+      when(jest.spyOn(packageManifestModule, 'readPackageManifest'))
+        .calledWith('/path/to/project/package.json')
+        .mockResolvedValue({
+          unvalidated: {
+            repository: 'https://github.com/example-org/example-repo',
+          },
+          validated: buildMockManifest(),
+        });
+
+      when(jest.spyOn(packageManifestModule, 'readPackageManifest'))
+        .calledWith('/path/to/project/packages/controller-utils/package.json')
+        .mockResolvedValue({
+          unvalidated: {},
+          validated: buildMockManifest({
+            name: '@metamask/controller-utils',
+          }),
+        });
+
+      jest
+        .spyOn(projectModule, 'getValidRepositoryUrl')
+        .mockResolvedValue('https://github.com/example-org/example-repo');
+
+      jest
+        .spyOn(changelogValidatorModule, 'validateChangelogs')
+        .mockResolvedValue([]);
+
+      const result = await checkDependencyBumps({
+        fromRef: 'abc123',
+        projectRoot: '/path/to/project',
+        stdout,
+        stderr,
+      });
+
+      // Should not detect any changes (optionalDependencies should be ignored)
+      expect(result).toStrictEqual({});
+    });
+
+    it('correctly resets section when encountering optionalDependencies after dependencies', async () => {
+      const getStdoutSpy = jest.spyOn(miscUtilsModule, 'getStdoutFromCommand');
+
+      // Diff with dependencies change, then optionalDependencies section
+      // The optionalDependencies section should reset currentSection
+      const diffWithDepsAndOptional = `
+diff --git a/packages/controller-utils/package.json b/packages/controller-utils/package.json
+index 1234567..890abcd 100644
+--- a/packages/controller-utils/package.json
++++ b/packages/controller-utils/package.json
+@@ -10,7 +10,7 @@
+   "dependencies": {
+-    "@metamask/transaction-controller": "^61.0.0"
++    "@metamask/transaction-controller": "^62.0.0"
+   },
+   "optionalDependencies": {
+-    "@metamask/some-optional": "^1.0.0"
++    "@metamask/some-optional": "^2.0.0"
+   }
+ }
+`;
+
+      when(getStdoutSpy)
+        .calledWith(
+          'git',
+          ['diff', '-U9999', 'abc123', 'HEAD', '--', '**/package.json'],
+          { cwd: '/path/to/project' },
+        )
+        .mockResolvedValue(diffWithDepsAndOptional);
+
+      when(jest.spyOn(packageManifestModule, 'readPackageManifest'))
+        .calledWith('/path/to/project/package.json')
+        .mockResolvedValue({
+          unvalidated: {
+            repository: 'https://github.com/example-org/example-repo',
+          },
+          validated: buildMockManifest(),
+        });
+
+      when(jest.spyOn(packageManifestModule, 'readPackageManifest'))
+        .calledWith('/path/to/project/packages/controller-utils/package.json')
+        .mockResolvedValue({
+          unvalidated: {},
+          validated: buildMockManifest({
+            name: '@metamask/controller-utils',
+          }),
+        });
+
+      jest
+        .spyOn(projectModule, 'getValidRepositoryUrl')
+        .mockResolvedValue('https://github.com/example-org/example-repo');
+
+      jest
+        .spyOn(changelogValidatorModule, 'validateChangelogs')
+        .mockResolvedValue([]);
+
+      const result = await checkDependencyBumps({
+        fromRef: 'abc123',
+        projectRoot: '/path/to/project',
+        stdout,
+        stderr,
+      });
+
+      // Should only detect dependencies change, not optionalDependencies
+      expect(result).toStrictEqual({
+        'controller-utils': {
+          packageName: '@metamask/controller-utils',
+          dependencyChanges: [
+            {
+              package: 'controller-utils',
+              dependency: '@metamask/transaction-controller',
+              type: 'dependencies',
+              oldVersion: '^61.0.0',
+              newVersion: '^62.0.0',
+            },
+          ],
+        },
+      });
+    });
+
     it('handles diff without proper file path', async () => {
       const getStdoutSpy = jest.spyOn(miscUtilsModule, 'getStdoutFromCommand');
 

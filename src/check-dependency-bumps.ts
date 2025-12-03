@@ -101,22 +101,32 @@ async function parseDiff(
       }
     }
 
-    // Detect dependency sections (excluding devDependencies)
+    // Detect dependency sections (excluding devDependencies and optionalDependencies)
     if (line.includes('"peerDependencies"')) {
       currentSection = 'peerDependencies';
     } else if (line.includes('"dependencies"')) {
       currentSection = 'dependencies';
-    } else if (line.includes('"devDependencies"')) {
-      // Skip devDependencies section
+    } else if (
+      line.includes('"devDependencies"') ||
+      line.includes('"optionalDependencies"')
+    ) {
+      // Skip devDependencies and optionalDependencies sections
       currentSection = null;
     }
 
     // Check if we're leaving a section
     if ((currentSection && line.trim() === '},') || line.trim() === '}') {
-      // Check if next line is another section or end of sections
+      // Check if next line is another section we care about
       const nextLine = lines[i + 1];
 
-      if (nextLine && !nextLine.includes('Dependencies"')) {
+      // Reset section unless next line starts a section we care about
+      // Check for exact section names to avoid false matches (e.g., peerDependencies contains "dependencies")
+      const isNextSectionDependencies =
+        nextLine && /^\s*"dependencies"\s*:/u.test(nextLine);
+      const isNextSectionPeerDependencies =
+        nextLine && /^\s*"peerDependencies"\s*:/u.test(nextLine);
+
+      if (!isNextSectionDependencies && !isNextSectionPeerDependencies) {
         currentSection = null;
       }
     }
