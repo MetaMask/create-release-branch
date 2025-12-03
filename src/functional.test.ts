@@ -1065,4 +1065,990 @@ __metadata:
       );
     });
   });
+
+  describe('check-deps command', () => {
+    it('detects dependency bumps and validates changelogs', async () => {
+      await withMonorepoProjectEnvironment(
+        {
+          packages: {
+            $root$: {
+              name: '@scope/monorepo',
+              version: '1.0.0',
+              directoryPath: '.',
+            },
+            a: {
+              name: '@scope/a',
+              version: '1.0.0',
+              directoryPath: 'packages/a',
+            },
+            b: {
+              name: '@scope/b',
+              version: '1.0.0',
+              directoryPath: 'packages/b',
+            },
+          },
+          workspaces: {
+            '.': ['packages/*'],
+          },
+          createInitialCommit: false,
+        },
+        async (environment) => {
+          // Set up initial state
+          await environment.updateJsonFileWithinPackage('a', 'package.json', {
+            dependencies: {
+              '@scope/b': '1.0.0',
+            },
+          });
+          // Format the JSON file so the diff parser can work with it
+          const initialPkg = await environment.readJsonFileWithinPackage(
+            'a',
+            'package.json',
+          );
+          await environment.writeFileWithinPackage(
+            'a',
+            'package.json',
+            `${JSON.stringify(initialPkg, null, 2)}\n`,
+          );
+          await environment.writeFileWithinPackage(
+            'a',
+            'CHANGELOG.md',
+            buildChangelog(`
+              ## [Unreleased]
+
+              [Unreleased]: https://github.com/example-org/example-repo
+            `),
+          );
+          await environment.createCommit('Initial commit');
+          const baseCommit = (
+            await environment.runCommand('git', ['rev-parse', 'HEAD'])
+          ).stdout.trim();
+
+          // Bump dependency version
+          await environment.updateJsonFileWithinPackage('a', 'package.json', {
+            dependencies: {
+              '@scope/b': '2.0.0',
+            },
+          });
+          // Format the JSON file again
+          const updatedPkg = await environment.readJsonFileWithinPackage(
+            'a',
+            'package.json',
+          );
+          await environment.writeFileWithinPackage(
+            'a',
+            'package.json',
+            `${JSON.stringify(updatedPkg, null, 2)}\n`,
+          );
+          await environment.createCommit('Bump @scope/b to 2.0.0');
+
+          // Run check-deps
+          const result = await environment.runCheckDeps({
+            fromRef: baseCommit,
+          });
+
+          // Should detect the dependency bump and report missing changelog entry
+          expect(result.exitCode).toBe(0);
+          expect(result.stdout).toContain('@scope/b');
+          expect(result.stdout).toContain('1.0.0');
+          expect(result.stdout).toContain('2.0.0');
+          // The error could be about missing section or missing entries
+          expect(
+            result.stderr.includes('Missing') ||
+              result.stderr.includes('No [Unreleased] section'),
+          ).toBe(true);
+        },
+      );
+    });
+
+    it('automatically fixes missing changelog entries with --fix', async () => {
+      await withMonorepoProjectEnvironment(
+        {
+          packages: {
+            $root$: {
+              name: '@scope/monorepo',
+              version: '1.0.0',
+              directoryPath: '.',
+            },
+            a: {
+              name: '@scope/a',
+              version: '1.0.0',
+              directoryPath: 'packages/a',
+            },
+            b: {
+              name: '@scope/b',
+              version: '1.0.0',
+              directoryPath: 'packages/b',
+            },
+          },
+          workspaces: {
+            '.': ['packages/*'],
+          },
+          createInitialCommit: false,
+        },
+        async (environment) => {
+          // Set up initial state
+          await environment.updateJsonFileWithinPackage('a', 'package.json', {
+            dependencies: {
+              '@scope/b': '1.0.0',
+            },
+          });
+          // Format the JSON file so the diff parser can work with it
+          const initialPkg = await environment.readJsonFileWithinPackage(
+            'a',
+            'package.json',
+          );
+          await environment.writeFileWithinPackage(
+            'a',
+            'package.json',
+            `${JSON.stringify(initialPkg, null, 2)}\n`,
+          );
+          await environment.writeFileWithinPackage(
+            'a',
+            'CHANGELOG.md',
+            buildChangelog(`
+              ## [Unreleased]
+
+              [Unreleased]: https://github.com/example-org/example-repo
+            `),
+          );
+          await environment.createCommit('Initial commit');
+          const baseCommit = (
+            await environment.runCommand('git', ['rev-parse', 'HEAD'])
+          ).stdout.trim();
+
+          // Bump dependency version
+          await environment.updateJsonFileWithinPackage('a', 'package.json', {
+            dependencies: {
+              '@scope/b': '2.0.0',
+            },
+          });
+          // Format the JSON file again
+          const updatedPkg = await environment.readJsonFileWithinPackage(
+            'a',
+            'package.json',
+          );
+          await environment.writeFileWithinPackage(
+            'a',
+            'package.json',
+            `${JSON.stringify(updatedPkg, null, 2)}\n`,
+          );
+          await environment.createCommit('Bump @scope/b to 2.0.0');
+
+          const result = await environment.runCheckDeps({
+            fromRef: baseCommit,
+            fix: true,
+            prNumber: '123',
+          });
+
+          // Should update the changelog
+          expect(result.exitCode).toBe(0);
+          // Verify changes were detected
+          expect(result.stdout).toContain('@scope/b');
+          // Verify the command tried to update
+          expect(result.stdout).toContain('Updating changelogs');
+          const changelog = await environment.readFileWithinPackage(
+            'a',
+            'CHANGELOG.md',
+          );
+          expect(changelog).toStrictEqual(
+            buildChangelog(`
+              ## [Unreleased]
+
+              ### Changed
+
+              - Bump \`@scope/b\` from \`1.0.0\` to \`2.0.0\` ([#123](https://github.com/example-org/example-repo/pull/123))
+
+              [Unreleased]: https://github.com/example-org/example-repo/
+            `),
+          );
+        },
+      );
+    });
+
+    it('detects peerDependency bumps', async () => {
+      await withMonorepoProjectEnvironment(
+        {
+          packages: {
+            $root$: {
+              name: '@scope/monorepo',
+              version: '1.0.0',
+              directoryPath: '.',
+            },
+            a: {
+              name: '@scope/a',
+              version: '1.0.0',
+              directoryPath: 'packages/a',
+            },
+            b: {
+              name: '@scope/b',
+              version: '1.0.0',
+              directoryPath: 'packages/b',
+            },
+          },
+          workspaces: {
+            '.': ['packages/*'],
+          },
+          createInitialCommit: false,
+        },
+        async (environment) => {
+          // Set up initial state
+          await environment.updateJsonFileWithinPackage('a', 'package.json', {
+            peerDependencies: {
+              '@scope/b': '1.0.0',
+            },
+          });
+          // Format the JSON file so the diff parser can work with it
+          const initialPkg = await environment.readJsonFileWithinPackage(
+            'a',
+            'package.json',
+          );
+          await environment.writeFileWithinPackage(
+            'a',
+            'package.json',
+            `${JSON.stringify(initialPkg, null, 2)}\n`,
+          );
+          await environment.writeFileWithinPackage(
+            'a',
+            'CHANGELOG.md',
+            buildChangelog(`
+              ## [Unreleased]
+
+              [Unreleased]: https://github.com/example-org/example-repo
+            `),
+          );
+          await environment.createCommit('Initial commit');
+          const baseCommit = (
+            await environment.runCommand('git', ['rev-parse', 'HEAD'])
+          ).stdout.trim();
+
+          // Bump peerDependency version
+          await environment.updateJsonFileWithinPackage('a', 'package.json', {
+            peerDependencies: {
+              '@scope/b': '2.0.0',
+            },
+          });
+          // Format the JSON file again
+          const updatedPkg = await environment.readJsonFileWithinPackage(
+            'a',
+            'package.json',
+          );
+          await environment.writeFileWithinPackage(
+            'a',
+            'package.json',
+            `${JSON.stringify(updatedPkg, null, 2)}\n`,
+          );
+          await environment.createCommit(
+            'Bump @scope/b peerDependency to 2.0.0',
+          );
+
+          const result = await environment.runCheckDeps({
+            fromRef: baseCommit,
+            fix: true,
+            prNumber: '456',
+          });
+
+          // Should detect and update peerDependency change
+          expect(result.exitCode).toBe(0);
+          const changelog = await environment.readFileWithinPackage(
+            'a',
+            'CHANGELOG.md',
+          );
+          expect(changelog).toStrictEqual(
+            buildChangelog(`
+              ## [Unreleased]
+
+              ### Changed
+
+              - **BREAKING:** Bump \`@scope/b\` from \`1.0.0\` to \`2.0.0\` ([#456](https://github.com/example-org/example-repo/pull/456))
+
+              [Unreleased]: https://github.com/example-org/example-repo/
+            `),
+          );
+        },
+      );
+    });
+
+    it('detects non-scoped package dependency bumps', async () => {
+      await withMonorepoProjectEnvironment(
+        {
+          packages: {
+            $root$: {
+              name: '@scope/monorepo',
+              version: '1.0.0',
+              directoryPath: '.',
+            },
+            a: {
+              name: '@scope/a',
+              version: '1.0.0',
+              directoryPath: 'packages/a',
+            },
+          },
+          workspaces: {
+            '.': ['packages/*'],
+          },
+          createInitialCommit: false,
+        },
+        async (environment) => {
+          // Set up initial state
+          await environment.updateJsonFileWithinPackage('a', 'package.json', {
+            dependencies: {
+              lodash: '4.17.20',
+            },
+          });
+          // Format the JSON file so the diff parser can work with it
+          const initialPkg = await environment.readJsonFileWithinPackage(
+            'a',
+            'package.json',
+          );
+          await environment.writeFileWithinPackage(
+            'a',
+            'package.json',
+            `${JSON.stringify(initialPkg, null, 2)}\n`,
+          );
+          await environment.writeFileWithinPackage(
+            'a',
+            'CHANGELOG.md',
+            buildChangelog(`
+              ## [Unreleased]
+
+              [Unreleased]: https://github.com/example-org/example-repo
+            `),
+          );
+          await environment.createCommit('Initial commit');
+          const baseCommit = (
+            await environment.runCommand('git', ['rev-parse', 'HEAD'])
+          ).stdout.trim();
+
+          // Bump non-scoped dependency
+          await environment.updateJsonFileWithinPackage('a', 'package.json', {
+            dependencies: {
+              lodash: '4.17.21',
+            },
+          });
+          // Format the JSON file again
+          const updatedPkg = await environment.readJsonFileWithinPackage(
+            'a',
+            'package.json',
+          );
+          await environment.writeFileWithinPackage(
+            'a',
+            'package.json',
+            `${JSON.stringify(updatedPkg, null, 2)}\n`,
+          );
+          await environment.createCommit('Bump lodash to 4.17.21');
+
+          const result = await environment.runCheckDeps({
+            fromRef: baseCommit,
+            fix: true,
+            prNumber: '789',
+          });
+
+          // Should detect and update non-scoped package change
+          expect(result.exitCode).toBe(0);
+          const changelog = await environment.readFileWithinPackage(
+            'a',
+            'CHANGELOG.md',
+          );
+          expect(changelog).toStrictEqual(
+            buildChangelog(`
+              ## [Unreleased]
+
+              ### Changed
+
+              - Bump \`lodash\` from \`4.17.20\` to \`4.17.21\` ([#789](https://github.com/example-org/example-repo/pull/789))
+
+              [Unreleased]: https://github.com/example-org/example-repo/
+            `),
+          );
+        },
+      );
+    });
+
+    it('validates existing changelog entries correctly', async () => {
+      await withMonorepoProjectEnvironment(
+        {
+          packages: {
+            $root$: {
+              name: '@scope/monorepo',
+              version: '1.0.0',
+              directoryPath: '.',
+            },
+            a: {
+              name: '@scope/a',
+              version: '1.0.0',
+              directoryPath: 'packages/a',
+            },
+            b: {
+              name: '@scope/b',
+              version: '1.0.0',
+              directoryPath: 'packages/b',
+            },
+          },
+          workspaces: {
+            '.': ['packages/*'],
+          },
+          createInitialCommit: false,
+        },
+        async (environment) => {
+          // Set up initial state
+          await environment.updateJsonFileWithinPackage('a', 'package.json', {
+            dependencies: {
+              '@scope/b': '1.0.0',
+            },
+          });
+          // Format the JSON file so the diff parser can work with it
+          const initialPkg = await environment.readJsonFileWithinPackage(
+            'a',
+            'package.json',
+          );
+          await environment.writeFileWithinPackage(
+            'a',
+            'package.json',
+            `${JSON.stringify(initialPkg, null, 2)}\n`,
+          );
+          await environment.writeFileWithinPackage(
+            'a',
+            'CHANGELOG.md',
+            buildChangelog(`
+              ## [Unreleased]
+
+              ### Changed
+
+              - Bump \`@scope/b\` from \`1.0.0\` to \`2.0.0\` ([#123](https://github.com/example-org/example-repo/pull/123))
+
+              [Unreleased]: https://github.com/example-org/example-repo/
+            `),
+          );
+          await environment.createCommit('Initial commit');
+          const baseCommit = (
+            await environment.runCommand('git', ['rev-parse', 'HEAD'])
+          ).stdout.trim();
+
+          // Bump dependency version
+          await environment.updateJsonFileWithinPackage('a', 'package.json', {
+            dependencies: {
+              '@scope/b': '2.0.0',
+            },
+          });
+          // Format the JSON file again
+          const updatedPkg = await environment.readJsonFileWithinPackage(
+            'a',
+            'package.json',
+          );
+          await environment.writeFileWithinPackage(
+            'a',
+            'package.json',
+            `${JSON.stringify(updatedPkg, null, 2)}\n`,
+          );
+          await environment.createCommit('Bump @scope/b to 2.0.0');
+
+          // Run check-deps
+          const result = await environment.runCheckDeps({
+            fromRef: baseCommit,
+          });
+
+          // Should validate that changelog entry exists
+          expect(result.exitCode).toBe(0);
+          expect(result.stdout).toContain('All entries present');
+          expect(result.stderr).not.toContain('Missing');
+        },
+      );
+    });
+
+    it('handles multiple dependency bumps in the same package', async () => {
+      await withMonorepoProjectEnvironment(
+        {
+          packages: {
+            $root$: {
+              name: '@scope/monorepo',
+              version: '1.0.0',
+              directoryPath: '.',
+            },
+            a: {
+              name: '@scope/a',
+              version: '1.0.0',
+              directoryPath: 'packages/a',
+            },
+            b: {
+              name: '@scope/b',
+              version: '1.0.0',
+              directoryPath: 'packages/b',
+            },
+            c: {
+              name: '@scope/c',
+              version: '1.0.0',
+              directoryPath: 'packages/c',
+            },
+          },
+          workspaces: {
+            '.': ['packages/*'],
+          },
+          createInitialCommit: false,
+        },
+        async (environment) => {
+          // Set up initial state
+          await environment.updateJsonFileWithinPackage('a', 'package.json', {
+            dependencies: {
+              '@scope/b': '1.0.0',
+              '@scope/c': '1.0.0',
+            },
+          });
+          // Format the JSON file so the diff parser can work with it
+          const initialPkg = await environment.readJsonFileWithinPackage(
+            'a',
+            'package.json',
+          );
+          await environment.writeFileWithinPackage(
+            'a',
+            'package.json',
+            `${JSON.stringify(initialPkg, null, 2)}\n`,
+          );
+          await environment.writeFileWithinPackage(
+            'a',
+            'CHANGELOG.md',
+            buildChangelog(`
+              ## [Unreleased]
+
+              [Unreleased]: https://github.com/example-org/example-repo
+            `),
+          );
+          await environment.createCommit('Initial commit');
+          const baseCommit = (
+            await environment.runCommand('git', ['rev-parse', 'HEAD'])
+          ).stdout.trim();
+
+          // Bump multiple dependencies
+          await environment.updateJsonFileWithinPackage('a', 'package.json', {
+            dependencies: {
+              '@scope/b': '2.0.0',
+              '@scope/c': '2.0.0',
+            },
+          });
+          // Format the JSON file again
+          const updatedPkg = await environment.readJsonFileWithinPackage(
+            'a',
+            'package.json',
+          );
+          await environment.writeFileWithinPackage(
+            'a',
+            'package.json',
+            `${JSON.stringify(updatedPkg, null, 2)}\n`,
+          );
+          await environment.createCommit('Bump multiple dependencies');
+
+          const result = await environment.runCheckDeps({
+            fromRef: baseCommit,
+            fix: true,
+            prNumber: '999',
+          });
+
+          // Should detect and update all dependency changes
+          expect(result.exitCode).toBe(0);
+          const changelog = await environment.readFileWithinPackage(
+            'a',
+            'CHANGELOG.md',
+          );
+          expect(changelog).toStrictEqual(
+            buildChangelog(`
+              ## [Unreleased]
+
+              ### Changed
+
+              - Bump \`@scope/b\` from \`1.0.0\` to \`2.0.0\` ([#999](https://github.com/example-org/example-repo/pull/999))
+              - Bump \`@scope/c\` from \`1.0.0\` to \`2.0.0\` ([#999](https://github.com/example-org/example-repo/pull/999))
+
+              [Unreleased]: https://github.com/example-org/example-repo/
+            `),
+          );
+        },
+      );
+    });
+
+    it('orders BREAKING changes before regular dependencies', async () => {
+      await withMonorepoProjectEnvironment(
+        {
+          packages: {
+            $root$: {
+              name: '@scope/monorepo',
+              version: '1.0.0',
+              directoryPath: '.',
+            },
+            a: {
+              name: '@scope/a',
+              version: '1.0.0',
+              directoryPath: 'packages/a',
+            },
+            b: {
+              name: '@scope/b',
+              version: '1.0.0',
+              directoryPath: 'packages/b',
+            },
+            c: {
+              name: '@scope/c',
+              version: '1.0.0',
+              directoryPath: 'packages/c',
+            },
+          },
+          workspaces: {
+            '.': ['packages/*'],
+          },
+          createInitialCommit: false,
+        },
+        async (environment) => {
+          // Set up initial state
+          await environment.updateJsonFileWithinPackage('a', 'package.json', {
+            dependencies: {
+              '@scope/b': '1.0.0',
+              '@scope/c': '1.0.0',
+            },
+            peerDependencies: {
+              '@scope/b': '1.0.0',
+            },
+          });
+          // Format the JSON file so the diff parser can work with it
+          const initialPkg = await environment.readJsonFileWithinPackage(
+            'a',
+            'package.json',
+          );
+          await environment.writeFileWithinPackage(
+            'a',
+            'package.json',
+            `${JSON.stringify(initialPkg, null, 2)}\n`,
+          );
+          await environment.writeFileWithinPackage(
+            'a',
+            'CHANGELOG.md',
+            buildChangelog(`
+              ## [Unreleased]
+
+              [Unreleased]: https://github.com/example-org/example-repo
+            `),
+          );
+          await environment.createCommit('Initial commit');
+          const baseCommit = (
+            await environment.runCommand('git', ['rev-parse', 'HEAD'])
+          ).stdout.trim();
+
+          // Bump both dependency and peerDependency
+          await environment.updateJsonFileWithinPackage('a', 'package.json', {
+            dependencies: {
+              '@scope/b': '2.0.0',
+              '@scope/c': '2.0.0',
+            },
+            peerDependencies: {
+              '@scope/b': '2.0.0',
+            },
+          });
+          // Format the JSON file again
+          const updatedPkg = await environment.readJsonFileWithinPackage(
+            'a',
+            'package.json',
+          );
+          await environment.writeFileWithinPackage(
+            'a',
+            'package.json',
+            `${JSON.stringify(updatedPkg, null, 2)}\n`,
+          );
+          await environment.createCommit(
+            'Bump dependencies and peerDependencies',
+          );
+
+          const result = await environment.runCheckDeps({
+            fromRef: baseCommit,
+            fix: true,
+            prNumber: '111',
+          });
+
+          // Should order BREAKING (peerDeps) first, then regular deps
+          expect(result.exitCode).toBe(0);
+          const changelog = await environment.readFileWithinPackage(
+            'a',
+            'CHANGELOG.md',
+          );
+
+          // Find the Changed section
+          const changedSectionStart = changelog.indexOf('### Changed');
+          expect(changedSectionStart).toBeGreaterThan(-1);
+
+          // Extract the Changed section content
+          const changedSection = changelog.substring(changedSectionStart);
+
+          // Find BREAKING entry (for @scope/b peerDependency)
+          const breakingIndex = changedSection.indexOf('**BREAKING:**');
+          expect(breakingIndex).toBeGreaterThan(-1);
+
+          // Find regular dependency entries (for @scope/b and @scope/c dependencies)
+          const regularDepBIndex = changedSection.indexOf('Bump `@scope/b`');
+          const regularDepCIndex = changedSection.indexOf('Bump `@scope/c`');
+
+          // BREAKING entry should appear before regular dependency entries
+          expect(regularDepBIndex).toBeGreaterThan(-1);
+          expect(regularDepCIndex).toBeGreaterThan(-1);
+          expect(breakingIndex).toBeLessThan(regularDepBIndex);
+          expect(breakingIndex).toBeLessThan(regularDepCIndex);
+        },
+      );
+    });
+
+    it('updates existing changelog entry when dependency is bumped again', async () => {
+      await withMonorepoProjectEnvironment(
+        {
+          packages: {
+            $root$: {
+              name: '@scope/monorepo',
+              version: '1.0.0',
+              directoryPath: '.',
+            },
+            a: {
+              name: '@scope/a',
+              version: '1.0.0',
+              directoryPath: 'packages/a',
+            },
+            b: {
+              name: '@scope/b',
+              version: '1.0.0',
+              directoryPath: 'packages/b',
+            },
+          },
+          workspaces: {
+            '.': ['packages/*'],
+          },
+          createInitialCommit: false,
+        },
+        async (environment) => {
+          // Set up initial state with existing changelog entry
+          await environment.updateJsonFileWithinPackage('a', 'package.json', {
+            dependencies: {
+              '@scope/b': '1.0.0',
+            },
+          });
+          // Format the JSON file so the diff parser can work with it
+          const initialPkg = await environment.readJsonFileWithinPackage(
+            'a',
+            'package.json',
+          );
+          await environment.writeFileWithinPackage(
+            'a',
+            'package.json',
+            `${JSON.stringify(initialPkg, null, 2)}\n`,
+          );
+          await environment.writeFileWithinPackage(
+            'a',
+            'CHANGELOG.md',
+            buildChangelog(`
+              ## [Unreleased]
+
+              ### Changed
+
+              - Bump \`@scope/b\` from \`1.0.0\` to \`2.0.0\` ([#100](https://github.com/example-org/example-repo/pull/100))
+
+              [Unreleased]: https://github.com/example-org/example-repo/
+            `),
+          );
+          await environment.createCommit('Initial commit');
+          const baseCommit = (
+            await environment.runCommand('git', ['rev-parse', 'HEAD'])
+          ).stdout.trim();
+
+          // Bump dependency version again (from 2.0.0 to 3.0.0)
+          await environment.updateJsonFileWithinPackage('a', 'package.json', {
+            dependencies: {
+              '@scope/b': '3.0.0',
+            },
+          });
+          // Format the JSON file again
+          const updatedPkg = await environment.readJsonFileWithinPackage(
+            'a',
+            'package.json',
+          );
+          await environment.writeFileWithinPackage(
+            'a',
+            'package.json',
+            `${JSON.stringify(updatedPkg, null, 2)}\n`,
+          );
+          await environment.createCommit('Bump @scope/b to 3.0.0');
+
+          const result = await environment.runCheckDeps({
+            fromRef: baseCommit,
+            fix: true,
+            prNumber: '200',
+          });
+
+          // Should update the existing entry with new version and preserve old PR
+          expect(result.exitCode).toBe(0);
+          const changelog = await environment.readFileWithinPackage(
+            'a',
+            'CHANGELOG.md',
+          );
+          expect(changelog).toStrictEqual(
+            buildChangelog(`
+              ## [Unreleased]
+
+              ### Changed
+
+              - Bump \`@scope/b\` from \`1.0.0\` to \`3.0.0\` ([#100](https://github.com/example-org/example-repo/pull/100), [#200](https://github.com/example-org/example-repo/pull/200))
+
+              [Unreleased]: https://github.com/example-org/example-repo/
+            `),
+          );
+        },
+      );
+    });
+
+    it('handles renamed packages correctly', async () => {
+      await withMonorepoProjectEnvironment(
+        {
+          packages: {
+            $root$: {
+              name: '@scope/monorepo',
+              version: '1.0.0',
+              directoryPath: '.',
+            },
+            a: {
+              name: '@scope/renamed-package',
+              version: '1.0.0',
+              directoryPath: 'packages/a',
+            },
+            b: {
+              name: '@scope/b',
+              version: '1.0.0',
+              directoryPath: 'packages/b',
+            },
+          },
+          workspaces: {
+            '.': ['packages/*'],
+          },
+          createInitialCommit: false,
+        },
+        async (environment) => {
+          // Set up initial state with package rename info in scripts
+          await environment.updateJsonFileWithinPackage('a', 'package.json', {
+            name: '@scope/renamed-package',
+            dependencies: {
+              '@scope/b': '1.0.0',
+            },
+            scripts: {
+              'auto-changelog':
+                'auto-changelog --tag-prefix-before-package-rename old-package-name@ --version-before-package-rename 5.0.1',
+            },
+          });
+          // Format the JSON file so the diff parser can work with it
+          const initialPkg = await environment.readJsonFileWithinPackage(
+            'a',
+            'package.json',
+          );
+          await environment.writeFileWithinPackage(
+            'a',
+            'package.json',
+            `${JSON.stringify(initialPkg, null, 2)}\n`,
+          );
+          await environment.writeFileWithinPackage(
+            'a',
+            'CHANGELOG.md',
+            buildChangelog(`
+              ## [Unreleased]
+
+              [Unreleased]: https://github.com/example-org/example-repo/
+            `),
+          );
+          await environment.createCommit('Initial commit');
+          const baseCommit = (
+            await environment.runCommand('git', ['rev-parse', 'HEAD'])
+          ).stdout.trim();
+
+          // Bump dependency version
+          await environment.updateJsonFileWithinPackage('a', 'package.json', {
+            name: '@scope/renamed-package',
+            dependencies: {
+              '@scope/b': '2.0.0',
+            },
+            scripts: {
+              'auto-changelog':
+                'auto-changelog --tag-prefix-before-package-rename old-package-name@ --version-before-package-rename 5.0.1',
+            },
+          });
+          // Format the JSON file again
+          const updatedPkg = await environment.readJsonFileWithinPackage(
+            'a',
+            'package.json',
+          );
+          await environment.writeFileWithinPackage(
+            'a',
+            'package.json',
+            `${JSON.stringify(updatedPkg, null, 2)}\n`,
+          );
+          await environment.createCommit('Bump @scope/b to 2.0.0');
+
+          const result = await environment.runCheckDeps({
+            fromRef: baseCommit,
+            fix: true,
+            prNumber: '300',
+          });
+
+          // Should detect and update dependency change even with package rename info
+          expect(result.exitCode).toBe(0);
+          const changelog = await environment.readFileWithinPackage(
+            'a',
+            'CHANGELOG.md',
+          );
+          expect(changelog).toStrictEqual(
+            buildChangelog(`
+              ## [Unreleased]
+
+              ### Changed
+
+              - Bump \`@scope/b\` from \`1.0.0\` to \`2.0.0\` ([#300](https://github.com/example-org/example-repo/pull/300))
+
+              [Unreleased]: https://github.com/example-org/example-repo/
+            `),
+          );
+        },
+      );
+    });
+
+    it('reports no changes when no dependency bumps are found', async () => {
+      await withMonorepoProjectEnvironment(
+        {
+          packages: {
+            $root$: {
+              name: '@scope/monorepo',
+              version: '1.0.0',
+              directoryPath: '.',
+            },
+            a: {
+              name: '@scope/a',
+              version: '1.0.0',
+              directoryPath: 'packages/a',
+            },
+          },
+          workspaces: {
+            '.': ['packages/*'],
+          },
+          createInitialCommit: false,
+        },
+        async (environment) => {
+          await environment.createCommit('Initial commit');
+          const baseCommit = (
+            await environment.runCommand('git', ['rev-parse', 'HEAD'])
+          ).stdout.trim();
+
+          // Make a non-dependency change
+          await environment.writeFileWithinPackage('a', 'dummy.txt', 'content');
+          await environment.createCommit('Non-dependency change');
+
+          // Run check-deps
+          const result = await environment.runCheckDeps({
+            fromRef: baseCommit,
+          });
+
+          // Should report no dependency bumps (or no package.json changes)
+          expect(result.exitCode).toBe(0);
+          expect(
+            result.stdout.includes('No dependency version bumps found') ||
+              result.stdout.includes('No package.json changes found'),
+          ).toBe(true);
+        },
+      );
+    });
+  });
 });
