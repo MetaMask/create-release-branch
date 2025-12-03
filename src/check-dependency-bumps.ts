@@ -115,7 +115,7 @@ async function parseDiff(
     }
 
     // Check if we're leaving a section
-    if ((currentSection && line.trim() === '},') || line.trim() === '}') {
+    if (currentSection && (line.trim() === '},' || line.trim() === '}')) {
       // Check if next line is another section we care about
       const nextLine = lines[i + 1];
 
