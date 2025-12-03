@@ -82,6 +82,8 @@ async function parseDiff(
       const match = line.match(/b\/(.+)/u);
 
       if (match) {
+        // Reset section state when starting a new file (diff --git always starts a new file)
+        currentSection = null;
         currentFile = match[1];
       }
     }

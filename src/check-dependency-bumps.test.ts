@@ -2261,6 +2261,96 @@ diff --git a/packages/controller-utils/package.json b/packages/controller-utils/
       expect(result).toStrictEqual({});
     });
 
+    it('resets section state when switching to a different file', async () => {
+      const getStdoutSpy = jest.spyOn(miscUtilsModule, 'getStdoutFromCommand');
+
+      // Diff with two different files - section state should reset between them
+      const diffWithMultipleFiles = `
+diff --git a/packages/package-a/package.json b/packages/package-a/package.json
+index 1234567..890abcd 100644
+--- a/packages/package-a/package.json
++++ b/packages/package-a/package.json
+@@ -10,7 +10,7 @@
+   "dependencies": {
+-    "@metamask/transaction-controller": "^61.0.0"
++    "@metamask/transaction-controller": "^62.0.0"
+   }
+ }
+diff --git a/packages/package-b/package.json b/packages/package-b/package.json
+index abc1234..def5678 100644
+--- a/packages/package-b/package.json
++++ b/packages/package-b/package.json
+@@ -10,7 +10,7 @@
+   "peerDependencies": {
+-    "@metamask/network-controller": "^5.0.0"
++    "@metamask/network-controller": "^6.0.0"
+   }
+ }
+`;
+
+      when(getStdoutSpy)
+        .calledWith(
+          'git',
+          ['diff', '-U9999', 'abc123', 'HEAD', '--', '**/package.json'],
+          { cwd: '/path/to/project' },
+        )
+        .mockResolvedValue(diffWithMultipleFiles);
+
+      when(jest.spyOn(packageManifestModule, 'readPackageManifest'))
+        .calledWith('/path/to/project/package.json')
+        .mockResolvedValue({
+          unvalidated: {
+            repository: 'https://github.com/example-org/example-repo',
+          },
+          validated: buildMockManifest(),
+        });
+
+      when(jest.spyOn(packageManifestModule, 'readPackageManifest'))
+        .calledWith('/path/to/project/packages/package-a/package.json')
+        .mockResolvedValue({
+          unvalidated: {},
+          validated: buildMockManifest({
+            name: '@metamask/package-a',
+          }),
+        });
+
+      when(jest.spyOn(packageManifestModule, 'readPackageManifest'))
+        .calledWith('/path/to/project/packages/package-b/package.json')
+        .mockResolvedValue({
+          unvalidated: {},
+          validated: buildMockManifest({
+            name: '@metamask/package-b',
+          }),
+        });
+
+      jest
+        .spyOn(projectModule, 'getValidRepositoryUrl')
+        .mockResolvedValue('https://github.com/example-org/example-repo');
+
+      jest
+        .spyOn(changelogValidatorModule, 'validateChangelogs')
+        .mockResolvedValue([]);
+
+      const result = await checkDependencyBumps({
+        fromRef: 'abc123',
+        projectRoot: '/path/to/project',
+        stdout,
+        stderr,
+      });
+
+      // Should detect changes in both files with correct section types
+      expect(result['package-a']).toBeDefined();
+      expect(result['package-a'].dependencyChanges).toHaveLength(1);
+      expect(result['package-a'].dependencyChanges[0].type).toBe(
+        'dependencies',
+      );
+      expect(result['package-b']).toBeDefined();
+      expect(result['package-b'].dependencyChanges).toHaveLength(1);
+      expect(result['package-b'].dependencyChanges[0].type).toBe(
+        'peerDependencies',
+      );
+    });
+
     it('detects package version changes for release detection', async () => {
       const getStdoutSpy = jest.spyOn(miscUtilsModule, 'getStdoutFromCommand');
 
