@@ -49,6 +49,28 @@ describe('check-dependency-bumps', () => {
       expect(result).toStrictEqual({});
     });
 
+    it('returns empty object when on custom defaultBranch without fromRef', async () => {
+      const stdoutWriteSpy = jest.spyOn(stdout, 'write');
+      jest
+        .spyOn(repoModule, 'getCurrentBranchName')
+        .mockResolvedValue('develop');
+
+      const result = await checkDependencyBumps({
+        defaultBranch: 'develop',
+        projectRoot: '/path/to/project',
+        stdout,
+        stderr,
+      });
+
+      expect(result).toStrictEqual({});
+      expect(stdoutWriteSpy).toHaveBeenCalledWith(
+        expect.stringContaining('📌 Current branch: develop'),
+      );
+      expect(stdoutWriteSpy).toHaveBeenCalledWith(
+        expect.stringContaining('⚠️  You are on the develop branch'),
+      );
+    });
+
     it('auto-detects merge base when fromRef is not provided', async () => {
       const stdoutWriteSpy = jest.spyOn(stdout, 'write');
       const getStdoutSpy = jest.spyOn(miscUtilsModule, 'getStdoutFromCommand');

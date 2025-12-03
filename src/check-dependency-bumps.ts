@@ -296,10 +296,10 @@ export async function checkDependencyBumps({
     const currentBranch = await getCurrentBranchName(projectRoot);
     stdout.write(`\n📌 Current branch: ${currentBranch}\n`);
 
-    // Skip if we're on main/master
-    if (currentBranch === 'main' || currentBranch === 'master') {
+    // Skip if we're on the default branch
+    if (currentBranch === defaultBranch) {
       stdout.write(
-        '⚠️  You are on the main/master branch. Please specify commits to compare or switch to a feature branch.\n',
+        `⚠️  You are on the ${defaultBranch} branch. Please specify commits to compare or switch to a feature branch.\n`,
       );
       return {};
     }
