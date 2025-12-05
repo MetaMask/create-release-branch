@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Auto-updates changelogs with `--fix` flag, preserving PR history
   - Detects package releases and validates/updates in correct changelog section (Unreleased vs specific version)
   - Smart PR concatenation when same dependency bumped multiple times
-  - Usage: `yarn check-dependency-bumps --fix --pr <number>`
+  - Usage: `yarn create-release-branch check-deps --fix --pr <number>`
 
 ## [4.1.3]
 
