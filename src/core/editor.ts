@@ -1,6 +1,5 @@
 import { getErrorMessage } from '@metamask/utils';
 
-import { getEnvironmentVariables } from './env.js';
 import { debug, resolveExecutable } from './misc-utils.js';
 
 /**
@@ -18,23 +17,25 @@ export type Editor = {
 
 /**
  * Looks for an executable that represents a code editor on your computer. Tries
- * the `EDITOR` environment variable first, falling back to the executable that
- * represents VSCode (`code`).
+ * the given file path first, falling back to the executable that represents
+ * VSCode (`code`).
  *
+ * @param possiblePath - A file path to test for existence.
  * @returns A promise that contains information about the found editor (path and
  * arguments), or null otherwise.
  */
-export async function determineEditor(): Promise<Editor | null> {
+export async function determineEditor(
+  possiblePath: string | undefined,
+): Promise<Editor | null> {
   let executablePath: string | null = null;
   const executableArgs: string[] = [];
-  const { EDITOR } = getEnvironmentVariables();
 
-  if (EDITOR !== undefined) {
+  if (possiblePath !== undefined) {
     try {
-      executablePath = await resolveExecutable(EDITOR);
+      executablePath = await resolveExecutable(possiblePath);
     } catch (error) {
       debug(
-        `Could not resolve executable ${EDITOR} (${getErrorMessage(error)}), falling back to VSCode`,
+        `Could not resolve executable ${possiblePath} (${getErrorMessage(error)}), falling back to VSCode`,
       );
     }
   }

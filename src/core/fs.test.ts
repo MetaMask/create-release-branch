@@ -13,7 +13,7 @@ import {
   ensureDirectoryPathExists,
   removeFile,
 } from './fs.js';
-import { withSandbox } from '../tests/helpers.js';
+import { withSandbox } from '../../tests/helpers.js';
 
 jest.mock('@metamask/action-utils');
 

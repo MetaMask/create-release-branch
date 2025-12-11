@@ -2,12 +2,14 @@ import type { WriteStream } from 'fs';
 
 import { determineInitialParameters } from './initial-parameters.js';
 import { followMonorepoWorkflow } from './monorepo-workflow-operations.js';
-import { startUI } from './ui.js';
+import { start as startUI } from '../ui/start.js';
 
 /**
- * The main function for this tool. Designed to not access `process.argv`,
- * `process.env`, `process.cwd()`, `process.stdout`, or `process.stderr`
- * directly so as to be more easily testable.
+ * The entrypoint for this tool.
+ *
+ * Designed to not access `process.argv`, `process.env`, `process.cwd()`,
+ * `process.stdout`, or `process.stderr` directly so as to be more easily
+ * testable.
  *
  * @param args - The arguments.
  * @param args.argv - The name of this executable and its arguments (as obtained
@@ -16,7 +18,7 @@ import { startUI } from './ui.js';
  * @param args.stdout - A stream that can be used to write to standard out.
  * @param args.stderr - A stream that can be used to write to standard error.
  */
-export async function main({
+export async function run({
   argv,
   cwd,
   stdout,

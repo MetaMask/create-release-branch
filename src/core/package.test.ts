@@ -15,13 +15,13 @@ import {
   updatePackageChangelog,
 } from './package.js';
 import * as repoModule from './repo.js';
-import { buildChangelog, withSandbox } from '../tests/helpers.js';
+import { buildChangelog, withSandbox } from '../../tests/helpers.js';
 import {
   buildMockPackage,
   buildMockProject,
   buildMockManifest,
   createNoopWriteStream,
-} from '../tests/unit/helpers.js';
+} from '../../tests/unit/helpers.js';
 
 jest.mock('./package-manifest');
 jest.mock('./repo');

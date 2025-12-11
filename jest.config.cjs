@@ -61,7 +61,7 @@ module.exports = {
     '/src/command-line-arguments.ts',
     '/src/ui.ts',
     '/src/ui/types.ts',
-    '/src/dirname.ts',
+    '/src/get-source-directory-path.ts',
   ],
 
   // Indicates which provider should be used to instrument code for coverage

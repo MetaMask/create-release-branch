@@ -5,16 +5,16 @@ import path from 'path';
 import * as commandLineArgumentsModule from './command-line-arguments.js';
 import * as envModule from './env.js';
 import { determineInitialParameters } from './initial-parameters.js';
-import * as projectModule from './project.js';
 import {
   buildMockProject,
   buildMockPackage,
   createNoopWriteStream,
-} from '../tests/unit/helpers.js';
+} from '../../tests/unit/helpers.js';
+import * as projectModule from '../core/project.js';
 
+jest.mock('../core/project');
 jest.mock('./command-line-arguments');
 jest.mock('./env');
-jest.mock('./project');
 
 describe('initial-parameters', () => {
   describe('determineInitialParameters', () => {

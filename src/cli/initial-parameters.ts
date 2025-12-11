@@ -2,19 +2,9 @@ import os from 'os';
 import path from 'path';
 
 import { readCommandLineArguments } from './command-line-arguments.js';
-import { WriteStreamLike } from './fs.js';
-import { readProject, Project } from './project.js';
-
-/**
- * The type of release being created as determined by the parent release.
- *
- * - An *ordinary* release includes features or fixes applied against the latest
- *   release and is designated by bumping the first part of that release's
- *   version string.
- * - A *backport* release includes fixes applied against a previous release and
- *   is designated by bumping the second part of that release's version string.
- */
-export type ReleaseType = 'ordinary' | 'backport';
+import { WriteStreamLike } from '../core/fs.js';
+import { readProject, Project } from '../core/project.js';
+import { ReleaseType } from '../core/types.js';
 
 /**
  * Various pieces of information that the tool uses to run, derived from

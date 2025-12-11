@@ -4,8 +4,15 @@ const ROOT_DIR = path.resolve(__dirname, '../../..');
 
 /**
  * The path to the entrypoint of the tool, locally.
+ *
+ * This needs to match `bin/create-release-branch.js`.
  */
-export const TOOL_EXECUTABLE_PATH = path.join(ROOT_DIR, 'src', 'cli.ts');
+export const TOOL_EXECUTABLE_PATH = path.join(
+  ROOT_DIR,
+  'src',
+  'scripts',
+  'cli.ts',
+);
 
 /**
  * The path to `tsx`, locally.

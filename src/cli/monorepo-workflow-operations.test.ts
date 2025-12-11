@@ -3,33 +3,35 @@ import { when } from 'jest-when';
 import path from 'path';
 import { MockWritable } from 'stdio-mock';
 
-import { determineEditor } from './editor.js';
-import type { Editor } from './editor.js';
+import { getEnvironmentVariables } from './env.js';
 import { followMonorepoWorkflow } from './monorepo-workflow-operations.js';
-import { Project } from './project.js';
-import { executeReleasePlan, planRelease } from './release-plan.js';
-import type { ReleasePlan } from './release-plan.js';
+import { withSandbox, Sandbox, isErrorWithCode } from '../../tests/helpers.js';
+import { buildMockProject, Require } from '../../tests/unit/helpers.js';
+import { determineEditor } from '../core/editor.js';
+import type { Editor } from '../core/editor.js';
+import { Project } from '../core/project.js';
+import { executeReleasePlan, planRelease } from '../core/release-plan.js';
+import type { ReleasePlan } from '../core/release-plan.js';
 import {
   generateReleaseSpecificationTemplateForMonorepo,
   waitForUserToEditReleaseSpecification,
   validateReleaseSpecification,
-} from './release-specification.js';
-import type { ReleaseSpecification } from './release-specification.js';
-import { commitAllChanges } from './repo.js';
-import * as workflowOperationsModule from './workflow-operations.js';
+} from '../core/release-specification.js';
+import type { ReleaseSpecification } from '../core/release-specification.js';
+import { commitAllChanges } from '../core/repo.js';
+import * as workflowOperationsModule from '../core/workflow-operations.js';
 import {
   deduplicateDependencies,
   fixConstraints,
   updateYarnLockfile,
-} from './yarn-commands.js';
-import { withSandbox, Sandbox, isErrorWithCode } from '../tests/helpers.js';
-import { buildMockProject, Require } from '../tests/unit/helpers.js';
+} from '../core/yarn-commands.js';
 
-jest.mock('./editor');
-jest.mock('./release-plan');
-jest.mock('./release-specification');
-jest.mock('./repo');
-jest.mock('./yarn-commands.js');
+jest.mock('../core/editor');
+jest.mock('../core/release-plan');
+jest.mock('../core/release-specification');
+jest.mock('../core/repo');
+jest.mock('../core/yarn-commands.js');
+jest.mock('./env');
 
 const determineEditorMock = jest.mocked(determineEditor);
 const generateReleaseSpecificationTemplateForMonorepoMock = jest.mocked(
@@ -47,6 +49,7 @@ const commitAllChangesMock = jest.mocked(commitAllChanges);
 const fixConstraintsMock = jest.mocked(fixConstraints);
 const updateYarnLockfileMock = jest.mocked(updateYarnLockfile);
 const deduplicateDependenciesMock = jest.mocked(deduplicateDependencies);
+const getEnvironmentVariablesMock = jest.mocked(getEnvironmentVariables);
 
 /**
  * Tests the given path to determine whether it represents a file.
@@ -248,6 +251,8 @@ async function setupFollowMonorepoWorkflow({
   when(commitAllChangesMock)
     .calledWith(projectDirectoryPath, '')
     .mockResolvedValue();
+
+  getEnvironmentVariablesMock.mockReturnValue({});
 
   if (doesReleaseSpecFileExist) {
     await fs.promises.writeFile(

@@ -4,9 +4,9 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  root: 'src/ui',
+  root: 'src/ui/app',
   build: {
-    outDir: '../../dist/ui',
+    outDir: '../../../dist/ui/build',
     emptyOutDir: true,
   },
 });
