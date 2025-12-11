@@ -8,10 +8,10 @@ import { knownKeysOf } from './utils.js';
  * A set of configuration options for a {@link LocalMonorepo}. In addition
  * to the options listed in {@link LocalRepoOptions}, these include:
  *
- * packages - The known packages within this repo (including the
- * root).
+ * Properties
  *
- * workspaces - The known workspaces within this repo.
+ * - `packages` - The known packages within this repo (including the root).
+ * - `workspaces` - The known workspaces within this repo.
  */
 export type LocalMonorepoOptions<WorkspacePackageNickname extends string> = {
   packages: Record<WorkspacePackageNickname, PackageSpecification>;
