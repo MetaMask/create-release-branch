@@ -41,10 +41,12 @@ async function ensureFileEntryDoesNotExist(entryPath: string): Promise<void> {
       typeof error === 'object' &&
       error !== null &&
       hasProperty(error, 'code') &&
-      error.code !== 'ENOENT'
+      error.code === 'ENOENT'
     ) {
-      throw error;
+      return;
     }
+
+    throw error;
   }
 }
 
