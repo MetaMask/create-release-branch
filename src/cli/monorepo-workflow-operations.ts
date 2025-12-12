@@ -1,32 +1,33 @@
 import type { WriteStream } from 'fs';
 import path from 'path';
 
-import { determineEditor } from './editor.js';
+import { getEnvironmentVariables } from './env.js';
+import { determineEditor } from '../core/editor.js';
 import {
   ensureDirectoryPathExists,
   fileExists,
   removeFile,
   writeFile,
-} from './fs.js';
-import { ReleaseType } from './initial-parameters.js';
+} from '../core/fs.js';
 import {
   Project,
   updateChangelogsForChangedPackages,
   restoreChangelogsForSkippedPackages,
-} from './project.js';
-import { planRelease, executeReleasePlan } from './release-plan.js';
+} from '../core/project.js';
+import { planRelease, executeReleasePlan } from '../core/release-plan.js';
 import {
   generateReleaseSpecificationTemplateForMonorepo,
   waitForUserToEditReleaseSpecification,
   validateReleaseSpecification,
-} from './release-specification.js';
-import { commitAllChanges } from './repo.js';
-import { createReleaseBranch } from './workflow-operations.js';
+} from '../core/release-specification.js';
+import { commitAllChanges } from '../core/repo.js';
+import { ReleaseType } from '../core/types.js';
+import { createReleaseBranch } from '../core/workflow-operations.js';
 import {
   deduplicateDependencies,
   fixConstraints,
   updateYarnLockfile,
-} from './yarn-commands.js';
+} from '../core/yarn-commands.js';
 
 /**
  * For a monorepo, the process works like this:
@@ -104,7 +105,8 @@ export async function followMonorepoWorkflow({
       'Release spec already exists. Picking back up from previous run.\n',
     );
   } else {
-    const editor = await determineEditor();
+    const { EDITOR } = getEnvironmentVariables();
+    const editor = await determineEditor(EDITOR);
 
     const releaseSpecificationTemplate =
       await generateReleaseSpecificationTemplateForMonorepo({

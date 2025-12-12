@@ -3,7 +3,7 @@ import path from 'path';
 import { SemVer } from 'semver';
 
 import { readPackageManifest } from './package-manifest.js';
-import { withSandbox } from '../tests/helpers.js';
+import { withSandbox } from '../../tests/helpers.js';
 
 describe('package-manifest', () => {
   describe('readPackageManifest', () => {

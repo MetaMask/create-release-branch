@@ -15,12 +15,12 @@ import {
 } from './project.js';
 import { IncrementableVersionParts } from './release-specification.js';
 import * as repoModule from './repo.js';
-import { withProtectedProcessEnv, withSandbox } from '../tests/helpers.js';
+import { withProtectedProcessEnv, withSandbox } from '../../tests/helpers.js';
 import {
   buildMockPackage,
   buildMockProject,
   createNoopWriteStream,
-} from '../tests/unit/helpers.js';
+} from '../../tests/unit/helpers.js';
 
 jest.mock('./package');
 jest.mock('./repo');

@@ -6,13 +6,13 @@ import { SemVer } from 'semver';
 import {
   PackageManifestDependenciesFieldNames,
   PackageManifestFieldNames,
-} from '../../src/package-manifest.js';
+} from '../../src/core/package-manifest.js';
 import type {
   UnvalidatedPackageManifest,
   ValidatedPackageManifest,
-} from '../../src/package-manifest.js';
-import type { Package } from '../../src/package.js';
-import type { Project } from '../../src/project.js';
+} from '../../src/core/package-manifest.js';
+import type { Package } from '../../src/core/package.js';
+import type { Project } from '../../src/core/project.js';
 
 /**
  * Returns a version of the given record type where optionality is removed from

@@ -106,7 +106,7 @@ const config = createConfig([
 
   {
     files: ['**/*.js', '**/*.cjs', '**/*.ts', '**/*.test.ts', '**/*.test.js'],
-    ignores: ['src/ui/**'],
+    ignores: ['src/ui/app/**'],
     extends: nodejs,
   },
 

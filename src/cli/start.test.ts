@@ -1,24 +1,24 @@
 import fs from 'fs';
 
 import * as initialParametersModule from './initial-parameters.js';
-import { main } from './main.js';
 import * as monorepoWorkflowOperations from './monorepo-workflow-operations.js';
-import * as ui from './ui.js';
-import { buildMockProject } from '../tests/unit/helpers.js';
+import { run } from './run.js';
+import { buildMockProject } from '../../tests/unit/helpers.js';
+import * as ui from '../ui/start.js';
 
+jest.mock('../core/get-root-directory-path', () => ({
+  getRootDirectoryPath: jest.fn().mockReturnValue('/path/to/somewhere'),
+}));
+jest.mock('../ui/start');
 jest.mock('./initial-parameters');
 jest.mock('./monorepo-workflow-operations');
-jest.mock('./ui');
-jest.mock('./dirname', () => ({
-  getCurrentDirectoryPath: jest.fn().mockReturnValue('/path/to/somewhere'),
-}));
 jest.mock('open', () => ({
   apps: {
     browser: jest.fn(),
   },
 }));
 
-describe('main', () => {
+describe('start', () => {
   it('executes the CLI monorepo workflow if the project is a monorepo and interactive is false', async () => {
     const project = buildMockProject({ isMonorepo: true });
     const stdout = fs.createWriteStream('/dev/null');
@@ -38,7 +38,7 @@ describe('main', () => {
       .spyOn(monorepoWorkflowOperations, 'followMonorepoWorkflow')
       .mockResolvedValue();
 
-    await main({
+    await run({
       argv: [],
       cwd: '/path/to/somewhere',
       stdout,
@@ -71,16 +71,16 @@ describe('main', () => {
         interactive: true,
         port: 3000,
       });
-    const startUISpy = jest.spyOn(ui, 'startUI').mockResolvedValue();
+    const startSpy = jest.spyOn(ui, 'start').mockResolvedValue();
 
-    await main({
+    await run({
       argv: [],
       cwd: '/path/to/somewhere',
       stdout,
       stderr,
     });
 
-    expect(startUISpy).toHaveBeenCalledWith({
+    expect(startSpy).toHaveBeenCalledWith({
       project,
       releaseType: 'backport',
       defaultBranch: 'main',
@@ -109,7 +109,7 @@ describe('main', () => {
       .spyOn(monorepoWorkflowOperations, 'followMonorepoWorkflow')
       .mockResolvedValue();
 
-    await main({
+    await run({
       argv: [],
       cwd: '/path/to/somewhere',
       stdout,

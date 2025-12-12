@@ -2,17 +2,17 @@ import { getErrorMessage } from '@metamask/utils';
 import express, { static as expressStatic, json as expressJson } from 'express';
 import type { WriteStream } from 'fs';
 import open from 'open';
-import { join } from 'path';
+import path from 'path';
 
-import { getCurrentDirectoryPath } from './dirname.js';
-import { readFile } from './fs.js';
-import { Package } from './package.js';
+import { readFile } from '../core/fs.js';
+import { getRootDirectoryPath } from '../core/get-root-directory-path.js';
+import { Package } from '../core/package.js';
 import {
   restoreChangelogsForSkippedPackages,
   updateChangelogsForChangedPackages,
-} from './project.js';
-import type { Project } from './project.js';
-import { executeReleasePlan, planRelease } from './release-plan.js';
+} from '../core/project.js';
+import type { Project } from '../core/project.js';
+import { executeReleasePlan, planRelease } from '../core/release-plan.js';
 import {
   findAllWorkspacePackagesThatDependOnPackage,
   findMissingUnreleasedDependenciesForRelease,
@@ -20,17 +20,17 @@ import {
   IncrementableVersionParts,
   ReleaseSpecification,
   validateAllPackageEntries,
-} from './release-specification.js';
-import { commitAllChanges } from './repo.js';
-import { SemVer, semver } from './semver.js';
-import { createReleaseBranch } from './workflow-operations.js';
+} from '../core/release-specification.js';
+import { commitAllChanges } from '../core/repo.js';
+import { SemVer, semver } from '../core/semver.js';
+import { createReleaseBranch } from '../core/workflow-operations.js';
 import {
   deduplicateDependencies,
   fixConstraints,
   updateYarnLockfile,
-} from './yarn-commands.js';
+} from '../core/yarn-commands.js';
 
-const UI_BUILD_DIR = join(getCurrentDirectoryPath(), 'ui');
+const UI_BUILD_DIR = path.join(getRootDirectoryPath(), 'ui', 'build');
 
 /**
  * The set of options that can be used to start the UI.
@@ -55,7 +55,7 @@ type UIOptions = {
  * @param options.stdout - The stdout stream.
  * @param options.stderr - The stderr stream.
  */
-export async function startUI({
+export async function start({
   project,
   releaseType,
   defaultBranch,

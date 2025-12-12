@@ -11,8 +11,11 @@ import {
   waitForUserToEditReleaseSpecification,
   validateReleaseSpecification,
 } from './release-specification.js';
-import { withSandbox } from '../tests/helpers.js';
-import { buildMockProject, buildMockPackage } from '../tests/unit/helpers.js';
+import { withSandbox } from '../../tests/helpers.js';
+import {
+  buildMockProject,
+  buildMockPackage,
+} from '../../tests/unit/helpers.js';
 
 jest.mock('./misc-utils', () => {
   return {

@@ -2587,7 +2587,7 @@ __metadata:
     "@types/express": ^5.0.0
     "@types/jest": ^29.5.10
     "@types/jest-when": ^3.5.2
-    "@types/node": ^17.0.23
+    "@types/node": ^22.0.0
     "@types/prettier": ^2.7.3
     "@types/react": ^19.0.8
     "@types/react-dom": ^19.0.3
@@ -3516,10 +3516,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^17.0.23":
-  version: 17.0.45
-  resolution: "@types/node@npm:17.0.45"
-  checksum: aa04366b9103b7d6cfd6b2ef64182e0eaa7d4462c3f817618486ea0422984c51fc69fd0d436eae6c9e696ddfdbec9ccaa27a917f7c2e8c75c5d57827fe3d95e8
+"@types/node@npm:^22.0.0":
+  version: 22.19.2
+  resolution: "@types/node@npm:22.19.2"
+  dependencies:
+    undici-types: ~6.21.0
+  checksum: 06e329d4a3c40ef8e675f92bd6b92a766f3fd66501cc23e021d9537a8a8c7ab5be987de2ae6b48e9405c5f9d58a58faedf1a280b1f8f73a2326a7cb85ffd39fd
   languageName: node
   linkType: hard
 
@@ -10226,6 +10228,13 @@ __metadata:
   version: 5.26.5
   resolution: "undici-types@npm:5.26.5"
   checksum: 3192ef6f3fd5df652f2dc1cd782b49d6ff14dc98e5dced492aa8a8c65425227da5da6aafe22523c67f035a272c599bb89cfe803c1db6311e44bed3042fc25487
+  languageName: node
+  linkType: hard
+
+"undici-types@npm:~6.21.0":
+  version: 6.21.0
+  resolution: "undici-types@npm:6.21.0"
+  checksum: 46331c7d6016bf85b3e8f20c159d62f5ae471aba1eb3dc52fff35a0259d58dcc7d592d4cc4f00c5f9243fa738a11cfa48bd20203040d4a9e6bc25e807fab7ab3
   languageName: node
   linkType: hard
 
