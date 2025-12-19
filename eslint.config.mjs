@@ -55,6 +55,39 @@ const typedTagsUnnecessaryOutsideDeclare = new Set([
   'this',
 ]);
 
+// Consider copying this to @metamask/eslint-config
+const requireJsdocOverride = {
+  'jsdoc/require-jsdoc': [
+    'error',
+    {
+      require: {
+        // Classes
+        ClassDeclaration: true,
+        // Function declarations
+        FunctionDeclaration: true,
+        // Methods
+        MethodDefinition: true,
+      },
+      contexts: [
+        // Type interfaces that are not defined within `declare` blocks
+        ':not(TSModuleBlock) > TSInterfaceDeclaration',
+        // Type aliases
+        'TSTypeAliasDeclaration',
+        // Enums
+        'TSEnumDeclaration',
+        // Arrow functions that are not contained within plain objects or
+        // are not arguments to functions or methods
+        ':not(Property, NewExpression, CallExpression) > ArrowFunctionExpression',
+        // Function expressions that are not contained within plain objects
+        // or are not arguments to functions or methods
+        ':not(Property, NewExpression, CallExpression) > FunctionExpression',
+        // Exported variables at the root
+        'ExportNamedDeclaration:has(> VariableDeclaration)',
+      ],
+    },
+  ],
+};
+
 const config = createConfig([
   {
     ignores: ['dist/', 'docs/', '.yarn/'],
@@ -72,37 +105,8 @@ const config = createConfig([
 
     rules: {
       // Consider copying this to @metamask/eslint-config
-      'jsdoc/require-jsdoc': [
-        'error',
-        {
-          require: {
-            // Classes
-            ClassDeclaration: true,
-            // Function declarations
-            FunctionDeclaration: true,
-            // Methods
-            MethodDefinition: true,
-          },
-          contexts: [
-            // Type interfaces that are not defined within `declare` blocks
-            ':not(TSModuleBlock) > TSInterfaceDeclaration',
-            // Type aliases
-            'TSTypeAliasDeclaration',
-            // Enums
-            'TSEnumDeclaration',
-            // Arrow functions that are not contained within plain objects or
-            // are not arguments to functions or methods
-            ':not(Property, NewExpression, CallExpression) > ArrowFunctionExpression',
-            // Function expressions that are not contained within plain objects
-            // or are not arguments to functions or methods
-            ':not(Property, NewExpression, CallExpression) > FunctionExpression',
-            // Exported variables at the root
-            'ExportNamedDeclaration:has(> VariableDeclaration)',
-          ],
-        },
-      ],
-      // Consider copying this to @metamask/eslint-config
       'jsdoc/no-blank-blocks': 'error',
+      requireJsdocOverride,
     },
 
     settings: {
@@ -123,38 +127,9 @@ const config = createConfig([
       ],
       // Consider copying this to @metamask/eslint-config
       'jsdoc/no-blank-blocks': 'error',
-      // Consider copying this to @metamask/eslint-config
-      'jsdoc/require-jsdoc': [
-        'error',
-        {
-          require: {
-            // Classes
-            ClassDeclaration: true,
-            // Function declarations
-            FunctionDeclaration: true,
-            // Methods
-            MethodDefinition: true,
-          },
-          contexts: [
-            // Type interfaces that are not defined within `declare` blocks
-            ':not(TSModuleBlock) > TSInterfaceDeclaration',
-            // Type aliases
-            'TSTypeAliasDeclaration',
-            // Enums
-            'TSEnumDeclaration',
-            // Arrow functions that are not contained within plain objects or
-            // are not arguments to functions or methods
-            ':not(Property, NewExpression, CallExpression) > ArrowFunctionExpression',
-            // Function expressions that are not contained within plain objects
-            // or are not arguments to functions or methods
-            ':not(Property, NewExpression, CallExpression) > FunctionExpression',
-            // Exported variables at the root
-            'ExportNamedDeclaration:has(> VariableDeclaration)',
-          ],
-        },
-      ],
-      // Override this rule so that the JSDoc tags that were checked with `typed:
-      // true` still apply, but `@property` is excluded
+      requireJsdocOverride,
+      // Override this rule so that the JSDoc tags that were checked with
+      // `typed: true` still apply, but `@property` is excluded
       'jsdoc/check-tag-names': ['error', { typed: false }],
       'jsdoc/no-restricted-syntax': [
         'error',
