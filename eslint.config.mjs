@@ -106,7 +106,7 @@ const config = createConfig([
     rules: {
       // Consider copying this to @metamask/eslint-config
       'jsdoc/no-blank-blocks': 'error',
-      requireJsdocOverride,
+      ...requireJsdocOverride,
     },
 
     settings: {
@@ -127,7 +127,7 @@ const config = createConfig([
       ],
       // Consider copying this to @metamask/eslint-config
       'jsdoc/no-blank-blocks': 'error',
-      requireJsdocOverride,
+      ...requireJsdocOverride,
       // Override this rule so that the JSDoc tags that were checked with
       // `typed: true` still apply, but `@property` is excluded
       'jsdoc/check-tag-names': ['error', { typed: false }],
