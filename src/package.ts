@@ -23,13 +23,16 @@ const CHANGELOG_FILE_NAME = 'CHANGELOG.md';
 /**
  * Information about a package within a project.
  *
- * Properties:
- *
- * - `directoryPath` - The path to the directory where the package is located.
- * - `manifestPath` - The path to the manifest file.
- * - `manifest` - The data extracted from the manifest.
- * - `changelogPath` - The path to the changelog file (which may or may not
- *   exist).
+ * @property directoryPath - The path to the directory where the package is
+ * located.
+ * @property manifestPath - The path to the manifest file.
+ * @property unvalidatedManifest - The data extracted from the manifest.
+ * @property validatedManifest - The data extracted from the manifest, in a
+ * typed version.
+ * @property changelogPath - The path to the changelog file (which may or may
+ * not exist).
+ * @property hasChangesSinceLatestRelease - Whether there have been changes to
+ * the package since its latest release.
  */
 export type Package = {
   directoryPath: string;

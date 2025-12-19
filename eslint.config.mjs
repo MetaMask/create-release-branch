@@ -3,6 +3,58 @@ import jest from '@metamask/eslint-config-jest';
 import nodejs from '@metamask/eslint-config-nodejs';
 import typescript from '@metamask/eslint-config-typescript';
 
+// Copied from `jsdoc/check-tag-names`, except `@property` is omitted
+// <https://github.com/gajus/eslint-plugin-jsdoc/blob/f219b6282a1383b99d3a1497abf2836c03346b65/test/rules/assertions/checkTagNames.js>
+const typedTagsAlwaysUnnecessary = new Set([
+  'augments',
+  'callback',
+  'class',
+  'enum',
+  'implements',
+  'private',
+  'protected',
+  'public',
+  'readonly',
+  'this',
+  'type',
+  'typedef',
+]);
+
+// Copied from `jsdoc/check-tag-names`
+// <https://github.com/gajus/eslint-plugin-jsdoc/blob/f219b6282a1383b99d3a1497abf2836c03346b65/test/rules/assertions/checkTagNames.js>
+const typedTagsNeedingName = new Set(['template']);
+
+// Copied from `jsdoc/check-tag-names`, except `@property` is omitted
+// <https://github.com/gajus/eslint-plugin-jsdoc/blob/f219b6282a1383b99d3a1497abf2836c03346b65/test/rules/assertions/checkTagNames.js>
+const typedTagsUnnecessaryOutsideDeclare = new Set([
+  'abstract',
+  'access',
+  'class',
+  'constant',
+  'constructs',
+  'enum',
+  'export',
+  'exports',
+  'function',
+  'global',
+  'inherits',
+  'instance',
+  'interface',
+  'member',
+  'memberof',
+  'memberOf',
+  'method',
+  'mixes',
+  'mixin',
+  'module',
+  'name',
+  'namespace',
+  'override',
+  'requires',
+  'static',
+  'this',
+]);
+
 const config = createConfig([
   {
     ignores: ['dist/', 'docs/', '.yarn/'],
@@ -70,6 +122,8 @@ const config = createConfig([
         },
       ],
       // Consider copying this to @metamask/eslint-config
+      'jsdoc/no-blank-blocks': 'error',
+      // Consider copying this to @metamask/eslint-config
       'jsdoc/require-jsdoc': [
         'error',
         {
@@ -99,8 +153,34 @@ const config = createConfig([
           ],
         },
       ],
-      // Consider copying this to @metamask/eslint-config
-      'jsdoc/no-blank-blocks': 'error',
+      // Override this rule so that the JSDoc tags that were checked with `typed:
+      // true` still apply, but `@property` is excluded
+      'jsdoc/check-tag-names': ['error', { typed: false }],
+      'jsdoc/no-restricted-syntax': [
+        'error',
+        {
+          contexts: [
+            ...Array.from(typedTagsAlwaysUnnecessary).map((tag) => ({
+              comment: `JsdocBlock:has(JsdocTag[tag='${tag}'])`,
+              message: `'@${tag}' is redundant when using a type system.`,
+            })),
+            ...Array.from(typedTagsNeedingName).map((tag) => ({
+              comment: `JsdocBlock:has(JsdocTag[tag='${tag}']:not([name]))`,
+              message: `'@${tag}' is redundant without a name when using a type system.`,
+            })),
+            ...Array.from(typedTagsUnnecessaryOutsideDeclare).map((tag) => ({
+              // We want to allow the use of these tags inside of `declare`
+              // blocks. The only way to do this seems to be to name all common
+              // node types, but exclude `TSModuleBlock` and
+              // `TSModuleDeclaration`.
+              context:
+                'TSTypeAliasDeclaration, TSInterfaceDeclaration, ClassDeclaration, FunctionDeclaration, MethodDefinition, VariableDeclaration, TSEnumDeclaration, PropertyDefinition, TSPropertySignature, TSMethodSignature',
+              comment: `JsdocBlock:has(JsdocTag[tag='${tag}'])`,
+              message: `'@${tag}' is redundant when using a type system outside of ambient declarations.`,
+            })),
+          ],
+        },
+      ],
     },
   },
 

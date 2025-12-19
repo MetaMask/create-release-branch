@@ -20,14 +20,12 @@ export type UnvalidatedPackageManifest = Readonly<Record<string, any>>;
 /**
  * A type-checked representation of the data in a package's `package.json`.
  *
- * Properties:
- *
- * - `name` - The name of the package.
- * - `version` - The version of the package.
- * - `private` - Whether the package is private.
- * - `workspaces` - Paths to subpackages within the package.
- * - `bundledDependencies` - The set of packages that are expected to be bundled
- *   when publishing the package.
+ * @property name - The name of the package.
+ * @property version - The version of the package.
+ * @property private - Whether the package is private.
+ * @property workspaces - Paths to subpackages within the package.
+ * @property dependencies - The declared dependencies.
+ * @property peerDependencies - The declared peer dependencies.
  */
 export type ValidatedPackageManifest = {
   readonly [PackageManifestFieldNames.Name]: string;

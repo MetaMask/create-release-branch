@@ -15,22 +15,22 @@ import { debug, knownKeysOf } from './utils.js';
  * A set of configuration options for a {@link MonorepoEnvironment}. In addition
  * to the options listed in {@link EnvironmentOptions}, these include:
  *
- * Properties:
- *
- * - `packages` - The known packages within this repo (including the root).
- * - `workspaces` - The known workspaces within this repo.
- * - `directoryPath` - The directory out of which this environment will operate.
- * - `createInitialCommit` - Usually when a repo is initialized, a commit is
- *   created (which will contain starting `package.json` files). You can use
- *   this option to disable that if you need to create your own commits for
- *   clarity.
+ * @property directoryPath - The directory out of which this environment will
+ * operate.
+ * @property createInitialCommit - Usually when a repo is initialized, a commit
+ * is created (which will contain starting `package.json` files). You can use
+ * this option to disable that if you need to create your own commits for
+ * clarity.
+ * @property packages - The known packages within this repo (including the
+ * root).
+ * @property workspaces - The known workspaces within this repo.
  */
 export type MonorepoEnvironmentOptions<
   WorkspacePackageNickname extends string,
-> = {
+> = EnvironmentOptions & {
   packages: Record<WorkspacePackageNickname, PackageSpecification>;
   workspaces: Record<string, string[]>;
-} & EnvironmentOptions;
+};
 
 /**
  * The release specification data.

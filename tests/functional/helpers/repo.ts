@@ -9,10 +9,8 @@ import { isErrorWithCode } from '../../helpers.js';
 /**
  * A set of configuration options for a {@link Repo}.
  *
- * Properties:
- *
- * - `environmentDirectoryPath` - The directory that holds the environment that
- *   created this repo.
+ * @property environmentDirectoryPath - The directory that holds the environment
+ * that created this repo.
  */
 export type RepoOptions = {
   environmentDirectoryPath: string;

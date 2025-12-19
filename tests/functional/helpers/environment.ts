@@ -8,12 +8,10 @@ import Repo from './repo.js';
  * Describes the package that is used to initialize a polyrepo, or one of the
  * packages that is used to initialize a monorepo.
  *
- * Properties:
- *
- * - `name` - The desired name of the package.
- * - `version` - The desired version of the package.
- * - `directory` - The path relative to the repo's root directory that holds
- *   this package.
+ * @property name - The desired name of the package.
+ * @property version - The desired version of the package.
+ * @property directory - The path relative to the repo's root directory that
+ * holds this package.
  */
 export type PackageSpecification = {
   name: string;
@@ -24,13 +22,12 @@ export type PackageSpecification = {
 /**
  * A set of configuration options for an {@link Environment}.
  *
- * Properties:
- *
- * - `directoryPath` - The directory out of which this environment will operate.
- * - `createInitialCommit` - Usually when a repo is initialized, a commit is
- *   created (which will contain starting `package.json` files). You can use
- *   this option to disable that if you need to create your own commits for
- *   clarity.
+ * @property directoryPath - The directory out of which this environment will
+ * operate.
+ * @property createInitialCommit - Usually when a repo is initialized, a commit
+ * is created (which will contain starting `package.json` files). You can use
+ * this option to disable that if you need to create your own commits for
+ * clarity.
  */
 export type EnvironmentOptions = {
   directoryPath: string;
