@@ -10,9 +10,9 @@ import {
 } from './project.js';
 import { Package } from './package.js';
 import {
-  findAllWorkspacePackagesThatDependOnPackage,
-  findMissingUnreleasedDependenciesForRelease,
-  findMissingUnreleasedDependentsForBreakingChanges,
+  findWorkspaceDependentNamesOfType,
+  findCandidateDependencies,
+  findCandidateDependentsOfTypeForMajorBump,
   IncrementableVersionParts,
   ReleaseSpecification,
   validateAllPackageEntries,
@@ -151,7 +151,11 @@ function createApp({
 
     const requiredDependents = new Set(
       majorBumpsArray.flatMap((majorBump) =>
-        findAllWorkspacePackagesThatDependOnPackage(project, majorBump),
+        findWorkspaceDependentNamesOfType(
+          project,
+          majorBump,
+          'peerDependencies',
+        ),
       ),
     );
 
@@ -197,24 +201,34 @@ function createApp({
             const changedPackage =
               project.workspacePackages[changedPackageName];
 
-            const missingDependentNames =
-              findMissingUnreleasedDependentsForBreakingChanges(
+            const missingDirectDependentNames =
+              findCandidateDependentsOfTypeForMajorBump(
                 project,
                 changedPackageName,
                 versionSpecifierOrDirective,
                 releasedPackages,
+                'dependencies',
               );
 
-            const missingDependencies =
-              findMissingUnreleasedDependenciesForRelease(
+            const missingPeerDependentNames =
+              findCandidateDependentsOfTypeForMajorBump(
                 project,
-                changedPackage,
+                changedPackageName,
                 versionSpecifierOrDirective,
                 releasedPackages,
+                'peerDependencies',
               );
 
+            const missingDependencies = findCandidateDependencies(
+              project,
+              changedPackage,
+              versionSpecifierOrDirective,
+              releasedPackages,
+            );
+
             if (
-              missingDependentNames.length === 0 &&
+              missingDirectDependentNames.length === 0 &&
+              missingPeerDependentNames.length === 0 &&
               missingDependencies.length === 0
             ) {
               return map;
@@ -223,7 +237,8 @@ function createApp({
             return {
               ...map,
               [changedPackageName]: {
-                missingDependentNames,
+                missingDirectDependentNames,
+                missingPeerDependentNames,
                 missingDependencies,
               },
             };

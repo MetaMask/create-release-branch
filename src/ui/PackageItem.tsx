@@ -11,7 +11,8 @@ type PackageItemProps = {
   packageDependencyErrors: Record<
     string,
     {
-      missingDependentNames: string[];
+      missingDirectDependentNames: string[];
+      missingPeerDependentNames: string[];
       missingDependencies: string[];
     }
   >;
@@ -177,11 +178,79 @@ export function PackageItem({
               }
             />
           )}
-          {packageDependencyErrors[pkg.name].missingDependentNames.length >
+          {packageDependencyErrors[pkg.name].missingDirectDependentNames
+            .length > 0 && (
+            <DependencyErrorSection
+              title="Missing Direct Dependents"
+              items={
+                packageDependencyErrors[pkg.name].missingDirectDependentNames
+              }
+              setSelections={setSelections}
+              errorSubject={`You've bumped ${pkg.name} by a major version, indicating that there are breaking changes. However, this package has dependents (that is, other packages that depend on this one) that we strongly recommend you include in the release.`}
+              errorDetails={
+                <>
+                  <p className="mb-2">
+                    To resolve these errors, for each dependent listed below,
+                    you need to look at its changelog or commit history to make
+                    the following decision:
+                  </p>
+                  <ul className="list-disc ml-8 text-sm">
+                    <li className="mb-2">
+                      <span className="font-semibold">
+                        Did you need to make changes to a dependent package in
+                        response to the breaking changes? You <em>must</em>{' '}
+                        include that dependent in the release.
+                      </span>{' '}
+                      For instance, say you've modified the return type of a
+                      messenger action{' '}
+                      <code className="font-mono">
+                        FooController:doSomething
+                      </code>
+                      {', '}
+                      which is used by a controller in other package,{' '}
+                      <code className="font-mono">BarController</code>. In this
+                      case, you would need to release the package that contains{' '}
+                      <code className="font-mono">BarController</code> as well,
+                      or else it wouldn't work at runtime.
+                    </li>
+                    <li>
+                      <span className="font-semibold">
+                        Even if you didn't have to make changes to a dependent
+                        package, it's highly recommended you include the
+                        dependent in the release anyway.
+                      </span>{' '}
+                      If you don't do this, multiple versions of the same
+                      dependent will exist in the dependency tree, bloating the
+                      installed size of the extension or mobile app. For
+                      instance, you could end up with something like this:
+                      <pre className="font-mono text-sm mt-2 mb-2 ml-4">
+                        {`
+- @metamask/foo-controller 2.0.0     # new version released
+- @metamask/bar-controller 5.0.0     # no new version released
+  - @metamask/foo-controller 1.0.0   # previous version
+                                `.trim()}
+                      </pre>
+                      Whereas ideally we want this:
+                      <pre className="font-mono text-sm mt-2 mb-2 ml-4">
+                        {`
+- @metamask/foo-controller 2.0.0     # new version released
+- @metamask/bar-controller 6.0.0     # new version released
+  - @metamask/foo-controller 2.0.0   # will get de-duplicated with direct dependency
+                                `.trim()}
+                      </pre>
+                    </li>
+                  </ul>
+                </>
+              }
+            />
+          )}
+          {packageDependencyErrors[pkg.name].missingPeerDependentNames.length >
             0 && (
             <DependencyErrorSection
               title="Missing Peer Dependents"
-              items={packageDependencyErrors[pkg.name].missingDependentNames}
+              items={
+                packageDependencyErrors[pkg.name].missingPeerDependentNames
+              }
               setSelections={setSelections}
               errorSubject={`You've bumped ${pkg.name} by a major version, indicating that there are breaking changes. However, this package has peer dependents (that is, other packages that list this one as a peer dependency) that you should include in the release.`}
               errorDetails={
