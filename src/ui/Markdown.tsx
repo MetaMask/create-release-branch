@@ -1,9 +1,15 @@
 import ReactMarkdown from 'react-markdown';
 
+/**
+ * Renders Markdown, used to render the changelog for a package.
+ *
+ * @param props - The props.
+ * @param props.content - The text to render.
+ * @returns The rendered Markdown.
+ */
 export function Markdown({ content }: { content: string }) {
   return (
     <ReactMarkdown
-      children={content}
       components={{
         h1: ({ node, ...props }) => (
           <h1 className="text-2xl font-bold my-4" {...props} />
@@ -35,6 +41,8 @@ export function Markdown({ content }: { content: string }) {
           />
         ),
       }}
-    />
+    >
+      {content}
+    </ReactMarkdown>
   );
 }

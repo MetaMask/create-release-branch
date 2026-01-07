@@ -27,6 +27,38 @@ type PackageItemProps = {
   onToggleSelect: () => void;
 };
 
+/**
+ * Displays a box for a candidate package within a release, which contains the
+ * name of the package, its current and new version, a dropdown for selecting a
+ * new version, and any errors that are generated when selecting a new version.
+ *
+ * @param props - The props.
+ * @param props.pkg - Data on the package.
+ * @param props.selections - The list of selected packages in this release.
+ * @param props.versionErrors - Validation errors specific to the new version
+ * chosen.
+ * @param props.packageDependencyErrors - Errors related to dependencies or
+ * dependents of the package.
+ * @param props.loadingChangelogs - Used to determine whether the changelog for
+ * this package is being loaded.
+ * @param props.changelogs - Used to display the changelog for this package.
+ * @param props.isSelected - Whether this package is selected (for bulk
+ * actions).
+ * @param props.showCheckbox - Whether a checkbox should be shown next to the
+ * package name (for bulk actions).
+ * @param props.onSelectionChange - Callback called when the version selector
+ * for the package is changed.
+ * @param props.onCustomVersionChange - Callback called when a custom version is
+ * set or changed.
+ * @param props.onFetchChangelog - Callback called when the changelog is fetched.
+ * @param props.setSelections - Used to update the list of packages selected for
+ * this release.
+ * @param props.setChangelogs - Used to update the list of changelogs loaded
+ * across all packages.
+ * @param props.onToggleSelect - Callback called when selection for this package
+ * is toggled.
+ * @returns The package item component.
+ */
 export function PackageItem({
   pkg,
   selections,
@@ -82,16 +114,16 @@ export function PackageItem({
                 !versionErrors[pkg.name] && (
                   <p className="text-yellow-700">
                     New version:{' '}
-                    {!['patch', 'minor', 'major'].includes(selections[pkg.name])
-                      ? selections[pkg.name]
-                      : new SemVer(pkg.version)
+                    {['patch', 'minor', 'major'].includes(selections[pkg.name])
+                      ? new SemVer(pkg.version)
                           .inc(
                             selections[pkg.name] as Exclude<
                               ReleaseType,
                               'intentionally-skip' | 'custom' | string
                             >,
                           )
-                          .toString()}
+                          .toString()
+                      : selections[pkg.name]}
                   </p>
                 )}
               {versionErrors[pkg.name] && (

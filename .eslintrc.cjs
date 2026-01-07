@@ -39,15 +39,35 @@ module.exports = {
 
   overrides: [
     {
-      files: ['*.ts'],
+      files: ['*.cjs'],
+      parserOptions: {
+        sourceType: 'script',
+      },
+    },
+    {
+      files: ['*.ts', '*.tsx', '*.mts'],
       extends: ['@metamask/eslint-config-typescript'],
     },
 
     {
-      files: ['*.test.ts'],
+      files: ['*.test.ts', '*.test.tsx'],
       extends: ['@metamask/eslint-config-jest'],
+    },
+
+    {
+      files: ['src/ui/**/*.tsx'],
+      extends: ['plugin:react/recommended', 'plugin:react/jsx-runtime'],
+      rules: {
+        // This rule isn't useful for us
+        'react/no-unescaped-entities': 'off',
+      },
+      settings: {
+        react: {
+          version: 'detect',
+        },
+      },
     },
   ],
 
-  ignorePatterns: ['!.eslintrc.js', '!.prettierrc.js', 'dist/'],
+  ignorePatterns: ['dist/', 'node_modules/'],
 };
