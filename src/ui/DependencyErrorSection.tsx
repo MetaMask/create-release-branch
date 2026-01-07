@@ -5,6 +5,16 @@ type DependencyErrorSectionProps = {
   description: string;
 };
 
+/**
+ * Display details about missing dependents or dependencies.
+ *
+ * @param props - The props.
+ * @param props.title - The title of the section.
+ * @param props.items - The missing dependents or dependencies.
+ * @param props.setSelections - Updates data around packages selected for the release.
+ * @param props.description - Describes the error.
+ * @returns The section component.
+ */
 export function DependencyErrorSection({
   title,
   items,

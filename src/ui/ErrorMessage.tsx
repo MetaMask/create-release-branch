@@ -2,8 +2,17 @@ type ErrorMessageProps = {
   errors: string[];
 };
 
+/**
+ * A generic error message.
+ *
+ * @param props - The props.
+ * @param props.errors - The list of errors.
+ * @returns The error message component.
+ */
 export function ErrorMessage({ errors }: ErrorMessageProps) {
-  if (errors.length === 0) return null;
+  if (errors.length === 0) {
+    return null;
+  }
 
   return (
     <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
