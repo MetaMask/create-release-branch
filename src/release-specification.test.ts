@@ -775,7 +775,7 @@ ${releaseSpecificationPath}
               hasChangesSinceLatestRelease: true,
             }),
             b: buildMockPackage('b', {
-              hasChangesSinceLatestRelease: true,
+              hasChangesSinceLatestRelease: false,
               validatedManifest: {
                 peerDependencies: {
                   a: '2.1.4',
@@ -1219,7 +1219,7 @@ ${releaseSpecificationPath}
               hasChangesSinceLatestRelease: true,
             }),
             b: buildMockPackage('b', {
-              hasChangesSinceLatestRelease: true,
+              hasChangesSinceLatestRelease: false,
               validatedManifest: {
                 dependencies: {
                   a: '2.1.4',
