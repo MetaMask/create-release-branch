@@ -1434,7 +1434,6 @@ ${releaseSpecificationPath}
       });
     });
 
-    // NEW
     it('throws if there are any packages in the release with a major version bump using a literal version, but their direct dependents have their version specified as null in the release spec, even if they have no changes', async () => {
       await withSandbox(async (sandbox) => {
         const project = buildMockProject({
