@@ -149,7 +149,13 @@ function createApp({
         ? majorBumps.split(',').filter(Boolean)
         : (req.query.majorBumps as string[] | undefined) || [];
 
-    const requiredDependents = new Set(
+    const requiredDirectDependentNames = new Set(
+      majorBumpsArray.flatMap((majorBump) =>
+        findWorkspaceDependentNamesOfType(project, majorBump, 'dependencies'),
+      ),
+    );
+
+    const requiredPeerDependentNames = new Set(
       majorBumpsArray.flatMap((majorBump) =>
         findWorkspaceDependentNamesOfType(
           project,
@@ -162,7 +168,8 @@ function createApp({
     const pkgs = Object.values(project.workspacePackages).filter(
       (pkg) =>
         pkg.hasChangesSinceLatestRelease ||
-        requiredDependents.has(pkg.validatedManifest.name),
+        requiredDirectDependentNames.has(pkg.validatedManifest.name) ||
+        requiredPeerDependentNames.has(pkg.validatedManifest.name),
     );
 
     const packages = pkgs.map((pkg) => ({
