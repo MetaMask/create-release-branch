@@ -91,8 +91,8 @@ export function PackageItem({
       }`}
     >
       <div className="flex items-start gap-3">
-        <div className="pt-1">
-          {showCheckbox && (
+        {showCheckbox && (
+          <div className="pt-1">
             <input
               type="checkbox"
               checked={isSelected}
@@ -101,8 +101,8 @@ export function PackageItem({
                 ${isSelected ? 'text-blue-600' : 'text-gray-300'}
               `}
             />
-          )}
-        </div>
+          </div>
+        )}
         <div className="flex-1">
           <h2 className="text-xl font-semibold">{pkg.name}</h2>
           <div className="flex items-center justify-between">
@@ -145,33 +145,83 @@ export function PackageItem({
       </div>
 
       {packageDependencyErrors[pkg.name] && (
-        <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded">
-          <div className="flex-grow">
-            {packageDependencyErrors[pkg.name].missingDependencies.length >
-              0 && (
-              <DependencyErrorSection
-                title="Missing Dependencies"
-                items={packageDependencyErrors[pkg.name].missingDependencies}
-                setSelections={setSelections}
-                description={`The following packages are dependencies or peer dependencies of ${pkg.name}. Because they may have introduced new changes that ${pkg.name} is now using, you need to verify whether to include them in the release.
-
-To do this, look at the change history for each package and compare it with the change history for ${pkg.name}. If ${pkg.name} uses any new changes from a package, then you need to include it by bumping its version. If you have confirmed that the changes to a package do not affect ${pkg.name}, you may omit it from the release by choosing "Skip" instead.`}
-              />
-            )}
-            {packageDependencyErrors[pkg.name].missingDependentNames.length >
-              0 && (
-              <div className="mt-4">
-                <DependencyErrorSection
-                  title="Missing Dependents"
-                  items={
-                    packageDependencyErrors[pkg.name].missingDependentNames
-                  }
-                  setSelections={setSelections}
-                  description={`Because ${pkg.name} is being released with a new major version, to prevent peer dependency warnings in consuming projects, all of the following packages which list ${pkg.name} as a peer dependency need to be included in the release. Please choose new versions for these packages. If for some reason you feel it is safe to omit a package you may choose "Skip".`}
-                />
-              </div>
-            )}
-          </div>
+        <div className="flex-grow flex flex-col gap-2">
+          {packageDependencyErrors[pkg.name].missingDependencies.length > 0 && (
+            <DependencyErrorSection
+              title="Missing Dependencies"
+              items={packageDependencyErrors[pkg.name].missingDependencies}
+              setSelections={setSelections}
+              errorSubject={`You've included ${pkg.name} in the release. However, this package has direct or peer dependencies which have unreleased changes, and you may need to include them as well.`}
+              errorDetails={
+                <>
+                  <p className="mb-2">
+                    To resolve these errors, you need to look the changelog or
+                    commit history for {pkg.name} (and possibly each dependency
+                    listed below) to make the following decision:
+                  </p>
+                  <ul className="list-disc ml-8 mt-2">
+                    <li className="mb-2">
+                      <span className="font-semibold">
+                        Did a dependency introduce a new feature that {pkg.name}{' '}
+                        now uses? If so, you need to include the dependency in
+                        the release by bumping its version.
+                      </span>
+                    </li>
+                    <li>
+                      Once you've verified that changes to a dependency do not
+                      affect {pkg.name}, you may omit it from the release by
+                      pressing "Skip".
+                    </li>
+                  </ul>
+                </>
+              }
+            />
+          )}
+          {packageDependencyErrors[pkg.name].missingDependentNames.length >
+            0 && (
+            <DependencyErrorSection
+              title="Missing Peer Dependents"
+              items={packageDependencyErrors[pkg.name].missingDependentNames}
+              setSelections={setSelections}
+              errorSubject={`You've bumped ${pkg.name} by a major version, indicating that there are breaking changes. However, this package has peer dependents (that is, other packages that list this one as a peer dependency) that you should include in the release.`}
+              errorDetails={
+                <>
+                  <p className="mb-2">
+                    If a package has a peer dependency on other package, it
+                    means that a project which declares the first package as a
+                    dependency must also declare the second one in order for the
+                    first one to function correctly, and the version used for
+                    the second package must satisfy the requested version range.
+                    If this is not the case, a peer dependency warning will
+                    appear when dependencies are installed. (For instance, if{' '}
+                    <code className="font-mono">@metamask/foo-controller</code>{' '}
+                    has a peer dependency on{' '}
+                    <code className="font-mono">@metamask/bar-controller</code>{' '}
+                    ^1.0.0, then if{' '}
+                    <code className="font-mono">@metamask/foo-controller</code>{' '}
+                    is present in a client's{' '}
+                    <code className="font-mono">package.json</code>,{' '}
+                    <code className="font-mono">@metamask/bar-controller</code>{' '}
+                    1.x must also be present.)
+                  </p>
+                  <p className="mb-2">
+                    If you release a new major version of {pkg.name}, and you
+                    upgrade it in a client, and you don't release any of the
+                    peer dependents listed below, you will receive a peer
+                    dependency warning, because all of the peer dependents
+                    expect the client to be using the previous version, and now
+                    that requirement is no longer satisfied.
+                  </p>
+                  <p>
+                    <span className="font-semibold">
+                      To fix this, you need to navigate to each of the
+                      dependents and include them in the release.
+                    </span>
+                  </p>
+                </>
+              }
+            />
+          )}
         </div>
       )}
 
