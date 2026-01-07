@@ -155,9 +155,9 @@ export function PackageItem({
               errorDetails={
                 <>
                   <p className="mb-2">
-                    To resolve these errors, you need to look the changelog or
-                    commit history for {pkg.name} (and possibly each dependency
-                    listed below) to make the following decision:
+                    To resolve these errors, you need to look at the changelog
+                    or commit history for {pkg.name} (and possibly each
+                    dependency listed below) to make the following decision:
                   </p>
                   <ul className="list-disc ml-8 mt-2">
                     <li className="mb-2">
