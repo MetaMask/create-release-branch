@@ -602,7 +602,7 @@ Your release spec could not be processed due to the following issues:
       });
     });
 
-    it('throws if there are any packages in the release with a major version bump using the word "major", but any of their dependents defined as "peerDependencies" have changes since their latest release and are not listed in the release', async () => {
+    it('throws if there are any packages in the release with a major version bump using the word "major", but any of their peer dependents have changes since their latest release and are not listed in the release', async () => {
       await withSandbox(async (sandbox) => {
         const project = buildMockProject({
           workspacePackages: {
@@ -642,7 +642,7 @@ Your release spec could not be processed due to the following issues:
 
   - b
 
- Consider including them in the release spec so that they are compatible with the new 'a' version.
+  Consider including them in the release spec so that they are compatible with the new 'a' version.
 
   If you are ABSOLUTELY SURE these packages are safe to omit, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:
 
@@ -657,228 +657,7 @@ ${releaseSpecificationPath}
       });
     });
 
-    it('throws if there are any packages in the release with a major version bump using the word "major", but any of their dependents defined as "peerDependencies" are not listed in the release, even if they have no changes', async () => {
-      await withSandbox(async (sandbox) => {
-        const project = buildMockProject({
-          workspacePackages: {
-            a: buildMockPackage('a', {
-              hasChangesSinceLatestRelease: true,
-            }),
-            b: buildMockPackage('b', {
-              hasChangesSinceLatestRelease: false,
-              validatedManifest: {
-                peerDependencies: {
-                  a: '1.0.0',
-                },
-              },
-            }),
-          },
-        });
-        const releaseSpecificationPath = path.join(
-          sandbox.directoryPath,
-          'release-spec',
-        );
-        await fs.promises.writeFile(
-          releaseSpecificationPath,
-          YAML.stringify({
-            packages: {
-              a: 'major',
-            },
-          }),
-        );
-
-        await expect(
-          validateReleaseSpecification(project, releaseSpecificationPath),
-        ).rejects.toThrow(
-          `
-Your release spec could not be processed due to the following issues:
-
-* The following dependents of package 'a', which is being released with a major version bump, are missing from the release spec.
-
-  - b
-
- Consider including them in the release spec so that they are compatible with the new 'a' version.
-
-  If you are ABSOLUTELY SURE these packages are safe to omit, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:
-
-    packages:
-      b: intentionally-skip
-
-The release spec file has been retained for you to edit again and make the necessary fixes. Once you've done this, re-run this tool.
-
-${releaseSpecificationPath}
-`.trim(),
-        );
-      });
-    });
-
-    it('throws if there are any packages in the release with a major version bump using a literal version, but any of their dependents defined as "peerDependencies" have changes since their latest release and are not listed in the release', async () => {
-      await withSandbox(async (sandbox) => {
-        const project = buildMockProject({
-          workspacePackages: {
-            a: buildMockPackage('a', '2.1.4', {
-              hasChangesSinceLatestRelease: true,
-            }),
-            b: buildMockPackage('b', {
-              hasChangesSinceLatestRelease: true,
-              validatedManifest: {
-                peerDependencies: {
-                  a: '2.1.4',
-                },
-              },
-            }),
-          },
-        });
-        const releaseSpecificationPath = path.join(
-          sandbox.directoryPath,
-          'release-spec',
-        );
-        await fs.promises.writeFile(
-          releaseSpecificationPath,
-          YAML.stringify({
-            packages: {
-              a: '3.0.0',
-            },
-          }),
-        );
-
-        await expect(
-          validateReleaseSpecification(project, releaseSpecificationPath),
-        ).rejects.toThrow(
-          `
-Your release spec could not be processed due to the following issues:
-
-* The following dependents of package 'a', which is being released with a major version bump, are missing from the release spec.
-
-  - b
-
- Consider including them in the release spec so that they are compatible with the new 'a' version.
-
-  If you are ABSOLUTELY SURE these packages are safe to omit, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:
-
-    packages:
-      b: intentionally-skip
-
-The release spec file has been retained for you to edit again and make the necessary fixes. Once you've done this, re-run this tool.
-
-${releaseSpecificationPath}
-`.trim(),
-        );
-      });
-    });
-
-    it('throws if there are any packages in the release with a major version bump using a literal version, but any of their dependents defined as "peerDependencies" are not listed in the release, even if they have no changes', async () => {
-      await withSandbox(async (sandbox) => {
-        const project = buildMockProject({
-          workspacePackages: {
-            a: buildMockPackage('a', '2.1.4', {
-              hasChangesSinceLatestRelease: true,
-            }),
-            b: buildMockPackage('b', {
-              hasChangesSinceLatestRelease: true,
-              validatedManifest: {
-                peerDependencies: {
-                  a: '2.1.4',
-                },
-              },
-            }),
-          },
-        });
-        const releaseSpecificationPath = path.join(
-          sandbox.directoryPath,
-          'release-spec',
-        );
-        await fs.promises.writeFile(
-          releaseSpecificationPath,
-          YAML.stringify({
-            packages: {
-              a: '3.0.0',
-            },
-          }),
-        );
-
-        await expect(
-          validateReleaseSpecification(project, releaseSpecificationPath),
-        ).rejects.toThrow(
-          `
-Your release spec could not be processed due to the following issues:
-
-* The following dependents of package 'a', which is being released with a major version bump, are missing from the release spec.
-
-  - b
-
- Consider including them in the release spec so that they are compatible with the new 'a' version.
-
-  If you are ABSOLUTELY SURE these packages are safe to omit, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:
-
-    packages:
-      b: intentionally-skip
-
-The release spec file has been retained for you to edit again and make the necessary fixes. Once you've done this, re-run this tool.
-
-${releaseSpecificationPath}
-`.trim(),
-        );
-      });
-    });
-
-    it('throws if there are any packages in the release with a major version bump using the word "major", but their dependents via "peerDependencies" have changes since their latest release and have their version specified as null in the release spec', async () => {
-      await withSandbox(async (sandbox) => {
-        const project = buildMockProject({
-          workspacePackages: {
-            a: buildMockPackage('a', {
-              hasChangesSinceLatestRelease: true,
-            }),
-            b: buildMockPackage('b', {
-              hasChangesSinceLatestRelease: true,
-              validatedManifest: {
-                peerDependencies: {
-                  a: '1.0.0',
-                },
-              },
-            }),
-          },
-        });
-        const releaseSpecificationPath = path.join(
-          sandbox.directoryPath,
-          'release-spec',
-        );
-        await fs.promises.writeFile(
-          releaseSpecificationPath,
-          YAML.stringify({
-            packages: {
-              a: 'major',
-              b: null,
-            },
-          }),
-        );
-
-        await expect(
-          validateReleaseSpecification(project, releaseSpecificationPath),
-        ).rejects.toThrow(
-          `
-Your release spec could not be processed due to the following issues:
-
-* The following dependents of package 'a', which is being released with a major version bump, are missing from the release spec.
-
-  - b
-
- Consider including them in the release spec so that they are compatible with the new 'a' version.
-
-  If you are ABSOLUTELY SURE these packages are safe to omit, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:
-
-    packages:
-      b: intentionally-skip
-
-The release spec file has been retained for you to edit again and make the necessary fixes. Once you've done this, re-run this tool.
-
-${releaseSpecificationPath}
-`.trim(),
-        );
-      });
-    });
-
-    it('throws if there are any packages in the release with a major version bump using the word "major", but their dependents via "peerDependencies" have their version specified as null in the release spec, even if they have no changes', async () => {
+    it('throws if there are any packages in the release with a major version bump using the word "major", but any of their peer dependents are not listed in the release, even if they have no changes', async () => {
       await withSandbox(async (sandbox) => {
         const project = buildMockProject({
           workspacePackages: {
@@ -904,6 +683,171 @@ ${releaseSpecificationPath}
           YAML.stringify({
             packages: {
               a: 'major',
+            },
+          }),
+        );
+
+        await expect(
+          validateReleaseSpecification(project, releaseSpecificationPath),
+        ).rejects.toThrow(
+          `
+Your release spec could not be processed due to the following issues:
+
+* The following dependents of package 'a', which is being released with a major version bump, are missing from the release spec.
+
+  - b
+
+  Consider including them in the release spec so that they are compatible with the new 'a' version.
+
+  If you are ABSOLUTELY SURE these packages are safe to omit, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:
+
+    packages:
+      b: intentionally-skip
+
+The release spec file has been retained for you to edit again and make the necessary fixes. Once you've done this, re-run this tool.
+
+${releaseSpecificationPath}
+`.trim(),
+        );
+      });
+    });
+
+    it('throws if there are any packages in the release with a major version bump using a literal version, but any of their peer dependents have changes since their latest release and are not listed in the release', async () => {
+      await withSandbox(async (sandbox) => {
+        const project = buildMockProject({
+          workspacePackages: {
+            a: buildMockPackage('a', '2.1.4', {
+              hasChangesSinceLatestRelease: true,
+            }),
+            b: buildMockPackage('b', {
+              hasChangesSinceLatestRelease: true,
+              validatedManifest: {
+                peerDependencies: {
+                  a: '2.1.4',
+                },
+              },
+            }),
+          },
+        });
+        const releaseSpecificationPath = path.join(
+          sandbox.directoryPath,
+          'release-spec',
+        );
+        await fs.promises.writeFile(
+          releaseSpecificationPath,
+          YAML.stringify({
+            packages: {
+              a: '3.0.0',
+            },
+          }),
+        );
+
+        await expect(
+          validateReleaseSpecification(project, releaseSpecificationPath),
+        ).rejects.toThrow(
+          `
+Your release spec could not be processed due to the following issues:
+
+* The following dependents of package 'a', which is being released with a major version bump, are missing from the release spec.
+
+  - b
+
+  Consider including them in the release spec so that they are compatible with the new 'a' version.
+
+  If you are ABSOLUTELY SURE these packages are safe to omit, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:
+
+    packages:
+      b: intentionally-skip
+
+The release spec file has been retained for you to edit again and make the necessary fixes. Once you've done this, re-run this tool.
+
+${releaseSpecificationPath}
+`.trim(),
+        );
+      });
+    });
+
+    it('throws if there are any packages in the release with a major version bump using a literal version, but any of their peer dependents are not listed in the release, even if they have no changes', async () => {
+      await withSandbox(async (sandbox) => {
+        const project = buildMockProject({
+          workspacePackages: {
+            a: buildMockPackage('a', '2.1.4', {
+              hasChangesSinceLatestRelease: true,
+            }),
+            b: buildMockPackage('b', {
+              hasChangesSinceLatestRelease: false,
+              validatedManifest: {
+                peerDependencies: {
+                  a: '2.1.4',
+                },
+              },
+            }),
+          },
+        });
+        const releaseSpecificationPath = path.join(
+          sandbox.directoryPath,
+          'release-spec',
+        );
+        await fs.promises.writeFile(
+          releaseSpecificationPath,
+          YAML.stringify({
+            packages: {
+              a: '3.0.0',
+            },
+          }),
+        );
+
+        await expect(
+          validateReleaseSpecification(project, releaseSpecificationPath),
+        ).rejects.toThrow(
+          `
+Your release spec could not be processed due to the following issues:
+
+* The following dependents of package 'a', which is being released with a major version bump, are missing from the release spec.
+
+  - b
+
+  Consider including them in the release spec so that they are compatible with the new 'a' version.
+
+  If you are ABSOLUTELY SURE these packages are safe to omit, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:
+
+    packages:
+      b: intentionally-skip
+
+The release spec file has been retained for you to edit again and make the necessary fixes. Once you've done this, re-run this tool.
+
+${releaseSpecificationPath}
+`.trim(),
+        );
+      });
+    });
+
+    it('throws if there are any packages in the release with a major version bump using the word "major", but their peer dependents have changes since their latest release and have their version specified as null in the release spec', async () => {
+      await withSandbox(async (sandbox) => {
+        const project = buildMockProject({
+          workspacePackages: {
+            a: buildMockPackage('a', {
+              hasChangesSinceLatestRelease: true,
+            }),
+            b: buildMockPackage('b', {
+              hasChangesSinceLatestRelease: true,
+              validatedManifest: {
+                peerDependencies: {
+                  a: '1.0.0',
+                },
+              },
+            }),
+          },
+        });
+        const releaseSpecificationPath = path.join(
+          sandbox.directoryPath,
+          'release-spec',
+        );
+        await fs.promises.writeFile(
+          releaseSpecificationPath,
+          YAML.stringify({
+            packages: {
+              a: 'major',
               b: null,
             },
           }),
@@ -919,7 +863,7 @@ Your release spec could not be processed due to the following issues:
 
   - b
 
- Consider including them in the release spec so that they are compatible with the new 'a' version.
+  Consider including them in the release spec so that they are compatible with the new 'a' version.
 
   If you are ABSOLUTELY SURE these packages are safe to omit, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:
 
@@ -934,7 +878,63 @@ ${releaseSpecificationPath}
       });
     });
 
-    it('throws if there are any packages in the release with a major version bump using a literal version, but their dependents via "peerDependencies" have changes since their latest release and have their version specified as null in the release spec', async () => {
+    it('throws if there are any packages in the release with a major version bump using the word "major", but their peer dependents have their version specified as null in the release spec, even if they have no changes', async () => {
+      await withSandbox(async (sandbox) => {
+        const project = buildMockProject({
+          workspacePackages: {
+            a: buildMockPackage('a', {
+              hasChangesSinceLatestRelease: true,
+            }),
+            b: buildMockPackage('b', {
+              hasChangesSinceLatestRelease: false,
+              validatedManifest: {
+                peerDependencies: {
+                  a: '1.0.0',
+                },
+              },
+            }),
+          },
+        });
+        const releaseSpecificationPath = path.join(
+          sandbox.directoryPath,
+          'release-spec',
+        );
+        await fs.promises.writeFile(
+          releaseSpecificationPath,
+          YAML.stringify({
+            packages: {
+              a: 'major',
+              b: null,
+            },
+          }),
+        );
+
+        await expect(
+          validateReleaseSpecification(project, releaseSpecificationPath),
+        ).rejects.toThrow(
+          `
+Your release spec could not be processed due to the following issues:
+
+* The following dependents of package 'a', which is being released with a major version bump, are missing from the release spec.
+
+  - b
+
+  Consider including them in the release spec so that they are compatible with the new 'a' version.
+
+  If you are ABSOLUTELY SURE these packages are safe to omit, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:
+
+    packages:
+      b: intentionally-skip
+
+The release spec file has been retained for you to edit again and make the necessary fixes. Once you've done this, re-run this tool.
+
+${releaseSpecificationPath}
+`.trim(),
+        );
+      });
+    });
+
+    it('throws if there are any packages in the release with a major version bump using a literal version, but their peer dependents have changes since their latest release and have their version specified as null in the release spec', async () => {
       await withSandbox(async (sandbox) => {
         const project = buildMockProject({
           workspacePackages: {
@@ -975,7 +975,7 @@ Your release spec could not be processed due to the following issues:
 
   - b
 
- Consider including them in the release spec so that they are compatible with the new 'a' version.
+  Consider including them in the release spec so that they are compatible with the new 'a' version.
 
   If you are ABSOLUTELY SURE these packages are safe to omit, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:
 
@@ -990,7 +990,7 @@ ${releaseSpecificationPath}
       });
     });
 
-    it('throws if there are any packages in the release with a major version bump using a literal version, but their dependents via "peerDependencies" have their version specified as null in the release spec, even if they have no changes', async () => {
+    it('throws if there are any packages in the release with a major version bump using a literal version, but their peer dependents have their version specified as null in the release spec, even if they have no changes', async () => {
       await withSandbox(async (sandbox) => {
         const project = buildMockProject({
           workspacePackages: {
@@ -1031,9 +1031,453 @@ Your release spec could not be processed due to the following issues:
 
   - b
 
- Consider including them in the release spec so that they are compatible with the new 'a' version.
+  Consider including them in the release spec so that they are compatible with the new 'a' version.
 
   If you are ABSOLUTELY SURE these packages are safe to omit, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:
+
+    packages:
+      b: intentionally-skip
+
+The release spec file has been retained for you to edit again and make the necessary fixes. Once you've done this, re-run this tool.
+
+${releaseSpecificationPath}
+`.trim(),
+        );
+      });
+    });
+
+    it('throws if there are any packages in the release with a major version bump using the word "major", but any of their direct dependents have changes since their latest release and are not listed in the release', async () => {
+      await withSandbox(async (sandbox) => {
+        const project = buildMockProject({
+          workspacePackages: {
+            a: buildMockPackage('a', {
+              hasChangesSinceLatestRelease: true,
+            }),
+            b: buildMockPackage('b', {
+              hasChangesSinceLatestRelease: true,
+              validatedManifest: {
+                dependencies: {
+                  a: '1.0.0',
+                },
+              },
+            }),
+          },
+        });
+        const releaseSpecificationPath = path.join(
+          sandbox.directoryPath,
+          'release-spec',
+        );
+        await fs.promises.writeFile(
+          releaseSpecificationPath,
+          YAML.stringify({
+            packages: {
+              a: 'major',
+            },
+          }),
+        );
+
+        await expect(
+          validateReleaseSpecification(project, releaseSpecificationPath),
+        ).rejects.toThrow(
+          `
+Your release spec could not be processed due to the following issues:
+
+* The following direct dependents of package 'a', which is being released with a major version bump, are missing from the release spec.
+
+  - b
+
+  Consider including them in the release spec so that the dependency tree of consuming projects can be kept small.
+
+  If you do not want to do this, then list it with a directive of "intentionally-skip". For example:
+
+    packages:
+      b: intentionally-skip
+
+The release spec file has been retained for you to edit again and make the necessary fixes. Once you've done this, re-run this tool.
+
+${releaseSpecificationPath}
+`.trim(),
+        );
+      });
+    });
+
+    it('throws if there are any packages in the release with a major version bump using the word "major", but any of their direct dependents are not listed in the release, even if they have no changes', async () => {
+      await withSandbox(async (sandbox) => {
+        const project = buildMockProject({
+          workspacePackages: {
+            a: buildMockPackage('a', {
+              hasChangesSinceLatestRelease: true,
+            }),
+            b: buildMockPackage('b', {
+              hasChangesSinceLatestRelease: false,
+              validatedManifest: {
+                dependencies: {
+                  a: '1.0.0',
+                },
+              },
+            }),
+          },
+        });
+        const releaseSpecificationPath = path.join(
+          sandbox.directoryPath,
+          'release-spec',
+        );
+        await fs.promises.writeFile(
+          releaseSpecificationPath,
+          YAML.stringify({
+            packages: {
+              a: 'major',
+            },
+          }),
+        );
+
+        await expect(
+          validateReleaseSpecification(project, releaseSpecificationPath),
+        ).rejects.toThrow(
+          `
+Your release spec could not be processed due to the following issues:
+
+* The following direct dependents of package 'a', which is being released with a major version bump, are missing from the release spec.
+
+  - b
+
+  Consider including them in the release spec so that the dependency tree of consuming projects can be kept small.
+
+  If you do not want to do this, then list it with a directive of "intentionally-skip". For example:
+
+    packages:
+      b: intentionally-skip
+
+The release spec file has been retained for you to edit again and make the necessary fixes. Once you've done this, re-run this tool.
+
+${releaseSpecificationPath}
+`.trim(),
+        );
+      });
+    });
+
+    it('throws if there are any packages in the release with a major version bump using a literal version, but any of their direct dependents have changes since their latest release and are not listed in the release', async () => {
+      await withSandbox(async (sandbox) => {
+        const project = buildMockProject({
+          workspacePackages: {
+            a: buildMockPackage('a', '2.1.4', {
+              hasChangesSinceLatestRelease: true,
+            }),
+            b: buildMockPackage('b', {
+              hasChangesSinceLatestRelease: true,
+              validatedManifest: {
+                dependencies: {
+                  a: '2.1.4',
+                },
+              },
+            }),
+          },
+        });
+        const releaseSpecificationPath = path.join(
+          sandbox.directoryPath,
+          'release-spec',
+        );
+        await fs.promises.writeFile(
+          releaseSpecificationPath,
+          YAML.stringify({
+            packages: {
+              a: '3.0.0',
+            },
+          }),
+        );
+
+        await expect(
+          validateReleaseSpecification(project, releaseSpecificationPath),
+        ).rejects.toThrow(
+          `
+Your release spec could not be processed due to the following issues:
+
+* The following direct dependents of package 'a', which is being released with a major version bump, are missing from the release spec.
+
+  - b
+
+  Consider including them in the release spec so that the dependency tree of consuming projects can be kept small.
+
+  If you do not want to do this, then list it with a directive of "intentionally-skip". For example:
+
+    packages:
+      b: intentionally-skip
+
+The release spec file has been retained for you to edit again and make the necessary fixes. Once you've done this, re-run this tool.
+
+${releaseSpecificationPath}
+`.trim(),
+        );
+      });
+    });
+
+    it('throws if there are any packages in the release with a major version bump using a literal version, but any of their direct dependents are not listed in the release, even if they have no changes', async () => {
+      await withSandbox(async (sandbox) => {
+        const project = buildMockProject({
+          workspacePackages: {
+            a: buildMockPackage('a', '2.1.4', {
+              hasChangesSinceLatestRelease: true,
+            }),
+            b: buildMockPackage('b', {
+              hasChangesSinceLatestRelease: false,
+              validatedManifest: {
+                dependencies: {
+                  a: '2.1.4',
+                },
+              },
+            }),
+          },
+        });
+        const releaseSpecificationPath = path.join(
+          sandbox.directoryPath,
+          'release-spec',
+        );
+        await fs.promises.writeFile(
+          releaseSpecificationPath,
+          YAML.stringify({
+            packages: {
+              a: '3.0.0',
+            },
+          }),
+        );
+
+        await expect(
+          validateReleaseSpecification(project, releaseSpecificationPath),
+        ).rejects.toThrow(
+          `
+Your release spec could not be processed due to the following issues:
+
+* The following direct dependents of package 'a', which is being released with a major version bump, are missing from the release spec.
+
+  - b
+
+  Consider including them in the release spec so that the dependency tree of consuming projects can be kept small.
+
+  If you do not want to do this, then list it with a directive of "intentionally-skip". For example:
+
+    packages:
+      b: intentionally-skip
+
+The release spec file has been retained for you to edit again and make the necessary fixes. Once you've done this, re-run this tool.
+
+${releaseSpecificationPath}
+`.trim(),
+        );
+      });
+    });
+
+    it('throws if there are any packages in the release with a major version bump using the word "major", but their direct dependents have changes since their latest release and have their version specified as null in the release spec', async () => {
+      await withSandbox(async (sandbox) => {
+        const project = buildMockProject({
+          workspacePackages: {
+            a: buildMockPackage('a', {
+              hasChangesSinceLatestRelease: true,
+            }),
+            b: buildMockPackage('b', {
+              hasChangesSinceLatestRelease: true,
+              validatedManifest: {
+                dependencies: {
+                  a: '1.0.0',
+                },
+              },
+            }),
+          },
+        });
+        const releaseSpecificationPath = path.join(
+          sandbox.directoryPath,
+          'release-spec',
+        );
+        await fs.promises.writeFile(
+          releaseSpecificationPath,
+          YAML.stringify({
+            packages: {
+              a: 'major',
+              b: null,
+            },
+          }),
+        );
+
+        await expect(
+          validateReleaseSpecification(project, releaseSpecificationPath),
+        ).rejects.toThrow(
+          `
+Your release spec could not be processed due to the following issues:
+
+* The following direct dependents of package 'a', which is being released with a major version bump, are missing from the release spec.
+
+  - b
+
+  Consider including them in the release spec so that the dependency tree of consuming projects can be kept small.
+
+  If you do not want to do this, then list it with a directive of "intentionally-skip". For example:
+
+    packages:
+      b: intentionally-skip
+
+The release spec file has been retained for you to edit again and make the necessary fixes. Once you've done this, re-run this tool.
+
+${releaseSpecificationPath}
+`.trim(),
+        );
+      });
+    });
+
+    it('throws if there are any packages in the release with a major version bump using the word "major", but their direct dependents have their version specified as null in the release spec, even if they have no changes', async () => {
+      await withSandbox(async (sandbox) => {
+        const project = buildMockProject({
+          workspacePackages: {
+            a: buildMockPackage('a', {
+              hasChangesSinceLatestRelease: true,
+            }),
+            b: buildMockPackage('b', {
+              hasChangesSinceLatestRelease: false,
+              validatedManifest: {
+                dependencies: {
+                  a: '1.0.0',
+                },
+              },
+            }),
+          },
+        });
+        const releaseSpecificationPath = path.join(
+          sandbox.directoryPath,
+          'release-spec',
+        );
+        await fs.promises.writeFile(
+          releaseSpecificationPath,
+          YAML.stringify({
+            packages: {
+              a: 'major',
+              b: null,
+            },
+          }),
+        );
+
+        await expect(
+          validateReleaseSpecification(project, releaseSpecificationPath),
+        ).rejects.toThrow(
+          `
+Your release spec could not be processed due to the following issues:
+
+* The following direct dependents of package 'a', which is being released with a major version bump, are missing from the release spec.
+
+  - b
+
+  Consider including them in the release spec so that the dependency tree of consuming projects can be kept small.
+
+  If you do not want to do this, then list it with a directive of "intentionally-skip". For example:
+
+    packages:
+      b: intentionally-skip
+
+The release spec file has been retained for you to edit again and make the necessary fixes. Once you've done this, re-run this tool.
+
+${releaseSpecificationPath}
+`.trim(),
+        );
+      });
+    });
+
+    it('throws if there are any packages in the release with a major version bump using a literal version, but their direct dependents have changes since their latest release and have their version specified as null in the release spec', async () => {
+      await withSandbox(async (sandbox) => {
+        const project = buildMockProject({
+          workspacePackages: {
+            a: buildMockPackage('a', '2.1.4', {
+              hasChangesSinceLatestRelease: true,
+            }),
+            b: buildMockPackage('b', {
+              hasChangesSinceLatestRelease: true,
+              validatedManifest: {
+                dependencies: {
+                  a: '2.1.4',
+                },
+              },
+            }),
+          },
+        });
+        const releaseSpecificationPath = path.join(
+          sandbox.directoryPath,
+          'release-spec',
+        );
+        await fs.promises.writeFile(
+          releaseSpecificationPath,
+          YAML.stringify({
+            packages: {
+              a: '3.0.0',
+              b: null,
+            },
+          }),
+        );
+
+        await expect(
+          validateReleaseSpecification(project, releaseSpecificationPath),
+        ).rejects.toThrow(
+          `
+Your release spec could not be processed due to the following issues:
+
+* The following direct dependents of package 'a', which is being released with a major version bump, are missing from the release spec.
+
+  - b
+
+  Consider including them in the release spec so that the dependency tree of consuming projects can be kept small.
+
+  If you do not want to do this, then list it with a directive of "intentionally-skip". For example:
+
+    packages:
+      b: intentionally-skip
+
+The release spec file has been retained for you to edit again and make the necessary fixes. Once you've done this, re-run this tool.
+
+${releaseSpecificationPath}
+`.trim(),
+        );
+      });
+    });
+
+    it('throws if there are any packages in the release with a major version bump using a literal version, but their direct dependents have their version specified as null in the release spec, even if they have no changes', async () => {
+      await withSandbox(async (sandbox) => {
+        const project = buildMockProject({
+          workspacePackages: {
+            a: buildMockPackage('a', '2.1.4', {
+              hasChangesSinceLatestRelease: true,
+            }),
+            b: buildMockPackage('b', {
+              hasChangesSinceLatestRelease: false,
+              validatedManifest: {
+                dependencies: {
+                  a: '2.1.4',
+                },
+              },
+            }),
+          },
+        });
+        const releaseSpecificationPath = path.join(
+          sandbox.directoryPath,
+          'release-spec',
+        );
+        await fs.promises.writeFile(
+          releaseSpecificationPath,
+          YAML.stringify({
+            packages: {
+              a: '3.0.0',
+              b: null,
+            },
+          }),
+        );
+
+        await expect(
+          validateReleaseSpecification(project, releaseSpecificationPath),
+        ).rejects.toThrow(
+          `
+Your release spec could not be processed due to the following issues:
+
+* The following direct dependents of package 'a', which is being released with a major version bump, are missing from the release spec.
+
+  - b
+
+  Consider including them in the release spec so that the dependency tree of consuming projects can be kept small.
+
+  If you do not want to do this, then list it with a directive of "intentionally-skip". For example:
 
     packages:
       b: intentionally-skip
@@ -1136,7 +1580,7 @@ ${releaseSpecificationPath}
       });
     });
 
-    it('does not throw an error if packages in the release with a major version bump using the word "major", have their dependents via "peerDependencies" with their version specified as "intentionally-skip" in the release spec', async () => {
+    it('does not throw an error if packages in the release with a major version bump using the word "major", have their peer dependents with their version specified as "intentionally-skip" in the release spec', async () => {
       await withSandbox(async (sandbox) => {
         const project = buildMockProject({
           workspacePackages: {
@@ -1181,7 +1625,7 @@ ${releaseSpecificationPath}
       });
     });
 
-    it('does not throw an error if packages in the release with a major version bump using a literal version, have their dependents via "peerDependencies" with their version specified as "intentionally-skip" in the release spec', async () => {
+    it('does not throw an error if packages in the release with a major version bump using a literal version, have their peer dependents with their version specified as "intentionally-skip" in the release spec', async () => {
       await withSandbox(async (sandbox) => {
         const project = buildMockProject({
           workspacePackages: {

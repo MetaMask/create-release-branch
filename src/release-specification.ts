@@ -168,44 +168,52 @@ export async function waitForUserToEditReleaseSpecification(
 }
 
 /**
- * Finds all workspace packages that depend on the given package.
+ * Finds all workspace packages that have the given package under a particular
+ * "dependencies" section.
  *
  * @param project - The project containing workspace packages.
  * @param packageName - The name of the package to find dependents for.
- * @returns An array of package names that depend on the given package.
+ * @param type - The section in which to look for the package.
+ * @returns An array of package names.
  */
-export function findAllWorkspacePackagesThatDependOnPackage(
+export function findWorkspaceDependentNamesOfType(
   project: Project,
   packageName: string,
+  type: 'dependencies' | 'peerDependencies',
 ): string[] {
-  const dependentNames = Object.keys(project.workspacePackages).filter(
+  return Object.keys(project.workspacePackages).filter(
     (possibleDependentName) => {
       const possibleDependent =
         project.workspacePackages[possibleDependentName];
-      const { peerDependencies } = possibleDependent.validatedManifest;
-      return hasProperty(peerDependencies, packageName);
+      return hasProperty(
+        possibleDependent.validatedManifest[type],
+        packageName,
+      );
     },
   );
-
-  return dependentNames;
 }
 
 /**
- * Finds all workspace packages that depend on the given package.
+ * Finds all workspace packages that list the package in a particular
+ * "dependencies" section but are missing from the release spec.
  *
  * @param project - The project containing workspace packages.
  * @param packageName - The name of the package to find dependents for.
- * @param unvalidatedReleaseSpecificationPackages - The packages in the release specification.
- * @returns An array of package names that depend on the given package and are missing from the release spec.
+ * @param unvalidatedReleaseSpecificationPackages - The packages in the release
+ * specification.
+ * @param type - The type of dependents to find for.
+ * @returns An array of package names.
  */
-export function findMissingUnreleasedDependents(
+export function findMissingWorkspaceDependentNamesOfType(
   project: Project,
   packageName: string,
   unvalidatedReleaseSpecificationPackages: Record<string, string | null>,
+  type: 'dependencies' | 'peerDependencies',
 ): string[] {
-  const dependentNames = findAllWorkspacePackagesThatDependOnPackage(
+  const dependentNames = findWorkspaceDependentNamesOfType(
     project,
     packageName,
+    type,
   );
 
   return dependentNames.filter((dependentName) => {
@@ -214,12 +222,14 @@ export function findMissingUnreleasedDependents(
 }
 
 /**
- * Finds all workspace packages that are dependencies of the given package and have changes since their latest release.
+ * Finds all workspace packages that are direct or peer dependencies of the
+ * given package and have changes since their latest release.
  *
  * @param project - The project containing workspace packages.
  * @param changedPackage - The package to find dependencies for.
- * @param unvalidatedReleaseSpecificationPackages - The packages in the release specification.
- * @returns An array of package names that are dependencies and are missing from the release spec.
+ * @param unvalidatedReleaseSpecificationPackages - The packages in the release
+ * specification.
+ * @returns An array of package names.
  */
 function findMissingUnreleasedDependencies(
   project: Project,
@@ -238,21 +248,25 @@ function findMissingUnreleasedDependencies(
 }
 
 /**
- * Finds all dependents of a package that are missing from the release spec when
- * making breaking changes.
+ * Finds the direct or peer dependents of a major-bumped package that are
+ * candidates for inclusion in the release.
  *
  * @param project - Information about the whole project (e.g., names of packages
  * and where they can found).
  * @param packageName - The name of the package to validate.
- * @param versionSpecifierOrDirective - The version specifier or directive for the package.
- * @param unvalidatedReleaseSpecificationPackages - The packages in the release specification.
- * @returns An array of validation errors, if any.
+ * @param versionSpecifierOrDirective - The version specifier or directive for
+ * the package.
+ * @param unvalidatedReleaseSpecificationPackages - The packages in the release
+ * specification.
+ * @param type - The type of dependents to search for.
+ * @returns An array of direct dependents for the package.
  */
-export function findMissingUnreleasedDependentsForBreakingChanges(
+export function findCandidateDependentsOfTypeForMajorBump(
   project: Project,
   packageName: string,
   versionSpecifierOrDirective: string | null,
   unvalidatedReleaseSpecificationPackages: Record<string, string | null>,
+  type: 'dependencies' | 'peerDependencies',
 ): string[] {
   const changedPackage = project.workspacePackages[packageName];
 
@@ -264,10 +278,11 @@ export function findMissingUnreleasedDependentsForBreakingChanges(
         versionSpecifierOrDirective,
       ) === 'major')
   ) {
-    return findMissingUnreleasedDependents(
+    return findMissingWorkspaceDependentNamesOfType(
       project,
       packageName,
       unvalidatedReleaseSpecificationPackages,
+      type,
     );
   }
 
@@ -275,8 +290,9 @@ export function findMissingUnreleasedDependentsForBreakingChanges(
 }
 
 /**
- * Finds all dependencies of a package that are missing from the release spec when
- * making breaking changes.
+ * For a package being included in the release, finds all direct peer or
+ * dependencies that have changes since their last release but have not been
+ * added to the release yet.
  *
  * @param project - Information about the whole project (e.g., names of packages
  * and where they can found).
@@ -285,7 +301,7 @@ export function findMissingUnreleasedDependentsForBreakingChanges(
  * @param unvalidatedReleaseSpecificationPackages - The packages in the release specification.
  * @returns An array of validation errors, if any.
  */
-export function findMissingUnreleasedDependenciesForRelease(
+export function findCandidateDependencies(
   project: Project,
   changedPackage: Package,
   versionSpecifierOrDirective: string | null,
@@ -375,25 +391,26 @@ export function validateAllPackageEntries(
         }
       }
 
-      const missingDependentNames =
-        findMissingUnreleasedDependentsForBreakingChanges(
+      const missingDirectDependentNames =
+        findCandidateDependentsOfTypeForMajorBump(
           project,
           changedPackageName,
           versionSpecifierOrDirective,
           unvalidatedReleaseSpecificationPackages,
+          'dependencies',
         );
 
-      if (missingDependentNames.length > 0) {
+      if (missingDirectDependentNames.length > 0) {
         errors.push({
           message: [
-            `The following dependents of package '${changedPackageName}', which is being released with a major version bump, are missing from the release spec.`,
-            missingDependentNames
+            `The following direct dependents of package '${changedPackageName}', which is being released with a major version bump, are missing from the release spec.`,
+            missingDirectDependentNames
               .map((dependent) => `  - ${dependent}`)
               .join('\n'),
-            ` Consider including them in the release spec so that they are compatible with the new '${changedPackageName}' version.`,
-            `  If you are ABSOLUTELY SURE these packages are safe to omit, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:`,
+            `  Consider including them in the release spec so that the dependency tree of consuming projects can be kept small.`,
+            `  If you do not want to do this, then list it with a directive of "intentionally-skip". For example:`,
             YAML.stringify({
-              packages: missingDependentNames.reduce(
+              packages: missingDirectDependentNames.reduce(
                 (object, dependent) => ({
                   ...object,
                   [dependent]: INTENTIONALLY_SKIP_PACKAGE_DIRECTIVE,
@@ -409,7 +426,42 @@ export function validateAllPackageEntries(
         });
       }
 
-      const missingDependencies = findMissingUnreleasedDependenciesForRelease(
+      const missingPeerDependentNames =
+        findCandidateDependentsOfTypeForMajorBump(
+          project,
+          changedPackageName,
+          versionSpecifierOrDirective,
+          unvalidatedReleaseSpecificationPackages,
+          'peerDependencies',
+        );
+
+      if (missingPeerDependentNames.length > 0) {
+        errors.push({
+          message: [
+            `The following dependents of package '${changedPackageName}', which is being released with a major version bump, are missing from the release spec.`,
+            missingPeerDependentNames
+              .map((dependent) => `  - ${dependent}`)
+              .join('\n'),
+            `  Consider including them in the release spec so that they are compatible with the new '${changedPackageName}' version.`,
+            `  If you are ABSOLUTELY SURE these packages are safe to omit, however, and want to postpone the release of a package, then list it with a directive of "intentionally-skip". For example:`,
+            YAML.stringify({
+              packages: missingPeerDependentNames.reduce(
+                (object, dependent) => ({
+                  ...object,
+                  [dependent]: INTENTIONALLY_SKIP_PACKAGE_DIRECTIVE,
+                }),
+                {},
+              ),
+            })
+              .trim()
+              .split('\n')
+              .map((line) => `    ${line}`)
+              .join('\n'),
+          ].join('\n\n'),
+        });
+      }
+
+      const missingDependencies = findCandidateDependencies(
         project,
         changedPackage,
         versionSpecifierOrDirective,

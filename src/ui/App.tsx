@@ -22,7 +22,11 @@ type SubmitButtonProps = {
   selections: Record<string, string>;
   packageDependencyErrors: Record<
     string,
-    { missingDependentNames: string[]; missingDependencies: string[] }
+    {
+      missingDirectDependentNames: string[];
+      missingPeerDependentNames: string[];
+      missingDependencies: string[];
+    }
   >;
   onSubmit: () => Promise<void>;
 };
@@ -84,7 +88,8 @@ function App() {
     Record<
       string,
       {
-        missingDependentNames: string[];
+        missingDirectDependentNames: string[];
+        missingPeerDependentNames: string[];
         missingDependencies: string[];
       }
     >
@@ -247,7 +252,8 @@ function App() {
         packagesErrors?: Record<
           string,
           {
-            missingDependentNames: string[];
+            missingDirectDependentNames: string[];
+            missingPeerDependentNames: string[];
             missingDependencies: string[];
           }
         >;
