@@ -1,16 +1,25 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { getErrorMessage } from '@metamask/utils';
+import React, { useState, useEffect, useRef, JSX } from 'react';
 import { createRoot } from 'react-dom/client';
 import { SemVer } from 'semver';
+
 import { ErrorMessage } from './ErrorMessage.js';
 import { PackageItem } from './PackageItem.js';
 import { Package, RELEASE_TYPE_OPTIONS, ReleaseType } from './types.js';
 
 // This file doesn't export anything, it is used to load Tailwind.
-// eslint-disable-next-line import/no-unassigned-import
+// eslint-disable-next-line import-x/no-unassigned-import
 import './style.css';
 
-// Helper function to compare sets
-const setsAreEqual = (a: Set<string>, b: Set<string>) => {
+/**
+ * Determine whether two sets are equal (i.e., they have the same exact
+ * contents).
+ *
+ * @param a - The first set.
+ * @param b - The second set.
+ * @returns True if the two sets are equal, false otherwise.
+ */
+const setsAreEqual = (a: Set<string>, b: Set<string>): boolean => {
   if (a.size !== b.size) {
     return false;
   }
@@ -18,6 +27,9 @@ const setsAreEqual = (a: Set<string>, b: Set<string>) => {
   return [...a].every((value) => b.has(value));
 };
 
+/**
+ * Props for the `SubmitButton` component.
+ */
 type SubmitButtonProps = {
   selections: Record<string, string>;
   packageDependencyErrors: Record<
@@ -28,7 +40,7 @@ type SubmitButtonProps = {
       missingDependencies: string[];
     }
   >;
-  onSubmit: () => Promise<void>;
+  onSubmit: () => void;
 };
 
 /**
@@ -45,7 +57,7 @@ function SubmitButton({
   selections,
   packageDependencyErrors,
   onSubmit,
-}: SubmitButtonProps) {
+}: SubmitButtonProps): JSX.Element {
   const isDisabled =
     Object.keys(selections).length === 0 ||
     Object.keys(packageDependencyErrors).length > 0 ||
@@ -71,7 +83,7 @@ function SubmitButton({
  *
  * @returns The app component.
  */
-function App() {
+function App(): JSX.Element {
   const [packages, setPackages] = useState<Package[]>([]);
   const [selections, setSelections] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -102,19 +114,22 @@ function App() {
   const previousPackages = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    const majorBumps = Object.entries(selections)
-      .filter(([_, type]) => type === 'major')
-      .map(([pkgName]) => pkgName);
+    const fetchPackages = async (): Promise<void> => {
+      const majorBumps = Object.entries(selections)
+        .filter(([_, type]) => type === 'major')
+        .map(([pkgName]) => pkgName);
 
-    fetch(`/api/packages?majorBumps=${majorBumps.join(',')}`)
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(`Received ${res.status}`);
-        }
+      const response = await fetch(
+        `/api/packages?majorBumps=${majorBumps.join(',')}`,
+      );
 
-        return res.json();
-      })
-      .then((data: Package[]) => {
+      if (!response.ok) {
+        throw new Error(`Received ${response.status}`);
+      }
+
+      const data: Package[] = await response.json();
+
+      try {
         const newPackageNames = new Set(data.map((pkg) => pkg.name));
 
         // Only clean up selections if the package list actually changed
@@ -133,14 +148,20 @@ function App() {
         setLoadingChangelogs(
           data.reduce((acc, pkg) => ({ ...acc, [pkg.name]: false }), {}),
         );
-      })
-      .catch((err) => {
-        setError(err.message);
-        console.error('Error fetching packages:', err);
-      });
+      } catch (fetchingPackagesError) {
+        setError(getErrorMessage(fetchingPackagesError));
+        console.error('Error fetching packages:', error);
+      }
+    };
+
+    // We already handle errors.
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    fetchPackages();
   }, [selections]);
 
-  const checkDependencies = async (selectionData: Record<string, string>) => {
+  const checkDependencies = async (
+    selectionData: Record<string, string>,
+  ): Promise<boolean> => {
     if (Object.keys(selectionData).length === 0) {
       return false;
     }
@@ -162,24 +183,31 @@ function App() {
       setSubmitErrors([]);
       setPackageDependencyErrors({});
       return true;
-    } catch (err) {
+    } catch (checkDependenciesError) {
       const errorMessage =
-        err instanceof Error ? err.message : 'An error occurred';
+        checkDependenciesError instanceof Error
+          ? checkDependenciesError.message
+          : 'An error occurred';
       setError(errorMessage);
-      console.error('Error checking dependencies:', err);
+      console.error('Error checking dependencies:', checkDependenciesError);
       return false;
     }
   };
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
+      // We already handle errors.
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       checkDependencies(selections);
     }, 500);
 
     return () => clearTimeout(timeoutId);
   }, [selections]);
 
-  const handleCustomVersionChange = (packageName: string, version: string) => {
+  const handleCustomVersionChange = (
+    packageName: string,
+    version: string,
+  ): void => {
     try {
       if (!version) {
         setVersionErrors((prev) => ({
@@ -191,7 +219,7 @@ function App() {
 
       const newVersion = new SemVer(version);
       const currentVersion = new SemVer(
-        packages.find((p) => p.name === packageName)?.version || '0.0.0',
+        packages.find((pkg) => pkg.name === packageName)?.version ?? '0.0.0',
       );
 
       if (newVersion.compare(currentVersion) <= 0) {
@@ -211,7 +239,7 @@ function App() {
         ...prev,
         [packageName]: version,
       }));
-    } catch (err) {
+    } catch {
       setVersionErrors((prev) => ({
         ...prev,
         [packageName]: 'Invalid semver version',
@@ -224,10 +252,11 @@ function App() {
     value: ReleaseType | '',
   ): void => {
     if (value === '') {
-      const { [packageName]: _, ...rest } = selections;
+      const { [packageName]: _unusedPackageName1, ...rest } = selections;
       setSelections(rest);
 
-      const { [packageName]: __, ...remainingErrors } = packageDependencyErrors;
+      const { [packageName]: _unusedPackageName2, ...remainingErrors } =
+        packageDependencyErrors;
       setPackageDependencyErrors(remainingErrors);
     } else {
       setSelections({
@@ -278,11 +307,13 @@ function App() {
       if (data.status === 'success') {
         setIsSuccess(true);
       }
-    } catch (err) {
+    } catch (handleSubmitError) {
       const errorMessage =
-        err instanceof Error ? err.message : 'An error occurred';
+        handleSubmitError instanceof Error
+          ? handleSubmitError.message
+          : 'An error occurred';
       setError(errorMessage);
-      console.error('Error submitting selections:', err);
+      console.error('Error submitting selections:', handleSubmitError);
       // TODO: Show an error message instead of an alert
       // eslint-disable-next-line no-alert
       alert('Failed to submit selections. Please try again.');
@@ -303,16 +334,18 @@ function App() {
 
       const changelog = await response.text();
       setChangelogs((prev) => ({ ...prev, [packageName]: changelog }));
-    } catch (err) {
+    } catch (fetchChangelogError) {
       const errorMessage =
-        err instanceof Error ? err.message : 'Failed to fetch changelog';
+        fetchChangelogError instanceof Error
+          ? fetchChangelogError.message
+          : 'Failed to fetch changelog';
       setError(errorMessage);
     } finally {
       setLoadingChangelogs((prev) => ({ ...prev, [packageName]: false }));
     }
   };
 
-  const handleBulkAction = (action: ReleaseType) => {
+  const handleBulkAction = (action: ReleaseType): void => {
     const newSelections = { ...selections };
     selectedPackages.forEach((packageName) => {
       newSelections[packageName] = action;
@@ -322,7 +355,7 @@ function App() {
     setShowCheckboxes(true);
   };
 
-  const togglePackageSelection = (packageName: string) => {
+  const togglePackageSelection = (packageName: string): void => {
     setSelectedPackages((prev) => {
       const newSet = new Set(prev);
 
@@ -449,7 +482,11 @@ function App() {
         <SubmitButton
           selections={selections}
           packageDependencyErrors={packageDependencyErrors}
-          onSubmit={handleSubmit}
+          onSubmit={() => {
+            // We already handle errors.
+            // eslint-disable-next-line @typescript-eslint/no-floating-promises
+            handleSubmit();
+          }}
         />
       )}
 
