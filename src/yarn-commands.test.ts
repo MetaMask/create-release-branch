@@ -1,10 +1,11 @@
 import { when } from 'jest-when';
+
+import * as miscUtils from './misc-utils.js';
 import {
   deduplicateDependencies,
   fixConstraints,
   updateYarnLockfile,
 } from './yarn-commands.js';
-import * as miscUtils from './misc-utils.js';
 
 jest.mock('./misc-utils');
 

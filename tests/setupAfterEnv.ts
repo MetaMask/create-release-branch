@@ -1,4 +1,6 @@
+import { getErrorMessage } from '@metamask/utils';
 import type { ExecaReturnValue } from 'execa';
+
 import { isExecaError } from './helpers.js';
 
 /**
@@ -21,8 +23,9 @@ declare global {
   // defined.
   /* eslint-disable-next-line @typescript-eslint/no-namespace */
   namespace jest {
-    // interface is used here to allow for declaration merging
-    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
+    // We need to use `interface`, as well the same name for the type parameter,
+    // because we are augmenting a type
+    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions, @typescript-eslint/naming-convention
     interface Matchers<R> {
       toResolve(): Promise<R>;
       toThrowExecaError(
@@ -56,7 +59,9 @@ const END = '▲▲▲ END ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲�
  * this function.
  * @returns A promise that resolves to a symbol.
  */
-const treatUnresolvedAfter = (duration: number): Promise<typeof UNRESOLVED> => {
+const treatUnresolvedAfter = async (
+  duration: number,
+): Promise<typeof UNRESOLVED> => {
   return new Promise((resolve) => {
     originalSetTimeout(resolve, duration, UNRESOLVED);
   });
@@ -88,8 +93,8 @@ expect.extend({
         promise,
         treatUnresolvedAfter(TIME_TO_WAIT_UNTIL_UNRESOLVED),
       ]);
-    } catch (e) {
-      rejectionValue = e;
+    } catch (error) {
+      rejectionValue = error;
     }
 
     return rejectionValue !== undefined || resolutionValue === UNRESOLVED
@@ -149,7 +154,7 @@ expect.extend({
 
       return {
         message: () =>
-          `Expected running the tool to fail with an error from \`execa\`, but it failed with:\n\n${error}`,
+          `Expected running the tool to fail with an error from \`execa\`, but it failed with:\n\n${getErrorMessage(error)}`,
         pass: false,
       };
     }

@@ -1,4 +1,5 @@
 import path from 'path';
+
 import LocalRepo from './local-repo.js';
 import RemoteRepo from './remote-repo.js';
 import Repo from './repo.js';
@@ -62,6 +63,11 @@ export default abstract class Environment<SpecificLocalRepo extends LocalRepo> {
 
   createCommit: SpecificLocalRepo['createCommit'];
 
+  /**
+   * Creates an Environment.
+   *
+   * @param options - The options.
+   */
   constructor(options: EnvironmentOptions) {
     const { directoryPath, createInitialCommit = true } = options;
     this.directoryPath = directoryPath;
@@ -88,7 +94,7 @@ export default abstract class Environment<SpecificLocalRepo extends LocalRepo> {
    * as `git fetch --tags`, and a "local" repo, which is the one against which
    * the tool is run.
    */
-  async initialize() {
+  async initialize(): Promise<void> {
     await this.remoteRepo.initialize();
     await this.localRepo.initialize();
   }

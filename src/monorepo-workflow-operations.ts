@@ -1,12 +1,13 @@
 import type { WriteStream } from 'fs';
 import path from 'path';
+
+import { determineEditor } from './editor.js';
 import {
   ensureDirectoryPathExists,
   fileExists,
   removeFile,
   writeFile,
 } from './fs.js';
-import { determineEditor } from './editor.js';
 import { ReleaseType } from './initial-parameters.js';
 import {
   Project,
@@ -14,12 +15,12 @@ import {
   restoreChangelogsForSkippedPackages,
 } from './project.js';
 import { planRelease, executeReleasePlan } from './release-plan.js';
-import { commitAllChanges } from './repo.js';
 import {
   generateReleaseSpecificationTemplateForMonorepo,
   waitForUserToEditReleaseSpecification,
   validateReleaseSpecification,
 } from './release-specification.js';
+import { commitAllChanges } from './repo.js';
 import { createReleaseBranch } from './workflow-operations.js';
 import {
   deduplicateDependencies,
@@ -76,7 +77,7 @@ export async function followMonorepoWorkflow({
   defaultBranch: string;
   stdout: Pick<WriteStream, 'write'>;
   stderr: Pick<WriteStream, 'write'>;
-}) {
+}): Promise<void> {
   const { version: newReleaseVersion, firstRun } = await createReleaseBranch({
     project,
     releaseType,

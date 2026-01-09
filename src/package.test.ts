@@ -1,16 +1,12 @@
-import fs from 'fs';
-import path from 'path';
-import { when } from 'jest-when';
 import * as autoChangelog from '@metamask/auto-changelog';
+import fs from 'fs';
+import { when } from 'jest-when';
+import path from 'path';
 import { SemVer } from 'semver';
 import { MockWritable } from 'stdio-mock';
-import { buildChangelog, withSandbox } from '../tests/helpers.js';
-import {
-  buildMockPackage,
-  buildMockProject,
-  buildMockManifest,
-  createNoopWriteStream,
-} from '../tests/unit/helpers.js';
+
+import * as fsModule from './fs.js';
+import * as packageManifestModule from './package-manifest.js';
 import {
   formatChangelog,
   readMonorepoRootPackage,
@@ -18,9 +14,14 @@ import {
   updatePackage,
   updatePackageChangelog,
 } from './package.js';
-import * as fsModule from './fs.js';
-import * as packageManifestModule from './package-manifest.js';
 import * as repoModule from './repo.js';
+import { buildChangelog, withSandbox } from '../tests/helpers.js';
+import {
+  buildMockPackage,
+  buildMockProject,
+  buildMockManifest,
+  createNoopWriteStream,
+} from '../tests/unit/helpers.js';
 
 jest.mock('./package-manifest');
 jest.mock('./repo');

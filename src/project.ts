@@ -1,25 +1,26 @@
-import { WriteStream } from 'fs';
-import { resolve } from 'path';
 import { getWorkspaceLocations } from '@metamask/action-utils';
 import { isPlainObject } from '@metamask/utils';
+import { WriteStream } from 'fs';
+import { resolve } from 'path';
+
 import { WriteStreamLike, fileExists } from './fs.js';
+import {
+  convertToHttpsGitHubRepositoryUrl,
+  getStdoutFromCommand,
+} from './misc-utils.js';
+import {
+  PackageManifestFieldNames,
+  UnvalidatedPackageManifest,
+} from './package-manifest.js';
 import {
   Package,
   readMonorepoRootPackage,
   readMonorepoWorkspacePackage,
   updatePackageChangelog,
 } from './package.js';
+import { ReleaseSpecification } from './release-specification.js';
 import { getTagNames, restoreFiles } from './repo.js';
 import { SemVer } from './semver.js';
-import {
-  PackageManifestFieldNames,
-  UnvalidatedPackageManifest,
-} from './package-manifest.js';
-import { ReleaseSpecification } from './release-specification.js';
-import {
-  convertToHttpsGitHubRepositoryUrl,
-  getStdoutFromCommand,
-} from './misc-utils.js';
 
 /**
  * The release version of the root package of a monorepo extracted from its
@@ -49,6 +50,8 @@ type ReleaseVersion = {
  * project is a monorepo).
  * @property workspacePackages - Information about packages that are referenced
  * via workspaces (assuming that the project is a monorepo).
+ * @property isMonorepo - Whether the project is a monorepo.
+ * @property releaseVersion - The new version that is being released.
  */
 export type Project = {
   directoryPath: string;
@@ -124,12 +127,9 @@ export async function readProject(
         });
       }),
     )
-  ).reduce(
-    (obj, pkg) => {
-      return { ...obj, [pkg.validatedManifest.name]: pkg };
-    },
-    {} as Record<string, Package>,
-  );
+  ).reduce<Record<string, Package>>((obj, pkg) => {
+    return { ...obj, [pkg.validatedManifest.name]: pkg };
+  }, {});
 
   const isMonorepo = Object.keys(workspacePackages).length > 0;
 
@@ -174,6 +174,7 @@ export async function getValidRepositoryUrl(
   repositoryDirectoryPath: string,
 ): Promise<string> {
   // Set automatically by NPM or Yarn 1.x
+  // eslint-disable-next-line n/no-process-env
   const npmPackageRepositoryUrl = process.env.npm_package_repository_url;
 
   if (npmPackageRepositoryUrl) {
@@ -222,7 +223,7 @@ export async function updateChangelogsForChangedPackages({
       .filter(
         ({ hasChangesSinceLatestRelease }) => hasChangesSinceLatestRelease,
       )
-      .map((pkg) =>
+      .map(async (pkg) =>
         updatePackageChangelog({
           project,
           package: pkg,
