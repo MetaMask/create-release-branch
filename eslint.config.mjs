@@ -1,4 +1,3 @@
-import globals from 'globals';
 import base, { createConfig } from '@metamask/eslint-config';
 import browser from '@metamask/eslint-config-browser';
 import jest from '@metamask/eslint-config-jest';
@@ -64,27 +63,25 @@ const requireJsdocOverride = {
     'error',
     {
       require: {
-        // Classes
-        ClassDeclaration: true,
-        // Function declarations
-        FunctionDeclaration: true,
         // Methods
         MethodDefinition: true,
       },
       contexts: [
-        // Type interfaces that are not defined within `declare` blocks
-        ':not(TSModuleBlock) > TSInterfaceDeclaration',
-        // Type aliases
-        'TSTypeAliasDeclaration',
-        // Enums
-        'TSEnumDeclaration',
-        // Arrow functions that are not contained within plain objects or
-        // are not arguments to functions or methods
-        ':not(Property, NewExpression, CallExpression) > ArrowFunctionExpression',
-        // Function expressions that are not contained within plain objects
-        // or are not arguments to functions or methods
-        ':not(Property, NewExpression, CallExpression) > FunctionExpression',
-        // Exported variables at the root
+        // Type interfaces defined at the topmost scope of a file
+        'Program > TSInterfaceDeclaration',
+        // Type aliases defined at the topmost scope of a file
+        'Program > TSTypeAliasDeclaration',
+        // Enums defined at the topmost scope of a file
+        'Program > TSEnumDeclaration',
+        // Class declarations defined at the topmost scope of a file
+        'Program > ClassDeclaration',
+        // Function declarations defined at the topmost scope of a file
+        'Program > FunctionDeclaration',
+        // Arrow functions defined at the topmost scope of a file
+        'Program > VariableDeclaration > VariableDeclarator > ArrowFunctionExpression',
+        // Function expressions defined at the topmost scope of a file
+        'Program > VariableDeclaration > VariableDeclarator > FunctionExpression',
+        // Exported variables defined at the topmost scope of a file
         'ExportNamedDeclaration:has(> VariableDeclaration)',
       ],
     },
@@ -118,7 +115,7 @@ const config = createConfig([
   },
 
   {
-    files: ['**/*.ts'],
+    files: ['**/*.ts', '**/*.tsx', '**/*.mts'],
     extends: typescript,
     rules: {
       // Consider copying this to @metamask/eslint-config
@@ -169,25 +166,99 @@ const config = createConfig([
   },
 
   {
-    files: ['**/*.test.ts'],
+    files: ['**/*.test.ts', '**/*.test.tsx'],
     extends: jest,
   },
 
   {
     files: ['src/ui/**.tsx'],
-    extends: [browser],
-    plugins: { react },
+    extends: [
+      browser,
+      react.configs.flat.recommended,
+      react.configs.flat['jsx-runtime'],
+    ],
     rules: {
       // This rule isn't useful for us
       'react/no-unescaped-entities': 'off',
-    },
-    // TODO: Is this necessary?
-    languageOptions: {
-      parserOptions: {
-        ecmaFeatures: {
-          jsx: true,
+      // Copied from `@metamask/eslint-config`, but tweaked to allow functions
+      // to be formatted as PascalCase
+      '@typescript-eslint/naming-convention': [
+        'error',
+        {
+          selector: 'default',
+          format: ['camelCase'],
+          leadingUnderscore: 'allow',
+          trailingUnderscore: 'forbid',
         },
-      },
+        {
+          selector: 'function',
+          format: ['camelCase', 'PascalCase'],
+          leadingUnderscore: 'allow',
+          trailingUnderscore: 'forbid',
+        },
+        {
+          selector: 'enumMember',
+          format: ['PascalCase'],
+        },
+        {
+          selector: 'import',
+          format: ['camelCase', 'PascalCase', 'snake_case', 'UPPER_CASE'],
+        },
+        {
+          selector: 'interface',
+          format: ['PascalCase'],
+          custom: {
+            regex: '^I[A-Z]',
+            match: false,
+          },
+        },
+        {
+          selector: 'objectLiteralMethod',
+          format: ['camelCase', 'PascalCase', 'UPPER_CASE'],
+        },
+        {
+          selector: 'objectLiteralProperty',
+          // Disabled because object literals are often parameters to 3rd party libraries/services,
+          // which we don't set the naming conventions for
+          format: null,
+        },
+        {
+          selector: 'typeLike',
+          format: ['PascalCase'],
+        },
+        {
+          selector: 'typeParameter',
+          format: ['PascalCase'],
+          custom: {
+            regex: '^.{3,}',
+            match: true,
+          },
+        },
+        {
+          selector: 'variable',
+          format: ['camelCase', 'UPPER_CASE', 'PascalCase'],
+          leadingUnderscore: 'allow',
+        },
+        {
+          selector: 'parameter',
+          format: ['camelCase', 'PascalCase'],
+          leadingUnderscore: 'allow',
+        },
+        {
+          selector: [
+            'classProperty',
+            'objectLiteralProperty',
+            'typeProperty',
+            'classMethod',
+            'objectLiteralMethod',
+            'typeMethod',
+            'accessor',
+            'enumMember',
+          ],
+          format: null,
+          modifiers: ['requiresQuotes'],
+        },
+      ],
     },
     settings: {
       react: {
