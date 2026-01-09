@@ -1,5 +1,5 @@
 import { getErrorMessage } from '@metamask/utils';
-import React, { useState, useEffect, useRef, JSX } from 'react';
+import React, { useState, useEffect, useRef, ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { SemVer } from 'semver';
 
@@ -57,7 +57,7 @@ function SubmitButton({
   selections,
   packageDependencyErrors,
   onSubmit,
-}: SubmitButtonProps): JSX.Element {
+}: SubmitButtonProps): ReactNode {
   const isDisabled =
     Object.keys(selections).length === 0 ||
     Object.keys(packageDependencyErrors).length > 0 ||
@@ -83,7 +83,7 @@ function SubmitButton({
  *
  * @returns The app component.
  */
-function App(): JSX.Element {
+function App(): React.ReactNode {
   const [packages, setPackages] = useState<Package[]>([]);
   const [selections, setSelections] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);

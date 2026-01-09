@@ -178,8 +178,6 @@ const config = createConfig([
       react.configs.flat['jsx-runtime'],
     ],
     rules: {
-      // This rule isn't useful for us
-      'react/no-unescaped-entities': 'off',
       // Copied from `@metamask/eslint-config`, but tweaked to allow functions
       // to be formatted as PascalCase
       '@typescript-eslint/naming-convention': [
@@ -259,6 +257,15 @@ const config = createConfig([
           modifiers: ['requiresQuotes'],
         },
       ],
+      // `event` is a common argument of event listeners.
+      '@typescript-eslint/no-shadow': [
+        'error',
+        {
+          allow: ['event'],
+        },
+      ],
+      // This rule isn't useful for us
+      'react/no-unescaped-entities': 'off',
     },
     settings: {
       react: {
