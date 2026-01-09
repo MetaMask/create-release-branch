@@ -6,5 +6,5 @@
 // - This file will only exist after running `yarn build`. We don't want
 //   developers or CI to receive a lint error if the script has not been run.
 //   (A warning will appear if the script *has* been run, but that is okay.)
-// eslint-disable-next-line import-x/no-unassigned-import, import-x/extensions
+// eslint-disable-next-line import-x/no-unassigned-import, import-x/extensions, import-x/no-unresolved
 import '../dist/cli.js';
