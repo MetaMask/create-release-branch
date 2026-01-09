@@ -1,7 +1,10 @@
+import globals from 'globals';
 import base, { createConfig } from '@metamask/eslint-config';
+import browser from '@metamask/eslint-config-browser';
 import jest from '@metamask/eslint-config-jest';
 import nodejs from '@metamask/eslint-config-nodejs';
 import typescript from '@metamask/eslint-config-typescript';
+import react from 'eslint-plugin-react';
 
 // Copied from `jsdoc/check-tag-names`, except `@property` is omitted
 // <https://github.com/gajus/eslint-plugin-jsdoc/blob/f219b6282a1383b99d3a1497abf2836c03346b65/test/rules/assertions/checkTagNames.js>
@@ -168,6 +171,29 @@ const config = createConfig([
   {
     files: ['**/*.test.ts'],
     extends: jest,
+  },
+
+  {
+    files: ['src/ui/**.tsx'],
+    extends: [browser],
+    plugins: { react },
+    rules: {
+      // This rule isn't useful for us
+      'react/no-unescaped-entities': 'off',
+    },
+    // TODO: Is this necessary?
+    languageOptions: {
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
+    },
+    settings: {
+      react: {
+        version: 'detect',
+      },
+    },
   },
 
   // List this last to override any settings inherited from plugins,

@@ -9,6 +9,22 @@ type VersionSelectorProps = {
   isLoadingChangelog: boolean;
 };
 
+/**
+ * The dropdown used to select a version for a package.
+ *
+ * @param props - The props.
+ * @param props.packageName - The name of the package.
+ * @param props.selection - The selected value of the dropdown.
+ * @param props.onSelectionChange - Callback called when the value of the
+ * dropdown changes.
+ * @param props.onCustomVersionChange - Callback called when the value of the
+ * custom version text field is changed.
+ * @param props.onFetchChangelog - Callback called when the changelog for the
+ * package is fetched.
+ * @param props.isLoadingChangelog - Whether the changelog for the package is
+ * being loaded.
+ * @returns The version selector component.
+ */
 export function VersionSelector({
   packageName,
   selection,
@@ -54,7 +70,7 @@ export function VersionSelector({
         />
       )}
       <button
-        onClick={() => void onFetchChangelog(packageName)}
+        onClick={() => onFetchChangelog(packageName)}
         disabled={isLoadingChangelog}
         className="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600 disabled:bg-gray-400"
       >

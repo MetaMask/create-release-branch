@@ -1,4 +1,3 @@
-import './style.css';
 import React, { useState, useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { SemVer } from 'semver';
@@ -6,9 +5,16 @@ import { ErrorMessage } from './ErrorMessage.js';
 import { PackageItem } from './PackageItem.js';
 import { Package, RELEASE_TYPE_OPTIONS, ReleaseType } from './types.js';
 
+// This file doesn't export anything, it is used to load Tailwind.
+// eslint-disable-next-line import/no-unassigned-import
+import './style.css';
+
 // Helper function to compare sets
 const setsAreEqual = (a: Set<string>, b: Set<string>) => {
-  if (a.size !== b.size) return false;
+  if (a.size !== b.size) {
+    return false;
+  }
+
   return [...a].every((value) => b.has(value));
 };
 
@@ -16,11 +22,25 @@ type SubmitButtonProps = {
   selections: Record<string, string>;
   packageDependencyErrors: Record<
     string,
-    { missingDependentNames: string[]; missingDependencies: string[] }
+    {
+      missingDirectDependentNames: string[];
+      missingPeerDependentNames: string[];
+      missingDependencies: string[];
+    }
   >;
   onSubmit: () => Promise<void>;
 };
 
+/**
+ * Creates the release branch.
+ *
+ * @param props - The props.
+ * @param props.selections - The packages that have been added to the release.
+ * @param props.packageDependencyErrors - Errors that are discovered relating to
+ * dependencies or dependents of packages.
+ * @param props.onSubmit - The callback to call when the button is pressed.
+ * @returns The submit button.
+ */
 function SubmitButton({
   selections,
   packageDependencyErrors,
@@ -33,7 +53,7 @@ function SubmitButton({
 
   return (
     <button
-      onClick={() => void onSubmit()}
+      onClick={onSubmit}
       disabled={isDisabled}
       className={`mt-6 px-4 py-2 rounded ${
         isDisabled
@@ -46,6 +66,11 @@ function SubmitButton({
   );
 }
 
+/**
+ * The main component of the `create-release-branch` app.
+ *
+ * @returns The app component.
+ */
 function App() {
   const [packages, setPackages] = useState<Package[]>([]);
   const [selections, setSelections] = useState<Record<string, string>>({});
@@ -63,7 +88,8 @@ function App() {
     Record<
       string,
       {
-        missingDependentNames: string[];
+        missingDirectDependentNames: string[];
+        missingPeerDependentNames: string[];
         missingDependencies: string[];
       }
     >
@@ -85,6 +111,7 @@ function App() {
         if (!res.ok) {
           throw new Error(`Received ${res.status}`);
         }
+
         return res.json();
       })
       .then((data: Package[]) => {
@@ -114,7 +141,9 @@ function App() {
   }, [selections]);
 
   const checkDependencies = async (selectionData: Record<string, string>) => {
-    if (Object.keys(selectionData).length === 0) return;
+    if (Object.keys(selectionData).length === 0) {
+      return false;
+    }
 
     try {
       const response = await fetch('/api/check-packages', {
@@ -144,7 +173,7 @@ function App() {
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      void checkDependencies(selections);
+      checkDependencies(selections);
     }, 500);
 
     return () => clearTimeout(timeoutId);
@@ -210,6 +239,7 @@ function App() {
 
   const handleSubmit = async (): Promise<void> => {
     setIsSubmitting(true);
+
     try {
       const response = await fetch('/api/release', {
         method: 'POST',
@@ -222,7 +252,8 @@ function App() {
         packagesErrors?: Record<
           string,
           {
-            missingDependentNames: string[];
+            missingDirectDependentNames: string[];
+            missingPeerDependentNames: string[];
             missingDependencies: string[];
           }
         >;
@@ -234,11 +265,12 @@ function App() {
 
       if (data.status === 'error' && data.errors) {
         setSubmitErrors(
-          data.errors.flatMap((error) => {
-            if (Array.isArray(error.message)) {
-              return error.message;
+          data.errors.flatMap((submitError) => {
+            if (Array.isArray(submitError.message)) {
+              return submitError.message;
             }
-            return error.message;
+
+            return submitError.message;
           }),
         );
       }
@@ -251,6 +283,8 @@ function App() {
         err instanceof Error ? err.message : 'An error occurred';
       setError(errorMessage);
       console.error('Error submitting selections:', err);
+      // TODO: Show an error message instead of an alert
+      // eslint-disable-next-line no-alert
       alert('Failed to submit selections. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -259,11 +293,14 @@ function App() {
 
   const fetchChangelog = async (packageName: string): Promise<void> => {
     setLoadingChangelogs((prev) => ({ ...prev, [packageName]: true }));
+
     try {
       const response = await fetch(`/api/changelog?package=${packageName}`);
+
       if (!response.ok) {
         throw new Error('Failed to fetch changelog');
       }
+
       const changelog = await response.text();
       setChangelogs((prev) => ({ ...prev, [packageName]: changelog }));
     } catch (err) {
@@ -288,11 +325,13 @@ function App() {
   const togglePackageSelection = (packageName: string) => {
     setSelectedPackages((prev) => {
       const newSet = new Set(prev);
+
       if (newSet.has(packageName)) {
         newSet.delete(packageName);
       } else {
         newSet.add(packageName);
       }
+
       return newSet;
     });
   };
@@ -422,12 +461,13 @@ function App() {
 }
 
 const container = document.getElementById('root');
+
 if (container === null) {
   throw new Error('Failed to find the root element');
 }
 
-const root = createRoot(container);
-root.render(
+const reactRoot = createRoot(container);
+reactRoot.render(
   <React.StrictMode>
     <App />
   </React.StrictMode>,
