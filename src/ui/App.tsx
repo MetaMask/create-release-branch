@@ -119,17 +119,17 @@ function App(): React.ReactNode {
         .filter(([_, type]) => type === 'major')
         .map(([pkgName]) => pkgName);
 
-      const response = await fetch(
-        `/api/packages?majorBumps=${majorBumps.join(',')}`,
-      );
-
-      if (!response.ok) {
-        throw new Error(`Received ${response.status}`);
-      }
-
-      const data: Package[] = await response.json();
-
       try {
+        const response = await fetch(
+          `/api/packages?majorBumps=${majorBumps.join(',')}`,
+        );
+
+        if (!response.ok) {
+          throw new Error(`Received ${response.status}`);
+        }
+
+        const data: Package[] = await response.json();
+
         const newPackageNames = new Set(data.map((pkg) => pkg.name));
 
         // Only clean up selections if the package list actually changed
@@ -150,7 +150,7 @@ function App(): React.ReactNode {
         );
       } catch (fetchingPackagesError) {
         setError(getErrorMessage(fetchingPackagesError));
-        console.error('Error fetching packages:', error);
+        console.error('Error fetching packages:', fetchingPackagesError);
       }
     };
 
