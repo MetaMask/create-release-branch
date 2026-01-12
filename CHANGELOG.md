@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.2.0]
+
+### Uncategorized
+
+- Detect direct dependents missing from release ([#193](https://github.com/MetaMask/create-release-branch/pull/193))
+- Improve UI/copy for per-package error messages ([#192](https://github.com/MetaMask/create-release-branch/pull/192))
+- Fix ESLint config ([#191](https://github.com/MetaMask/create-release-branch/pull/191))
+- Add preview builds ([#187](https://github.com/MetaMask/create-release-branch/pull/187))
+- chore: Update codeowners to @MetaMask/core-platform ([#188](https://github.com/MetaMask/create-release-branch/pull/188))
+
 ## [4.1.3]
 
 ### Fixed
@@ -129,7 +139,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - In this first release, this tool only supports monorepos with an independent versioning scheme. We will add support for other kinds of projects in future releases.
   - You can learn more on how to use this tool by reading the [documentation](docs/).
 
-[Unreleased]: https://github.com/MetaMask/create-release-branch/compare/v4.1.3...HEAD
+[Unreleased]: https://github.com/MetaMask/create-release-branch/compare/v4.2.0...HEAD
+[4.2.0]: https://github.com/MetaMask/create-release-branch/compare/v4.1.3...v4.2.0
 [4.1.3]: https://github.com/MetaMask/create-release-branch/compare/v4.1.2...v4.1.3
 [4.1.2]: https://github.com/MetaMask/create-release-branch/compare/v4.1.1...v4.1.2
 [4.1.1]: https://github.com/MetaMask/create-release-branch/compare/v4.1.0...v4.1.1
