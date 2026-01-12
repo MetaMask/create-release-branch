@@ -11,8 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- When a new major version of a package is being released but some direct dependents are missing, strongly suggest that they be included in the release as well ([#193](https://github.com/MetaMask/create-release-branch/pull/193))
-- Update UI to improve how existing per-package error messages are shown so they are less arresting visually and provide clearer rationales/examples ([#192](https://github.com/MetaMask/create-release-branch/pull/192))
+- When a new major version of a package is being released but some of its direct dependents are missing, strongly suggest that they be included in the release as well ([#193](https://github.com/MetaMask/create-release-branch/pull/193))
+- Update UI to improve how existing per-package error messages are shown so they are less prominent visually and provide clearer rationales/examples ([#192](https://github.com/MetaMask/create-release-branch/pull/192))
 
 ## [4.1.3]
 
