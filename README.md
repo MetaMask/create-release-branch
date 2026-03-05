@@ -116,3 +116,4 @@ If you make more changes to your pull request and want to create a new preview b
 1. Post another `@metamaskbot` comment on the pull request and wait for the response.
 2. Update the version of the preview build in your project's `package.json`. Make sure to re-run `yarn install`!
 
+
