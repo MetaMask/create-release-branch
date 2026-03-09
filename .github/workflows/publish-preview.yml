@@ -10,5 +10,6 @@ jobs:
     uses: MetaMask/github-tools/.github/workflows/publish-preview.yml@prepare-preview-builds-action
     with:
       is-monorepo: false
+      dry-run: true
     secrets:
       PUBLISH_PREVIEW_NPM_TOKEN: ${{ secrets.PUBLISH_PREVIEW_NPM_TOKEN }}
