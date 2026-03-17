@@ -14,6 +14,7 @@ import { SemVer } from './semver.js';
 import {
   PackageManifestFieldNames,
   UnvalidatedPackageManifest,
+  readPackageManifest,
 } from './package-manifest.js';
 import { ReleaseSpecification } from './release-specification.js';
 import {
@@ -91,7 +92,27 @@ export async function readProject(
   projectDirectoryPath: string,
   { stderr }: { stderr: WriteStreamLike },
 ): Promise<Project> {
-  const tagNames = await getTagNames(projectDirectoryPath);
+  const rootManifest = await readPackageManifest(
+    resolve(projectDirectoryPath, 'package.json'),
+  );
+  const workspaceDirectories = await getWorkspaceLocations(
+    rootManifest.validated[PackageManifestFieldNames.Workspaces],
+    projectDirectoryPath,
+    true,
+  );
+  const workspacePackageNames = await Promise.all(
+    workspaceDirectories.map(async (directory) => {
+      const { validated } = await readPackageManifest(
+        resolve(projectDirectoryPath, directory, 'package.json'),
+      );
+      return validated[PackageManifestFieldNames.Name];
+    }),
+  );
+
+  const tagNames = await getTagNames(
+    projectDirectoryPath,
+    workspacePackageNames,
+  );
   const rootPackage = await readMonorepoRootPackage({
     packageDirectoryPath: projectDirectoryPath,
     projectDirectoryPath,
@@ -103,12 +124,6 @@ export async function readProject(
   );
   const releaseVersion = examineReleaseVersion(
     rootPackage.validatedManifest.version,
-  );
-
-  const workspaceDirectories = await getWorkspaceLocations(
-    rootPackage.validatedManifest[PackageManifestFieldNames.Workspaces],
-    projectDirectoryPath,
-    true,
   );
 
   const workspacePackages = (

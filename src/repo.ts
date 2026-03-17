@@ -207,18 +207,32 @@ export async function branchExists(
 }
 
 /**
- * Retrieves the names of the tags in the given repo, sorted by ascending
- * semantic version order. As this fetches tags from the remote first, you are
- * advised to only run this once.
+ * Fetches tags for the given packages from the given repo, sorted by ascending
+ * semantic version order. The tags are ultimately used to obtain the latest
+ * changes for these packages.
  *
  * @param repositoryDirectoryPath - The path to the repository directory.
+ * @param packageNames - The names of the workspace packages in the monorepo
+ * (e.g. `["@metamask/foo", "@metamask/bar"]`).
  * @returns The names of the tags.
  * @throws If no tags are found and the local git history is incomplete.
  */
 export async function getTagNames(
   repositoryDirectoryPath: string,
+  packageNames: string[] = [],
 ): Promise<string[]> {
-  await runGitCommandWithin(repositoryDirectoryPath, 'fetch', ['--tags']);
+  // Force-fetch only the tag patterns used by this tool (`v*` for root releases
+  // and `<package-name>@*` for workspace package releases) so that stale local
+  // tags don't cause conflicts. Unrelated local tags will be left untouched.
+  const releaseTagRefspecs = [
+    'refs/tags/v*:refs/tags/v*',
+    ...packageNames.map((name) => `refs/tags/${name}@*:refs/tags/${name}@*`),
+  ];
+  await runGitCommandWithin(repositoryDirectoryPath, 'fetch', [
+    '--force',
+    'origin',
+    ...releaseTagRefspecs,
+  ]);
 
   const tagNames = await getLinesFromGitCommandWithin(
     repositoryDirectoryPath,

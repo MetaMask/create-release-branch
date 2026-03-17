@@ -35,6 +35,30 @@ describe('repo', () => {
   });
 
   describe('getTagNames', () => {
+    it('force-fetches release tag refspecs for all provided package names', async () => {
+      const runCommandSpy = jest.spyOn(miscUtils, 'runCommand');
+      when(jest.spyOn(miscUtils, 'getLinesFromCommand'))
+        .calledWith('git', ['tag', '--sort=version:refname', '--merged'], {
+          cwd: '/path/to/repo',
+        })
+        .mockResolvedValue(['tag1', 'tag2', 'tag3']);
+
+      await getTagNames('/path/to/repo', ['@scope/foo', 'bar']);
+
+      expect(runCommandSpy).toHaveBeenCalledWith(
+        'git',
+        [
+          'fetch',
+          '--force',
+          'origin',
+          'refs/tags/v*:refs/tags/v*',
+          'refs/tags/@scope/foo@*:refs/tags/@scope/foo@*',
+          'refs/tags/bar@*:refs/tags/bar@*',
+        ],
+        { cwd: '/path/to/repo' },
+      );
+    });
+
     it('returns all of the tag names that match a known format, sorted by ascending semantic version order', async () => {
       when(jest.spyOn(miscUtils, 'getLinesFromCommand'))
         .calledWith('git', ['tag', '--sort=version:refname', '--merged'], {

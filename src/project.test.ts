@@ -5,6 +5,7 @@ import { SemVer } from 'semver';
 import * as actionUtils from '@metamask/action-utils';
 import { withProtectedProcessEnv, withSandbox } from '../tests/helpers.js';
 import {
+  buildMockManifest,
   buildMockPackage,
   buildMockProject,
   createNoopWriteStream,
@@ -17,11 +18,13 @@ import {
   updateChangelogsForChangedPackages,
 } from './project.js';
 import * as packageModule from './package.js';
+import * as packageManifestModule from './package-manifest.js';
 import * as repoModule from './repo.js';
 import * as fs from './fs.js';
 import { IncrementableVersionParts } from './release-specification.js';
 
 jest.mock('./package');
+jest.mock('./package-manifest');
 jest.mock('./repo');
 jest.mock('@metamask/action-utils', () => ({
   ...jest.requireActual('@metamask/action-utils'),
@@ -66,8 +69,38 @@ describe('project', () => {
         };
         const projectTagNames = ['tag1', 'tag2', 'tag3'];
         const stderr = createNoopWriteStream();
+        when(jest.spyOn(packageManifestModule, 'readPackageManifest'))
+          .calledWith(path.join(projectDirectoryPath, 'package.json'))
+          .mockResolvedValue({
+            unvalidated: rootPackage.unvalidatedManifest,
+            validated: buildMockManifest({
+              name: rootPackageName,
+              version: rootPackageVersion,
+              workspaces: ['packages/a', 'packages/subpackages/*'],
+            }),
+          })
+          .calledWith(
+            path.join(projectDirectoryPath, 'packages', 'a', 'package.json'),
+          )
+          .mockResolvedValue({
+            unvalidated: {},
+            validated: buildMockManifest({ name: 'a' }),
+          })
+          .calledWith(
+            path.join(
+              projectDirectoryPath,
+              'packages',
+              'subpackages',
+              'b',
+              'package.json',
+            ),
+          )
+          .mockResolvedValue({
+            unvalidated: {},
+            validated: buildMockManifest({ name: 'b' }),
+          });
         when(jest.spyOn(repoModule, 'getTagNames'))
-          .calledWith(projectDirectoryPath)
+          .calledWith(projectDirectoryPath, ['a', 'b'])
           .mockResolvedValue(projectTagNames);
         when(jest.spyOn(packageModule, 'readMonorepoRootPackage'))
           .calledWith({
@@ -107,12 +140,6 @@ describe('project', () => {
             stderr,
           })
           .mockResolvedValue(workspacePackages.b);
-        await mkdir(path.join(projectDirectoryPath, 'packages'));
-        await mkdir(path.join(projectDirectoryPath, 'packages', 'a'));
-        await mkdir(path.join(projectDirectoryPath, 'packages', 'subpackages'));
-        await mkdir(
-          path.join(projectDirectoryPath, 'packages', 'subpackages', 'b'),
-        );
 
         expect(
           await readProject(projectDirectoryPath, { stderr }),
