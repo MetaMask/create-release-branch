@@ -1,25 +1,26 @@
-import { mkdir } from 'fs/promises';
-import path from 'path';
-import { when } from 'jest-when';
-import { SemVer } from 'semver';
 import * as actionUtils from '@metamask/action-utils';
-import { withProtectedProcessEnv, withSandbox } from '../tests/helpers.js';
-import {
-  buildMockPackage,
-  buildMockProject,
-  createNoopWriteStream,
-} from '../tests/unit/helpers.js';
+import { mkdir } from 'fs/promises';
+import { when } from 'jest-when';
+import path from 'path';
+import { SemVer } from 'semver';
+
+import * as fs from './fs.js';
 import * as miscUtils from './misc-utils.js';
+import * as packageModule from './package.js';
 import {
   getValidRepositoryUrl,
   readProject,
   restoreChangelogsForSkippedPackages,
   updateChangelogsForChangedPackages,
 } from './project.js';
-import * as packageModule from './package.js';
-import * as repoModule from './repo.js';
-import * as fs from './fs.js';
 import { IncrementableVersionParts } from './release-specification.js';
+import * as repoModule from './repo.js';
+import { withProtectedProcessEnv, withSandbox } from '../tests/helpers.js';
+import {
+  buildMockPackage,
+  buildMockProject,
+  createNoopWriteStream,
+} from '../tests/unit/helpers.js';
 
 jest.mock('./package');
 jest.mock('./repo');
@@ -135,6 +136,10 @@ describe('project', () => {
     describe('if the `npm_package_repository_url` environment variable is set', () => {
       it('returns the HTTPS version of this URL', async () => {
         await withProtectedProcessEnv(async () => {
+          // This function consults an environment variable that NPM sets
+          // in order to know the repository URL.
+          // Changes to environment variables are protected in this test.
+          // eslint-disable-next-line n/no-process-env
           process.env.npm_package_repository_url =
             'git@github.com:example-org/example-repo.git';
           const packageManifest = {};

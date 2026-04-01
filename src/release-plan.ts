@@ -1,5 +1,6 @@
 import { WriteStream } from 'fs';
 import { SemVer } from 'semver';
+
 import { debug } from './misc-utils.js';
 import { Package, updatePackage } from './package.js';
 import { Project } from './project.js';
@@ -31,9 +32,11 @@ export type ReleasePlan = {
  * Instructions for how to update a package within a project in order to prepare
  * it for a new release.
  *
- * @property package - Information about the package.
- * @property newVersion - The new version for the package, as a
- * SemVer-compatible string.
+ * Properties:
+ *
+ * - `package` - Information about the package.
+ * - `newVersion` - The new version for the package, as a SemVer-compatible
+ *   string.
  */
 export type PackageReleasePlan = {
   package: Package;
@@ -75,11 +78,11 @@ export async function planRelease({
     const newVersion =
       versionSpecifier instanceof SemVer
         ? versionSpecifier
-        : new SemVer(currentVersion.toString()).inc(versionSpecifier);
+        : new SemVer(currentVersion.version).inc(versionSpecifier);
 
     return {
       package: pkg,
-      newVersion: newVersion.toString(),
+      newVersion: newVersion.version,
     };
   });
 
@@ -102,7 +105,7 @@ export async function executeReleasePlan(
   project: Project,
   releasePlan: ReleasePlan,
   stderr: Pick<WriteStream, 'write'>,
-) {
+): Promise<void> {
   await Promise.all(
     releasePlan.packages.map(async (workspaceReleasePlan) => {
       debug(

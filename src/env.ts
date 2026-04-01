@@ -1,4 +1,13 @@
+// This file tests a file that is concerned with accessing environment
+// variables.
+/* eslint-disable n/no-process-env */
+
+/**
+ * Environment variables that this tool uses.
+ */
 type Env = {
+  // Environment variables are uppercase by convention.
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   EDITOR: string | undefined;
 };
 

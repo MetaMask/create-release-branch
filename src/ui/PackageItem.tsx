@@ -1,9 +1,14 @@
+import { ReactNode } from 'react';
 import { SemVer } from 'semver';
-import { Markdown } from './Markdown.js';
-import { VersionSelector } from './VersionSelector.js';
-import { DependencyErrorSection } from './DependencyErrorSection.js';
-import { Package, ReleaseType } from './types.js';
 
+import { DependencyErrorSection } from './DependencyErrorSection.js';
+import { Markdown } from './Markdown.js';
+import { Package, ReleaseType } from './types.js';
+import { VersionSelector } from './VersionSelector.js';
+
+/**
+ * Props for the `PackageItem` component.
+ */
 type PackageItemProps = {
   pkg: Package;
   selections: Record<string, string>;
@@ -75,7 +80,7 @@ export function PackageItem({
   setSelections,
   setChangelogs,
   onToggleSelect,
-}: PackageItemProps) {
+}: PackageItemProps): ReactNode {
   return (
     <div
       key={pkg.name}
@@ -116,14 +121,12 @@ export function PackageItem({
                   <p className="text-yellow-700">
                     New version:{' '}
                     {['patch', 'minor', 'major'].includes(selections[pkg.name])
-                      ? new SemVer(pkg.version)
-                          .inc(
-                            selections[pkg.name] as Exclude<
-                              ReleaseType,
-                              'intentionally-skip' | 'custom' | string
-                            >,
-                          )
-                          .toString()
+                      ? new SemVer(pkg.version).inc(
+                          selections[pkg.name] as Exclude<
+                            ReleaseType,
+                            'intentionally-skip' | 'custom' | string
+                          >,
+                        ).version
                       : selections[pkg.name]}
                   </p>
                 )}
@@ -139,7 +142,7 @@ export function PackageItem({
               onSelectionChange={onSelectionChange}
               onCustomVersionChange={onCustomVersionChange}
               onFetchChangelog={onFetchChangelog}
-              isLoadingChangelog={loadingChangelogs[pkg.name] === true}
+              isLoadingChangelog={loadingChangelogs[pkg.name]}
             />
           </div>
         </div>

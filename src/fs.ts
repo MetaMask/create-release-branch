@@ -1,8 +1,9 @@
-import fs from 'fs';
 import {
   readJsonObjectFile as underlyingReadJsonObjectFile,
   writeJsonFile as underlyingWriteJsonFile,
 } from '@metamask/action-utils';
+import fs from 'fs';
+
 import { wrapError, isErrorWithCode } from './misc-utils.js';
 
 /**

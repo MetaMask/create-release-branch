@@ -1,5 +1,8 @@
 import createDebug from 'debug';
 
+/**
+ * Logger for development only.
+ */
 export const debug = createDebug('create-release-branch:tests');
 
 /**
@@ -13,10 +16,10 @@ export const debug = createDebug('create-release-branch:tests');
  * @returns The keys of an object, typed according to the type of the object
  * itself.
  */
-export function knownKeysOf<K extends string | number | symbol>(
-  object: Partial<Record<K, any>>,
-) {
-  return Object.keys(object) as K[];
+export function knownKeysOf<Key extends string | number | symbol>(
+  object: Partial<Record<Key, any>>,
+): Key[] {
+  return Object.keys(object) as Key[];
 }
 
 /**

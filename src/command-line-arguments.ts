@@ -1,6 +1,9 @@
-import yargs from 'yargs/yargs';
 import { hideBin } from 'yargs/helpers';
+import yargs from 'yargs/yargs';
 
+/**
+ * The set of positional and named arguments that can be passed to this tool.
+ */
 export type CommandLineArguments = {
   projectDirectory: string;
   tempDirectory: string | undefined;

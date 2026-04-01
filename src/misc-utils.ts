@@ -1,8 +1,8 @@
-import which from 'which';
-import { execa, Options } from 'execa';
+import { getErrorMessage, isObject } from '@metamask/utils';
 import createDebug from 'debug';
+import { execa, Options } from 'execa';
 import { ErrorWithCause } from 'pony-cause';
-import { isObject } from '@metamask/utils';
+import which from 'which';
 
 export { isTruthyString } from '@metamask/action-utils';
 export { hasProperty, isNullOrUndefined } from '@metamask/utils';
@@ -94,18 +94,23 @@ export function isErrorWithStack(error: unknown): error is { stack: string } {
  * something throwable).
  * @returns A new error object.
  */
-export function wrapError(message: string, originalError: unknown) {
+export function wrapError(
+  message: string,
+  originalError: unknown,
+): Error & { code?: string } {
   if (isError(originalError)) {
-    const error: any = new ErrorWithCause(message, { cause: originalError });
+    const error = new ErrorWithCause(message, { cause: originalError });
 
     if (isErrorWithCode(originalError)) {
+      // @ts-expect-error `code` does not exist on ErrorWithCause, but we add it
+      // anyway
       error.code = originalError.code;
     }
 
     return error;
   }
 
-  return new Error(`${message}: ${originalError}`);
+  return new Error(`${message}: ${getErrorMessage(originalError)}`);
 }
 
 /**

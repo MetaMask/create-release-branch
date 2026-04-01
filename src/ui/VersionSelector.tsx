@@ -1,5 +1,10 @@
+import { ReactNode } from 'react';
+
 import { RELEASE_TYPE_OPTIONS, ReleaseType } from './types.js';
 
+/**
+ * Props for the `VersionSelector` component.
+ */
 type VersionSelectorProps = {
   packageName: string;
   selection: string;
@@ -32,14 +37,12 @@ export function VersionSelector({
   onCustomVersionChange,
   onFetchChangelog,
   isLoadingChangelog,
-}: VersionSelectorProps) {
+}: VersionSelectorProps): ReactNode {
   return (
     <div className="flex items-center space-x-2">
       <select
         value={selection}
-        onChange={(e) =>
-          onSelectionChange(packageName, e.target.value as ReleaseType)
-        }
+        onChange={(event) => onSelectionChange(packageName, event.target.value)}
         className="border rounded px-2 py-1"
       >
         <option value="">Select version bump</option>
@@ -65,12 +68,16 @@ export function VersionSelector({
         <input
           type="text"
           placeholder="Enter version (e.g., 1.2.3)"
-          onChange={(e) => onCustomVersionChange(packageName, e.target.value)}
+          onChange={(event) =>
+            onCustomVersionChange(packageName, event.target.value)
+          }
           className="border rounded px-2 py-1"
         />
       )}
       <button
-        onClick={() => onFetchChangelog(packageName)}
+        onClick={() => {
+          onFetchChangelog(packageName).catch(console.error);
+        }}
         disabled={isLoadingChangelog}
         className="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600 disabled:bg-gray-400"
       >

@@ -1,7 +1,7 @@
-import { withProtectedProcessEnv, withSandbox } from '../../helpers.js';
 import MonorepoEnvironment, {
   MonorepoEnvironmentOptions,
 } from './monorepo-environment.js';
+import { withProtectedProcessEnv, withSandbox } from '../../helpers.js';
 
 /**
  * Builds a monorepo project in a temporary directory, then calls the given
@@ -23,7 +23,7 @@ export async function withMonorepoProjectEnvironment<
   callback: (
     environment: MonorepoEnvironment<WorkspacePackageNickname>,
   ) => Promise<CallbackReturnValue>,
-) {
+): Promise<void> {
   return withProtectedProcessEnv(async () => {
     return withSandbox(async (sandbox) => {
       const environment = new MonorepoEnvironment({

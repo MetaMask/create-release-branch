@@ -1,9 +1,14 @@
+import { ReactNode } from 'react';
+
+/**
+ * Props for the `DependencyErrorSection` component.
+ */
 type DependencyErrorSectionProps = {
   title: string;
   items: string[];
   setSelections: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   errorSubject: string;
-  errorDetails: React.ReactNode;
+  errorDetails: ReactNode;
 };
 
 /**
@@ -24,7 +29,7 @@ export function DependencyErrorSection({
   setSelections,
   errorSubject,
   errorDetails,
-}: DependencyErrorSectionProps) {
+}: DependencyErrorSectionProps): ReactNode {
   return (
     <div className="mt-4 pt-4 border-t border-red-200">
       <div className="flex justify-between items-center mb-2">

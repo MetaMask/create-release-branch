@@ -1,14 +1,16 @@
 import path from 'path';
-import { buildChangelog } from '../../helpers.js';
+
 import Repo, { RepoOptions } from './repo.js';
+import { buildChangelog } from '../../helpers.js';
 
 /**
  * A set of configuration options for a {@link LocalRepo}. In addition to the
  * options listed in {@link RepoOptions}, these include:
  *
- * @property remoteRepoDirectoryPath - The directory that holds the "remote"
+ * remoteRepoDirectoryPath - The directory that holds the "remote"
  * companion of this repo.
- * @property createInitialCommit - Usually when this repo is initialized, a
+ *
+ * createInitialCommit - Usually when this repo is initialized, a
  * commit is created (which will contain starting `package.json` files). You can
  * use this option to disable that if you need to create your own commits for
  * clarity.
@@ -26,15 +28,24 @@ export default abstract class LocalRepo extends Repo {
   /**
    * The directory that holds the "remote" companion of this repo.
    */
-  #remoteRepoDirectoryPath: string;
+  readonly #remoteRepoDirectoryPath: string;
 
   /**
    * Usually when this repo is initialized, a commit is created (which will
    * contain starting `package.json` files). You can use this option to disable
    * that if you need to create your own commits for clarity.
    */
-  #createInitialCommit: boolean;
+  readonly #createInitialCommit: boolean;
 
+  /**
+   * Creates a LocalRepo.
+   *
+   * @param args - The arguments.
+   * @param args.remoteRepoDirectoryPath - The path to the remote repo that this
+   * repo should appear to be cloned from.
+   * @param args.createInitialCommit - Whether to create an initial commit in
+   * the repo upon initialization.
+   */
   constructor({
     remoteRepoDirectoryPath,
     createInitialCommit,
@@ -48,7 +59,7 @@ export default abstract class LocalRepo extends Repo {
   /**
    * Clones the "remote" repo.
    */
-  protected async create() {
+  protected async create(): Promise<void> {
     await this.runCommand(
       'git',
       ['clone', this.#remoteRepoDirectoryPath, this.getWorkingDirectoryPath()],
@@ -61,7 +72,7 @@ export default abstract class LocalRepo extends Repo {
    * and changelog. Also creates an initial commit if this repo was configured
    * with `createInitialCommit: true`.
    */
-  protected async afterCreate() {
+  protected async afterCreate(): Promise<void> {
     await super.afterCreate();
 
     // We reconfigure the repo such that it ostensibly has a remote that points
@@ -111,7 +122,7 @@ export default abstract class LocalRepo extends Repo {
    *
    * @returns `local-repo` within the environment directory.
    */
-  getWorkingDirectoryPath() {
+  getWorkingDirectoryPath(): string {
     return path.join(this.environmentDirectoryPath, 'local-repo');
   }
 

@@ -1,3 +1,4 @@
+import { ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
 
 /**
@@ -7,7 +8,7 @@ import ReactMarkdown from 'react-markdown';
  * @param props.content - The text to render.
  * @returns The rendered Markdown.
  */
-export function Markdown({ content }: { content: string }) {
+export function Markdown({ content }: { content: string }): ReactNode {
   return (
     <ReactMarkdown
       components={{

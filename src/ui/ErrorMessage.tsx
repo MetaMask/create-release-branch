@@ -1,3 +1,8 @@
+import { ReactNode } from 'react';
+
+/**
+ * Props for the `ErrorMessage` component.
+ */
 type ErrorMessageProps = {
   errors: string[];
 };
@@ -9,7 +14,7 @@ type ErrorMessageProps = {
  * @param props.errors - The list of errors.
  * @returns The error message component.
  */
-export function ErrorMessage({ errors }: ErrorMessageProps) {
+export function ErrorMessage({ errors }: ErrorMessageProps): ReactNode {
   if (errors.length === 0) {
     return null;
   }

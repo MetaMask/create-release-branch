@@ -1,5 +1,6 @@
 import os from 'os';
 import path from 'path';
+
 import { readCommandLineArguments } from './command-line-arguments.js';
 import { WriteStreamLike } from './fs.js';
 import { readProject, Project } from './project.js';
@@ -7,14 +8,18 @@ import { readProject, Project } from './project.js';
 /**
  * The type of release being created as determined by the parent release.
  *
- * - An *ordinary* release includes features or fixes applied against the
- * latest release and is designated by bumping the first part of that release's
- * version string.
+ * - An *ordinary* release includes features or fixes applied against the latest
+ *   release and is designated by bumping the first part of that release's
+ *   version string.
  * - A *backport* release includes fixes applied against a previous release and
- * is designated by bumping the second part of that release's version string.
+ *   is designated by bumping the second part of that release's version string.
  */
 export type ReleaseType = 'ordinary' | 'backport';
 
+/**
+ * Various pieces of information that the tool uses to run, derived from
+ * command-line arguments.
+ */
 type InitialParameters = {
   project: Project;
   tempDirectoryPath: string;

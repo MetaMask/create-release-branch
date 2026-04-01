@@ -1,3 +1,7 @@
+// This file tests a file that is concerned with accessing environment
+// variables.
+/* eslint-disable n/no-process-env */
+
 import { getEnvironmentVariables } from './env.js';
 
 describe('env', () => {

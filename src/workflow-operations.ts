@@ -1,5 +1,5 @@
-import { debug } from './misc-utils.js';
 import { ReleaseType } from './initial-parameters.js';
+import { debug } from './misc-utils.js';
 import { Project } from './project.js';
 import {
   branchExists,
