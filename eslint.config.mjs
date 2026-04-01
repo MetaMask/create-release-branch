@@ -171,7 +171,7 @@ const config = createConfig([
   },
 
   {
-    files: ['src/ui/**.tsx'],
+    files: ['src/ui/**/*.tsx'],
     extends: [
       browser,
       react.configs.flat.recommended,
