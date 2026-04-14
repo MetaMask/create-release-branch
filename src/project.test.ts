@@ -327,6 +327,7 @@ describe('project', () => {
 
       await updateChangelogsForChangedPackages({
         project,
+        formatter: 'prettier',
         stderr,
       });
 
@@ -361,6 +362,7 @@ describe('project', () => {
 
       await updateChangelogsForChangedPackages({
         project,
+        formatter: 'prettier',
         stderr,
       });
 

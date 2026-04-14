@@ -32,6 +32,7 @@ describe('main', () => {
         releaseType: 'backport',
         interactive: false,
         port: 3000,
+        formatter: 'prettier',
       });
     const followMonorepoWorkflowSpy = jest
       .spyOn(monorepoWorkflowOperations, 'followMonorepoWorkflow')
@@ -69,6 +70,7 @@ describe('main', () => {
         releaseType: 'backport',
         interactive: true,
         port: 3000,
+        formatter: 'prettier',
       });
     const startUISpy = jest.spyOn(ui, 'startUI').mockResolvedValue();
 
@@ -103,6 +105,7 @@ describe('main', () => {
         releaseType: 'backport',
         interactive: false,
         port: 3000,
+        formatter: 'prettier',
       });
     const followMonorepoWorkflowSpy = jest
       .spyOn(monorepoWorkflowOperations, 'followMonorepoWorkflow')
