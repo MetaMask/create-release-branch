@@ -51,6 +51,7 @@ describe('main', () => {
       firstRemovingExistingReleaseSpecification: true,
       releaseType: 'backport',
       defaultBranch: 'main',
+      formatter: 'prettier',
       stdout,
       stderr,
     });
@@ -86,6 +87,7 @@ describe('main', () => {
       releaseType: 'backport',
       defaultBranch: 'main',
       port: 3000,
+      formatter: 'prettier',
       stdout,
       stderr,
     });
