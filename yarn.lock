@@ -2327,7 +2327,13 @@ __metadata:
     yaml: ^2.2.2
     yargs: ^17.7.1
   peerDependencies:
+    oxfmt: ^0.45.0
     prettier: ">=3.0.0"
+  peerDependenciesMeta:
+    oxfmt:
+      optional: true
+    prettier:
+      optional: true
   bin:
     create-release-branch: bin/create-release-branch.js
   languageName: unknown
