@@ -7,7 +7,7 @@ import {
   writeFile,
 } from './fs.js';
 import { determineEditor } from './editor.js';
-import { ReleaseType } from './initial-parameters.js';
+import { Formatter, ReleaseType } from './initial-parameters.js';
 import {
   Project,
   updateChangelogsForChangedPackages,
@@ -57,6 +57,7 @@ import {
  * @param args.releaseType - The type of release ("ordinary" or "backport"),
  * which affects how the version is bumped.
  * @param args.defaultBranch - The name of the default branch in the repository.
+ * @param args.formatter - The formatter to use for formatting the changelog.
  * @param args.stdout - A stream that can be used to write to standard out.
  * @param args.stderr - A stream that can be used to write to standard error.
  */
@@ -66,6 +67,7 @@ export async function followMonorepoWorkflow({
   firstRemovingExistingReleaseSpecification,
   releaseType,
   defaultBranch,
+  formatter,
   stdout,
   stderr,
 }: {
@@ -74,6 +76,7 @@ export async function followMonorepoWorkflow({
   firstRemovingExistingReleaseSpecification: boolean;
   releaseType: ReleaseType;
   defaultBranch: string;
+  formatter: Formatter;
   stdout: Pick<WriteStream, 'write'>;
   stderr: Pick<WriteStream, 'write'>;
 }) {
@@ -83,7 +86,7 @@ export async function followMonorepoWorkflow({
   });
 
   if (firstRun) {
-    await updateChangelogsForChangedPackages({ project, stderr });
+    await updateChangelogsForChangedPackages({ project, formatter, stderr });
     await commitAllChanges(
       project.directoryPath,
       `Initialize Release ${newReleaseVersion}`,
@@ -150,7 +153,7 @@ export async function followMonorepoWorkflow({
     releaseSpecificationPackages: packages,
     newReleaseVersion,
   });
-  await executeReleasePlan(project, releasePlan, stderr);
+  await executeReleasePlan(project, releasePlan, formatter, stderr);
   await removeFile(releaseSpecificationPath);
   await fixConstraints(project.directoryPath);
   await updateYarnLockfile(project.directoryPath);

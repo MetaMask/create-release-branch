@@ -1,9 +1,13 @@
 import fs, { WriteStream } from 'fs';
 import path from 'path';
 import { format } from 'util';
-import { parseChangelog, updateChangelog } from '@metamask/auto-changelog';
-import { format as formatPrettier } from 'prettier/standalone';
-import * as markdown from 'prettier/plugins/markdown';
+import {
+  oxfmt,
+  parseChangelog,
+  prettier,
+  updateChangelog,
+} from '@metamask/auto-changelog';
+import { assertExhaustive } from '@metamask/utils';
 import { WriteStreamLike, readFile, writeFile, writeJsonFile } from './fs.js';
 import { isErrorWithCode } from './misc-utils.js';
 import {
@@ -15,6 +19,7 @@ import { Project } from './project.js';
 import { PackageReleasePlan } from './release-plan.js';
 import { hasChangesInDirectorySinceGitTag } from './repo.js';
 import { SemVer } from './semver.js';
+import { Formatter } from './initial-parameters.js';
 
 const MANIFEST_FILE_NAME = 'package.json';
 const CHANGELOG_FILE_NAME = 'CHANGELOG.md';
@@ -232,6 +237,27 @@ export async function readMonorepoWorkspacePackage({
 }
 
 /**
+ * Get the formatting function for the given formatter name.
+ *
+ * @param formatter - The name of the formatter.
+ * @returns The formatting function.
+ */
+export function getFormatter(
+  formatter: 'oxfmt' | 'prettier',
+): (changelog: string) => Promise<string> {
+  switch (formatter) {
+    case 'oxfmt':
+      return oxfmt;
+
+    case 'prettier':
+      return prettier;
+
+    default:
+      return assertExhaustive(formatter);
+  }
+}
+
+/**
  * Migrate all unreleased changes to a release section.
  *
  * Changes are migrated in their existing categories, and placed above any
@@ -241,6 +267,7 @@ export async function readMonorepoWorkspacePackage({
  * @param args.project - The project.
  * @param args.package - A particular package in the project.
  * @param args.version - The release version to migrate unreleased changes to.
+ * @param args.formatter - The formatter to use for formatting the changelog.
  * @param args.stderr - A stream that can be used to write to standard error.
  * @returns The result of writing to the changelog.
  */
@@ -248,11 +275,13 @@ export async function migrateUnreleasedChangelogChangesToRelease({
   project: { repositoryUrl },
   package: pkg,
   version,
+  formatter,
   stderr,
 }: {
   project: Pick<Project, 'directoryPath' | 'repositoryUrl'>;
   package: Package;
   version: string;
+  formatter: Formatter;
   stderr: Pick<WriteStream, 'write'>;
 }): Promise<void> {
   let changelogContent;
@@ -274,26 +303,12 @@ export async function migrateUnreleasedChangelogChangesToRelease({
     changelogContent,
     repoUrl: repositoryUrl,
     tagPrefix: `${pkg.validatedManifest.name}@`,
-    formatter: formatChangelog,
+    formatter: getFormatter(formatter),
   });
 
   changelog.addRelease({ version });
   changelog.migrateUnreleasedChangesToRelease(version);
   await writeFile(pkg.changelogPath, await changelog.toString());
-}
-
-/**
- * Format the given changelog using Prettier. This is extracted into a separate
- * function for coverage purposes.
- *
- * @param changelog - The changelog to format.
- * @returns The formatted changelog.
- */
-export async function formatChangelog(changelog: string) {
-  return await formatPrettier(changelog, {
-    parser: 'markdown',
-    plugins: [markdown],
-  });
 }
 
 /**
@@ -304,16 +319,19 @@ export async function formatChangelog(changelog: string) {
  * @param args - The arguments.
  * @param args.project - The project.
  * @param args.package - A particular package in the project.
+ * @param args.formatter - The formatter to use for formatting the changelog.
  * @param args.stderr - A stream that can be used to write to standard error.
  * @returns The result of writing to the changelog.
  */
 export async function updatePackageChangelog({
   project: { repositoryUrl },
   package: pkg,
+  formatter,
   stderr,
 }: {
   project: Pick<Project, 'directoryPath' | 'repositoryUrl'>;
   package: Package;
+  formatter: Formatter;
   stderr: Pick<WriteStream, 'write'>;
 }): Promise<void> {
   let changelogContent;
@@ -340,7 +358,7 @@ export async function updatePackageChangelog({
     projectRootDirectory: pkg.directoryPath,
     repoUrl: repositoryUrl,
     tagPrefixes: [`${pkg.validatedManifest.name}@`, 'v'],
-    formatter: formatChangelog,
+    formatter: getFormatter(formatter),
   });
 
   if (newChangelogContent) {
@@ -362,16 +380,19 @@ export async function updatePackageChangelog({
  * @param args.project - The project.
  * @param args.packageReleasePlan - The release plan for a particular package in the
  * project.
+ * @param args.formatter - The formatter to use for formatting the changelog.
  * @param args.stderr - A stream that can be used to write to standard error.
  * Defaults to /dev/null.
  */
 export async function updatePackage({
   project,
   packageReleasePlan,
+  formatter,
   stderr = fs.createWriteStream('/dev/null'),
 }: {
   project: Pick<Project, 'directoryPath' | 'repositoryUrl'>;
   packageReleasePlan: PackageReleasePlan;
+  formatter: Formatter;
   stderr?: Pick<WriteStream, 'write'>;
 }): Promise<void> {
   const { package: pkg, newVersion } = packageReleasePlan;
@@ -384,6 +405,7 @@ export async function updatePackage({
   await migrateUnreleasedChangelogChangesToRelease({
     project,
     package: pkg,
+    formatter,
     stderr,
     version: newVersion,
   });
