@@ -9,9 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [4.2.0]
 
-### Uncategorized
+### Added
 
-- feat: Add option to use Oxfmt for formatting changelog ([#198](https://github.com/MetaMask/create-release-branch/pull/198))
+- Add option to use Oxfmt for formatting changelog ([#198](https://github.com/MetaMask/create-release-branch/pull/198))
+  - The CLI now accepts an optional `--formatter` option which can be set to either "oxfmt" or "prettier" (default).
 
 ## [4.1.4]
 
