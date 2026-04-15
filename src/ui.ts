@@ -28,6 +28,7 @@ import {
 } from './yarn-commands.js';
 import { readFile } from './fs.js';
 import { getCurrentDirectoryPath } from './dirname.js';
+import { Formatter } from './initial-parameters.js';
 
 const UI_BUILD_DIR = join(getCurrentDirectoryPath(), 'ui');
 
@@ -36,6 +37,7 @@ type UIOptions = {
   releaseType: 'ordinary' | 'backport';
   defaultBranch: string;
   port: number;
+  formatter: Formatter;
   stdout: Pick<WriteStream, 'write'>;
   stderr: Pick<WriteStream, 'write'>;
 };
@@ -48,6 +50,7 @@ type UIOptions = {
  * @param options.releaseType - The type of release.
  * @param options.defaultBranch - The default branch name.
  * @param options.port - The port number for the server.
+ * @param options.formatter - The formatter to use for formatting the changelog.
  * @param options.stdout - The stdout stream.
  * @param options.stderr - The stderr stream.
  */
@@ -56,6 +59,7 @@ export async function startUI({
   releaseType,
   defaultBranch,
   port,
+  formatter,
   stdout,
   stderr,
 }: UIOptions): Promise<void> {
@@ -65,7 +69,7 @@ export async function startUI({
   });
 
   if (firstRun) {
-    await updateChangelogsForChangedPackages({ project, stderr });
+    await updateChangelogsForChangedPackages({ project, formatter, stderr });
     await commitAllChanges(
       project.directoryPath,
       `Initialize Release ${newReleaseVersion}`,
@@ -75,6 +79,7 @@ export async function startUI({
   const app = createApp({
     project,
     defaultBranch,
+    formatter,
     stderr,
     version: newReleaseVersion,
     closeServer: () => {
@@ -118,6 +123,7 @@ export async function startUI({
  * @param options - The options for creating the app.
  * @param options.project - The project object.
  * @param options.defaultBranch - The default branch name.
+ * @param options.formatter - The formatter to use for formatting the changelog.
  * @param options.stderr - The stderr stream.
  * @param options.version - The release version.
  * @param options.closeServer - The function to close the server.
@@ -126,12 +132,14 @@ export async function startUI({
 function createApp({
   project,
   defaultBranch,
+  formatter,
   stderr,
   version,
   closeServer,
 }: {
   project: Project;
   defaultBranch: string;
+  formatter: Formatter;
   stderr: Pick<WriteStream, 'write'>;
   version: string;
   closeServer: () => void;
@@ -328,7 +336,7 @@ function createApp({
           releaseSpecificationPackages,
           newReleaseVersion: version,
         });
-        await executeReleasePlan(project, releasePlan, stderr);
+        await executeReleasePlan(project, releasePlan, formatter, stderr);
         await fixConstraints(project.directoryPath);
         await updateYarnLockfile(project.directoryPath);
         await deduplicateDependencies(project.directoryPath);

@@ -181,16 +181,18 @@ describe('release-plan-utils', () => {
       const stderr = fs.createWriteStream('/dev/null');
       const updatePackageSpy = jest.spyOn(packageUtils, 'updatePackage');
 
-      await executeReleasePlan(project, releasePlan, stderr);
+      await executeReleasePlan(project, releasePlan, 'prettier', stderr);
 
       expect(updatePackageSpy).toHaveBeenNthCalledWith(1, {
         project,
         packageReleasePlan: releasePlan.packages[0],
+        formatter: 'prettier',
         stderr,
       });
       expect(updatePackageSpy).toHaveBeenNthCalledWith(2, {
         project,
         packageReleasePlan: releasePlan.packages[1],
+        formatter: 'prettier',
         stderr,
       });
     });

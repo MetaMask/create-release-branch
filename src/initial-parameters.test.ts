@@ -38,6 +38,7 @@ describe('initial-parameters', () => {
           defaultBranch: 'main',
           interactive: false,
           port: 3000,
+          formatter: 'prettier',
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
@@ -60,6 +61,7 @@ describe('initial-parameters', () => {
         defaultBranch: 'main',
         interactive: false,
         port: 3000,
+        formatter: 'prettier',
       });
     });
 
@@ -78,6 +80,7 @@ describe('initial-parameters', () => {
           defaultBranch: 'main',
           interactive: false,
           port: 3000,
+          formatter: 'prettier',
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
@@ -110,6 +113,7 @@ describe('initial-parameters', () => {
           defaultBranch: 'main',
           interactive: false,
           port: 3000,
+          formatter: 'prettier',
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
@@ -142,6 +146,7 @@ describe('initial-parameters', () => {
           defaultBranch: 'main',
           interactive: false,
           port: 3000,
+          formatter: 'prettier',
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
@@ -174,6 +179,7 @@ describe('initial-parameters', () => {
           defaultBranch: 'main',
           interactive: false,
           port: 3000,
+          formatter: 'prettier',
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
@@ -204,6 +210,7 @@ describe('initial-parameters', () => {
           defaultBranch: 'main',
           interactive: false,
           port: 3000,
+          formatter: 'prettier',
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
@@ -234,6 +241,7 @@ describe('initial-parameters', () => {
           defaultBranch: 'main',
           interactive: false,
           port: 3000,
+          formatter: 'prettier',
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
@@ -264,6 +272,7 @@ describe('initial-parameters', () => {
           defaultBranch: 'main',
           interactive: false,
           port: 3000,
+          formatter: 'prettier',
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')

@@ -4,6 +4,7 @@ import { debug } from './misc-utils.js';
 import { Package, updatePackage } from './package.js';
 import { Project } from './project.js';
 import { ReleaseSpecification } from './release-specification.js';
+import { Formatter } from './initial-parameters.js';
 
 /**
  * Instructions for how to update the project in order to prepare it for a new
@@ -96,11 +97,13 @@ export async function planRelease({
  * and where they can found).
  * @param releasePlan - Compiled instructions on how exactly to update the
  * project in order to prepare a new release.
+ * @param formatter - The formatter to use for formatting the changelog.
  * @param stderr - A stream that can be used to write to standard error.
  */
 export async function executeReleasePlan(
   project: Project,
   releasePlan: ReleasePlan,
+  formatter: Formatter,
   stderr: Pick<WriteStream, 'write'>,
 ) {
   await Promise.all(
@@ -111,6 +114,7 @@ export async function executeReleasePlan(
       await updatePackage({
         project,
         packageReleasePlan: workspaceReleasePlan,
+        formatter,
         stderr,
       });
     }),

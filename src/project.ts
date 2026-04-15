@@ -20,6 +20,7 @@ import {
   convertToHttpsGitHubRepositoryUrl,
   getStdoutFromCommand,
 } from './misc-utils.js';
+import { Formatter } from './initial-parameters.js';
 
 /**
  * The release version of the root package of a monorepo extracted from its
@@ -205,16 +206,19 @@ export async function getValidRepositoryUrl(
  * @param args - The arguments.
  * @param args.project - The project.
  * @param args.stderr - A stream that can be used to write to standard error.
+ * @param args.formatter - The formatter to use for formatting the changelog.
  * @returns The result of writing to the changelog.
  */
 export async function updateChangelogsForChangedPackages({
   project,
+  formatter,
   stderr,
 }: {
   project: Pick<
     Project,
     'directoryPath' | 'repositoryUrl' | 'workspacePackages'
   >;
+  formatter: Formatter;
   stderr: Pick<WriteStream, 'write'>;
 }): Promise<void> {
   await Promise.all(
@@ -225,6 +229,7 @@ export async function updateChangelogsForChangedPackages({
       .map((pkg) =>
         updatePackageChangelog({
           project,
+          formatter,
           package: pkg,
           stderr,
         }),

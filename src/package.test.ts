@@ -4,7 +4,11 @@ import { when } from 'jest-when';
 import * as autoChangelog from '@metamask/auto-changelog';
 import { SemVer } from 'semver';
 import { MockWritable } from 'stdio-mock';
-import { buildChangelog, withSandbox } from '../tests/helpers.js';
+import {
+  buildChangelog,
+  normalizeMultilineString,
+  withSandbox,
+} from '../tests/helpers.js';
 import {
   buildMockPackage,
   buildMockProject,
@@ -12,7 +16,7 @@ import {
   createNoopWriteStream,
 } from '../tests/unit/helpers.js';
 import {
-  formatChangelog,
+  getFormatter,
   readMonorepoRootPackage,
   readMonorepoWorkspacePackage,
   updatePackage,
@@ -24,6 +28,23 @@ import * as repoModule from './repo.js';
 
 jest.mock('./package-manifest');
 jest.mock('./repo');
+jest.mock('@metamask/auto-changelog', () => ({
+  ...jest.requireActual('@metamask/auto-changelog'),
+  updateChangelog: jest.fn(),
+
+  // Replacing the implementation of the `oxfmt` function because Jest
+  // doesn't work well with dynamic imports, and Oxfmt is ESM-only.
+  oxfmt: async (content: string) => content,
+
+  // Replacing the implementation of the `prettier` function because Jest
+  // doesn't work well with dynamic imports.
+  prettier: async (content: string) => {
+    const markdown = jest.requireActual('prettier/plugins/markdown');
+    return await jest
+      .requireActual('prettier/standalone')
+      .format(content, { parser: 'markdown', plugins: [markdown] });
+  },
+}));
 
 describe('package', () => {
   describe('readMonorepoRootPackage', () => {
@@ -440,7 +461,11 @@ describe('package', () => {
           newVersion: '2.0.0',
         };
 
-        await updatePackage({ project, packageReleasePlan });
+        await updatePackage({
+          project,
+          packageReleasePlan,
+          formatter: 'prettier',
+        });
 
         const newManifest = JSON.parse(
           await fs.promises.readFile(manifestPath, 'utf8'),
@@ -483,7 +508,11 @@ describe('package', () => {
           `),
         );
 
-        await updatePackage({ project, packageReleasePlan });
+        await updatePackage({
+          project,
+          packageReleasePlan,
+          formatter: 'prettier',
+        });
 
         const newChangelogContent = await fs.promises.readFile(
           changelogPath,
@@ -514,6 +543,75 @@ describe('package', () => {
       });
     });
 
+    it('migrates all unreleased changes to a release section with Oxfmt', async () => {
+      await withSandbox(async (sandbox) => {
+        const project = buildMockProject({
+          repositoryUrl: 'https://repo.url',
+        });
+        const changelogPath = path.join(sandbox.directoryPath, 'CHANGELOG.md');
+        const packageReleasePlan = {
+          package: buildMockPackage({
+            directoryPath: sandbox.directoryPath,
+            manifestPath: path.join(sandbox.directoryPath, 'package.json'),
+            validatedManifest: buildMockManifest(),
+            changelogPath,
+          }),
+          newVersion: '2.0.0',
+        };
+
+        await fs.promises.writeFile(
+          changelogPath,
+          buildChangelog(`
+            ## [Unreleased]
+            ### Uncategorized
+            - Add isNewFunction ([#2](https://repo.url/compare/package/pull/2))
+
+            ## [1.0.0] - 2020-01-01
+            ### Changed
+            - Something else
+
+            [Unreleased]: https://repo.url/compare/package@2.0.0...HEAD
+            [1.0.0]: https://repo.url/releases/tag/package@1.0.0
+          `),
+        );
+
+        await updatePackage({
+          project,
+          packageReleasePlan,
+          formatter: 'oxfmt',
+        });
+
+        const newChangelogContent = await fs.promises.readFile(
+          changelogPath,
+          'utf8',
+        );
+
+        expect(newChangelogContent).toBe(
+          normalizeMultilineString(`
+            # Changelog
+            All notable changes to this project will be documented in this file.
+
+            The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+            and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+            ## [Unreleased]
+
+            ## [2.0.0]
+            ### Uncategorized
+            - Add isNewFunction ([#2](https://repo.url/compare/package/pull/2))
+
+            ## [1.0.0] - 2020-01-01
+            ### Changed
+            - Something else
+
+            [Unreleased]: https://repo.url/compare/package@2.0.0...HEAD
+            [2.0.0]: https://repo.url/compare/package@1.0.0...package@2.0.0
+            [1.0.0]: https://repo.url/releases/tag/package@1.0.0
+          `),
+        );
+      });
+    });
+
     it("throws if reading the package's changelog fails in an unexpected way", async () => {
       await withSandbox(async (sandbox) => {
         const project = buildMockProject();
@@ -530,7 +628,7 @@ describe('package', () => {
         jest.spyOn(fsModule, 'readFile').mockRejectedValue(new Error('oops'));
 
         await expect(
-          updatePackage({ project, packageReleasePlan }),
+          updatePackage({ project, packageReleasePlan, formatter: 'prettier' }),
         ).rejects.toThrow('oops');
       });
     });
@@ -549,7 +647,11 @@ describe('package', () => {
           newVersion: '2.0.0',
         };
 
-        const result = await updatePackage({ project, packageReleasePlan });
+        const result = await updatePackage({
+          project,
+          packageReleasePlan,
+          formatter: 'prettier',
+        });
 
         expect(result).toBeUndefined();
       });
@@ -577,7 +679,7 @@ describe('package', () => {
             projectRootDirectory: sandbox.directoryPath,
             repoUrl: 'https://repo.url',
             tagPrefixes: ['package@', 'v'],
-            formatter: formatChangelog,
+            formatter: expect.any(Function),
           })
           .mockResolvedValue('new changelog');
         await fs.promises.writeFile(changelogPath, 'existing changelog');
@@ -585,6 +687,7 @@ describe('package', () => {
         await updatePackageChangelog({
           project,
           package: pkg,
+          formatter: 'prettier',
           stderr,
         });
 
@@ -616,7 +719,7 @@ describe('package', () => {
             projectRootDirectory: sandbox.directoryPath,
             repoUrl: 'https://repo.url',
             tagPrefixes: ['package@', 'v'],
-            formatter: formatChangelog,
+            formatter: expect.any(Function),
           })
           .mockResolvedValue(undefined);
         await fs.promises.writeFile(changelogPath, 'existing changelog');
@@ -624,6 +727,7 @@ describe('package', () => {
         await updatePackageChangelog({
           project,
           package: pkg,
+          formatter: 'prettier',
           stderr,
         });
 
@@ -652,6 +756,7 @@ describe('package', () => {
         const result = await updatePackageChangelog({
           project,
           package: pkg,
+          formatter: 'prettier',
           stderr,
         });
 
@@ -675,36 +780,33 @@ describe('package', () => {
         jest.spyOn(fsModule, 'readFile').mockRejectedValue(new Error('oops'));
 
         await expect(
-          updatePackageChangelog({ project, package: pkg, stderr }),
+          updatePackageChangelog({
+            project,
+            package: pkg,
+            formatter: 'prettier',
+            stderr,
+          }),
         ).rejects.toThrow('oops');
       });
     });
   });
 
-  describe('formatChangelog', () => {
-    it('formats a changelog', async () => {
-      const unformattedChangelog = `#  Changelog
-##     1.0.0
+  describe('getFormatter', () => {
+    it('returns the Oxfmt formatter', async () => {
+      const formatter = await getFormatter('oxfmt');
+      expect(formatter).toBe(autoChangelog.oxfmt);
+    });
 
- - Some change
-## 0.0.1
+    it('returns the Prettier formatter', async () => {
+      const formatter = await getFormatter('prettier');
+      expect(formatter).toBe(autoChangelog.prettier);
+    });
 
-- Some other change
-`;
-
-      expect(await formatChangelog(unformattedChangelog))
-        .toMatchInlineSnapshot(`
-        "# Changelog
-
-        ## 1.0.0
-
-        - Some change
-
-        ## 0.0.1
-
-        - Some other change
-        "
-      `);
+    it('throws if an unknown formatter name is given', async () => {
+      // @ts-expect-error: Invalid formatter name for testing purposes.
+      expect(() => getFormatter('some-unknown-formatter')).toThrow(
+        'Invalid branch reached. Should be detected during compilation.',
+      );
     });
   });
 });

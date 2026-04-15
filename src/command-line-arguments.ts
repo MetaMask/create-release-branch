@@ -9,6 +9,7 @@ export type CommandLineArguments = {
   defaultBranch: string;
   interactive: boolean;
   port: number;
+  formatter: string;
 };
 
 /**
@@ -65,6 +66,11 @@ export async function readCommandLineArguments(
         'Port to run the interactive web UI server (only used with --interactive)',
       type: 'number',
       default: 3000,
+    })
+    .option('formatter', {
+      describe: 'The formatter to use for changelog formatting.',
+      choices: ['oxfmt', 'prettier'],
+      default: 'prettier',
     })
     .help()
     .strict()

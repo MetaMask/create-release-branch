@@ -327,18 +327,21 @@ describe('project', () => {
 
       await updateChangelogsForChangedPackages({
         project,
+        formatter: 'prettier',
         stderr,
       });
 
       expect(updatePackageChangelogSpy).toHaveBeenCalledWith({
         project,
         package: project.workspacePackages.a,
+        formatter: 'prettier',
         stderr,
       });
 
       expect(updatePackageChangelogSpy).toHaveBeenCalledWith({
         project,
         package: project.workspacePackages.b,
+        formatter: 'prettier',
         stderr,
       });
     });
@@ -361,6 +364,7 @@ describe('project', () => {
 
       await updateChangelogsForChangedPackages({
         project,
+        formatter: 'prettier',
         stderr,
       });
 

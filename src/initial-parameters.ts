@@ -15,6 +15,11 @@ import { readProject, Project } from './project.js';
  */
 export type ReleaseType = 'ordinary' | 'backport';
 
+/**
+ * The name of the formatter to use for formatting the changelog.
+ */
+export type Formatter = 'oxfmt' | 'prettier';
+
 type InitialParameters = {
   project: Project;
   tempDirectoryPath: string;
@@ -23,6 +28,7 @@ type InitialParameters = {
   defaultBranch: string;
   interactive: boolean;
   port: number;
+  formatter: Formatter;
 };
 
 /**
@@ -65,5 +71,6 @@ export async function determineInitialParameters({
     releaseType: args.backport ? 'backport' : 'ordinary',
     interactive: args.interactive,
     port: args.port,
+    formatter: args.formatter as Formatter,
   };
 }
