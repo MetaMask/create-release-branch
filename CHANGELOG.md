@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.2.0]
+
+### Added
+
+- Add option to use Oxfmt for formatting changelog ([#198](https://github.com/MetaMask/create-release-branch/pull/198))
+  - The CLI now accepts an optional `--formatter` option which can be set to either "oxfmt" or "prettier" (default).
+
 ## [4.1.4]
 
 ### Changed
@@ -136,7 +143,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - In this first release, this tool only supports monorepos with an independent versioning scheme. We will add support for other kinds of projects in future releases.
   - You can learn more on how to use this tool by reading the [documentation](docs/).
 
-[Unreleased]: https://github.com/MetaMask/create-release-branch/compare/v4.1.4...HEAD
+[Unreleased]: https://github.com/MetaMask/create-release-branch/compare/v4.2.0...HEAD
+[4.2.0]: https://github.com/MetaMask/create-release-branch/compare/v4.1.4...v4.2.0
 [4.1.4]: https://github.com/MetaMask/create-release-branch/compare/v4.1.3...v4.1.4
 [4.1.3]: https://github.com/MetaMask/create-release-branch/compare/v4.1.2...v4.1.3
 [4.1.2]: https://github.com/MetaMask/create-release-branch/compare/v4.1.1...v4.1.2
