@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Bump `@metamask/auto-changelog` from `6.1.0` to `6.1.1` ([#xxx](https://github.com/MetaMask/create-release-branch/pull/xxx))
+- Bump `@metamask/auto-changelog` from `6.1.0` to `6.1.1` ([#200](https://github.com/MetaMask/create-release-branch/pull/200))
 
 ## [4.2.0]
 
