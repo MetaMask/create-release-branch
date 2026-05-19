@@ -2236,9 +2236,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metamask/auto-changelog@npm:^6.1.0":
-  version: 6.1.0
-  resolution: "@metamask/auto-changelog@npm:6.1.0"
+"@metamask/auto-changelog@npm:^6.1.1":
+  version: 6.1.1
+  resolution: "@metamask/auto-changelog@npm:6.1.1"
   dependencies:
     "@octokit/rest": ^20.0.0
     diff: ^5.0.0
@@ -2255,7 +2255,7 @@ __metadata:
       optional: true
   bin:
     auto-changelog: dist/cli.mjs
-  checksum: af543c8ceaa2f388dc3bdc088cd92070ed061e7a27ca7e2f2362feabea7b2657a465eda46f65b7b6a189de24df7696097b8f819c5bcab963b0d07bbf3ab642d7
+  checksum: 73199a42580927df872326e48dea9f60f0d221225b2e7695d050494c706f78ddf7843961d3b323ca791bb4126f42f02ba38d382d2f03602535c8fc907128d291
   languageName: node
   linkType: hard
 
@@ -2269,7 +2269,7 @@ __metadata:
     "@babel/preset-typescript": ^7.23.3
     "@lavamoat/allow-scripts": ^3.1.0
     "@metamask/action-utils": ^1.0.0
-    "@metamask/auto-changelog": ^6.1.0
+    "@metamask/auto-changelog": ^6.1.1
     "@metamask/eslint-config": ^10.0.0
     "@metamask/eslint-config-jest": ^10.0.0
     "@metamask/eslint-config-nodejs": ^10.0.0
