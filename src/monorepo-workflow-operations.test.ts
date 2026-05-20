@@ -468,7 +468,7 @@ describe('monorepo-workflow-operations', () => {
           expect(commitAllChangesSpy).toHaveBeenNthCalledWith(
             1,
             projectDirectoryPath,
-            `Initialize Release ${releaseVersion}`,
+            `Initialize release ${releaseVersion} by bumping all packages`,
           );
           expect(commitAllChangesSpy).toHaveBeenNthCalledWith(
             2,
@@ -587,7 +587,7 @@ describe('monorepo-workflow-operations', () => {
 
           expect(commitAllChangesSpy).toHaveBeenCalledWith(
             projectDirectoryPath,
-            'Initialize Release 2.0.0',
+            'Initialize release 2.0.0 by bumping all packages',
           );
 
           expect(commitAllChangesSpy).toHaveBeenCalledWith(
@@ -684,7 +684,7 @@ describe('monorepo-workflow-operations', () => {
 
           expect(commitAllChangesSpy).toHaveBeenCalledWith(
             projectDirectoryPath,
-            'Initialize Release 2.0.0',
+            'Initialize release 2.0.0 by bumping all packages',
           );
           expect(commitAllChangesSpy).not.toHaveBeenCalledWith(
             projectDirectoryPath,
@@ -1126,7 +1126,7 @@ describe('monorepo-workflow-operations', () => {
 
           expect(commitAllChangesSpy).toHaveBeenCalledWith(
             projectDirectoryPath,
-            'Initialize Release 2.0.0',
+            'Initialize release 2.0.0 by bumping all packages',
           );
 
           expect(commitAllChangesSpy).toHaveBeenCalledWith(
@@ -1397,7 +1397,7 @@ describe('monorepo-workflow-operations', () => {
 
           expect(commitAllChangesSpy).toHaveBeenCalledWith(
             projectDirectoryPath,
-            'Initialize Release 2.0.0',
+            'Initialize release 2.0.0 by bumping all packages',
           );
 
           expect(commitAllChangesSpy).toHaveBeenCalledWith(
@@ -1940,7 +1940,7 @@ describe('monorepo-workflow-operations', () => {
 
           expect(commitAllChangesSpy).toHaveBeenCalledWith(
             projectDirectoryPath,
-            'Initialize Release 2.0.0',
+            'Initialize release 2.0.0 by bumping all packages',
           );
 
           expect(commitAllChangesSpy).toHaveBeenCalledWith(

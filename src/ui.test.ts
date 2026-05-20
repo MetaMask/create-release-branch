@@ -1,15 +1,20 @@
 import { MockWritable } from 'stdio-mock';
 import { buildMockPackage, buildMockProject } from '../tests/unit/helpers.js';
-import { finalizeInteractiveRelease } from './ui.js';
+import {
+  finalizeInteractiveRelease,
+  prepareInteractiveReleaseBranch,
+} from './ui.js';
 import * as projectModule from './project.js';
 import * as releasePlanModule from './release-plan.js';
 import * as repoModule from './repo.js';
 import * as yarnCommands from './yarn-commands.js';
+import * as workflowOperations from './workflow-operations.js';
 
 jest.mock('./project');
 jest.mock('./release-plan');
 jest.mock('./repo');
 jest.mock('./yarn-commands');
+jest.mock('./workflow-operations');
 jest.mock('./dirname', () => ({
   getCurrentDirectoryPath: jest.fn().mockReturnValue('/path/to/somewhere'),
 }));
@@ -19,8 +24,43 @@ jest.mock('open', () => ({
 }));
 
 describe('ui', () => {
+  describe('prepareInteractiveReleaseBranch', () => {
+    it('updates changelogs without committing when creating an interactive release branch', async () => {
+      const project = buildMockProject({ directoryPath: '/path/to/project' });
+      const stderr = new MockWritable();
+      const updateChangelogsForChangedPackagesSpy = jest.spyOn(
+        projectModule,
+        'updateChangelogsForChangedPackages',
+      );
+      const commitAllChangesSpy = jest.spyOn(repoModule, 'commitAllChanges');
+      jest.spyOn(workflowOperations, 'createReleaseBranch').mockResolvedValue({
+        version: '2.0.0',
+        firstRun: true,
+      });
+
+      const result = await prepareInteractiveReleaseBranch({
+        project,
+        releaseType: 'ordinary',
+        formatter: 'prettier',
+        stderr,
+      });
+
+      expect(result).toStrictEqual({
+        version: '2.0.0',
+        firstRun: true,
+      });
+
+      expect(updateChangelogsForChangedPackagesSpy).toHaveBeenCalledWith({
+        project,
+        formatter: 'prettier',
+        stderr,
+      });
+      expect(commitAllChangesSpy).not.toHaveBeenCalled();
+    });
+  });
+
   describe('finalizeInteractiveRelease', () => {
-    it('squashes the initial release commit before committing an interactive first run', async () => {
+    it('commits an interactive first run without resetting HEAD', async () => {
       const project = buildMockProject({
         directoryPath: '/path/to/project',
         workspacePackages: {
@@ -31,7 +71,6 @@ describe('ui', () => {
       });
       const releasePlan = { newVersion: '2.0.0', packages: [] };
       const stderr = new MockWritable();
-      const resetLastCommitSpy = jest.spyOn(repoModule, 'resetLastCommit');
       const commitAllChangesSpy = jest.spyOn(repoModule, 'commitAllChanges');
       jest
         .spyOn(releasePlanModule, 'planRelease')
@@ -65,14 +104,10 @@ describe('ui', () => {
       expect(yarnCommands.deduplicateDependencies).toHaveBeenCalledWith(
         project.directoryPath,
       );
-      expect(resetLastCommitSpy).toHaveBeenCalledWith(project.directoryPath);
       expect(commitAllChangesSpy).toHaveBeenCalledTimes(1);
       expect(commitAllChangesSpy).toHaveBeenCalledWith(
         project.directoryPath,
         'Release 2.0.0',
-      );
-      expect(resetLastCommitSpy.mock.invocationCallOrder[0]).toBeLessThan(
-        commitAllChangesSpy.mock.invocationCallOrder[0],
       );
     });
 
@@ -87,7 +122,6 @@ describe('ui', () => {
       });
       const releasePlan = { newVersion: '2.0.0', packages: [] };
       const stderr = new MockWritable();
-      const resetLastCommitSpy = jest.spyOn(repoModule, 'resetLastCommit');
       const commitAllChangesSpy = jest.spyOn(repoModule, 'commitAllChanges');
       jest
         .spyOn(releasePlanModule, 'planRelease')
@@ -105,7 +139,6 @@ describe('ui', () => {
       });
 
       expect(result).toStrictEqual({ status: 'success' });
-      expect(resetLastCommitSpy).not.toHaveBeenCalled();
       expect(commitAllChangesSpy).toHaveBeenCalledWith(
         project.directoryPath,
         'Release 2.0.0',
