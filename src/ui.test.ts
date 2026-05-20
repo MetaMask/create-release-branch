@@ -20,14 +20,18 @@ jest.mock('open', () => ({
   default: jest.fn(),
 }));
 
-async function withServer(
-  app: express.Application,
-  callback: (url: string) => Promise<void>,
-) {
+/**
+ * Starts an Express app on an ephemeral port for the duration of a test.
+ *
+ * @param app - The Express app to start.
+ * @param run - The test logic to run while the server is listening.
+ */
+async function withServer(app: express.Application, run: (url: string) => Promise<void>) {
   let server: Server;
   const url = await new Promise<string>((resolve, reject) => {
     server = app.listen(0, () => {
       const address = server.address();
+
       if (address === null || typeof address === 'string') {
         reject(new Error('Unable to determine server port'));
         return;
@@ -38,16 +42,15 @@ async function withServer(
   });
 
   try {
-    await callback(url);
+    await run(url);
   } finally {
     await new Promise<void>((resolve, reject) => {
       server.close((error) => {
         if (error) {
-          reject(error);
-          return;
+          return reject(error);
         }
 
-        resolve();
+        return resolve();
       });
     });
   }
@@ -69,7 +72,9 @@ describe('ui', () => {
       const closeServer = jest.fn();
       const resetLastCommitSpy = jest.spyOn(repoModule, 'resetLastCommit');
       const commitAllChangesSpy = jest.spyOn(repoModule, 'commitAllChanges');
-      jest.spyOn(releasePlanModule, 'planRelease').mockResolvedValue(releasePlan);
+      jest
+        .spyOn(releasePlanModule, 'planRelease')
+        .mockResolvedValue(releasePlan);
       jest.spyOn(releasePlanModule, 'executeReleasePlan').mockResolvedValue();
 
       const app = createApp({
@@ -90,7 +95,7 @@ describe('ui', () => {
         });
 
         expect(response.ok).toBe(true);
-        await expect(response.json()).resolves.toEqual({
+        expect(JSON.parse(await response.text())).toStrictEqual({
           status: 'success',
         });
       });
@@ -137,7 +142,9 @@ describe('ui', () => {
       const closeServer = jest.fn();
       const resetLastCommitSpy = jest.spyOn(repoModule, 'resetLastCommit');
       const commitAllChangesSpy = jest.spyOn(repoModule, 'commitAllChanges');
-      jest.spyOn(releasePlanModule, 'planRelease').mockResolvedValue(releasePlan);
+      jest
+        .spyOn(releasePlanModule, 'planRelease')
+        .mockResolvedValue(releasePlan);
       jest.spyOn(releasePlanModule, 'executeReleasePlan').mockResolvedValue();
 
       const app = createApp({

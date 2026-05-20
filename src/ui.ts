@@ -344,9 +344,11 @@ export function createApp({
         await fixConstraints(project.directoryPath);
         await updateYarnLockfile(project.directoryPath);
         await deduplicateDependencies(project.directoryPath);
+
         if (firstRun) {
           await resetLastCommit(project.directoryPath);
         }
+
         await commitAllChanges(project.directoryPath, `Release ${version}`);
 
         res.json({ status: 'success' });
