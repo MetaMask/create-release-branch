@@ -160,6 +160,6 @@ export async function followMonorepoWorkflow({
   await deduplicateDependencies(project.directoryPath);
   await commitAllChanges(
     project.directoryPath,
-    `Update Release ${newReleaseVersion}`,
+    `Release ${newReleaseVersion}`,
   );
 }

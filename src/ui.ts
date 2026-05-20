@@ -342,7 +342,7 @@ function createApp({
         await deduplicateDependencies(project.directoryPath);
         await commitAllChanges(
           project.directoryPath,
-          `Update Release ${version}`,
+          `Release ${version}`,
         );
 
         res.json({ status: 'success' });

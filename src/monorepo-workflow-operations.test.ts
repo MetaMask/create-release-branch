@@ -473,7 +473,7 @@ describe('monorepo-workflow-operations', () => {
           expect(commitAllChangesSpy).toHaveBeenNthCalledWith(
             2,
             projectDirectoryPath,
-            `Update Release ${releaseVersion}`,
+            `Release ${releaseVersion}`,
           );
 
           expect(fixConstraintsSpy).toHaveBeenCalledTimes(1);
@@ -517,7 +517,7 @@ describe('monorepo-workflow-operations', () => {
           expect(commitAllChangesSpy).toHaveBeenNthCalledWith(
             3,
             projectDirectoryPath,
-            `Update Release ${releaseVersion}`,
+            `Release ${releaseVersion}`,
           );
         });
       });
@@ -592,7 +592,7 @@ describe('monorepo-workflow-operations', () => {
 
           expect(commitAllChangesSpy).toHaveBeenCalledWith(
             projectDirectoryPath,
-            'Update Release 2.0.0',
+            'Release 2.0.0',
           );
         });
       });
@@ -688,7 +688,7 @@ describe('monorepo-workflow-operations', () => {
           );
           expect(commitAllChangesSpy).not.toHaveBeenCalledWith(
             projectDirectoryPath,
-            'Update Release 2.0.0',
+            'Release 2.0.0',
           );
         });
       });
@@ -905,7 +905,7 @@ describe('monorepo-workflow-operations', () => {
 
           expect(commitAllChangesSpy).not.toHaveBeenCalledWith(
             projectDirectoryPath,
-            'Update Release 2.0.0',
+            'Release 2.0.0',
           );
         });
       });
@@ -1131,7 +1131,7 @@ describe('monorepo-workflow-operations', () => {
 
           expect(commitAllChangesSpy).toHaveBeenCalledWith(
             projectDirectoryPath,
-            'Update Release 2.0.0',
+            'Release 2.0.0',
           );
         });
       });
@@ -1402,7 +1402,7 @@ describe('monorepo-workflow-operations', () => {
 
           expect(commitAllChangesSpy).toHaveBeenCalledWith(
             projectDirectoryPath,
-            'Update Release 2.0.0',
+            'Release 2.0.0',
           );
         });
       });
@@ -1494,7 +1494,7 @@ describe('monorepo-workflow-operations', () => {
 
           expect(commitAllChangesSpy).not.toHaveBeenCalledWith(
             projectDirectoryPath,
-            'Update Release 2.0.0',
+            'Release 2.0.0',
           );
         });
       });
@@ -1711,7 +1711,7 @@ describe('monorepo-workflow-operations', () => {
 
           expect(commitAllChangesSpy).not.toHaveBeenCalledWith(
             projectDirectoryPath,
-            'Update Release 2.0.0',
+            'Release 2.0.0',
           );
         });
       });
@@ -1945,7 +1945,7 @@ describe('monorepo-workflow-operations', () => {
 
           expect(commitAllChangesSpy).toHaveBeenCalledWith(
             projectDirectoryPath,
-            'Update Release 2.0.0',
+            'Release 2.0.0',
           );
         });
       });
@@ -2037,7 +2037,7 @@ describe('monorepo-workflow-operations', () => {
 
           expect(commitAllChangesSpy).not.toHaveBeenCalledWith(
             projectDirectoryPath,
-            'Update Release 2.0.0',
+            'Release 2.0.0',
           );
         });
       });
@@ -2288,7 +2288,7 @@ describe('monorepo-workflow-operations', () => {
 
           expect(commitAllChangesSpy).not.toHaveBeenCalledWith(
             projectDirectoryPath,
-            'Update Release 2.0.0',
+            'Release 2.0.0',
           );
         });
       });
