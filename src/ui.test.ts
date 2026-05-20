@@ -26,7 +26,10 @@ jest.mock('open', () => ({
  * @param app - The Express app to start.
  * @param run - The test logic to run while the server is listening.
  */
-async function withServer(app: express.Application, run: (url: string) => Promise<void>) {
+async function withServer(
+  app: express.Application,
+  run: (url: string) => Promise<void>,
+) {
   let server: Server;
   const url = await new Promise<string>((resolve, reject) => {
     server = app.listen(0, () => {
