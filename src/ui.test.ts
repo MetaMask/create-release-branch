@@ -44,7 +44,7 @@ async function withServer(
       });
     });
   }
-});
+}
 
 describe('ui', () => {
   describe('createApp', () => {
@@ -160,4 +160,4 @@ describe('ui', () => {
       );
     });
   });
-}
+});
