@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Use `Release X.Y.Z` as the single `--interactive` release preparation commit message; non-interactive release preparation now keeps `Initialize Release X.Y.Z` followed by `Filter release to only selected packages`.
+- Use `Release X.Y.Z` as the single `--interactive` release preparation commit message; non-interactive release preparation now keeps `Initialize release X.Y.Z by bumping all packages` followed by `Filter release to only selected packages`.
 
 ## [4.2.1]
 

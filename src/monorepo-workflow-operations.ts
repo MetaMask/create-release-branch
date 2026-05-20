@@ -89,7 +89,7 @@ export async function followMonorepoWorkflow({
     await updateChangelogsForChangedPackages({ project, formatter, stderr });
     await commitAllChanges(
       project.directoryPath,
-      `Initialize Release ${newReleaseVersion}`,
+      `Initialize release ${newReleaseVersion} by bumping all packages`,
     );
   }
 

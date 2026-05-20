@@ -144,19 +144,6 @@ export async function commitAllChanges(
 }
 
 /**
- * Soft-resets the repository to the previous commit, leaving the reverted
- * commit's changes staged so they can be recommitted with other changes.
- *
- * @param repositoryDirectoryPath - The file system path to the git repository.
- */
-export async function resetLastCommit(repositoryDirectoryPath: string) {
-  await runGitCommandWithin(repositoryDirectoryPath, 'reset', [
-    '--soft',
-    'HEAD~1',
-  ]);
-}
-
-/**
  * Retrieves the current branch name of a git repository.
  *
  * @param repositoryDirectoryPath - The file system path to the git repository.

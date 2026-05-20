@@ -18,7 +18,7 @@ import {
   validateAllPackageEntries,
 } from './release-specification.js';
 import { createReleaseBranch } from './workflow-operations.js';
-import { commitAllChanges, resetLastCommit } from './repo.js';
+import { commitAllChanges } from './repo.js';
 import { SemVer, semver } from './semver.js';
 import { executeReleasePlan, planRelease } from './release-plan.js';
 import {
@@ -70,18 +70,12 @@ export async function startUI({
   stdout,
   stderr,
 }: UIOptions): Promise<void> {
-  const { version: newReleaseVersion, firstRun } = await createReleaseBranch({
+  const { version: newReleaseVersion } = await prepareInteractiveReleaseBranch({
     project,
     releaseType,
+    formatter,
+    stderr,
   });
-
-  if (firstRun) {
-    await updateChangelogsForChangedPackages({ project, formatter, stderr });
-    await commitAllChanges(
-      project.directoryPath,
-      `Initialize Release ${newReleaseVersion}`,
-    );
-  }
 
   const app = createApp({
     project,
@@ -89,7 +83,6 @@ export async function startUI({
     formatter,
     stderr,
     version: newReleaseVersion,
-    firstRun,
     closeServer: () => {
       // eslint-disable-next-line @typescript-eslint/no-use-before-define
       server.close();
@@ -126,6 +119,39 @@ export async function startUI({
 }
 
 /**
+ * Prepares the release branch for the interactive UI.
+ *
+ * @param options - The options.
+ * @param options.project - The project object.
+ * @param options.releaseType - The type of release.
+ * @param options.formatter - The formatter to use for formatting the changelog.
+ * @param options.stderr - The stderr stream.
+ * @returns The prepared release branch information.
+ */
+export async function prepareInteractiveReleaseBranch({
+  project,
+  releaseType,
+  formatter,
+  stderr,
+}: {
+  project: Project;
+  releaseType: 'ordinary' | 'backport';
+  formatter: Formatter;
+  stderr: Pick<WriteStream, 'write'>;
+}): Promise<{ version: string; firstRun: boolean }> {
+  const releaseBranch = await createReleaseBranch({
+    project,
+    releaseType,
+  });
+
+  if (releaseBranch.firstRun) {
+    await updateChangelogsForChangedPackages({ project, formatter, stderr });
+  }
+
+  return releaseBranch;
+}
+
+/**
  * Finalizes the release selected in the interactive UI.
  *
  * @param options - The options.
@@ -134,7 +160,6 @@ export async function startUI({
  * @param options.formatter - The formatter to use for formatting the changelog.
  * @param options.stderr - The stderr stream.
  * @param options.version - The release version.
- * @param options.firstRun - Whether this invocation created the release branch.
  * @param options.releasedPackages - The packages selected in the UI.
  * @returns The release result to send to the UI.
  */
@@ -144,7 +169,6 @@ export async function finalizeInteractiveRelease({
   formatter,
   stderr,
   version,
-  firstRun,
   releasedPackages,
 }: {
   project: Project;
@@ -152,7 +176,6 @@ export async function finalizeInteractiveRelease({
   formatter: Formatter;
   stderr: Pick<WriteStream, 'write'>;
   version: string;
-  firstRun: boolean;
   releasedPackages: Record<string, string | null>;
 }): Promise<InteractiveReleaseResult> {
   const errors = validateAllPackageEntries(project, releasedPackages, 0);
@@ -208,10 +231,6 @@ export async function finalizeInteractiveRelease({
   await updateYarnLockfile(project.directoryPath);
   await deduplicateDependencies(project.directoryPath);
 
-  if (firstRun) {
-    await resetLastCommit(project.directoryPath);
-  }
-
   await commitAllChanges(project.directoryPath, `Release ${version}`);
 
   return { status: 'success' };
@@ -226,7 +245,6 @@ export async function finalizeInteractiveRelease({
  * @param options.formatter - The formatter to use for formatting the changelog.
  * @param options.stderr - The stderr stream.
  * @param options.version - The release version.
- * @param options.firstRun - Whether this invocation created the release branch.
  * @param options.closeServer - The function to close the server.
  * @returns The Express application.
  */
@@ -236,7 +254,6 @@ export function createApp({
   formatter,
   stderr,
   version,
-  firstRun,
   closeServer,
 }: {
   project: Project;
@@ -244,7 +261,6 @@ export function createApp({
   formatter: Formatter;
   stderr: Pick<WriteStream, 'write'>;
   version: string;
-  firstRun: boolean;
   closeServer: () => void;
 }): express.Application {
   const app = express();
@@ -391,7 +407,6 @@ export function createApp({
           formatter,
           stderr,
           version,
-          firstRun,
           releasedPackages,
         });
 

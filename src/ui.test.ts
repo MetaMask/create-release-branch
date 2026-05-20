@@ -83,7 +83,6 @@ describe('ui', () => {
         formatter: 'prettier',
         stderr,
         version: '2.0.0',
-        firstRun: true,
         releasedPackages: { '@scope/a': 'major' },
       });
 
@@ -134,7 +133,6 @@ describe('ui', () => {
         formatter: 'prettier',
         stderr,
         version: '2.0.0',
-        firstRun: false,
         releasedPackages: { '@scope/a': 'major' },
       });
 
