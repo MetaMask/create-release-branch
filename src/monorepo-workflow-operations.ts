@@ -158,5 +158,8 @@ export async function followMonorepoWorkflow({
   await fixConstraints(project.directoryPath);
   await updateYarnLockfile(project.directoryPath);
   await deduplicateDependencies(project.directoryPath);
-  await commitAllChanges(project.directoryPath, `Release ${newReleaseVersion}`);
+  await commitAllChanges(
+    project.directoryPath,
+    'Filter release to only selected packages',
+  );
 }

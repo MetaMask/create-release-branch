@@ -18,7 +18,7 @@ import {
   validateAllPackageEntries,
 } from './release-specification.js';
 import { createReleaseBranch } from './workflow-operations.js';
-import { commitAllChanges } from './repo.js';
+import { commitAllChanges, resetLastCommit } from './repo.js';
 import { SemVer, semver } from './semver.js';
 import { executeReleasePlan, planRelease } from './release-plan.js';
 import {
@@ -82,6 +82,7 @@ export async function startUI({
     formatter,
     stderr,
     version: newReleaseVersion,
+    firstRun,
     closeServer: () => {
       // eslint-disable-next-line @typescript-eslint/no-use-before-define
       server.close();
@@ -126,15 +127,17 @@ export async function startUI({
  * @param options.formatter - The formatter to use for formatting the changelog.
  * @param options.stderr - The stderr stream.
  * @param options.version - The release version.
+ * @param options.firstRun - Whether this invocation created the release branch.
  * @param options.closeServer - The function to close the server.
  * @returns The Express application.
  */
-function createApp({
+export function createApp({
   project,
   defaultBranch,
   formatter,
   stderr,
   version,
+  firstRun,
   closeServer,
 }: {
   project: Project;
@@ -142,6 +145,7 @@ function createApp({
   formatter: Formatter;
   stderr: Pick<WriteStream, 'write'>;
   version: string;
+  firstRun: boolean;
   closeServer: () => void;
 }): express.Application {
   const app = express();
@@ -340,6 +344,9 @@ function createApp({
         await fixConstraints(project.directoryPath);
         await updateYarnLockfile(project.directoryPath);
         await deduplicateDependencies(project.directoryPath);
+        if (firstRun) {
+          await resetLastCommit(project.directoryPath);
+        }
         await commitAllChanges(project.directoryPath, `Release ${version}`);
 
         res.json({ status: 'success' });

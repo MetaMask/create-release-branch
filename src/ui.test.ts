@@ -12,6 +12,10 @@ jest.mock('./project');
 jest.mock('./release-plan');
 jest.mock('./repo');
 jest.mock('./yarn-commands');
+jest.mock('open', () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));
 
 async function withServer(
   app: express.Application,
