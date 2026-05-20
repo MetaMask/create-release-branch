@@ -12,6 +12,9 @@ jest.mock('./project');
 jest.mock('./release-plan');
 jest.mock('./repo');
 jest.mock('./yarn-commands');
+jest.mock('./dirname', () => ({
+  getCurrentDirectoryPath: jest.fn().mockReturnValue('/path/to/somewhere'),
+}));
 jest.mock('open', () => ({
   __esModule: true,
   default: jest.fn(),
