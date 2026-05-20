@@ -1,8 +1,6 @@
-import type { Server } from 'http';
-import type express from 'express';
 import { MockWritable } from 'stdio-mock';
 import { buildMockPackage, buildMockProject } from '../tests/unit/helpers.js';
-import { createApp } from './ui.js';
+import { finalizeInteractiveRelease } from './ui.js';
 import * as projectModule from './project.js';
 import * as releasePlanModule from './release-plan.js';
 import * as repoModule from './repo.js';
@@ -20,47 +18,8 @@ jest.mock('open', () => ({
   default: jest.fn(),
 }));
 
-/**
- * Starts an Express app on an ephemeral port for the duration of a test.
- *
- * @param app - The Express app to start.
- * @param run - The test logic to run while the server is listening.
- */
-async function withServer(
-  app: express.Application,
-  run: (url: string) => Promise<void>,
-) {
-  let server: Server;
-  const url = await new Promise<string>((resolve, reject) => {
-    server = app.listen(0, () => {
-      const address = server.address();
-
-      if (address === null || typeof address === 'string') {
-        reject(new Error('Unable to determine server port'));
-        return;
-      }
-
-      resolve(`http://127.0.0.1:${address.port}`);
-    });
-  });
-
-  try {
-    await run(url);
-  } finally {
-    await new Promise<void>((resolve, reject) => {
-      server.close((error) => {
-        if (error) {
-          return reject(error);
-        }
-
-        return resolve();
-      });
-    });
-  }
-}
-
 describe('ui', () => {
-  describe('createApp', () => {
+  describe('finalizeInteractiveRelease', () => {
     it('squashes the initial release commit before committing an interactive first run', async () => {
       const project = buildMockProject({
         directoryPath: '/path/to/project',
@@ -72,7 +31,6 @@ describe('ui', () => {
       });
       const releasePlan = { newVersion: '2.0.0', packages: [] };
       const stderr = new MockWritable();
-      const closeServer = jest.fn();
       const resetLastCommitSpy = jest.spyOn(repoModule, 'resetLastCommit');
       const commitAllChangesSpy = jest.spyOn(repoModule, 'commitAllChanges');
       jest
@@ -80,29 +38,17 @@ describe('ui', () => {
         .mockResolvedValue(releasePlan);
       jest.spyOn(releasePlanModule, 'executeReleasePlan').mockResolvedValue();
 
-      const app = createApp({
+      const result = await finalizeInteractiveRelease({
         project,
         defaultBranch: 'main',
         formatter: 'prettier',
         stderr,
         version: '2.0.0',
         firstRun: true,
-        closeServer,
+        releasedPackages: { '@scope/a': 'major' },
       });
 
-      await withServer(app, async (url) => {
-        const response = await fetch(`${url}/api/release`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ '@scope/a': 'major' }),
-        });
-
-        expect(response.ok).toBe(true);
-        expect(JSON.parse(await response.text())).toStrictEqual({
-          status: 'success',
-        });
-      });
-
+      expect(result).toStrictEqual({ status: 'success' });
       expect(
         projectModule.restoreChangelogsForSkippedPackages,
       ).toHaveBeenCalledWith({
@@ -128,7 +74,6 @@ describe('ui', () => {
       expect(resetLastCommitSpy.mock.invocationCallOrder[0]).toBeLessThan(
         commitAllChangesSpy.mock.invocationCallOrder[0],
       );
-      expect(closeServer).toHaveBeenCalledTimes(1);
     });
 
     it('does not reset HEAD before committing an existing interactive release branch', async () => {
@@ -142,7 +87,6 @@ describe('ui', () => {
       });
       const releasePlan = { newVersion: '2.0.0', packages: [] };
       const stderr = new MockWritable();
-      const closeServer = jest.fn();
       const resetLastCommitSpy = jest.spyOn(repoModule, 'resetLastCommit');
       const commitAllChangesSpy = jest.spyOn(repoModule, 'commitAllChanges');
       jest
@@ -150,26 +94,17 @@ describe('ui', () => {
         .mockResolvedValue(releasePlan);
       jest.spyOn(releasePlanModule, 'executeReleasePlan').mockResolvedValue();
 
-      const app = createApp({
+      const result = await finalizeInteractiveRelease({
         project,
         defaultBranch: 'main',
         formatter: 'prettier',
         stderr,
         version: '2.0.0',
         firstRun: false,
-        closeServer,
+        releasedPackages: { '@scope/a': 'major' },
       });
 
-      await withServer(app, async (url) => {
-        const response = await fetch(`${url}/api/release`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ '@scope/a': 'major' }),
-        });
-
-        expect(response.ok).toBe(true);
-      });
-
+      expect(result).toStrictEqual({ status: 'success' });
       expect(resetLastCommitSpy).not.toHaveBeenCalled();
       expect(commitAllChangesSpy).toHaveBeenCalledWith(
         project.directoryPath,

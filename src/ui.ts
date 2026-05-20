@@ -42,6 +42,13 @@ type UIOptions = {
   stderr: Pick<WriteStream, 'write'>;
 };
 
+type InteractiveReleaseResult =
+  | { status: 'success' }
+  | {
+      status: 'error';
+      errors: ReturnType<typeof validateAllPackageEntries>;
+    };
+
 /**
  * Starts the UI for the release process.
  *
@@ -116,6 +123,98 @@ export async function startUI({
       resolve();
     });
   });
+}
+
+/**
+ * Finalizes the release selected in the interactive UI.
+ *
+ * @param options - The options.
+ * @param options.project - The project object.
+ * @param options.defaultBranch - The default branch name.
+ * @param options.formatter - The formatter to use for formatting the changelog.
+ * @param options.stderr - The stderr stream.
+ * @param options.version - The release version.
+ * @param options.firstRun - Whether this invocation created the release branch.
+ * @param options.releasedPackages - The packages selected in the UI.
+ * @returns The release result to send to the UI.
+ */
+export async function finalizeInteractiveRelease({
+  project,
+  defaultBranch,
+  formatter,
+  stderr,
+  version,
+  firstRun,
+  releasedPackages,
+}: {
+  project: Project;
+  defaultBranch: string;
+  formatter: Formatter;
+  stderr: Pick<WriteStream, 'write'>;
+  version: string;
+  firstRun: boolean;
+  releasedPackages: Record<string, string | null>;
+}): Promise<InteractiveReleaseResult> {
+  const errors = validateAllPackageEntries(project, releasedPackages, 0);
+
+  if (errors.length > 0) {
+    return {
+      status: 'error',
+      errors,
+    };
+  }
+
+  const releaseSpecificationPackages = Object.keys(releasedPackages).reduce(
+    (obj, packageName) => {
+      const versionSpecifierOrDirective = releasedPackages[packageName];
+
+      if (versionSpecifierOrDirective !== 'intentionally-skip') {
+        if (
+          Object.values(IncrementableVersionParts).includes(
+            versionSpecifierOrDirective as any,
+          )
+        ) {
+          return {
+            ...obj,
+            [packageName]:
+              versionSpecifierOrDirective as IncrementableVersionParts,
+          };
+        }
+
+        return {
+          ...obj,
+          [packageName]: semver.parse(versionSpecifierOrDirective) as SemVer,
+        };
+      }
+
+      return obj;
+    },
+    {} as ReleaseSpecification['packages'],
+  );
+
+  await restoreChangelogsForSkippedPackages({
+    project,
+    releaseSpecificationPackages,
+    defaultBranch,
+  });
+
+  const releasePlan = await planRelease({
+    project,
+    releaseSpecificationPackages,
+    newReleaseVersion: version,
+  });
+  await executeReleasePlan(project, releasePlan, formatter, stderr);
+  await fixConstraints(project.directoryPath);
+  await updateYarnLockfile(project.directoryPath);
+  await deduplicateDependencies(project.directoryPath);
+
+  if (firstRun) {
+    await resetLastCommit(project.directoryPath);
+  }
+
+  await commitAllChanges(project.directoryPath, `Release ${version}`);
+
+  return { status: 'success' };
 }
 
 /**
@@ -286,74 +385,21 @@ export function createApp({
     async (req: express.Request, res: express.Response): Promise<void> => {
       try {
         const releasedPackages: Record<string, string | null> = req.body;
-
-        const errors = validateAllPackageEntries(project, releasedPackages, 0);
-
-        if (errors.length > 0) {
-          res.json({
-            status: 'error',
-            errors,
-          });
-          return;
-        }
-
-        const releaseSpecificationPackages = Object.keys(
-          releasedPackages,
-        ).reduce(
-          (obj, packageName) => {
-            const versionSpecifierOrDirective = releasedPackages[packageName];
-
-            if (versionSpecifierOrDirective !== 'intentionally-skip') {
-              if (
-                Object.values(IncrementableVersionParts).includes(
-                  versionSpecifierOrDirective as any,
-                )
-              ) {
-                return {
-                  ...obj,
-                  [packageName]:
-                    versionSpecifierOrDirective as IncrementableVersionParts,
-                };
-              }
-
-              return {
-                ...obj,
-                [packageName]: semver.parse(
-                  versionSpecifierOrDirective,
-                ) as SemVer,
-              };
-            }
-
-            return obj;
-          },
-          {} as ReleaseSpecification['packages'],
-        );
-
-        await restoreChangelogsForSkippedPackages({
+        const result = await finalizeInteractiveRelease({
           project,
-          releaseSpecificationPackages,
           defaultBranch,
+          formatter,
+          stderr,
+          version,
+          firstRun,
+          releasedPackages,
         });
 
-        const releasePlan = await planRelease({
-          project,
-          releaseSpecificationPackages,
-          newReleaseVersion: version,
-        });
-        await executeReleasePlan(project, releasePlan, formatter, stderr);
-        await fixConstraints(project.directoryPath);
-        await updateYarnLockfile(project.directoryPath);
-        await deduplicateDependencies(project.directoryPath);
+        res.json(result);
 
-        if (firstRun) {
-          await resetLastCommit(project.directoryPath);
+        if (result.status === 'success') {
+          closeServer();
         }
-
-        await commitAllChanges(project.directoryPath, `Release ${version}`);
-
-        res.json({ status: 'success' });
-
-        closeServer();
       } catch (error) {
         stderr.write(`Release error: ${error}\n`);
         res.status(400).send('Invalid request');
