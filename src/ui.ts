@@ -340,10 +340,7 @@ function createApp({
         await fixConstraints(project.directoryPath);
         await updateYarnLockfile(project.directoryPath);
         await deduplicateDependencies(project.directoryPath);
-        await commitAllChanges(
-          project.directoryPath,
-          `Release ${version}`,
-        );
+        await commitAllChanges(project.directoryPath, `Release ${version}`);
 
         res.json({ status: 'success' });
 
