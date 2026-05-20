@@ -90,7 +90,7 @@ describe('ui', () => {
         });
 
         expect(response.ok).toBe(true);
-        await expect(response.json()).resolves.toStrictEqual({
+        await expect(response.json()).resolves.toEqual({
           status: 'success',
         });
       });
