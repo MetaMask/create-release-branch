@@ -590,7 +590,7 @@ describe('create-release-branch (functional)', () => {
           });
 
           // Tests five things:
-          // * The latest commit should be called "Release 2.0.0"
+          // * The latest commit should be called "Filter release to only selected packages"
           // * The before latest commit should be called "Initialize Release 2.0.0"
           // * The latest commit should be the current commit (HEAD)
           // * The latest branch should be called "release/2.0.0"
@@ -617,7 +617,9 @@ describe('create-release-branch (functional)', () => {
               '--max-count=1',
             ])
           ).stdout;
-          expect(latestCommitsInReverse[0].subject).toBe('Release 2.0.0');
+          expect(latestCommitsInReverse[0].subject).toBe(
+            'Filter release to only selected packages',
+          );
           expect(latestCommitsInReverse[1].subject).toBe(
             'Initialize Release 2.0.0',
           );

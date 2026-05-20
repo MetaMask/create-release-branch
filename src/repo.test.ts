@@ -6,6 +6,7 @@ import {
   getCurrentBranchName,
   branchExists,
   restoreFiles,
+  resetLastCommit,
 } from './repo.js';
 import * as miscUtils from './misc-utils.js';
 
@@ -29,6 +30,19 @@ describe('repo', () => {
       expect(getStdoutFromCommandSpy).toHaveBeenCalledWith(
         'git',
         ['commit', '-m', commitMessage],
+        { cwd: '/path/to/project' },
+      );
+    });
+  });
+
+  describe('resetLastCommit', () => {
+    it('soft-resets HEAD to the previous commit', async () => {
+      const runCommandSpy = jest.spyOn(miscUtils, 'runCommand');
+      await resetLastCommit('/path/to/project');
+
+      expect(runCommandSpy).toHaveBeenCalledWith(
+        'git',
+        ['reset', '--soft', 'HEAD~1'],
         { cwd: '/path/to/project' },
       );
     });
