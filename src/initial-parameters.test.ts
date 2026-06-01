@@ -63,6 +63,7 @@ describe('initial-parameters', () => {
         interactive: false,
         port: 3000,
         formatter: 'prettier',
+        skipChangelogUpdate: false,
       });
     });
 
@@ -296,6 +297,70 @@ describe('initial-parameters', () => {
       });
 
       expect(initialParameters.releaseType).toBe('ordinary');
+    });
+
+    it('returns initial parameters including skipChangelogUpdate: false, derived from a command-line argument of "--skip-changelog-update false"', async () => {
+      const project = buildMockProject();
+      const stderr = createNoopWriteStream();
+      when(jest.spyOn(commandLineArgumentsModule, 'readCommandLineArguments'))
+        .calledWith(['arg1', 'arg2'])
+        .mockResolvedValue({
+          projectDirectory: '/path/to/project',
+          tempDirectory: '/path/to/temp',
+          reset: false,
+          backport: false,
+          defaultBranch: 'main',
+          interactive: false,
+          port: 3000,
+          formatter: 'prettier',
+          skipChangelogUpdate: false,
+        });
+      jest
+        .spyOn(envModule, 'getEnvironmentVariables')
+        .mockReturnValue({ EDITOR: undefined });
+      when(jest.spyOn(projectModule, 'readProject'))
+        .calledWith('/path/to/project', { stderr })
+        .mockResolvedValue(project);
+
+      const initialParameters = await determineInitialParameters({
+        argv: ['arg1', 'arg2'],
+        cwd: '/path/to/somewhere',
+        stderr,
+      });
+
+      expect(initialParameters.skipChangelogUpdate).toBe(false);
+    });
+
+    it('returns initial parameters including skipChangelogUpdate: true, derived from a command-line argument of "--skip-changelog-update true"', async () => {
+      const project = buildMockProject();
+      const stderr = createNoopWriteStream();
+      when(jest.spyOn(commandLineArgumentsModule, 'readCommandLineArguments'))
+        .calledWith(['arg1', 'arg2'])
+        .mockResolvedValue({
+          projectDirectory: '/path/to/project',
+          tempDirectory: '/path/to/temp',
+          reset: false,
+          backport: false,
+          defaultBranch: 'main',
+          interactive: false,
+          port: 3000,
+          formatter: 'prettier',
+          skipChangelogUpdate: true,
+        });
+      jest
+        .spyOn(envModule, 'getEnvironmentVariables')
+        .mockReturnValue({ EDITOR: undefined });
+      when(jest.spyOn(projectModule, 'readProject'))
+        .calledWith('/path/to/project', { stderr })
+        .mockResolvedValue(project);
+
+      const initialParameters = await determineInitialParameters({
+        argv: ['arg1', 'arg2'],
+        cwd: '/path/to/somewhere',
+        stderr,
+      });
+
+      expect(initialParameters.skipChangelogUpdate).toBe(true);
     });
   });
 });
