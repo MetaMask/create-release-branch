@@ -14,6 +14,7 @@ import type { ReleasePlan } from './release-plan.js';
 import * as repoModule from './repo.js';
 import * as yarnCommands from './yarn-commands.js';
 import * as workflowOperations from './workflow-operations.js';
+import * as projectModule from './project.js';
 import { Formatter } from './initial-parameters.js';
 
 jest.mock('./editor');
@@ -73,6 +74,10 @@ function getDependencySpies() {
     deduplicateDependenciesSpy: jest.spyOn(
       yarnCommands,
       'deduplicateDependencies',
+    ),
+    updateChangelogsForChangedPackagesSpy: jest.spyOn(
+      projectModule,
+      'updateChangelogsForChangedPackages',
     ),
   };
 }
@@ -196,6 +201,7 @@ async function setupFollowMonorepoWorkflow({
     fixConstraintsSpy,
     updateYarnLockfileSpy,
     deduplicateDependenciesSpy,
+    updateChangelogsForChangedPackagesSpy,
   } = getDependencySpies();
   const editor = buildMockEditor();
   const releaseSpecificationPath = path.join(
@@ -267,6 +273,8 @@ async function setupFollowMonorepoWorkflow({
     .calledWith(projectDirectoryPath, '')
     .mockResolvedValue();
 
+  updateChangelogsForChangedPackagesSpy.mockResolvedValue(undefined);
+
   if (doesReleaseSpecFileExist) {
     await fs.promises.writeFile(
       releaseSpecificationPath,
@@ -293,6 +301,7 @@ async function setupFollowMonorepoWorkflow({
     fixConstraintsSpy,
     updateYarnLockfileSpy,
     deduplicateDependenciesSpy,
+    updateChangelogsForChangedPackagesSpy,
   };
 }
 
@@ -315,6 +324,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'ordinary',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -342,6 +352,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'backport',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -375,6 +386,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'ordinary',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -409,6 +421,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'backport',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -454,6 +467,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'ordinary',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -503,6 +517,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'ordinary',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -519,6 +534,55 @@ describe('monorepo-workflow-operations', () => {
             projectDirectoryPath,
             `Update Release ${releaseVersion}`,
           );
+        });
+      });
+
+      it('skips the auto-populated changelog update and the Initialize Release commit when skipChangelogUpdate is true', async () => {
+        await withSandbox(async (sandbox) => {
+          const releaseVersion = '1.1.0';
+          const {
+            project,
+            stdout,
+            stderr,
+            createReleaseBranchSpy,
+            commitAllChangesSpy,
+            projectDirectoryPath,
+            formatter,
+            updateChangelogsForChangedPackagesSpy,
+          } = await setupFollowMonorepoWorkflow({
+            sandbox,
+            releaseVersion,
+            doesReleaseSpecFileExist: false,
+            isEditorAvailable: true,
+          });
+
+          createReleaseBranchSpy.mockResolvedValueOnce({
+            version: releaseVersion,
+            firstRun: true,
+          });
+
+          await followMonorepoWorkflow({
+            project,
+            tempDirectoryPath: sandbox.directoryPath,
+            firstRemovingExistingReleaseSpecification: false,
+            releaseType: 'ordinary',
+            defaultBranch: 'main',
+            formatter,
+            skipChangelogUpdate: true,
+            stdout,
+            stderr,
+          });
+
+          expect(updateChangelogsForChangedPackagesSpy).not.toHaveBeenCalled();
+          expect(commitAllChangesSpy).not.toHaveBeenCalledWith(
+            projectDirectoryPath,
+            `Initialize Release ${releaseVersion}`,
+          );
+          expect(commitAllChangesSpy).toHaveBeenCalledWith(
+            projectDirectoryPath,
+            `Update Release ${releaseVersion}`,
+          );
+          expect(commitAllChangesSpy).toHaveBeenCalledTimes(1);
         });
       });
 
@@ -545,6 +609,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'ordinary',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -581,6 +646,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'ordinary',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -618,6 +684,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'ordinary',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -644,6 +711,7 @@ describe('monorepo-workflow-operations', () => {
               releaseType: 'ordinary',
               defaultBranch: 'main',
               formatter,
+              skipChangelogUpdate: false,
               stdout,
               stderr,
             }),
@@ -677,6 +745,7 @@ describe('monorepo-workflow-operations', () => {
               releaseType: 'ordinary',
               defaultBranch: 'main',
               formatter,
+              skipChangelogUpdate: false,
               stdout,
               stderr,
             }),
@@ -716,6 +785,7 @@ describe('monorepo-workflow-operations', () => {
               releaseType: 'ordinary',
               defaultBranch: 'main',
               formatter,
+              skipChangelogUpdate: false,
               stdout,
               stderr,
             }),
@@ -743,6 +813,7 @@ describe('monorepo-workflow-operations', () => {
               releaseType: 'ordinary',
               defaultBranch: 'main',
               formatter,
+              skipChangelogUpdate: false,
               stdout,
               stderr,
             }),
@@ -774,6 +845,7 @@ describe('monorepo-workflow-operations', () => {
               releaseType: 'ordinary',
               defaultBranch: 'main',
               formatter,
+              skipChangelogUpdate: false,
               stdout,
               stderr,
             }),
@@ -808,6 +880,7 @@ describe('monorepo-workflow-operations', () => {
               releaseType: 'ordinary',
               defaultBranch: 'main',
               formatter,
+              skipChangelogUpdate: false,
               stdout,
               stderr,
             }),
@@ -842,6 +915,7 @@ describe('monorepo-workflow-operations', () => {
               releaseType: 'ordinary',
               defaultBranch: 'main',
               formatter,
+              skipChangelogUpdate: false,
               stdout,
               stderr,
             }),
@@ -869,6 +943,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'ordinary',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -899,6 +974,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'ordinary',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -926,6 +1002,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'ordinary',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -957,6 +1034,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'ordinary',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -987,6 +1065,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'ordinary',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -1018,6 +1097,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'ordinary',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -1051,6 +1131,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'backport',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -1085,6 +1166,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'ordinary',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -1120,6 +1202,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'ordinary',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -1156,6 +1239,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'ordinary',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -1187,6 +1271,7 @@ describe('monorepo-workflow-operations', () => {
               releaseType: 'ordinary',
               defaultBranch: 'main',
               formatter,
+              skipChangelogUpdate: false,
               stdout,
               stderr,
             }),
@@ -1220,6 +1305,7 @@ describe('monorepo-workflow-operations', () => {
               releaseType: 'ordinary',
               defaultBranch: 'main',
               formatter,
+              skipChangelogUpdate: false,
               stdout,
               stderr,
             }),
@@ -1253,6 +1339,7 @@ describe('monorepo-workflow-operations', () => {
               releaseType: 'ordinary',
               defaultBranch: 'main',
               formatter,
+              skipChangelogUpdate: false,
               stdout,
               stderr,
             }),
@@ -1286,6 +1373,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'ordinary',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -1320,6 +1408,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'backport',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -1355,6 +1444,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'ordinary',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -1391,6 +1481,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'ordinary',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -1428,6 +1519,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'ordinary',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -1454,6 +1546,7 @@ describe('monorepo-workflow-operations', () => {
               releaseType: 'ordinary',
               defaultBranch: 'main',
               formatter,
+              skipChangelogUpdate: false,
               stdout,
               stderr,
             }),
@@ -1487,6 +1580,7 @@ describe('monorepo-workflow-operations', () => {
               releaseType: 'ordinary',
               defaultBranch: 'main',
               formatter,
+              skipChangelogUpdate: false,
               stdout,
               stderr,
             }),
@@ -1522,6 +1616,7 @@ describe('monorepo-workflow-operations', () => {
               releaseType: 'ordinary',
               defaultBranch: 'main',
               formatter,
+              skipChangelogUpdate: false,
               stdout,
               stderr,
             }),
@@ -1549,6 +1644,7 @@ describe('monorepo-workflow-operations', () => {
               releaseType: 'ordinary',
               defaultBranch: 'main',
               formatter,
+              skipChangelogUpdate: false,
               stdout,
               stderr,
             }),
@@ -1580,6 +1676,7 @@ describe('monorepo-workflow-operations', () => {
               releaseType: 'ordinary',
               defaultBranch: 'main',
               formatter,
+              skipChangelogUpdate: false,
               stdout,
               stderr,
             }),
@@ -1614,6 +1711,7 @@ describe('monorepo-workflow-operations', () => {
               releaseType: 'ordinary',
               defaultBranch: 'main',
               formatter,
+              skipChangelogUpdate: false,
               stdout,
               stderr,
             }),
@@ -1648,6 +1746,7 @@ describe('monorepo-workflow-operations', () => {
               releaseType: 'ordinary',
               defaultBranch: 'main',
               formatter,
+              skipChangelogUpdate: false,
               stdout,
               stderr,
             }),
@@ -1675,6 +1774,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'ordinary',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -1705,6 +1805,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'ordinary',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -1732,6 +1833,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'ordinary',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -1763,6 +1865,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'ordinary',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -1794,6 +1897,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'ordinary',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -1829,6 +1933,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'ordinary',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -1863,6 +1968,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'backport',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -1898,6 +2004,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'ordinary',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -1934,6 +2041,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'ordinary',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -1971,6 +2079,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'ordinary',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -1997,6 +2106,7 @@ describe('monorepo-workflow-operations', () => {
               releaseType: 'ordinary',
               defaultBranch: 'main',
               formatter,
+              skipChangelogUpdate: false,
               stdout,
               stderr,
             }),
@@ -2030,6 +2140,7 @@ describe('monorepo-workflow-operations', () => {
               releaseType: 'ordinary',
               defaultBranch: 'main',
               formatter,
+              skipChangelogUpdate: false,
               stdout,
               stderr,
             }),
@@ -2065,6 +2176,7 @@ describe('monorepo-workflow-operations', () => {
               releaseType: 'ordinary',
               defaultBranch: 'main',
               formatter,
+              skipChangelogUpdate: false,
               stdout,
               stderr,
             }),
@@ -2092,6 +2204,7 @@ describe('monorepo-workflow-operations', () => {
               releaseType: 'ordinary',
               defaultBranch: 'main',
               formatter,
+              skipChangelogUpdate: false,
               stdout,
               stderr,
             }),
@@ -2123,6 +2236,7 @@ describe('monorepo-workflow-operations', () => {
               releaseType: 'ordinary',
               defaultBranch: 'main',
               formatter,
+              skipChangelogUpdate: false,
               stdout,
               stderr,
             }),
@@ -2157,6 +2271,7 @@ describe('monorepo-workflow-operations', () => {
               releaseType: 'ordinary',
               defaultBranch: 'main',
               formatter,
+              skipChangelogUpdate: false,
               stdout,
               stderr,
             }),
@@ -2191,6 +2306,7 @@ describe('monorepo-workflow-operations', () => {
               releaseType: 'ordinary',
               defaultBranch: 'main',
               formatter,
+              skipChangelogUpdate: false,
               stdout,
               stderr,
             }),
@@ -2223,6 +2339,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'ordinary',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -2252,6 +2369,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'ordinary',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -2282,6 +2400,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'ordinary',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -2309,6 +2428,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'ordinary',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
@@ -2340,6 +2460,7 @@ describe('monorepo-workflow-operations', () => {
             releaseType: 'ordinary',
             defaultBranch: 'main',
             formatter,
+            skipChangelogUpdate: false,
             stdout,
             stderr,
           });
