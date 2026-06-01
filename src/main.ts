@@ -35,6 +35,7 @@ export async function main({
     interactive,
     port,
     formatter,
+    skipChangelogUpdate,
   } = await determineInitialParameters({ argv, cwd, stderr });
 
   if (project.isMonorepo) {
@@ -49,6 +50,7 @@ export async function main({
         defaultBranch,
         port,
         formatter,
+        skipChangelogUpdate,
         stdout,
         stderr,
       });
@@ -60,6 +62,7 @@ export async function main({
         releaseType,
         defaultBranch,
         formatter,
+        skipChangelogUpdate,
         stdout,
         stderr,
       });
