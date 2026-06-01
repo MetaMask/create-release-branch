@@ -13,6 +13,7 @@
 ## File Structure
 
 **Modified files:**
+
 - `src/command-line-arguments.ts` — add `skipChangelogUpdate` to the `CommandLineArguments` type and to the yargs option list.
 - `src/initial-parameters.ts` — add `skipChangelogUpdate` to `InitialParameters` and propagate it from parsed CLI args.
 - `src/initial-parameters.test.ts` — update existing test mocks to include the new field; add a default-value test and a flag-on test.
@@ -31,6 +32,7 @@
 ## Task 1: Add `skipChangelogUpdate` to CLI argument parser
 
 **Files:**
+
 - Modify: `src/command-line-arguments.ts`
 
 - [ ] **Step 1: Add the field to the `CommandLineArguments` type**
@@ -98,6 +100,7 @@ git commit -m "feat: parse --skip-changelog-update CLI flag"
 ## Task 2: Propagate flag through `initial-parameters.ts`
 
 **Files:**
+
 - Modify: `src/initial-parameters.ts`
 - Test: `src/initial-parameters.test.ts`
 
@@ -172,69 +175,69 @@ expect(initialParameters).toStrictEqual({
 At the end of the `describe('determineInitialParameters', ...)` block in `src/initial-parameters.test.ts` (just before the two closing `});` on lines 292-293), append:
 
 ```ts
-    it('returns initial parameters including skipChangelogUpdate: false by default', async () => {
-      const project = buildMockProject();
-      const stderr = createNoopWriteStream();
-      when(jest.spyOn(commandLineArgumentsModule, 'readCommandLineArguments'))
-        .calledWith(['arg1', 'arg2'])
-        .mockResolvedValue({
-          projectDirectory: '/path/to/project',
-          tempDirectory: '/path/to/temp',
-          reset: false,
-          backport: false,
-          defaultBranch: 'main',
-          interactive: false,
-          port: 3000,
-          formatter: 'prettier',
-          skipChangelogUpdate: false,
-        });
-      jest
-        .spyOn(envModule, 'getEnvironmentVariables')
-        .mockReturnValue({ EDITOR: undefined });
-      when(jest.spyOn(projectModule, 'readProject'))
-        .calledWith('/path/to/project', { stderr })
-        .mockResolvedValue(project);
-
-      const initialParameters = await determineInitialParameters({
-        argv: ['arg1', 'arg2'],
-        cwd: '/path/to/somewhere',
-        stderr,
-      });
-
-      expect(initialParameters.skipChangelogUpdate).toBe(false);
+it('returns initial parameters including skipChangelogUpdate: false by default', async () => {
+  const project = buildMockProject();
+  const stderr = createNoopWriteStream();
+  when(jest.spyOn(commandLineArgumentsModule, 'readCommandLineArguments'))
+    .calledWith(['arg1', 'arg2'])
+    .mockResolvedValue({
+      projectDirectory: '/path/to/project',
+      tempDirectory: '/path/to/temp',
+      reset: false,
+      backport: false,
+      defaultBranch: 'main',
+      interactive: false,
+      port: 3000,
+      formatter: 'prettier',
+      skipChangelogUpdate: false,
     });
+  jest
+    .spyOn(envModule, 'getEnvironmentVariables')
+    .mockReturnValue({ EDITOR: undefined });
+  when(jest.spyOn(projectModule, 'readProject'))
+    .calledWith('/path/to/project', { stderr })
+    .mockResolvedValue(project);
 
-    it('returns initial parameters including skipChangelogUpdate: true, derived from a command-line argument of "--skip-changelog-update true"', async () => {
-      const project = buildMockProject();
-      const stderr = createNoopWriteStream();
-      when(jest.spyOn(commandLineArgumentsModule, 'readCommandLineArguments'))
-        .calledWith(['arg1', 'arg2'])
-        .mockResolvedValue({
-          projectDirectory: '/path/to/project',
-          tempDirectory: '/path/to/temp',
-          reset: false,
-          backport: false,
-          defaultBranch: 'main',
-          interactive: false,
-          port: 3000,
-          formatter: 'prettier',
-          skipChangelogUpdate: true,
-        });
-      jest
-        .spyOn(envModule, 'getEnvironmentVariables')
-        .mockReturnValue({ EDITOR: undefined });
-      when(jest.spyOn(projectModule, 'readProject'))
-        .calledWith('/path/to/project', { stderr })
-        .mockResolvedValue(project);
+  const initialParameters = await determineInitialParameters({
+    argv: ['arg1', 'arg2'],
+    cwd: '/path/to/somewhere',
+    stderr,
+  });
 
-      const initialParameters = await determineInitialParameters({
-        argv: ['arg1', 'arg2'],
-        cwd: '/path/to/somewhere',
-        stderr,
-      });
+  expect(initialParameters.skipChangelogUpdate).toBe(false);
+});
 
-      expect(initialParameters.skipChangelogUpdate).toBe(true);
+it('returns initial parameters including skipChangelogUpdate: true, derived from a command-line argument of "--skip-changelog-update true"', async () => {
+  const project = buildMockProject();
+  const stderr = createNoopWriteStream();
+  when(jest.spyOn(commandLineArgumentsModule, 'readCommandLineArguments'))
+    .calledWith(['arg1', 'arg2'])
+    .mockResolvedValue({
+      projectDirectory: '/path/to/project',
+      tempDirectory: '/path/to/temp',
+      reset: false,
+      backport: false,
+      defaultBranch: 'main',
+      interactive: false,
+      port: 3000,
+      formatter: 'prettier',
+      skipChangelogUpdate: true,
     });
+  jest
+    .spyOn(envModule, 'getEnvironmentVariables')
+    .mockReturnValue({ EDITOR: undefined });
+  when(jest.spyOn(projectModule, 'readProject'))
+    .calledWith('/path/to/project', { stderr })
+    .mockResolvedValue(project);
+
+  const initialParameters = await determineInitialParameters({
+    argv: ['arg1', 'arg2'],
+    cwd: '/path/to/somewhere',
+    stderr,
+  });
+
+  expect(initialParameters.skipChangelogUpdate).toBe(true);
+});
 ```
 
 - [ ] **Step 3: Run the new tests; they should fail**
@@ -278,32 +281,32 @@ type InitialParameters = {
 Then update the `return` statement at the end of `determineInitialParameters`:
 
 ```ts
-  return {
-    project,
-    tempDirectoryPath,
-    reset: args.reset,
-    defaultBranch: args.defaultBranch,
-    releaseType: args.backport ? 'backport' : 'ordinary',
-    interactive: args.interactive,
-    port: args.port,
-    formatter: args.formatter as Formatter,
-  };
+return {
+  project,
+  tempDirectoryPath,
+  reset: args.reset,
+  defaultBranch: args.defaultBranch,
+  releaseType: args.backport ? 'backport' : 'ordinary',
+  interactive: args.interactive,
+  port: args.port,
+  formatter: args.formatter as Formatter,
+};
 ```
 
 becomes:
 
 ```ts
-  return {
-    project,
-    tempDirectoryPath,
-    reset: args.reset,
-    defaultBranch: args.defaultBranch,
-    releaseType: args.backport ? 'backport' : 'ordinary',
-    interactive: args.interactive,
-    port: args.port,
-    formatter: args.formatter as Formatter,
-    skipChangelogUpdate: args.skipChangelogUpdate,
-  };
+return {
+  project,
+  tempDirectoryPath,
+  reset: args.reset,
+  defaultBranch: args.defaultBranch,
+  releaseType: args.backport ? 'backport' : 'ordinary',
+  interactive: args.interactive,
+  port: args.port,
+  formatter: args.formatter as Formatter,
+  skipChangelogUpdate: args.skipChangelogUpdate,
+};
 ```
 
 - [ ] **Step 5: Run all initial-parameters tests; they should pass**
@@ -323,6 +326,7 @@ git commit -m "feat: propagate skipChangelogUpdate through initial parameters"
 ## Task 3: Gate the first-run block in the non-interactive workflow
 
 **Files:**
+
 - Modify: `src/monorepo-workflow-operations.ts`
 - Test: `src/monorepo-workflow-operations.test.ts`
 
@@ -333,52 +337,52 @@ Note on test helpers: `setupFollowMonorepoWorkflow` (around line 166) does NOT n
 In `src/monorepo-workflow-operations.test.ts`, locate the test `'follows the workflow correctly when executed twice'` (around line 424). Immediately after that test (right after its closing `});` around line 523), insert a new test:
 
 ```ts
-      it('skips the auto-populated changelog update and the Initialize Release commit when skipChangelogUpdate is true', async () => {
-        await withSandbox(async (sandbox) => {
-          const releaseVersion = '1.1.0';
-          const {
-            project,
-            stdout,
-            stderr,
-            createReleaseBranchSpy,
-            commitAllChangesSpy,
-            projectDirectoryPath,
-            formatter,
-          } = await setupFollowMonorepoWorkflow({
-            sandbox,
-            releaseVersion,
-            doesReleaseSpecFileExist: false,
-            isEditorAvailable: true,
-          });
+it('skips the auto-populated changelog update and the Initialize Release commit when skipChangelogUpdate is true', async () => {
+  await withSandbox(async (sandbox) => {
+    const releaseVersion = '1.1.0';
+    const {
+      project,
+      stdout,
+      stderr,
+      createReleaseBranchSpy,
+      commitAllChangesSpy,
+      projectDirectoryPath,
+      formatter,
+    } = await setupFollowMonorepoWorkflow({
+      sandbox,
+      releaseVersion,
+      doesReleaseSpecFileExist: false,
+      isEditorAvailable: true,
+    });
 
-          createReleaseBranchSpy.mockResolvedValueOnce({
-            version: releaseVersion,
-            firstRun: true,
-          });
+    createReleaseBranchSpy.mockResolvedValueOnce({
+      version: releaseVersion,
+      firstRun: true,
+    });
 
-          await followMonorepoWorkflow({
-            project,
-            tempDirectoryPath: sandbox.directoryPath,
-            firstRemovingExistingReleaseSpecification: false,
-            releaseType: 'ordinary',
-            defaultBranch: 'main',
-            formatter,
-            skipChangelogUpdate: true,
-            stdout,
-            stderr,
-          });
+    await followMonorepoWorkflow({
+      project,
+      tempDirectoryPath: sandbox.directoryPath,
+      firstRemovingExistingReleaseSpecification: false,
+      releaseType: 'ordinary',
+      defaultBranch: 'main',
+      formatter,
+      skipChangelogUpdate: true,
+      stdout,
+      stderr,
+    });
 
-          expect(commitAllChangesSpy).not.toHaveBeenCalledWith(
-            projectDirectoryPath,
-            `Initialize Release ${releaseVersion}`,
-          );
-          expect(commitAllChangesSpy).toHaveBeenCalledWith(
-            projectDirectoryPath,
-            `Update Release ${releaseVersion}`,
-          );
-          expect(commitAllChangesSpy).toHaveBeenCalledTimes(1);
-        });
-      });
+    expect(commitAllChangesSpy).not.toHaveBeenCalledWith(
+      projectDirectoryPath,
+      `Initialize Release ${releaseVersion}`,
+    );
+    expect(commitAllChangesSpy).toHaveBeenCalledWith(
+      projectDirectoryPath,
+      `Update Release ${releaseVersion}`,
+    );
+    expect(commitAllChangesSpy).toHaveBeenCalledTimes(1);
+  });
+});
 ```
 
 Note: this test fails type-checking first because `followMonorepoWorkflow` doesn't accept `skipChangelogUpdate` yet. That's expected — TDD red.
@@ -451,25 +455,25 @@ Also add a `@param args.skipChangelogUpdate` line to the JSDoc above the functio
 Then change the first-run block:
 
 ```ts
-  if (firstRun) {
-    await updateChangelogsForChangedPackages({ project, formatter, stderr });
-    await commitAllChanges(
-      project.directoryPath,
-      `Initialize Release ${newReleaseVersion}`,
-    );
-  }
+if (firstRun) {
+  await updateChangelogsForChangedPackages({ project, formatter, stderr });
+  await commitAllChanges(
+    project.directoryPath,
+    `Initialize Release ${newReleaseVersion}`,
+  );
+}
 ```
 
 to:
 
 ```ts
-  if (firstRun && !skipChangelogUpdate) {
-    await updateChangelogsForChangedPackages({ project, formatter, stderr });
-    await commitAllChanges(
-      project.directoryPath,
-      `Initialize Release ${newReleaseVersion}`,
-    );
-  }
+if (firstRun && !skipChangelogUpdate) {
+  await updateChangelogsForChangedPackages({ project, formatter, stderr });
+  await commitAllChanges(
+    project.directoryPath,
+    `Initialize Release ${newReleaseVersion}`,
+  );
+}
 ```
 
 - [ ] **Step 4: Update existing tests that call `followMonorepoWorkflow` so they pass the new required param**
@@ -507,6 +511,7 @@ git commit -m "feat: gate auto-changelog update and init commit on skipChangelog
 ## Task 4: Apply the same gate in the interactive UI workflow
 
 **Files:**
+
 - Modify: `src/ui.ts`
 
 There is no existing `src/ui.test.ts`. Per the spec, we make the parallel code change without adding a new test file — keeping parity with current coverage.
@@ -582,25 +587,25 @@ Add a JSDoc line for the new param immediately before `@param options.stdout`:
 Then change the first-run block (around lines 71-77):
 
 ```ts
-  if (firstRun) {
-    await updateChangelogsForChangedPackages({ project, formatter, stderr });
-    await commitAllChanges(
-      project.directoryPath,
-      `Initialize Release ${newReleaseVersion}`,
-    );
-  }
+if (firstRun) {
+  await updateChangelogsForChangedPackages({ project, formatter, stderr });
+  await commitAllChanges(
+    project.directoryPath,
+    `Initialize Release ${newReleaseVersion}`,
+  );
+}
 ```
 
 to:
 
 ```ts
-  if (firstRun && !skipChangelogUpdate) {
-    await updateChangelogsForChangedPackages({ project, formatter, stderr });
-    await commitAllChanges(
-      project.directoryPath,
-      `Initialize Release ${newReleaseVersion}`,
-    );
-  }
+if (firstRun && !skipChangelogUpdate) {
+  await updateChangelogsForChangedPackages({ project, formatter, stderr });
+  await commitAllChanges(
+    project.directoryPath,
+    `Initialize Release ${newReleaseVersion}`,
+  );
+}
 ```
 
 - [ ] **Step 2: Type-check**
@@ -615,6 +620,7 @@ Expected: fails — `main.ts` calls `startUI(...)` without `skipChangelogUpdate`
 ## Task 5: Forward `skipChangelogUpdate` from `main.ts`
 
 **Files:**
+
 - Modify: `src/main.ts`
 
 - [ ] **Step 1: Destructure and forward**
@@ -622,92 +628,92 @@ Expected: fails — `main.ts` calls `startUI(...)` without `skipChangelogUpdate`
 In `src/main.ts`, change the destructured assignment (around lines 29-38):
 
 ```ts
-  const {
-    project,
-    tempDirectoryPath,
-    reset,
-    releaseType,
-    defaultBranch,
-    interactive,
-    port,
-    formatter,
-  } = await determineInitialParameters({ argv, cwd, stderr });
+const {
+  project,
+  tempDirectoryPath,
+  reset,
+  releaseType,
+  defaultBranch,
+  interactive,
+  port,
+  formatter,
+} = await determineInitialParameters({ argv, cwd, stderr });
 ```
 
 to:
 
 ```ts
-  const {
-    project,
-    tempDirectoryPath,
-    reset,
-    releaseType,
-    defaultBranch,
-    interactive,
-    port,
-    formatter,
-    skipChangelogUpdate,
-  } = await determineInitialParameters({ argv, cwd, stderr });
+const {
+  project,
+  tempDirectoryPath,
+  reset,
+  releaseType,
+  defaultBranch,
+  interactive,
+  port,
+  formatter,
+  skipChangelogUpdate,
+} = await determineInitialParameters({ argv, cwd, stderr });
 ```
 
 Update the `startUI` call (around lines 46-54):
 
 ```ts
-      await startUI({
-        project,
-        releaseType,
-        defaultBranch,
-        port,
-        formatter,
-        stdout,
-        stderr,
-      });
+await startUI({
+  project,
+  releaseType,
+  defaultBranch,
+  port,
+  formatter,
+  stdout,
+  stderr,
+});
 ```
 
 to:
 
 ```ts
-      await startUI({
-        project,
-        releaseType,
-        defaultBranch,
-        port,
-        formatter,
-        skipChangelogUpdate,
-        stdout,
-        stderr,
-      });
+await startUI({
+  project,
+  releaseType,
+  defaultBranch,
+  port,
+  formatter,
+  skipChangelogUpdate,
+  stdout,
+  stderr,
+});
 ```
 
 Update the `followMonorepoWorkflow` call (around lines 56-65):
 
 ```ts
-      await followMonorepoWorkflow({
-        project,
-        tempDirectoryPath,
-        firstRemovingExistingReleaseSpecification: reset,
-        releaseType,
-        defaultBranch,
-        formatter,
-        stdout,
-        stderr,
-      });
+await followMonorepoWorkflow({
+  project,
+  tempDirectoryPath,
+  firstRemovingExistingReleaseSpecification: reset,
+  releaseType,
+  defaultBranch,
+  formatter,
+  stdout,
+  stderr,
+});
 ```
 
 to:
 
 ```ts
-      await followMonorepoWorkflow({
-        project,
-        tempDirectoryPath,
-        firstRemovingExistingReleaseSpecification: reset,
-        releaseType,
-        defaultBranch,
-        formatter,
-        skipChangelogUpdate,
-        stdout,
-        stderr,
-      });
+await followMonorepoWorkflow({
+  project,
+  tempDirectoryPath,
+  firstRemovingExistingReleaseSpecification: reset,
+  releaseType,
+  defaultBranch,
+  formatter,
+  skipChangelogUpdate,
+  stdout,
+  stderr,
+});
 ```
 
 - [ ] **Step 2: Type-check**
@@ -732,6 +738,7 @@ git commit -m "feat: gate auto-changelog update in interactive UI on skipChangel
 ## Task 6: Add end-to-end functional test
 
 **Files:**
+
 - Modify: `src/functional.test.ts`
 
 - [ ] **Step 1: Read the surrounding test context**
@@ -743,61 +750,59 @@ Open `src/functional.test.ts` and locate the test `'switches to a new release br
 Immediately after the closing `});` of the `'switches to a new release branch and commits the changes'` test (after line 635), insert:
 
 ```ts
-    it('does not create an Initialize Release commit when --skip-changelog-update is passed', async () => {
-      await withMonorepoProjectEnvironment(
-        {
+it('does not create an Initialize Release commit when --skip-changelog-update is passed', async () => {
+  await withMonorepoProjectEnvironment(
+    {
+      packages: {
+        $root$: {
+          name: '@scope/monorepo',
+          version: '1.0.0',
+          directoryPath: '.',
+        },
+        a: {
+          name: '@scope/a',
+          version: '1.0.0',
+          directoryPath: 'packages/a',
+        },
+      },
+      workspaces: {
+        '.': ['packages/*'],
+      },
+    },
+    async (environment) => {
+      await environment.runTool({
+        args: ['--skip-changelog-update'],
+        releaseSpecification: {
           packages: {
-            $root$: {
-              name: '@scope/monorepo',
-              version: '1.0.0',
-              directoryPath: '.',
-            },
-            a: {
-              name: '@scope/a',
-              version: '1.0.0',
-              directoryPath: 'packages/a',
-            },
-          },
-          workspaces: {
-            '.': ['packages/*'],
+            a: 'major',
           },
         },
-        async (environment) => {
-          await environment.runTool({
-            args: ['--skip-changelog-update'],
-            releaseSpecification: {
-              packages: {
-                a: 'major',
-              },
-            },
-          });
+      });
 
-          const latestCommitsInReverse = (
-            await environment.runCommand('git', [
-              'log',
-              '--pretty=%s%x09%H%x09%D',
-              '--date-order',
-              '--max-count=2',
-            ])
-          ).stdout
-            .split('\n')
-            .map((line) => {
-              const [subject, commitId, revsMarker] = line.split('\x09');
-              const revs = revsMarker.split(' -> ');
-              return { subject, commitId, revs };
-            });
+      const latestCommitsInReverse = (
+        await environment.runCommand('git', [
+          'log',
+          '--pretty=%s%x09%H%x09%D',
+          '--date-order',
+          '--max-count=2',
+        ])
+      ).stdout
+        .split('\n')
+        .map((line) => {
+          const [subject, commitId, revsMarker] = line.split('\x09');
+          const revs = revsMarker.split(' -> ');
+          return { subject, commitId, revs };
+        });
 
-          expect(latestCommitsInReverse[0].subject).toBe(
-            'Update Release 2.0.0',
-          );
-          expect(latestCommitsInReverse[1].subject).not.toBe(
-            'Initialize Release 2.0.0',
-          );
-          expect(latestCommitsInReverse[0].revs).toContain('HEAD');
-          expect(latestCommitsInReverse[0].revs).toContain('release/2.0.0');
-        },
+      expect(latestCommitsInReverse[0].subject).toBe('Update Release 2.0.0');
+      expect(latestCommitsInReverse[1].subject).not.toBe(
+        'Initialize Release 2.0.0',
       );
-    });
+      expect(latestCommitsInReverse[0].revs).toContain('HEAD');
+      expect(latestCommitsInReverse[0].revs).toContain('release/2.0.0');
+    },
+  );
+});
 ```
 
 - [ ] **Step 3: Run the functional test**
@@ -819,6 +824,7 @@ git commit -m "test: cover --skip-changelog-update end-to-end"
 ## Task 7: Documentation
 
 **Files:**
+
 - Modify: `README.md`
 - Modify: `docs/usage.md`
 
@@ -885,6 +891,7 @@ yarn create-release-branch --skip-changelog-update
 ```
 
 Confirm:
+
 - No `Initialize Release X.Y.Z` commit lands on the new release branch.
 - Each package's `## Unreleased` section is unchanged from what was on disk before the run, modulo the migration to the new version section that `executeReleasePlan` performs.
 

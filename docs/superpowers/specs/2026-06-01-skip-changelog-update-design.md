@@ -42,14 +42,17 @@ A new boolean flag on `command-line-arguments.ts`:
 The flag travels through the existing chain:
 
 1. `src/command-line-arguments.ts`
+
    - Add `skipChangelogUpdate: boolean` to `CommandLineArguments`.
    - Register the option with `yargs`.
 
 2. `src/initial-parameters.ts`
+
    - Add `skipChangelogUpdate: boolean` to `InitialParameters`.
    - Propagate `args.skipChangelogUpdate` in `determineInitialParameters`.
 
 3. `src/main.ts`
+
    - Destructure `skipChangelogUpdate` and forward to both `followMonorepoWorkflow` and `startUI`.
 
 4. `src/monorepo-workflow-operations.ts` and `src/ui.ts`
