@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add `--skip-changelog-update` flag to skip auto-populating each package's `Unreleased` changelog section from git commits and skip the accompanying `Initialize Release` commit
+  - For repos that maintain changelogs on the go (i.e., each PR adds its own entry), this avoids duplicate/noisy entries from the auto-population step.
+
 ## [4.2.1]
 
 ### Changed
