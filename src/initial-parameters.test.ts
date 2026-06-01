@@ -39,6 +39,7 @@ describe('initial-parameters', () => {
           interactive: false,
           port: 3000,
           formatter: 'prettier',
+          skipChangelogUpdate: false,
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
@@ -81,6 +82,7 @@ describe('initial-parameters', () => {
           interactive: false,
           port: 3000,
           formatter: 'prettier',
+          skipChangelogUpdate: false,
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
@@ -114,6 +116,7 @@ describe('initial-parameters', () => {
           interactive: false,
           port: 3000,
           formatter: 'prettier',
+          skipChangelogUpdate: false,
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
@@ -147,6 +150,7 @@ describe('initial-parameters', () => {
           interactive: false,
           port: 3000,
           formatter: 'prettier',
+          skipChangelogUpdate: false,
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
@@ -180,6 +184,7 @@ describe('initial-parameters', () => {
           interactive: false,
           port: 3000,
           formatter: 'prettier',
+          skipChangelogUpdate: false,
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
@@ -211,6 +216,7 @@ describe('initial-parameters', () => {
           interactive: false,
           port: 3000,
           formatter: 'prettier',
+          skipChangelogUpdate: false,
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
@@ -242,6 +248,7 @@ describe('initial-parameters', () => {
           interactive: false,
           port: 3000,
           formatter: 'prettier',
+          skipChangelogUpdate: false,
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
@@ -273,6 +280,7 @@ describe('initial-parameters', () => {
           interactive: false,
           port: 3000,
           formatter: 'prettier',
+          skipChangelogUpdate: false,
         });
       jest
         .spyOn(envModule, 'getEnvironmentVariables')
