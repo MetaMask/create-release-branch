@@ -17,9 +17,10 @@
     "build": "tsc --project tsconfig.build.json && yarn build:ui",
     "build:ui": "vite build",
     "build:clean": "rimraf dist && yarn build",
-    "lint": "yarn lint:eslint && yarn lint:misc --check",
+    "lint": "yarn lint:eslint && yarn lint:misc --check && yarn lint:changelog",
+    "lint:changelog": "auto-changelog validate --formatter prettier",
     "lint:eslint": "eslint . --cache --ext cjs,cts,js,mjs,mts,ts,tsx",
-    "lint:fix": "yarn lint:eslint --fix && yarn lint:misc --write",
+    "lint:fix": "yarn lint:eslint --fix && yarn lint:misc --write && yarn lint:changelog --fix",
     "lint:misc": "prettier '**/*.json' '**/*.md' '!CHANGELOG.md' '**/*.yml' '!.yarnrc.yml' --ignore-path .gitignore --no-error-on-unmatched-pattern",
     "prepack": "./scripts/prepack.sh",
     "test": "jest && jest-it-up --config jest.config.cjs",
@@ -104,7 +105,7 @@
       "optional": true
     }
   },
-  "packageManager": "yarn@3.2.1",
+  "packageManager": "yarn@4.16.0",
   "engines": {
     "node": "^18.18 || >=20"
   },
