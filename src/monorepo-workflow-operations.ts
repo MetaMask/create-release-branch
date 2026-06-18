@@ -89,7 +89,7 @@ export async function followMonorepoWorkflow({
     await updateChangelogsForChangedPackages({ project, formatter, stderr });
     await commitAllChanges(
       project.directoryPath,
-      `Initialize Release ${newReleaseVersion}`,
+      `Initialize release ${newReleaseVersion} by bumping all packages`,
     );
   }
 
@@ -160,6 +160,6 @@ export async function followMonorepoWorkflow({
   await deduplicateDependencies(project.directoryPath);
   await commitAllChanges(
     project.directoryPath,
-    `Update Release ${newReleaseVersion}`,
+    'Filter release to only selected packages',
   );
 }

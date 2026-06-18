@@ -42,6 +42,13 @@ type UIOptions = {
   stderr: Pick<WriteStream, 'write'>;
 };
 
+type InteractiveReleaseResult =
+  | { status: 'success' }
+  | {
+      status: 'error';
+      errors: ReturnType<typeof validateAllPackageEntries>;
+    };
+
 /**
  * Starts the UI for the release process.
  *
@@ -63,18 +70,12 @@ export async function startUI({
   stdout,
   stderr,
 }: UIOptions): Promise<void> {
-  const { version: newReleaseVersion, firstRun } = await createReleaseBranch({
+  const { version: newReleaseVersion } = await prepareInteractiveReleaseBranch({
     project,
     releaseType,
+    formatter,
+    stderr,
   });
-
-  if (firstRun) {
-    await updateChangelogsForChangedPackages({ project, formatter, stderr });
-    await commitAllChanges(
-      project.directoryPath,
-      `Initialize Release ${newReleaseVersion}`,
-    );
-  }
 
   const app = createApp({
     project,
@@ -118,6 +119,124 @@ export async function startUI({
 }
 
 /**
+ * Prepares the release branch for the interactive UI.
+ *
+ * @param options - The options.
+ * @param options.project - The project object.
+ * @param options.releaseType - The type of release.
+ * @param options.formatter - The formatter to use for formatting the changelog.
+ * @param options.stderr - The stderr stream.
+ * @returns The prepared release branch information.
+ */
+export async function prepareInteractiveReleaseBranch({
+  project,
+  releaseType,
+  formatter,
+  stderr,
+}: {
+  project: Project;
+  releaseType: 'ordinary' | 'backport';
+  formatter: Formatter;
+  stderr: Pick<WriteStream, 'write'>;
+}): Promise<{ version: string; firstRun: boolean }> {
+  const releaseBranch = await createReleaseBranch({
+    project,
+    releaseType,
+  });
+
+  if (releaseBranch.firstRun) {
+    await updateChangelogsForChangedPackages({ project, formatter, stderr });
+  }
+
+  return releaseBranch;
+}
+
+/**
+ * Finalizes the release selected in the interactive UI.
+ *
+ * @param options - The options.
+ * @param options.project - The project object.
+ * @param options.defaultBranch - The default branch name.
+ * @param options.formatter - The formatter to use for formatting the changelog.
+ * @param options.stderr - The stderr stream.
+ * @param options.version - The release version.
+ * @param options.releasedPackages - The packages selected in the UI.
+ * @returns The release result to send to the UI.
+ */
+export async function finalizeInteractiveRelease({
+  project,
+  defaultBranch,
+  formatter,
+  stderr,
+  version,
+  releasedPackages,
+}: {
+  project: Project;
+  defaultBranch: string;
+  formatter: Formatter;
+  stderr: Pick<WriteStream, 'write'>;
+  version: string;
+  releasedPackages: Record<string, string | null>;
+}): Promise<InteractiveReleaseResult> {
+  const errors = validateAllPackageEntries(project, releasedPackages, 0);
+
+  if (errors.length > 0) {
+    return {
+      status: 'error',
+      errors,
+    };
+  }
+
+  const releaseSpecificationPackages = Object.keys(releasedPackages).reduce(
+    (obj, packageName) => {
+      const versionSpecifierOrDirective = releasedPackages[packageName];
+
+      if (versionSpecifierOrDirective !== 'intentionally-skip') {
+        if (
+          Object.values(IncrementableVersionParts).includes(
+            versionSpecifierOrDirective as any,
+          )
+        ) {
+          return {
+            ...obj,
+            [packageName]:
+              versionSpecifierOrDirective as IncrementableVersionParts,
+          };
+        }
+
+        return {
+          ...obj,
+          [packageName]: semver.parse(versionSpecifierOrDirective) as SemVer,
+        };
+      }
+
+      return obj;
+    },
+    {} as ReleaseSpecification['packages'],
+  );
+
+  await restoreChangelogsForSkippedPackages({
+    project,
+    releaseSpecificationPackages,
+    defaultBranch,
+  });
+
+  const releasePlan = await planRelease({
+    project,
+    releaseSpecificationPackages,
+    newReleaseVersion: version,
+  });
+  await executeReleasePlan(project, releasePlan, formatter, stderr);
+  await fixConstraints(project.directoryPath);
+  await updateYarnLockfile(project.directoryPath);
+  await deduplicateDependencies(project.directoryPath);
+
+  await commitAllChanges(project.directoryPath, `Release ${version}`);
+
+  return { status: 'success' };
+}
+
+/**
  * Creates an Express application for the UI server.
  *
  * @param options - The options for creating the app.
@@ -129,7 +248,7 @@ export async function startUI({
  * @param options.closeServer - The function to close the server.
  * @returns The Express application.
  */
-function createApp({
+export function createApp({
   project,
   defaultBranch,
   formatter,
@@ -282,72 +401,20 @@ function createApp({
     async (req: express.Request, res: express.Response): Promise<void> => {
       try {
         const releasedPackages: Record<string, string | null> = req.body;
-
-        const errors = validateAllPackageEntries(project, releasedPackages, 0);
-
-        if (errors.length > 0) {
-          res.json({
-            status: 'error',
-            errors,
-          });
-          return;
-        }
-
-        const releaseSpecificationPackages = Object.keys(
-          releasedPackages,
-        ).reduce(
-          (obj, packageName) => {
-            const versionSpecifierOrDirective = releasedPackages[packageName];
-
-            if (versionSpecifierOrDirective !== 'intentionally-skip') {
-              if (
-                Object.values(IncrementableVersionParts).includes(
-                  versionSpecifierOrDirective as any,
-                )
-              ) {
-                return {
-                  ...obj,
-                  [packageName]:
-                    versionSpecifierOrDirective as IncrementableVersionParts,
-                };
-              }
-
-              return {
-                ...obj,
-                [packageName]: semver.parse(
-                  versionSpecifierOrDirective,
-                ) as SemVer,
-              };
-            }
-
-            return obj;
-          },
-          {} as ReleaseSpecification['packages'],
-        );
-
-        await restoreChangelogsForSkippedPackages({
+        const result = await finalizeInteractiveRelease({
           project,
-          releaseSpecificationPackages,
           defaultBranch,
+          formatter,
+          stderr,
+          version,
+          releasedPackages,
         });
 
-        const releasePlan = await planRelease({
-          project,
-          releaseSpecificationPackages,
-          newReleaseVersion: version,
-        });
-        await executeReleasePlan(project, releasePlan, formatter, stderr);
-        await fixConstraints(project.directoryPath);
-        await updateYarnLockfile(project.directoryPath);
-        await deduplicateDependencies(project.directoryPath);
-        await commitAllChanges(
-          project.directoryPath,
-          `Update Release ${version}`,
-        );
+        res.json(result);
 
-        res.json({ status: 'success' });
-
-        closeServer();
+        if (result.status === 'success') {
+          closeServer();
+        }
       } catch (error) {
         stderr.write(`Release error: ${error}\n`);
         res.status(400).send('Invalid request');
