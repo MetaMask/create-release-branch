@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- fix: Bump `action-utils` to `^2.0.0` ([#206](https://github.com/MetaMask/create-release-branch/pull/206))
+- Bump `action-utils` to `^2.0.0` ([#206](https://github.com/MetaMask/create-release-branch/pull/206))
 
 ## [4.2.1]
 
