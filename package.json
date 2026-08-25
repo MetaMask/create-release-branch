@@ -27,7 +27,7 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
-    "@metamask/action-utils": "^1.0.0",
+    "@metamask/action-utils": "^2.0.0",
     "@metamask/auto-changelog": "^6.1.1",
     "@metamask/utils": "^9.0.0",
     "debug": "^4.3.4",
