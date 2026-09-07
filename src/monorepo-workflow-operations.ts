@@ -58,6 +58,9 @@ import {
  * which affects how the version is bumped.
  * @param args.defaultBranch - The name of the default branch in the repository.
  * @param args.formatter - The formatter to use for formatting the changelog.
+ * @param args.skipChangelogUpdate - When true, skips auto-populating the
+ * Unreleased section of each package's changelog from git commits since the
+ * last release, and skips the accompanying "Initialize Release" commit.
  * @param args.stdout - A stream that can be used to write to standard out.
  * @param args.stderr - A stream that can be used to write to standard error.
  */
@@ -68,6 +71,7 @@ export async function followMonorepoWorkflow({
   releaseType,
   defaultBranch,
   formatter,
+  skipChangelogUpdate,
   stdout,
   stderr,
 }: {
@@ -77,6 +81,7 @@ export async function followMonorepoWorkflow({
   releaseType: ReleaseType;
   defaultBranch: string;
   formatter: Formatter;
+  skipChangelogUpdate: boolean;
   stdout: Pick<WriteStream, 'write'>;
   stderr: Pick<WriteStream, 'write'>;
 }) {
@@ -85,7 +90,7 @@ export async function followMonorepoWorkflow({
     releaseType,
   });
 
-  if (firstRun) {
+  if (firstRun && !skipChangelogUpdate) {
     await updateChangelogsForChangedPackages({ project, formatter, stderr });
     await commitAllChanges(
       project.directoryPath,

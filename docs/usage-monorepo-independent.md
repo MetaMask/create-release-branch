@@ -63,3 +63,15 @@ create-release-branch --backport
 ```
 
 In this case, the new release version will be calculated by incrementing the "backport" (second) number of the current version, but the versions and changelogs of workspace packages will still be updated according to the release spec.
+
+## Skipping changelog auto-population
+
+By default, the tool reads the Git history for each package and adds a new section to its changelog listing commits since the last release. It then creates an "Initialize Release X.Y.Z" commit to record this.
+
+If your repo maintains changelogs on the go — that is, each pull request already adds its own entry to the `## Unreleased` section — this auto-population step is redundant. In that case, run:
+
+```
+create-release-branch --skip-changelog-update
+```
+
+The tool will still version packages, migrate your existing `## Unreleased` entries into the new release section, and create the release branch — it just won't auto-add commit-derived entries first, and it skips the "Initialize Release" commit. This flag composes naturally with `--backport`.
