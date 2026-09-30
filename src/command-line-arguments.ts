@@ -10,6 +10,7 @@ export type CommandLineArguments = {
   interactive: boolean;
   port: number;
   formatter: string;
+  skipChangelogUpdate: boolean;
 };
 
 /**
@@ -71,6 +72,12 @@ export async function readCommandLineArguments(
       describe: 'The formatter to use for changelog formatting.',
       choices: ['oxfmt', 'prettier'],
       default: 'prettier',
+    })
+    .option('skip-changelog-update', {
+      describe:
+        'Skip auto-populating the "Unreleased" section of each package\'s changelog from git commits since the last release. Use this in repos that maintain changelogs on the go. When set, the "Initialize Release" commit is also skipped.',
+      type: 'boolean',
+      default: false,
     })
     .help()
     .strict()

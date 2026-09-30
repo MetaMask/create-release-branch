@@ -634,6 +634,62 @@ describe('create-release-branch (functional)', () => {
       );
     });
 
+    it('does not create an Initialize Release commit when --skip-changelog-update is passed', async () => {
+      await withMonorepoProjectEnvironment(
+        {
+          packages: {
+            $root$: {
+              name: '@scope/monorepo',
+              version: '1.0.0',
+              directoryPath: '.',
+            },
+            a: {
+              name: '@scope/a',
+              version: '1.0.0',
+              directoryPath: 'packages/a',
+            },
+          },
+          workspaces: {
+            '.': ['packages/*'],
+          },
+        },
+        async (environment) => {
+          await environment.runTool({
+            args: ['--skip-changelog-update'],
+            releaseSpecification: {
+              packages: {
+                a: 'major',
+              },
+            },
+          });
+
+          const latestCommitsInReverse = (
+            await environment.runCommand('git', [
+              'log',
+              '--pretty=%s%x09%H%x09%D',
+              '--date-order',
+              '--max-count=2',
+            ])
+          ).stdout
+            .split('\n')
+            .map((line) => {
+              const [subject, commitId, revsMarker] = line.split('\x09');
+              const revs = revsMarker.split(' -> ');
+              return { subject, commitId, revs };
+            });
+
+          expect(latestCommitsInReverse[0].subject).toBe(
+            'Update Release 2.0.0',
+          );
+          expect(latestCommitsInReverse[1].subject).not.toBe(
+            'Initialize Release 2.0.0',
+          );
+          expect(latestCommitsInReverse[0].revs).toContain('HEAD');
+          expect(latestCommitsInReverse[0].revs).toContain('release/2.0.0');
+        },
+      );
+    });
+
     it('updates the dependency version in package "b" when package "a" version is bumped', async () => {
       await withMonorepoProjectEnvironment(
         {

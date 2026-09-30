@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add `--skip-changelog-update` flag to skip auto-populating each package's `## Unreleased` → `### Uncategorized` section from git commits, and skip the accompanying `Initialize Release` commit ([#203](https://github.com/MetaMask/create-release-branch/pull/203))
+  - For repos that maintain changelogs on the go (i.e., each PR adds its own categorized entry under `## Unreleased`), this avoids the noisy `### Uncategorized` block being added on top of those hand-written entries.
+
 ## [4.2.2]
 
 ### Fixed

@@ -33,6 +33,7 @@ describe('main', () => {
         interactive: false,
         port: 3000,
         formatter: 'prettier',
+        skipChangelogUpdate: false,
       });
     const followMonorepoWorkflowSpy = jest
       .spyOn(monorepoWorkflowOperations, 'followMonorepoWorkflow')
@@ -52,6 +53,7 @@ describe('main', () => {
       releaseType: 'backport',
       defaultBranch: 'main',
       formatter: 'prettier',
+      skipChangelogUpdate: false,
       stdout,
       stderr,
     });
@@ -72,6 +74,7 @@ describe('main', () => {
         interactive: true,
         port: 3000,
         formatter: 'prettier',
+        skipChangelogUpdate: false,
       });
     const startUISpy = jest.spyOn(ui, 'startUI').mockResolvedValue();
 
@@ -88,6 +91,7 @@ describe('main', () => {
       defaultBranch: 'main',
       port: 3000,
       formatter: 'prettier',
+      skipChangelogUpdate: false,
       stdout,
       stderr,
     });
@@ -108,6 +112,7 @@ describe('main', () => {
         interactive: false,
         port: 3000,
         formatter: 'prettier',
+        skipChangelogUpdate: false,
       });
     const followMonorepoWorkflowSpy = jest
       .spyOn(monorepoWorkflowOperations, 'followMonorepoWorkflow')

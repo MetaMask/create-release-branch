@@ -38,6 +38,7 @@ type UIOptions = {
   defaultBranch: string;
   port: number;
   formatter: Formatter;
+  skipChangelogUpdate: boolean;
   stdout: Pick<WriteStream, 'write'>;
   stderr: Pick<WriteStream, 'write'>;
 };
@@ -51,6 +52,9 @@ type UIOptions = {
  * @param options.defaultBranch - The default branch name.
  * @param options.port - The port number for the server.
  * @param options.formatter - The formatter to use for formatting the changelog.
+ * @param options.skipChangelogUpdate - When true, skips auto-populating the
+ * Unreleased section of each package's changelog from git commits since the
+ * last release, and skips the accompanying "Initialize Release" commit.
  * @param options.stdout - The stdout stream.
  * @param options.stderr - The stderr stream.
  */
@@ -60,6 +64,7 @@ export async function startUI({
   defaultBranch,
   port,
   formatter,
+  skipChangelogUpdate,
   stdout,
   stderr,
 }: UIOptions): Promise<void> {
@@ -68,7 +73,7 @@ export async function startUI({
     releaseType,
   });
 
-  if (firstRun) {
+  if (firstRun && !skipChangelogUpdate) {
     await updateChangelogsForChangedPackages({ project, formatter, stderr });
     await commitAllChanges(
       project.directoryPath,

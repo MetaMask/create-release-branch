@@ -29,6 +29,7 @@ type InitialParameters = {
   interactive: boolean;
   port: number;
   formatter: Formatter;
+  skipChangelogUpdate: boolean;
 };
 
 /**
@@ -72,5 +73,6 @@ export async function determineInitialParameters({
     interactive: args.interactive,
     port: args.port,
     formatter: args.formatter as Formatter,
+    skipChangelogUpdate: args.skipChangelogUpdate,
   };
 }
