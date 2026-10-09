@@ -1,6 +1,20 @@
 # @metamask/create-release-branch
 
-<table><tr><td><p align="center"><b>⚠️ PLEASE READ ⚠️</b></p><p align="center">This package is currently being migrated to our <a href="https://github.com/MetaMask/release-tools"><code>release-tools</code></a> monorepo. Please do not make any commits to this repository while this migration is taking place, as they will not be transferred over. Also, please re-open PRs that are under active development in the release-tools repo.</p></td></tr></table>
+<table>
+  <tr>
+    <td>
+      <p align="center"><b>⚠️ PLEASE READ ⚠️</b></p>
+      <p align="center">
+        This package has been migrated to our
+        <a href="https://github.com/MetaMask/release-tools"><code>release-tools</code></a>
+        monorepo, and this repository has been archived. Please note that all
+        future development and feature releases will take place in the
+        <a href="https://github.com/MetaMask/release-tools"><code>release-tools</code></a>
+        repository.
+      </p>
+    </td>
+  </tr>
+</table>
 
 This is an interactive command-line tool that automates steps involved in preparing a new release of a project. These steps include updating versions of one or more desired packages, adding a new section to the packages' changelogs to include changes since the previous release, and then creating a new branch from which a pull request can be submitted for review before the release goes live.
 
